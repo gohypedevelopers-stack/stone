@@ -21,6 +21,13 @@ const PRODUCTS = [
   { id: "p6", name: "Tinted Lip Balm", price: 399, tag: "Everyday", rating: 4.4 },
 ];
 
+const FEATURED = [
+  { key: "all", title: "All K-Beauty at Fingertip", caption: "Top trending products", theme: "ftLilac" },
+  { key: "masks", title: "Toner Pads + Sheet Masks", caption: "Toner pads + Sheet masks", theme: "ftPink" },
+  { key: "spf", title: "Sunscreen + Moisturisers", caption: "Sunscreen + Moisturisers", theme: "ftPeach" },
+  { key: "serums", title: "Serums + Ampoules", caption: "Serums + Ampoules", theme: "ftRose" },
+];
+
 function formatINR(amount) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount);
 }
@@ -143,6 +150,31 @@ export default function HomePage() {
 
       {/* Hero */}
       <main>
+        <section className="featured">
+          <div className="container">
+            <div className="featuredHead">
+              <div className="featuredTitle">
+                <span className="featuredTitleStrong">Featured</span>{" "}
+                <span className="featuredTitleLight">Collection</span>
+              </div>
+              <p className="featuredSub">From viral faves to hidden gems, find your match!</p>
+            </div>
+
+            <div className="featuredGrid">
+              {FEATURED.map((f) => (
+                <div key={f.key} className="featuredItem">
+                  <div className={`featuredCard ${f.theme}`}>
+                    <div className="featuredTag">{f.title}</div>
+                    <div className="featuredImage" aria-hidden="true" />
+                    <button className="featuredBtn">Shop now</button>
+                  </div>
+                  <div className="featuredCaption">{f.caption}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="hero">
           <div className="container heroGrid">
             <div className="heroCopy">
