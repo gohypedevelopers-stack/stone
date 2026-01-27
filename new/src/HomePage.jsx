@@ -28,6 +28,18 @@ const FEATURED = [
   { key: "serums", title: "Serums + Ampoules", caption: "Serums + Ampoules", theme: "ftRose" },
 ];
 
+const CATEGORY_SHOWCASE = [
+  { key: "cleansers", label: "Cleansers", tone: "catTone1" },
+  { key: "toner", label: "Toner & Mist", tone: "catTone2" },
+  { key: "treatments", label: "Treatments", tone: "catTone3" },
+  { key: "moisturiser", label: "Moisturiser", tone: "catTone4" },
+  { key: "sunscreen", label: "Sunscreen", tone: "catTone5" },
+  { key: "eyecare", label: "Eyecare", tone: "catTone6" },
+  { key: "lipcare", label: "Lipcare", tone: "catTone7" },
+  { key: "masks", label: "Masks", tone: "catTone8" },
+  { key: "kits", label: "Kits & Combos", tone: "catTone9" },
+];
+
 function formatINR(amount) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount);
 }
@@ -175,6 +187,25 @@ export default function HomePage() {
           </div>
         </section>
 
+        <section className="categoryShowcase">
+          <div className="container">
+            <div className="categoryShowcaseHead">
+              <span className="categoryShowcaseTitle">
+                Shop by <span className="categoryShowcaseAccent">Category</span>
+              </span>
+            </div>
+
+            <div className="categoryShowcaseGrid">
+              {CATEGORY_SHOWCASE.map((c) => (
+                <div key={c.key} className="categoryShowcaseItem">
+                  <div className={`categoryShowcaseImage ${c.tone}`} aria-hidden="true" />
+                  <div className="categoryShowcaseLabel">{c.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="hero">
           <div className="container heroGrid">
             <div className="heroCopy">
@@ -217,54 +248,36 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Categories */}
-        <section className="section">
-          <div className="container">
-            <div className="sectionHead">
-              <h2>Shop by category</h2>
-              <a className="link" href="#">View all</a>
-            </div>
-
-            <div className="grid6">
-              {CATEGORIES.map((c) => (
-                <a key={c.key} className="catCard" href="#">
-                  <div className="catIcon" aria-hidden="true" />
-                  <div className="catTitle">{c.title}</div>
-                  <div className="catDesc">{c.desc}</div>
-                </a>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* Featured products */}
         <section id="shop" className="section">
-          <div className="container">
-            <div className="sectionHead">
-              <h2>Best sellers</h2>
-              <div className="muted">Search: “{query || "…" }”</div>
-            </div>
+  <div className="container">
+    <div className="sectionHead">
+      <h2>Best sellers</h2>
+      <div className="muted">Search: "{query || "..."}"</div>
+    </div>
 
-            <div className="grid3">
-              {filteredProducts.map((p) => (
-                <div key={p.id} className="pCard">
-                  <div className="pImg" aria-hidden="true" />
-                  <div className="pRow">
-                    <div>
-                      <div className="pTag">{p.tag}</div>
-                      <div className="pName">{p.name}</div>
-                      <div className="pRating">★ {p.rating}</div>
-                    </div>
-                    <div className="pPrice">{formatINR(p.price)}</div>
-                  </div>
-                  <button className="btn btnPrimary w100" onClick={() => addToCart(p.id)}>
-                    Add to cart
-                  </button>
-                </div>
-              ))}
+    <div className="marquee">
+      <div className="marqueeTrack">
+        {[...filteredProducts, ...filteredProducts].map((p, idx) => (
+          <div key={`${p.id}-${idx}`} className="pCard pCardMarquee">
+            <div className="pImg" aria-hidden="true" />
+            <div className="pRow">
+              <div>
+                <div className="pTag">{p.tag}</div>
+                <div className="pName">{p.name}</div>
+                <div className="pRating">* {p.rating}</div>
+              </div>
+              <div className="pPrice">{formatINR(p.price)}</div>
             </div>
+            <button className="btn btnPrimary w100" onClick={() => addToCart(p.id)}>
+              Add to cart
+            </button>
           </div>
-        </section>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
 
         {/* Offers + Loyalty */}
         <section className="section">
@@ -316,6 +329,9 @@ export default function HomePage() {
 </div>
   );
 }
+
+
+
 
 
 
