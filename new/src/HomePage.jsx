@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import "./homepage.css";
 import Navbar from "./navbar.jsx";
 import Footer from "./footer.jsx";
-import HeroSlider from "./hero.jsx";
+import HeroSlider from "./Hero.jsx";
 import CuratedCollection from "./curatedcollection.jsx";
 import ByCategory from "./bycategory.jsx";
 
@@ -151,78 +151,44 @@ export default function HomePage() {
 
         <ByCategory />
 
-        <section className="hero">
-          <div className="container heroGrid">
-            <div className="heroCopy">
-              <div className="pill">Korean + Japanese skincare curated for India</div>
-              <h1>Build a routine that matches your skin — not trends.</h1>
-              <p>
-                Shop sunscreen, serums, cleansers, and makeup with ingredient-first picks.
-                Get guidance based on your skin type and concerns.
-              </p>
+        
 
-              <div className="heroBtns">
-                <a className="btn btnPrimary" href="#shop">Shop best sellers</a>
-                <a className="btn btnGhost" href="#quiz">Find my routine</a>
-              </div>
-
-              <div className="heroMeta">
-                <div className="metaCard">
-                  <div className="metaTitle">Free delivery</div>
-                  <div className="metaText">Above {formatINR(freeDeliveryThreshold)}</div>
-                </div>
-                <div className="metaCard">
-                  <div className="metaTitle">Loyalty points</div>
-                  <div className="metaText">Earn & redeem every order</div>
-                </div>
-                <div className="metaCard">
-                  <div className="metaTitle">Support</div>
-                  <div className="metaText">Call/WhatsApp: {supportPhone}</div>
-                </div>
-              </div>
+        {/* Featured products */}
+        <section id="shop" className="section">
+          <div className="container">
+            <div className="sectionHead">
+              <h2>Best sellers</h2>
+              <div className="muted">Search: "{query || "..."}"</div>
             </div>
 
-            <div className="heroArt" aria-hidden="true">
-              <div className="blob" />
-              <div className="productStack">
-                <div className="cardShot" />
-                <div className="cardShot" />
-                <div className="cardShot" />
+            <div className="marquee">
+              <div className="marqueeTrack">
+                {[...filteredProducts, ...filteredProducts].map((p, idx) => (
+                  <div key={`${p.id}-${idx}`} className="bsCard">
+                    <div className="bsImage" aria-hidden="true" />
+                    <div className="bsBody">
+                      <span className="bsPill">{p.tag}</span>
+                      <div className="bsName">{p.name}</div>
+                      <div className="bsMeta">
+                        <span className="bsPrice">{formatINR(p.price)}</span>
+                        <span className="bsRating">★ {p.rating}</span>
+                      </div>
+                      <span className="bsSize">28ml</span>
+                    </div>
+                    <div className="bsActions">
+                      <button className="bsWish" aria-label="Wishlist">
+                        {"\u2661"}
+                      </button>
+                      <button className="bsAdd" onClick={() => addToCart(p.id)}>
+                        Add to cart
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </section>
-
-        {/* Featured products */}
-        <section id="shop" className="section">
-  <div className="container">
-    <div className="sectionHead">
-      <h2>Best sellers</h2>
-      <div className="muted">Search: "{query || "..."}"</div>
-    </div>
-
-    <div className="marquee">
-      <div className="marqueeTrack">
-        {[...filteredProducts, ...filteredProducts].map((p, idx) => (
-          <div key={`${p.id}-${idx}`} className="pCard pCardMarquee">
-            <div className="pImg" aria-hidden="true" />
-            <div className="pRow">
-              <div>
-                <div className="pTag">{p.tag}</div>
-                <div className="pName">{p.name}</div>
-                <div className="pRating">* {p.rating}</div>
-              </div>
-              <div className="pPrice">{formatINR(p.price)}</div>
-            </div>
-            <button className="btn btnPrimary w100" onClick={() => addToCart(p.id)}>
-              Add to cart
-            </button>
-          </div>
-        ))}
-      </div>
-    </div>
-  </div>
-</section>
 
         {/* Offers + Loyalty */}
         <section className="section">
