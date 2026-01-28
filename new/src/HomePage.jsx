@@ -195,13 +195,15 @@ export default function HomePage() {
               </span>
             </div>
 
-            <div className="categoryShowcaseGrid">
-              {CATEGORY_SHOWCASE.map((c) => (
-                <div key={c.key} className="categoryShowcaseItem">
-                  <div className={`categoryShowcaseImage ${c.tone}`} aria-hidden="true" />
-                  <div className="categoryShowcaseLabel">{c.label}</div>
-                </div>
-              ))}
+            <div className="categoryMarquee">
+              <div className="categoryMarqueeTrack">
+                {[...CATEGORY_SHOWCASE, ...CATEGORY_SHOWCASE].map((c, idx) => (
+                  <div key={`${c.key}-${idx}`} className="categoryShowcaseItem">
+                    <div className={`categoryShowcaseImage ${c.tone}`} aria-hidden="true" />
+                    <div className="categoryShowcaseLabel">{c.label}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
