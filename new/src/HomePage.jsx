@@ -2,6 +2,9 @@ import { useMemo, useState } from "react";
 import "./homepage.css";
 import Navbar from "./navbar.jsx";
 import Footer from "./footer.jsx";
+import HeroSlider from "./hero.jsx";
+import CuratedCollection from "./curatedcollection.jsx";
+import ByCategory from "./bycategory.jsx";
 
 const CATEGORIES = [
   { key: "korean", title: "Korean Skincare", desc: "Essences, toners, ampoules" },
@@ -19,25 +22,6 @@ const PRODUCTS = [
   { id: "p4", name: "Calm Clean Foam", price: 499, tag: "Value", rating: 4.5 },
   { id: "p5", name: "Vitamin C Booster", price: 1099, tag: "Brightening", rating: 4.6 },
   { id: "p6", name: "Tinted Lip Balm", price: 399, tag: "Everyday", rating: 4.4 },
-];
-
-const FEATURED = [
-  { key: "all", title: "All K-Beauty at Fingertip", caption: "Top trending products", theme: "ftLilac" },
-  { key: "masks", title: "Toner Pads + Sheet Masks", caption: "Toner pads + Sheet masks", theme: "ftPink" },
-  { key: "spf", title: "Sunscreen + Moisturisers", caption: "Sunscreen + Moisturisers", theme: "ftPeach" },
-  { key: "serums", title: "Serums + Ampoules", caption: "Serums + Ampoules", theme: "ftRose" },
-];
-
-const CATEGORY_SHOWCASE = [
-  { key: "cleansers", label: "Cleansers", tone: "catTone1" },
-  { key: "toner", label: "Toner & Mist", tone: "catTone2" },
-  { key: "treatments", label: "Treatments", tone: "catTone3" },
-  { key: "moisturiser", label: "Moisturiser", tone: "catTone4" },
-  { key: "sunscreen", label: "Sunscreen", tone: "catTone5" },
-  { key: "eyecare", label: "Eyecare", tone: "catTone6" },
-  { key: "lipcare", label: "Lipcare", tone: "catTone7" },
-  { key: "masks", label: "Masks", tone: "catTone8" },
-  { key: "kits", label: "Kits & Combos", tone: "catTone9" },
 ];
 
 function formatINR(amount) {
@@ -162,51 +146,10 @@ export default function HomePage() {
 
       {/* Hero */}
       <main>
-        <section className="featured">
-          <div className="container">
-            <div className="featuredHead">
-              <div className="featuredTitle">
-                <span className="featuredTitleStrong">Featured</span>{" "}
-                <span className="featuredTitleLight">Collection</span>
-              </div>
-              <p className="featuredSub">From viral faves to hidden gems, find your match!</p>
-            </div>
+        <HeroSlider />
+        <CuratedCollection />
 
-            <div className="featuredGrid">
-              {FEATURED.map((f) => (
-                <div key={f.key} className="featuredItem">
-                  <div className={`featuredCard ${f.theme}`}>
-                    <div className="featuredTag">{f.title}</div>
-                    <div className="featuredImage" aria-hidden="true" />
-                    <button className="featuredBtn">Shop now</button>
-                  </div>
-                  <div className="featuredCaption">{f.caption}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="categoryShowcase">
-          <div className="container">
-            <div className="categoryShowcaseHead">
-              <span className="categoryShowcaseTitle">
-                Shop by <span className="categoryShowcaseAccent">Category</span>
-              </span>
-            </div>
-
-            <div className="categoryMarquee">
-              <div className="categoryMarqueeTrack">
-                {[...CATEGORY_SHOWCASE, ...CATEGORY_SHOWCASE].map((c, idx) => (
-                  <div key={`${c.key}-${idx}`} className="categoryShowcaseItem">
-                    <div className={`categoryShowcaseImage ${c.tone}`} aria-hidden="true" />
-                    <div className="categoryShowcaseLabel">{c.label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
+        <ByCategory />
 
         <section className="hero">
           <div className="container heroGrid">
