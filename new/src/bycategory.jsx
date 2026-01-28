@@ -1,3 +1,5 @@
+import banner8 from "./assets/9.png";
+
 const CATEGORIES = [
   "B.b cream",
   "Blender",
@@ -46,27 +48,33 @@ export default function ByCategory() {
   return (
     <section className="byCategory">
       <div className="container">
-        <div className="byCategoryHead">
-          <span className="byCategoryTitle">
-            Shop by <span className="byCategoryAccent">Category</span>
-          </span>
+        <div className="byCategoryStage">
+          <div className="byCategoryHead">
+            <span className="byCategoryTitle">
+              Shop by <span className="byCategoryAccent">Category</span>
+            </span>
+          </div>
+
+          <div className="byCategoryGrid">
+            {rows.map((row, rowIndex) => (
+              <div
+                key={`row-${rowIndex}`}
+                className="byCategorySlider"
+                style={{ "--visible": row.visible }}
+              >
+                {row.items.map((label) => (
+                  <div key={label} className="byCategoryCard">
+                    <div className="byCategoryImage" aria-hidden="true" />
+                    <div className="byCategoryLabel">{label}</div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="byCategoryGrid">
-          {rows.map((row, rowIndex) => (
-            <div
-              key={`row-${rowIndex}`}
-              className="byCategorySlider"
-              style={{ "--visible": row.visible }}
-            >
-              {row.items.map((label) => (
-                <div key={label} className="byCategoryCard">
-                  <div className="byCategoryImage" aria-hidden="true" />
-                  <div className="byCategoryLabel">{label}</div>
-                </div>
-              ))}
-            </div>
-          ))}
+        <div className="byCategoryBanner">
+          <img src={banner8} alt="Featured skincare banner" />
         </div>
       </div>
     </section>
