@@ -801,6 +801,7 @@ a{ color:inherit; text-decoration:none; }
   width: 100%;
   height: 570px;
   object-fit: cover;
+  object-position: center;
   border-radius: 18px;
 }
 
