@@ -1,9 +1,14 @@
+import logo from "./assets/logo.png";
+
 export default function Footer({ supportPhone }) {
   return (
     <footer className="footer">
       <div className="container footerGrid">
         <div>
-          <div className="footerBrand">omwskincare</div>
+          <div className="footerBrandRow">
+            <img className="footerLogo" src={logo} alt="omwskincare logo" />
+            <div className="footerBrand">omwskincare</div>
+          </div>
           <p className="muted">
             Curated skincare & cosmetics across Korean, Japanese and everyday essentials.
           </p>

@@ -7,12 +7,14 @@ import CuratedCollection from "./curatedcollection.jsx";
 import ByCategory from "./bycategory.jsx";
 
 const CATEGORIES = [
-  { key: "korean", title: "Korean Skincare", desc: "Essences, toners, ampoules" },
-  { key: "japanese", title: "Japanese Skincare", desc: "Gentle hydration & SPF" },
-  { key: "sunscreen", title: "Sunscreens", desc: "Daily UV protection" },
-  { key: "serums", title: "Serums", desc: "Brightening, acne, barrier" },
+      { key: "serums", title:    "Serums", desc: "Brightening, acne, barrier" },
+
+      { key: "makeup", title:    "Makeup", desc: "Tint, blush, lips" },
   { key: "cleansers", title: "Cleansers", desc: "Oil, foam & gel" },
-  { key: "makeup", title: "Makeup", desc: "Tint, blush, lips" },
+  { key: "sunscreen", title: "Sunscreens", desc: "Daily UV protection" },
+
+  { key: "korean", title:    "Korean Skincare", desc: "Essences, toners, ampoules" },
+  { key: "japanese", title:  "Japanese Skincare", desc: "Gentle hydration & SPF" },
 ];
 
 const PRODUCTS = [

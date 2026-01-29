@@ -47,11 +47,12 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
       <nav className="catbar" aria-label="Primary categories">
         <div className="container catbarInner">
           {categories.map((c) => (
-            <a key={c.key} className="catLink" href="#">
-              {c.title}
+            <a key={c.key} className="catItem" href="#">
+              <span className="catThumb" aria-hidden="true" />
+              <span className="catLabel">{c.title}</span>
             </a>
           ))}
-          <a className="catLink catLinkOffer" href="#">
+          <a className="catOffer" href="#">
             Offers
           </a>
         </div>
