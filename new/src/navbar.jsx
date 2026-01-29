@@ -1,44 +1,58 @@
+import { useEffect, useState } from "react";
 import logo from "./assets/logo.png";
+import searchIcon from "./assets/search.png";
+import discountIcon from "./assets/sale_16767126.gif";
+import locationIcon from "./assets/location.png";
+import favIcon from "./assets/favourite.png";
+import accountIcon from "./assets/user-account.png";
+import cartIcon from "./assets/shopping-cart.png";
+
+const PLACEHOLDERS = [
+  "Sunscreen",
+  "Serums",
+  "Moisturizer",
+  "Lipstick",
+  "Face Mists",
+  "Exfoliate",
+  "Concealer",
+  "Cleanser",
+  "Blender",
+  "Blush",
+];
 
 export default function Navbar({ categories, query, onQueryChange, cartCount, onToggleCart }) {
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setPlaceholderIndex((i) => (i + 1) % PLACEHOLDERS.length);
+    }, 2200);
+    return () => clearInterval(id);
+  }, []);
+
   return (
     <header className="header">
       <div className="container headerRow">
-        <button className="iconBtn" aria-label="Open menu">
-          {"\u2261"}
-        </button>
+        
 
         <a className="brand" href="#">
           <img className="brandLogo" src={logo} alt="omwskincare logo" />
           <div className="brandText">
-            <span className="brandName">omwskincare</span>
+            <span className="brandName">omw</span>
             <span className="brandTag">skin-first essentials</span>
           </div>
         </a>
 
         <div className="headerActions">
-          <div className="searchWrap">
-            <input
-              className="search"
-              value={query}
-              onChange={onQueryChange}
-              placeholder="Search serums, sunscreen, K-beauty..."
-              aria-label="Search products"
-            />
-            <span className="searchIcon" aria-hidden="true">
-              {"\u{1F50D}"}
-            </span>
-          </div>
-
           <button className="iconBtn" aria-label="Wishlist">
-            {"\u2661"}
+            <img className="iconImg" src={favIcon} alt="" />
           </button>
           <button className="iconBtn" aria-label="Account">
-            {"\u{1F464}"}
+            <img className="iconImg" src={accountIcon} alt="" />
           </button>
 
           <button className="cartBtn" onClick={onToggleCart} aria-label="Cart">
-            {"\u{1F6D2}"}
+            <img className="iconImg" src={cartIcon} alt="" />
             {cartCount > 0 && <span className="badge">{cartCount}</span>}
           </button>
         </div>
@@ -52,15 +66,27 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
               <span className="catLabel">{c.title}</span>
             </a>
           ))}
-          <a className="catOffer" href="#">
-            Offers
-          </a>
+          <div className="catSearch">
+            <span className="catSearchIcon" aria-hidden="true">
+              <img className="catSearchIconImg" src={searchIcon} alt="" />
+            </span>
+            <input
+              className="catSearchInput"
+              value={query}
+              onChange={onQueryChange}
+              placeholder={`Search for ${PLACEHOLDERS[placeholderIndex]}`}
+              aria-label="Search products"
+            />
+          </div>
+          <div className="catOfferWrap">
+            <img className="catOfferOuterIcon" src={locationIcon} alt="" />
+            <a className="catOffer" href="#">
+              <img className="catOfferIcon" src={discountIcon} alt="" />
+              Offers
+            </a>
+          </div>
         </div>
       </nav>
     </header>
   );
 }
-
-
-
-
