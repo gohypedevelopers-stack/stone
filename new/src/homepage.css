@@ -31,7 +31,7 @@ a{ color:inherit; text-decoration:none; }
 .headerRow{ display:flex; align-items:center; justify-content:space-between; gap:14px; padding:6px 0px; }
 .brand{ display:flex; align-items:center; gap:10px; line-height:1.05; margin-right:auto; }
 .brandLogo{ width:60px; height:60px; object-fit:contain; }
-.brandText{ display:flex; flex-direction:column; }
+.brandText{ display:flex; flex-direction:column; justify-content:center; }
 .brandName {
   background: linear-gradient(90deg, #ff4fa3, #ff77c8);
   -webkit-background-clip: text;
@@ -133,6 +133,10 @@ a{ color:inherit; text-decoration:none; }
   background:#fff;
   min-width:340px;
   box-shadow: 0 8px 18px rgba(0,0,0,.06);
+  position:relative;
+  --search-pad:12px;
+  --search-icon:28px;
+  --search-gap:10px;
 }
 .catSearchIcon{
   width:28px;
@@ -158,7 +162,21 @@ a{ color:inherit; text-decoration:none; }
   background:transparent;
   color:var(--text);
 }
-.catSearchInput::placeholder{ color:#f3a7cf; }
+.catSearchHint{
+  position:absolute;
+  left: calc(var(--search-pad) + var(--search-icon) + var(--search-gap));
+  top:50%;
+  transform:translateY(-50%);
+  display:flex;
+  gap:6px;
+  font-size:15px;
+  pointer-events:none;
+  transition:opacity .15s ease;
+}
+.catSearchHintPrefix{ color:#8e8e8e; }
+.catSearchHintValue{ color:#f3a7cf; }
+.catSearchInput:placeholder-shown + .catSearchHint{ opacity:1; }
+.catSearchInput:not(:placeholder-shown) + .catSearchHint{ opacity:0; }
 .catOffer{
   margin-left:0;
   align-self:center;
@@ -739,7 +757,11 @@ a{ color:inherit; text-decoration:none; }
 /* Footer */
 .footer{ border-top:1px solid var(--line); padding:28px 0 18px; }
 .footerGrid{ display:grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap:14px; }
-.footerBrand{ font-weight:900; font-size:18px; }
+.footerBrand{ background: linear-gradient(90deg, #ff4fa3, #ff77c8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+  font-size: 35px; }
 .footerBrandRow{ display:flex; align-items:center; gap:10px; }
 .footerLogo{ width:50px; height:50px; object-fit:contain; }
 .footerTitle{ font-weight:800; margin-bottom:10px; }

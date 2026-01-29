@@ -74,9 +74,13 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
               className="catSearchInput"
               value={query}
               onChange={onQueryChange}
-              placeholder={`Search for ${PLACEHOLDERS[placeholderIndex]}`}
+              placeholder=" "
               aria-label="Search products"
             />
+            <span className="catSearchHint" aria-hidden="true">
+              <span className="catSearchHintPrefix">Search for</span>
+              <span className="catSearchHintValue">{PLACEHOLDERS[placeholderIndex]}</span>
+            </span>
           </div>
           <div className="catOfferWrap">
             <img className="catOfferOuterIcon" src={locationIcon} alt="" />

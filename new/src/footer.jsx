@@ -7,7 +7,7 @@ export default function Footer({ supportPhone }) {
         <div>
           <div className="footerBrandRow">
             <img className="footerLogo" src={logo} alt="omwskincare logo" />
-            <div className="footerBrand">omwskincare</div>
+            <div className="footerBrand">omw</div>
           </div>
           <p className="muted">
             Curated skincare & cosmetics across Korean, Japanese and everyday essentials.
