@@ -5,6 +5,7 @@ import Footer from "./footer.jsx";
 import HeroSlider from "./Hero.jsx";
 import CuratedCollection from "./curatedcollection.jsx";
 import ByCategory from "./bycategory.jsx";
+import ShopByBrand from "./shopbybrand.jsx";
 
 const CATEGORIES = [
       { key: "serums", title:    "New Arrivals", desc: "Brightening, acne, barrier" },
@@ -191,6 +192,8 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        <ShopByBrand />
 
         {/* Offers + Loyalty */}
         <section className="section">

@@ -14,7 +14,7 @@
 }
 
 *{ box-sizing:border-box; }
-html,body{ margin:0; padding:7px; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; color:var(--text); background:var(--bg); }
+html,body{ margin:0; padding:7px; font-family: "Poppins", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; color:var(--text); background:var(--bg); }
 a{ color:inherit; text-decoration:none; }
 
 .container{ width:100%; margin:0; padding:10; }
@@ -487,6 +487,57 @@ a{ color:inherit; text-decoration:none; }
 @keyframes marqueeScroll{
   0%{ transform:translateX(0); }
   100%{ transform:translateX(-50%); }
+}
+
+/* Brands marquee */
+.brandsSection{
+  padding:32px 0 18px;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,.7), transparent 55%),
+    radial-gradient(circle at 80% 30%, rgba(255,255,255,.6), transparent 55%),
+    linear-gradient(180deg, rgba(235,215,255,.55), rgba(255,225,243,.45));
+  border-radius:24px;
+}
+.brandsHead{ text-align:center; }
+.brandsHead h2{ margin:0; font-size:28px; }
+.brandsSub{
+  margin:8px 0 0;
+  color:#7a6b86;
+  font-size:16px;
+  letter-spacing:.2px;
+  font-style:italic;
+}
+
+.brandsRows{
+  margin-top:18px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.brandsRow{
+  display:flex;
+  gap:14px;
+  overflow-x:auto;
+  scroll-snap-type:x mandatory;
+  padding:4px 2px 8px;
+  --card-w: clamp(120px, calc((100% - 6 * 14px) / 7), 180px);
+}
+.brandsRow::-webkit-scrollbar{ display:none; }
+.brandsRow{ scrollbar-width:none; }
+.brandCard{
+  flex:0 0 var(--card-w, 160px);
+  height:140px;
+  border-radius:22px;
+  background:rgba(255,255,255,.65);
+  border:1px solid rgba(255,255,255,.8);
+  box-shadow: 0 10px 22px rgba(0,0,0,.08);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  letter-spacing:.5px;
+  color:#5a4a6a;
+  scroll-snap-align:center;
 }
 .pCard{
   border:1px solid var(--line);
