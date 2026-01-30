@@ -78,7 +78,7 @@ export default function HomePage({ addToCart, query }) {
           <div className="relative overflow-x-auto py-[6px] no-scrollbar" ref={scrollRef}>
             <div className="flex gap-[14px] w-max">
               {[...filteredProducts, ...filteredProducts].map((p, idx) => (
-                <div key={`${p.id}-${idx}`} style={{ width: '320px', flexShrink: 0, padding: '0 10px' }}>
+                <div key={`${p.id}-${idx}`} style={{ width: '320px', flexShrink: 0 }}>
                   <ProductCard
                     product={{ ...p, category: p.tag, inStock: true }}
                     onAddToCart={() => addToCart(p.id)}
