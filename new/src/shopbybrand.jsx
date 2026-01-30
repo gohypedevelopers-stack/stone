@@ -86,22 +86,16 @@ export default function ShopByBrand() {
         <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '50px' }}>
           <InfiniteSlider gap={40} duration={40}>
             {BRANDS.slice(0, 17).map((brand, idx) => (
-              <div key={`r1-${brand.name}-${idx}`} className="brandCard" style={{ width: '340px', height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', borderRadius: '12px', padding: '8px', border: '1px solid #f0f0f0' }}>
-                <img src={brand.logo} alt={brand.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'fill', filter: 'grayscale(100%)', opacity: 0.7, transition: 'all 0.3s ease' }}
-                  onMouseOver={(e) => { e.currentTarget.style.filter = 'grayscale(0%)'; e.currentTarget.style.opacity = '1'; }}
-                  onMouseOut={(e) => { e.currentTarget.style.filter = 'grayscale(100%)'; e.currentTarget.style.opacity = '0.7'; }}
-                />
+              <div key={`r1-${brand.name}-${idx}`} className="brandCard" style={{ width: '340px', height: '180px', padding: '8px' }}>
+                <img src={brand.logo} alt={brand.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'fill' }} />
               </div>
             ))}
           </InfiniteSlider>
 
           <InfiniteSlider gap={40} duration={45} reverse>
             {BRANDS.slice(17).map((brand, idx) => (
-              <div key={`r2-${brand.name}-${idx}`} className="brandCard" style={{ width: '340px', height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', borderRadius: '12px', padding: '8px', border: '1px solid #f0f0f0' }}>
-                <img src={brand.logo} alt={brand.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'fill', filter: 'grayscale(100%)', opacity: 0.7, transition: 'all 0.3s ease' }}
-                  onMouseOver={(e) => { e.currentTarget.style.filter = 'grayscale(0%)'; e.currentTarget.style.opacity = '1'; }}
-                  onMouseOut={(e) => { e.currentTarget.style.filter = 'grayscale(100%)'; e.currentTarget.style.opacity = '0.7'; }}
-                />
+              <div key={`r2-${brand.name}-${idx}`} className="brandCard" style={{ width: '340px', height: '180px', padding: '8px' }}>
+                <img src={brand.logo} alt={brand.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'fill' }} />
               </div>
             ))}
           </InfiniteSlider>

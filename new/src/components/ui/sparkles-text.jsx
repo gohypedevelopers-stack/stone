@@ -36,7 +36,7 @@ const SparklesText = ({
           if (star.lifespan <= 0) {
             return generateStar();
           } else {
-            return { ...star, lifespan: star.lifespan - 50 };
+            return { ...star, lifespan: star.lifespan - 5 };
           }
         }));
     };
@@ -80,7 +80,7 @@ const Sparkle = ({ id, x, y, color, delay, scale }) => {
         scale: [0, scale, 0],
         rotate: [75, 120, 150],
       }}
-      transition={{ duration: 0.8, repeat: Infinity, delay }}
+      transition={{ duration: 20, repeat: Infinity, delay }}
       width="40"
       height="40"
       viewBox="0 0 21 21">

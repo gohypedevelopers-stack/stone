@@ -178,7 +178,6 @@ const styles = `
   appearance: none;
   -webkit-appearance: none;
   border-radius: 18px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
   background: var(--card-bg, #ffffff);
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
   min-height: 148px;
@@ -201,9 +200,7 @@ const styles = `
   outline: 2px solid rgba(0, 0, 0, 0.4);
   outline-offset: 3px;
 }
-.skinConcernCard.selected {
-  border: 2px solid rgba(0, 0, 0, 0.18);
-}
+
 .skinConcernIcon {
   width: 44px;
   height: 44px;
@@ -361,13 +358,7 @@ export default function BySkinConcern() {
               {FEATURED.desc}
               <span className="skinConcernFeaturedArrow">-&gt;</span>
             </div>
-            {selected === FEATURED.key && (
-              <span className="skinConcernCheck" aria-hidden="true">
-                <svg viewBox="0 0 16 16">
-                  <path d="M3 8l3 3 7-7" fill="none" />
-                </svg>
-              </span>
-            )}
+            
           </button>
 
           {/* All Concerns */}
@@ -384,13 +375,7 @@ export default function BySkinConcern() {
               <div className="skinConcernIcon">{ICONS[item.key]}</div>
               <div className="skinConcernLabel">{item.label}</div>
               {item.desc ? <div className="skinConcernDesc">{item.desc}</div> : null}
-              {selected === item.key && (
-                <span className="skinConcernCheck" aria-hidden="true">
-                  <svg viewBox="0 0 16 16">
-                    <path d="M3 8l3 3 7-7" fill="none" />
-                  </svg>
-                </span>
-              )}
+              
             </button>
           ))}
         </div>
