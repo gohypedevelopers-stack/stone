@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SparklesText } from "./components/ui/sparkles-text";
 
 const OFFERS = [
     {
@@ -210,7 +211,11 @@ export default function ByOffer() {
             <style>{styles}</style>
             <div className="container">
                 <div className="offersHeader">
-                    <h2>Deals for You</h2>
+                    <SparklesText
+                        text="Deals for You"
+                        className="text-[28px] leading-tight"
+                        colors={{ first: "#FF4FA3", second: "#a8edea" }}
+                    />
                     <p>Save more with limited-time offers, bundles, and best-value picks.</p>
                 </div>
 

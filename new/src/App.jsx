@@ -4,7 +4,12 @@ import Shop from "./Shop";
 import Navbar from "./navbar";
 import Footer from "./footer";
 import { getAllProducts } from "./data/products";
-import categorySphere from "./assets/category-sphere.png";
+import imgNewArrival from "./assets/newarrival.jpg";
+import imgBestSeller from "./assets/bestsellerproducts.jpg";
+import imgFoundation from "./assets/foundation.jpg";
+import imgMoisturizer from "./assets/Moisturizers.jpg";
+import imgPerfume from "./assets/perfumes.jpg";
+import imgLipstick from "./assets/lipstick.jpg";
 import "./homepage.css";
 
 function formatINR(amount) {
@@ -63,37 +68,37 @@ export default function App() {
       key: "serums",
       title: "New Arrivals",
       desc: "Brightening, acne, barrier",
-      image: categorySphere
+      image: imgNewArrival
     },
     {
       key: "makeup",
       title: "Best Sellers",
       desc: "Tint, blush, lips",
-      image: categorySphere
+      image: imgBestSeller
     },
     {
       key: "cleansers",
       title: "Foundation",
       desc: "Oil, foam & gel",
-      image: categorySphere
+      image: imgFoundation
     },
     {
       key: "sunscreen",
       title: "Moisturizers",
       desc: "Daily UV protection",
-      image: categorySphere
+      image: imgMoisturizer
     },
     {
       key: "korean",
       title: "Perfume",
       desc: "Essences, toners, ampoules",
-      image: categorySphere
+      image: imgPerfume
     },
     {
       key: "japanese",
       title: "Lipstick",
       desc: "Gentle hydration & SPF",
-      image: categorySphere
+      image: imgLipstick
     },
   ];
 

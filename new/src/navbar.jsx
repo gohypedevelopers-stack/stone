@@ -67,7 +67,7 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
         <div className="container catbarInner">
           {categories.map((c) => (
             <a key={c.key} className="catItem" href="#">
-              <span className="catThumb" aria-hidden="true" />
+              <img className="catThumb" src={c.image} alt="" style={{ objectFit: "cover" }} />
               <span className="catLabel">{c.title}</span>
             </a>
           ))}
