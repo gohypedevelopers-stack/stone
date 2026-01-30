@@ -20,7 +20,7 @@ const PLACEHOLDERS = [
   "Blush",
 ];
 
-export default function Navbar({ categories, query, onQueryChange, cartCount, onToggleCart }) {
+export default function Navbar({ categories, query, onQueryChange, cartCount, onToggleCart, onNavigate }) {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
 
   useEffect(() => {
@@ -33,9 +33,9 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
   return (
     <header className="header">
       <div className="container headerRow">
-        
 
-        <a className="brand" href="#">
+
+        <a className="brand" href="#" onClick={(e) => { e.preventDefault(); onNavigate('home'); }}>
           <img className="brandLogo" src={logo} alt="omwskincare logo" />
           <div className="brandText">
             <span className="brandName">omw</span>
@@ -44,6 +44,11 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
         </a>
 
         <div className="headerActions">
+
+          <a href="#" className="navLink" onClick={(e) => { e.preventDefault(); onNavigate('shop'); }} style={{ marginRight: '15px', fontWeight: 'bold' }}>
+            Shop
+          </a>
+
           <button className="iconBtn" aria-label="Wishlist">
             <img className="iconImg" src={favIcon} alt="" />
           </button>
