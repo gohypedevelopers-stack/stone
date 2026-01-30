@@ -1,3 +1,5 @@
+import { InfiniteSlider } from "./components/ui/infinite-slider.jsx";
+
 const BRANDS = [
   "COSRX",
   "Beauty of Joseon",
@@ -12,10 +14,6 @@ const BRANDS = [
 ];
 
 export default function ShopByBrand() {
-  const makeRow = (count) =>
-    Array.from({ length: count }, (_, i) => BRANDS[i % BRANDS.length]);
-  const firstRow = makeRow(12);
-  const secondRow = makeRow(12);
   return (
     <section className="brandsSection">
       <div className="container">
@@ -24,21 +22,22 @@ export default function ShopByBrand() {
           <p className="brandsSub">Explore best-loved brands and new beauty breakthroughs</p>
         </div>
 
-        <div className="brandsRows">
-          <div className="brandsRow">
-            {firstRow.map((brand, idx) => (
-              <div key={`r1-${brand}-${idx}`} className="brandCard">
+        <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <InfiniteSlider gap={16} duration={30}>
+            {BRANDS.map((brand, idx) => (
+              <div key={`r1-${brand}-${idx}`} className="brandCard" style={{ width: '160px', flex: '0 0 auto' }}>
                 {brand}
               </div>
             ))}
-          </div>
-          <div className="brandsRow">
-            {secondRow.map((brand, idx) => (
-              <div key={`r2-${brand}-${idx}`} className="brandCard">
+          </InfiniteSlider>
+
+          <InfiniteSlider gap={16} duration={35} reverse>
+            {BRANDS.map((brand, idx) => (
+              <div key={`r2-${brand}-${idx}`} className="brandCard" style={{ width: '160px', flex: '0 0 auto' }}>
                 {brand}
               </div>
             ))}
-          </div>
+          </InfiniteSlider>
         </div>
       </div>
     </section>
