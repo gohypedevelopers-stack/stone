@@ -1,4 +1,5 @@
 import logo from "./assets/logo.png";
+import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa";
 
 export default function Footer({ supportPhone }) {
   return (
@@ -10,8 +11,19 @@ export default function Footer({ supportPhone }) {
             <div className="footerBrand">omw</div>
           </div>
           <p className="muted">
-            Curated skincare & cosmetics across Korean, Japanese and everyday essentials.
+            Curated skincare & cosmetics across Korean,<br /> Japanese and everyday essentials.
           </p>
+          <div className="socialRow">
+            <a href="#" className="socialIcon" aria-label="Facebook">
+              <FaFacebookF />
+            </a>
+            <a href="#" className="socialIcon" aria-label="Instagram">
+              <FaInstagram />
+            </a>
+            <a href="#" className="socialIcon" aria-label="TikTok">
+              <FaTiktok />
+            </a>
+          </div>
         </div>
 
         <div>
@@ -43,6 +55,6 @@ export default function Footer({ supportPhone }) {
         <span className="muted">Â© {new Date().getFullYear()} omwskincare</span>
         <span className="muted">Made for skincare lovers</span>
       </div>
-    </footer>
+    </footer >
   );
 }
