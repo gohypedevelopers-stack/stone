@@ -6,16 +6,19 @@ import HeroSlider from "./Hero.jsx";
 import CuratedCollection from "./curatedcollection.jsx";
 import ByCategory from "./bycategory.jsx";
 import ShopByBrand from "./shopbybrand.jsx";
+import BySkinConcern from "./byskinconcern.jsx";
+import ByOffer from "./byoffer.jsx";
+import SkinQuiz from "./skinquiz.jsx";
 
 const CATEGORIES = [
-      { key: "serums", title:    "New Arrivals", desc: "Brightening, acne, barrier" },
+  { key: "serums", title: "New Arrivals", desc: "Brightening, acne, barrier" },
 
-      { key: "makeup", title:    "Best Sellers", desc: "Tint, blush, lips" },
+  { key: "makeup", title: "Best Sellers", desc: "Tint, blush, lips" },
   { key: "cleansers", title: "Foundation", desc: "Oil, foam & gel" },
   { key: "sunscreen", title: "Moisturizers", desc: "Daily UV protection" },
 
-  { key: "korean", title:    "Perfume", desc: "Essences, toners, ampoules" },
-  { key: "japanese", title:  "Lipstick", desc: "Gentle hydration & SPF" },
+  { key: "korean", title: "Perfume", desc: "Essences, toners, ampoules" },
+  { key: "japanese", title: "Lipstick", desc: "Gentle hydration & SPF" },
 ];
 
 const PRODUCTS = [
@@ -88,7 +91,7 @@ export default function HomePage() {
         cartCount={cartCount}
         onToggleCart={() => setCartOpen((v) => !v)}
       />
-{/* Mini cart drawer */}
+      {/* Mini cart drawer */}
       <aside className={`cartDrawer ${cartOpen ? "open" : ""}`} aria-label="Shopping cart">
         <div className="cartHeader">
           <div>
@@ -154,7 +157,7 @@ export default function HomePage() {
 
         <ByCategory />
 
-        
+
 
         {/* Featured products */}
         <section id="shop" className="section">
@@ -194,6 +197,8 @@ export default function HomePage() {
         </section>
 
         <ShopByBrand />
+        <BySkinConcern />
+        <ByOffer />
 
         {/* Offers + Loyalty */}
         <section className="section">
@@ -216,33 +221,10 @@ export default function HomePage() {
         </section>
 
         {/* Skin guidance */}
-        <section id="quiz" className="section">
-          <div className="container consult">
-            <div>
-              <h2>Need help choosing?</h2>
-              <p className="muted">
-                Tell us your skin type and concerns. Get product guidance and routine suggestions in minutes.
-              </p>
-              <div className="consultBtns">
-                <button className="btn btnPrimary" onClick={() => alert("Skin quiz flow goes here")}>
-                  Start skin quiz
-                </button>
-                <a className="btn btnGhost" href={`tel:${supportPhone}`}>
-                  Talk to support
-                </a>
-              </div>
-            </div>
-            <div className="consultCard" aria-hidden="true">
-              <div className="consultLine" />
-              <div className="consultLine" />
-              <div className="consultLine" />
-              <div className="consultPill">Acne • Pigmentation • Dryness • Barrier</div>
-            </div>
-          </div>
-        </section>
+        <SkinQuiz />
       </main>
       <Footer supportPhone={supportPhone} />
-</div>
+    </div>
   );
 }
 

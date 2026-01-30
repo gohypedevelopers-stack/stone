@@ -527,7 +527,7 @@ a{ color:inherit; text-decoration:none; }
 .brandCard{
   flex:0 0 var(--card-w, 160px);
   height:140px;
-  border-radius:22px;
+  border-radius:10px;
   background:rgba(255,255,255,.65);
   border:1px solid rgba(255,255,255,.8);
   box-shadow: 0 10px 22px rgba(0,0,0,.08);
