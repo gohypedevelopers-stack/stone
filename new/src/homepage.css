@@ -283,7 +283,7 @@ a {
   top: 50%;
   transform: translateY(-50%);
   display: flex;
-  gap: 6px;
+  gap: 11px;
   font-size: 15px;
   pointer-events: none;
   transition: opacity .15s ease;
@@ -291,10 +291,12 @@ a {
 
 .catSearchHintPrefix {
   color: #8e8e8e;
+  font-weight: 400;
 }
 
 .catSearchHintValue {
-  color: #f3a7cf;
+  color: #d1408e;
+  font-weight: 700;
 }
 
 .catSearchInput:placeholder-shown+.catSearchHint {
@@ -927,7 +929,7 @@ a {
 
 /* Brands marquee */
 .brandsSection {
-  padding: 32px 0 18px;
+  padding: 50px 0 60px;
   background:
     radial-gradient(circle at 20% 20%, rgba(255, 255, 255, .7), transparent 55%),
     radial-gradient(circle at 80% 30%, rgba(255, 255, 255, .6), transparent 55%),
@@ -942,6 +944,7 @@ a {
 .brandsHead h2 {
   margin: 0;
   font-size: 28px;
+  font-weight: 700;
 }
 
 .brandsSub {
@@ -961,7 +964,7 @@ a {
 
 .brandsRow {
   display: flex;
-  gap: 14px;
+  gap: 80px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   padding: 4px 2px 8px;

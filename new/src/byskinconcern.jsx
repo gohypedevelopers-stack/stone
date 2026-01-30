@@ -154,6 +154,7 @@ const styles = `
 .skinConcernHead h2 {
   margin: 0 0 8px;
   font-size: 28px;
+  font-weight: 700; 
   letter-spacing: -0.4px;
 }
 .skinConcernHead p {

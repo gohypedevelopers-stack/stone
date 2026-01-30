@@ -213,8 +213,8 @@ export default function ByOffer() {
                 <div className="offersHeader">
                     <SparklesText
                         text="Deals for You"
-                        className="text-[28px] leading-tight"
-                        colors={{ first: "#FF4FA3", second: "#a8edea" }}
+                        className="text-[40px] leading-tight"
+                        colors={{ first: "#FF4FA3", second: "#efd31eff", third: "#184ac0ff", fourth: "#ff4f4fff" }}
                     />
                     <p>Save more with limited-time offers, bundles, and best-value picks.</p>
                 </div>

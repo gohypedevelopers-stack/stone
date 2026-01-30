@@ -91,7 +91,7 @@ export default function HomePage({ addToCart, query }) {
       </section>
 
       <ShopByBrand />
-// ... (rest is same)
+
       <BySkinConcern />
       <ByOffer />
 
