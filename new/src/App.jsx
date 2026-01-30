@@ -4,6 +4,7 @@ import Shop from "./Shop";
 import Navbar from "./navbar";
 import Footer from "./footer";
 import { getAllProducts } from "./data/products";
+import categorySphere from "./assets/category-sphere.png";
 import "./homepage.css";
 
 function formatINR(amount) {
@@ -56,42 +57,43 @@ export default function App() {
   }
 
   // Categories Data
+  // Categories Data
   const CATEGORIES = [
     {
       key: "serums",
       title: "New Arrivals",
       desc: "Brightening, acne, barrier",
-      image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=200&q=80"
+      image: categorySphere
     },
     {
       key: "makeup",
       title: "Best Sellers",
       desc: "Tint, blush, lips",
-      image: "https://images.unsplash.com/photo-1596462502278-27bfdd403348?auto=format&fit=crop&w=200&q=80"
+      image: categorySphere
     },
     {
       key: "cleansers",
       title: "Foundation",
       desc: "Oil, foam & gel",
-      image: "https://images.unsplash.com/photo-1631729353982-596944061204?auto=format&fit=crop&w=200&q=80"
+      image: categorySphere
     },
     {
       key: "sunscreen",
       title: "Moisturizers",
       desc: "Daily UV protection",
-      image: "https://images.unsplash.com/photo-1629198688000-71f23e745b6e?auto=format&fit=crop&w=200&q=80"
+      image: categorySphere
     },
     {
       key: "korean",
       title: "Perfume",
       desc: "Essences, toners, ampoules",
-      image: "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=200&q=80"
+      image: categorySphere
     },
     {
       key: "japanese",
       title: "Lipstick",
       desc: "Gentle hydration & SPF",
-      image: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=200&q=80"
+      image: categorySphere
     },
   ];
 

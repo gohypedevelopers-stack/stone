@@ -1,4 +1,5 @@
 import banner8 from "./assets/9.png";
+import categorySphere from "./assets/category-sphere.png";
 
 const CATEGORIES = [
   "B.b cream",
@@ -64,7 +65,7 @@ export default function ByCategory() {
               >
                 {row.items.map((label) => (
                   <div key={label} className="byCategoryCard">
-                    <div className="byCategoryImage" aria-hidden="true" />
+                    <img className="byCategoryImage" src={categorySphere} alt="" style={{ objectFit: 'contain' }} />
                     <div className="byCategoryLabel">{label}</div>
                   </div>
                 ))}

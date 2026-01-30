@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import "./homepage.css";
 import HeroSlider from "./Hero.jsx";
 import CuratedCollection from "./curatedcollection.jsx";
@@ -7,6 +7,7 @@ import ShopByBrand from "./shopbybrand.jsx";
 import BySkinConcern from "./byskinconcern.jsx";
 import ByOffer from "./byoffer.jsx";
 import SkinQuiz from "./skinquiz.jsx";
+import ProductCard from "./components/card.jsx";
 import { getAllProducts } from "./data/products";
 
 function formatINR(amount) {
@@ -15,12 +16,50 @@ function formatINR(amount) {
 
 export default function HomePage({ addToCart, query }) {
   const PRODUCTS = getAllProducts();
+  const scrollRef = useRef(null);
 
   const filteredProducts = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return PRODUCTS;
     return PRODUCTS.filter((p) => p.name.toLowerCase().includes(q) || p.tag.toLowerCase().includes(q));
   }, [query, PRODUCTS]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    let animationId;
+    let isPaused = false;
+
+    const scroll = () => {
+      if (!isPaused) {
+        if (el.scrollLeft >= el.scrollWidth / 2) {
+          el.scrollLeft = 0;
+        } else {
+          el.scrollLeft += 1;
+        }
+      }
+      animationId = requestAnimationFrame(scroll);
+    };
+
+    animationId = requestAnimationFrame(scroll);
+
+    const pause = () => { isPaused = true; };
+    const resume = () => { isPaused = false; };
+
+    el.addEventListener("mouseenter", pause);
+    el.addEventListener("mouseleave", resume);
+    el.addEventListener("touchstart", pause);
+    el.addEventListener("touchend", resume);
+
+    return () => {
+      cancelAnimationFrame(animationId);
+      el.removeEventListener("mouseenter", pause);
+      el.removeEventListener("mouseleave", resume);
+      el.removeEventListener("touchstart", pause);
+      el.removeEventListener("touchend", resume);
+    };
+  }, [filteredProducts]);
 
   return (
     <main>
@@ -36,28 +75,14 @@ export default function HomePage({ addToCart, query }) {
             <h2>Best sellers</h2>
           </div>
 
-          <div className="marquee">
+          <div className="marquee" ref={scrollRef}>
             <div className="marqueeTrack">
               {[...filteredProducts, ...filteredProducts].map((p, idx) => (
-                <div key={`${p.id}-${idx}`} className="bsCard">
-                  <div className="bsImage" aria-hidden="true" />
-                  <div className="bsBody">
-                    <span className="bsPill">{p.tag}</span>
-                    <div className="bsName">{p.name}</div>
-                    <div className="bsMeta">
-                      <span className="bsPrice">{formatINR(p.price)}</span>
-                      <span className="bsRating">★ {p.rating}</span>
-                    </div>
-                    <span className="bsSize">{p.origin}</span>
-                  </div>
-                  <div className="bsActions">
-                    <button className="bsWish" aria-label="Wishlist">
-                      {"\u2661"}
-                    </button>
-                    <button className="bsAdd" onClick={() => addToCart(p.id)}>
-                      Add to cart
-                    </button>
-                  </div>
+                <div key={`${p.id}-${idx}`} style={{ width: '320px', flexShrink: 0, padding: '0 10px' }}>
+                  <ProductCard
+                    product={{ ...p, category: p.tag, inStock: true }}
+                    onAddToCart={() => addToCart(p.id)}
+                  />
                 </div>
               ))}
             </div>
@@ -66,6 +91,7 @@ export default function HomePage({ addToCart, query }) {
       </section>
 
       <ShopByBrand />
+// ... (rest is same)
       <BySkinConcern />
       <ByOffer />
 

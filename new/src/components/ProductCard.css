@@ -1,0 +1,143 @@
+.modernCard {
+    background: #fff;
+    border-radius: 24px;
+    /* Using large rounded corners */
+    padding: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+    border: 1px solid #f0f0f0;
+}
+
+.modernCard:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(255, 79, 163, 0.15);
+}
+
+.cardImageFrame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 20px;
+    overflow: hidden;
+    background: #f9f9f9;
+}
+
+.cardGradientBackground {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #fceaff 0%, #e8f5ff 100%);
+    /* Pastel gradient matching image */
+}
+
+.cardContent {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cardBadges {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.badgePill {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 99px;
+    text-transform: capitalize;
+}
+
+.badgePink {
+    background: #ffcce6;
+    /* Light pink bg */
+    color: #c41e3a;
+    /* Darker pink/red text? or black per image. Image had pink background, likely black text. */
+    color: #000;
+}
+
+.cardTitle {
+    font-size: 16px;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.cardMetaRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cardPrice {
+    color: #ff4fa3;
+    /* Hot pink price */
+    font-size: 18px;
+    font-weight: 900;
+}
+
+.cardRating {
+    font-size: 13px;
+    font-weight: 600;
+    color: #4a4a4a;
+}
+
+.originPill {
+    align-self: flex-start;
+    background: #1a1a1a;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 99px;
+}
+
+.cardActions {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.wishlistBtn {
+    width: 44px;
+    height: 44px;
+    border: 1px solid #ff4fa3;
+    border-radius: 14px;
+    background: transparent;
+    color: #ff4fa3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.wishlistBtn:hover {
+    background: #fff0f7;
+}
+
+.addToCartBtn {
+    flex: 1;
+    height: 44px;
+    border: none;
+    background: #ff4fa3;
+    /* Hot pink */
+    color: #fff;
+    font-size: 14px;
+    font-weight: 800;
+    border-radius: 14px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: background 0.2s;
+}
+
+.addToCartBtn:hover {
+    background: #e63e8f;
+}

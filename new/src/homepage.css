@@ -786,19 +786,26 @@ a {
 
 .marquee {
   position: relative;
-  overflow: hidden;
+  overflow-x: auto;
   padding: 6px 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.marquee::-webkit-scrollbar {
+  display: none;
 }
 
 .marqueeTrack {
   display: flex;
   gap: 14px;
   width: max-content;
-  animation: marqueeScroll 28s linear infinite;
+  /* animation removed for JS control */
 }
 
+/* Hover state handled by JS or simple pause if we used CSS but we are switching content */
 .marqueeTrack:hover {
-  animation-play-state: paused;
+  /* No op */
 }
 
 .pCardMarquee {
