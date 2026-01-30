@@ -137,183 +137,6 @@ const ICONS = {
   ),
 };
 
-const styles = `
-.skinConcernSection {
-  padding: 56px 0;
-}
-.skinConcernInner {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-}
-.skinConcernHead {
-  text-align: center;
-  max-width: 640px;
-  margin: 0 auto;
-}
-.skinConcernHead h2 {
-  margin: 0 0 8px;
-  font-size: 28px;
-  font-weight: 700; 
-  letter-spacing: -0.4px;
-}
-.skinConcernHead p {
-  margin: 0;
-  color: #6f6f6f;
-  font-size: 15px;
-}
-.skinConcernScroller {
-  display: grid;
-  gap: 16px;
-}
-.skinConcernScroller {
-  scrollbar-width: none;
-}
-.skinConcernScroller::-webkit-scrollbar {
-  display: none;
-}
-.skinConcernCard {
-  position: relative;
-  cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
-  border-radius: 18px;
-  background: var(--card-bg, #ffffff);
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
-  min-height: 148px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: 8px;
-  font-family: inherit;
-  color: inherit;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-}
-.skinConcernCard:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.12), 0 0 20px rgba(255, 255, 255, 0.9);
-}
-.skinConcernCard:focus-visible {
-  outline: 2px solid rgba(0, 0, 0, 0.4);
-  outline-offset: 3px;
-}
-
-.skinConcernIcon {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  display: grid;
-  place-items: center;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  transition: transform 0.18s ease;
-}
-.skinConcernIcon svg {
-  width: 26px;
-  height: 26px;
-  fill: none;
-  stroke: #1b1b1b;
-  stroke-width: 1.6;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.skinConcernCard:hover .skinConcernIcon {
-  transform: scale(1.05);
-}
-.skinConcernLabel {
-  font-weight: 800;
-  font-size: 14px;
-}
-.skinConcernDesc {
-  font-size: 12px;
-  color: #6f6f6f;
-}
-.skinConcernCheck {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 22px;
-  height: 22px;
-  border-radius: 999px;
-  background: #0f172a;
-  color: #ffffff;
-  display: grid;
-  place-items: center;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
-}
-.skinConcernCheck svg {
-  width: 12px;
-  height: 12px;
-  stroke: #ffffff;
-  stroke-width: 2.2;
-}
-.skinConcernCard.featured {
-  min-height: 196px;
-  padding: 18px;
-  gap: 10px;
-  grid-column: span 1;
-  grid-row: span 1;
-}
-.skinConcernFeaturedTag {
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  font-weight: 700;
-  color: #1b1b1b;
-}
-.skinConcernFeaturedTitle {
-  font-size: 18px;
-  font-weight: 900;
-  line-height: 1.2;
-}
-.skinConcernFeaturedCta {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: #1b1b1b;
-}
-.skinConcernFeaturedArrow {
-  display: inline-block;
-  transform: translateY(-1px);
-}
-
-@media (min-width: 980px) {
-  .skinConcernScroller {
-    grid-template-columns: repeat(5, minmax(160px, 1fr));
-  }
-  .skinConcernCard.featured {
-    grid-column: span 2;
-    grid-row: span 2;
-  }
-}
-
-@media (max-width: 980px) {
-  .skinConcernScroller {
-    grid-auto-flow: column;
-    grid-template-rows: repeat(2, minmax(148px, 1fr));
-    grid-auto-columns: 180px;
-    overflow-x: auto;
-    padding-bottom: 6px;
-    scroll-snap-type: x mandatory;
-  }
-  .skinConcernCard {
-    scroll-snap-align: start;
-  }
-  .skinConcernCard.featured {
-    min-height: 168px;
-    grid-column: auto;
-    grid-row: span 2;
-  }
-}
-`;
-
 export default function BySkinConcern() {
   const [selected, setSelected] = useState("");
 
@@ -333,32 +156,31 @@ export default function BySkinConcern() {
   }
 
   return (
-    <section className="skinConcernSection" aria-labelledby="skin-concern-title">
-      <style>{styles}</style>
-      <div className="container skinConcernInner">
-        <header className="skinConcernHead">
-          <h2 id="skin-concern-title">Shop by Skin Concern</h2>
-          <p>Find products tailored to your skin goals—fast.</p>
+    <section className="py-[56px]" aria-labelledby="skin-concern-title">
+      <div className="w-full px-0 sm:px-[10px] flex flex-col gap-[22px]">
+        <header className="text-center max-w-[640px] mx-auto">
+          <h2 id="skin-concern-title" className="m-[0_0_8px] text-[28px] font-[700] tracking-[-0.4px]">Shop by Skin Concern</h2>
+          <p className="m-0 text-muted-custom text-[15px]">Find products tailored to your skin goals—fast.</p>
         </header>
 
-        <div className="skinConcernScroller" role="list">
+        <div className="grid gap-[16px] no-scrollbar grid-flow-col grid-rows-[repeat(2,minmax(148px,1fr))] auto-cols-[180px] overflow-x-auto pb-[6px] snap-x snap-mandatory lg:grid-flow-row lg:grid-cols-[repeat(5,minmax(160px,1fr))] lg:grid-rows-none lg:overflow-visible lg:pb-0 lg:auto-cols-auto" role="list">
           {/* Featured Card */}
           <button
             type="button"
             role="listitem"
-            className={`skinConcernCard featured ${selected === FEATURED.key ? "selected" : ""}`}
-            style={{ "--card-bg": FEATURED.gradient }}
+            className="relative cursor-pointer appearance-none rounded-[18px] shadow-[0_10px_22px_rgba(0,0,0,0.08)] flex flex-col items-center justify-center text-center gap-[10px] text-inherit transition-all duration-180 ease-out hover:-translate-y-[4px] hover:shadow-[0_16px_30px_rgba(0,0,0,0.12),0_0_20px_rgba(255,255,255,0.9)] focus-visible:outline-2 focus-visible:outline-black/40 focus-visible:outline-offset-3 font-inherit min-h-[168px] lg:col-span-2 lg:row-span-2 lg:min-h-[196px] p-[18px] snap-start group"
+            style={{ background: FEATURED.gradient }}
             onClick={() => applyFilter(FEATURED.key)}
             aria-pressed={selected === FEATURED.key}
           >
-            <span className="skinConcernFeaturedTag">Featured</span>
-            <div className="skinConcernIcon">{ICONS.acne}</div>
-            <div className="skinConcernFeaturedTitle">{FEATURED.label}</div>
-            <div className="skinConcernFeaturedCta">
+            <span className="text-[11px] tracking-[1px] uppercase font-[700] text-[#1b1b1b]">Featured</span>
+            <div className="w-[44px] h-[44px] rounded-[14px] grid place-items-center bg-white/70 border border-black/5 transition-transform duration-180 ease-out group-hover:scale-105 [&>svg]:w-[26px] [&>svg]:h-[26px] [&>svg]:fill-none [&>svg]:stroke-[#1b1b1b] [&>svg]:stroke-[1.6] [&>svg]:stroke-linecap-round [&>svg]:stroke-linejoin-round">{ICONS.acne}</div>
+            <div className="text-[18px] font-[900] leading-[1.2]">{FEATURED.label}</div>
+            <div className="inline-flex items-center gap-[6px] text-[12px] font-[700] uppercase tracking-[0.6px] text-[#1b1b1b]">
               {FEATURED.desc}
-              <span className="skinConcernFeaturedArrow">-&gt;</span>
+              <span className="inline-block transform -translate-y-[1px]">-&gt;</span>
             </div>
-            
+
           </button>
 
           {/* All Concerns */}
@@ -367,15 +189,15 @@ export default function BySkinConcern() {
               key={item.key}
               type="button"
               role="listitem"
-              className={`skinConcernCard ${selected === item.key ? "selected" : ""}`}
-              style={{ "--card-bg": item.gradient }}
+              className="relative cursor-pointer appearance-none rounded-[18px] shadow-[0_10px_22px_rgba(0,0,0,0.08)] flex flex-col items-center justify-center text-center gap-[8px] text-inherit transition-all duration-180 ease-out hover:-translate-y-[4px] hover:shadow-[0_16px_30px_rgba(0,0,0,0.12),0_0_20px_rgba(255,255,255,0.9)] focus-visible:outline-2 focus-visible:outline-black/40 focus-visible:outline-offset-3 font-inherit min-h-[148px] p-[16px] snap-start group"
+              style={{ background: item.gradient }}
               onClick={() => applyFilter(item.key)}
               aria-pressed={selected === item.key}
             >
-              <div className="skinConcernIcon">{ICONS[item.key]}</div>
-              <div className="skinConcernLabel">{item.label}</div>
-              {item.desc ? <div className="skinConcernDesc">{item.desc}</div> : null}
-              
+              <div className="w-[44px] h-[44px] rounded-[14px] grid place-items-center bg-white/70 border border-black/5 transition-transform duration-180 ease-out group-hover:scale-105 [&>svg]:w-[26px] [&>svg]:h-[26px] [&>svg]:fill-none [&>svg]:stroke-[#1b1b1b] [&>svg]:stroke-[1.6] [&>svg]:stroke-linecap-round [&>svg]:stroke-linejoin-round">{ICONS[item.key]}</div>
+              <div className="font-[800] text-[14px]">{item.label}</div>
+              {item.desc ? <div className="text-[12px] text-[#6f6f6f]">{item.desc}</div> : null}
+
             </button>
           ))}
         </div>

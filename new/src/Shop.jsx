@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { getAllProducts } from "./data/products";
-import "./homepage.css";
+import ProductCard from "./components/card.jsx";
 
 function formatINR(amount) {
     return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount);
@@ -37,18 +37,19 @@ export default function Shop({ addToCart }) {
     }
 
     return (
-        <div className="container shopPage">
+        <div className="w-full px-0 sm:px-[10px] py-[32px] flex flex-col md:flex-row gap-[32px] max-w-[1320px] mx-auto min-h-[80vh]">
             {/* Sidebar */}
-            <aside className="filterSidebar">
-                <div className="filterSection">
-                    <h3>Origin</h3>
-                    <div className="filterOptions">
+            <aside className="w-full md:w-[260px] flex-shrink-0 flex flex-col gap-[32px]">
+                <div className="flex flex-col gap-[16px]">
+                    <h3 className="text-[18px] font-[800] m-0">Origin</h3>
+                    <div className="flex flex-col gap-[10px]">
                         {origins.map(origin => (
-                            <label key={origin} className="checkboxLabel">
+                            <label key={origin} className="flex items-center gap-[10px] cursor-pointer text-[14px] text-[#1b1b1b] font-[500] hover:text-[#000]">
                                 <input
                                     type="checkbox"
                                     checked={selectedOrigins.includes(origin)}
                                     onChange={() => toggleOrigin(origin)}
+                                    className="w-[18px] h-[18px] accent-black rounded-[4px] border border-black/20"
                                 />
                                 {origin}
                             </label>
@@ -56,9 +57,9 @@ export default function Shop({ addToCart }) {
                     </div>
                 </div>
 
-                <div className="filterSection">
-                    <h3>Price Range</h3>
-                    <div className="priceInputs">
+                <div className="flex flex-col gap-[16px]">
+                    <h3 className="text-[18px] font-[800] m-0">Price Range</h3>
+                    <div className="flex justify-between text-[14px] font-[600] text-muted-custom">
                         <span>{formatINR(priceRange[0])}</span>
                         <span>-</span>
                         <span>{formatINR(priceRange[1])}</span>
@@ -70,42 +71,36 @@ export default function Shop({ addToCart }) {
                         step="100"
                         value={priceRange[1]}
                         onChange={(e) => setPriceRange([0, Number(e.target.value)])}
-                        className="priceSlider"
+                        className="w-full h-[4px] bg-black/10 rounded-[99px] appearance-none cursor-pointer accent-black"
                     />
                 </div>
             </aside>
 
             {/* Product Grid */}
-            <main className="shopMain">
-                <div className="shopHeader">
-                    <h2>Shop All ({filteredProducts.length})</h2>
+            <main className="flex-1">
+                <div className="mb-[24px]">
+                    <h2 className="text-[24px] font-[800] m-0">Shop All ({filteredProducts.length})</h2>
                 </div>
 
-                <div className="shopGrid">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[20px]">
                     {filteredProducts.map(p => (
-                        <div key={p.id} className="bsCard">
-                            <div className="bsImage" aria-hidden="true" />
-                            <div className="bsBody">
-                                <span className="bsPill">{p.tag}</span>
-                                <div className="bsName">{p.name}</div>
-                                <div className="bsMeta">
-                                    <span className="bsPrice">{formatINR(p.price)}</span>
-                                    <span className="bsRating">★ {p.rating}</span>
-                                </div>
-                                <span className="bsSize">{p.origin}</span>
-                            </div>
-                            <div className="bsActions">
-                                <button className="bsWish" aria-label="Wishlist">{"\u2661"}</button>
-                                <button className="bsAdd" onClick={() => addToCart(p.id)}>Add to cart</button>
-                            </div>
-                        </div>
+                        <ProductCard
+                            key={p.id}
+                            product={{ ...p, category: p.tag, inStock: true }}
+                            onAddToCart={() => addToCart(p.id)}
+                        />
                     ))}
                 </div>
 
                 {filteredProducts.length === 0 && (
-                    <div className="noResults">
-                        <p>No products match your filters.</p>
-                        <button className="btn btnGhost" onClick={() => { setSelectedOrigins([]); setPriceRange([0, 2000]) }}>Clear Filters</button>
+                    <div className="py-[64px] text-center flex flex-col items-center gap-[16px]">
+                        <p className="text-[16px] text-muted-custom m-0">No products match your filters.</p>
+                        <button
+                            className="bg-transparent text-[#1b1b1b] border border-black/10 px-[24px] py-[10px] rounded-[99px] font-[700] text-[14px] uppercase tracking-[0.5px] cursor-pointer transition-all hover:bg-black hover:text-white"
+                            onClick={() => { setSelectedOrigins([]); setPriceRange([0, 2000]) }}
+                        >
+                            Clear Filters
+                        </button>
                     </div>
                 )}
             </main>

@@ -42,6 +42,21 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Custom Theme Utilities */
+  --color-bg-custom: var(--bg-custom);
+  --color-text-custom: var(--text-custom);
+  --color-muted-custom: var(--muted-custom);
+  --color-line-custom: var(--line-custom);
+
+  --color-brand1: var(--brand1);
+  --color-brand2: var(--brand2);
+  --color-brand3: var(--brand3);
+
+  --radius-custom: var(--radius-custom);
+
+  --shadow-custom: var(--shadow-custom);
+  --shadow-custom2: var(--shadow2-custom);
 }
 
 :root {
@@ -76,7 +91,21 @@
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-ring: oklch(0.556 0 0);
+
+  /* Project Custom Variables */
+  --bg-custom: #ffffff;
+  --text-custom: #151515;
+  --muted-custom: #6f6f6f;
+  --line-custom: #ececec;
+
+  --brand1: #6f5cff;
+  --brand2: #ff5db1;
+  --brand3: #ff8a2a;
+
+  --radius-custom: 18px;
+  --shadow-custom: 0 10px 30px rgba(0, 0, 0, .08);
+  --shadow2-custom: 0 14px 40px rgba(0, 0, 0, .10);
 }
 
 .dark {
@@ -111,13 +140,99 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* Project Custom Variables (Dark Mode placeholders - reusing light for now to match strict requirements) */
+  --bg-custom: #151515;
+  --text-custom: #ffffff;
+  --muted-custom: #a0a0a0;
+  --line-custom: #2a2a2a;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Custom Keyframes for Hero Slider - Migrated from homepage.css */
+@keyframes heroSlide {
+  0% {
+    transform: translateX(0);
+  }
+
+  30% {
+    transform: translateX(0);
+  }
+
+  35% {
+    transform: translateX(-33.3333%);
+  }
+
+  65% {
+    transform: translateX(-33.3333%);
+  }
+
+  70% {
+    transform: translateX(-66.6666%);
+  }
+
+  100% {
+    transform: translateX(-66.6666%);
+  }
+}
+
+@keyframes heroDot {
+  0% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+
+  30% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+
+  35% {
+    opacity: .4;
+    transform: scale(.9);
+  }
+
+  100% {
+    opacity: .4;
+    transform: scale(.9);
+  }
+}
+
+/* Custom Gradients for Curated Collection */
+.bg-ftLilac {
+  background: linear-gradient(160deg, #f6e6ff 0%, #efe9ff 45%, #fbeaff 100%);
+}
+
+.bg-ftPink {
+  background: linear-gradient(160deg, #ffe6ef 0%, #ffe0f6 55%, #fff0f7 100%);
+}
+
+.bg-ftPeach {
+  background: linear-gradient(160deg, #fff1dc 0%, #ffe9cc 50%, #fff6e8 100%);
+}
+
+.bg-ftRose {
+  background: linear-gradient(160deg, #ffe3f1 0%, #f7e6ff 55%, #ffe9f6 100%);
+}
+
+/* Utility to hide scrollbar */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari and Opera */
 }

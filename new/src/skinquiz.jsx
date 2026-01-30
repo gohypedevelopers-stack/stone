@@ -1,221 +1,59 @@
 import { useState } from "react";
 
-const styles = `
-.skinQuizSection {
-  padding: 64px 0;
-}
-.skinQuizCard {
-  background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
-  border-radius: 24px;
-  overflow: hidden;
-  display: flex;
-  position: relative;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.04);
-  border: 1px solid rgba(0,0,0,0.04);
-}
-.skinQuizContent {
-  flex: 1;
-  padding: 48px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  z-index: 2;
-}
-.skinQuizTitle {
-  font-size: 32px;
-  font-weight: 900;
-  margin-bottom: 12px;
-  color: #1b1b1b;
-  letter-spacing: -0.5px;
-}
-.skinQuizDesc {
-  font-size: 16px;
-  line-height: 1.6;
-  color: #6f6f6f;
-  margin-bottom: 32px;
-  max-width: 440px;
-}
-.skinQuizActions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.btnQuizPrimary {
-  background: #1b1b1b;
-  color: #fff;
-  padding: 14px 28px;
-  border-radius: 99px;
-  font-weight: 700;
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-}
-.btnQuizPrimary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(0,0,0,0.15);
-  background: #000;
-}
-.btnQuizSecondary {
-  background: transparent;
-  color: #1b1b1b;
-  padding: 14px 28px;
-  border-radius: 99px;
-  font-weight: 700;
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border: 1px solid rgba(0,0,0,0.1);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  display: inline-block;
-}
-.btnQuizSecondary:hover {
-  background: #fff;
-  border-color: #1b1b1b;
-}
-
-.skinQuizVisual {
-  flex: 1;
-  background: #fff;
-  position: relative;
-  display: grid;
-  place-items: center;
-  min-height: 300px;
-  overflow: hidden;
-}
-.skinQuizMesh {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: 
-    radial-gradient(circle at 80% 20%, #e0c3fc 0%, transparent 40%),
-    radial-gradient(circle at 20% 80%, #a8edea 0%, transparent 40%);
-  opacity: 0.6;
-}
-.routinePreview {
-  position: relative;
-  background: rgba(255,255,255,0.8);
-  backdrop-filter: blur(12px);
-  padding: 24px;
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.6);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.08);
-  width: 280px;
-  transform: rotate(-2deg);
-}
-.routineItem {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-.routineItem:last-child {
-  margin-bottom: 0;
-}
-.routineIcon {
-  width: 32px;
-  height: 32px;
-  background: #f1f5f9;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font-size: 12px;
-}
-.routineText {
-  display: flex;
-  flex-direction: column;
-}
-.routineLabel {
-  font-size: 12px;
-  font-weight: 700;
-  color: #1b1b1b;
-}
-.routineSub {
-  font-size: 10px;
-  color: #888;
-}
-
-@media (max-width: 980px) {
-  .skinQuizCard {
-    flex-direction: column-reverse;
-  }
-  .skinQuizContent {
-    padding: 32px 24px;
-    text-align: center;
-    align-items: center;
-  }
-  .skinQuizVisual {
-    min-height: 200px;
-  }
-  .routinePreview {
-    transform: rotate(0);
-    scale: 0.9;
-  }
-}
-`;
-
 export default function SkinQuiz() {
-    const supportPhone = "+91 90000 00000";
+  const supportPhone = "+91 90000 00000";
 
-    return (
-        <section className="skinQuizSection" aria-labelledby="quiz-heading">
-            <style>{styles}</style>
-            <div className="container">
-                <div className="skinQuizCard">
-                    <div className="skinQuizContent">
-                        <h2 id="quiz-heading" className="skinQuizTitle">Unlock Your Best Skin</h2>
-                        <p className="skinQuizDesc">
-                            Not sure where to start? Take our 2-minute quiz to build a personalized routine targeted to your concerns.
-                        </p>
-                        <div className="skinQuizActions">
-                            <button
-                                className="btnQuizPrimary"
-                                onClick={() => alert("Skin quiz functionality would open here")}
-                            >
-                                Start Skin Quiz
-                            </button>
-                            <a href={`tel:${supportPhone}`} className="btnQuizSecondary">
-                                Talk to an Expert
-                            </a>
-                        </div>
-                    </div>
-
-                    <div className="skinQuizVisual" aria-hidden="true">
-                        <div className="skinQuizMesh" />
-                        <div className="routinePreview">
-                            <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', color: '#999', fontWeight: '700' }}>Your Personal Routine</div>
-                            <div className="routineItem">
-                                <div className="routineIcon">☀️</div>
-                                <div className="routineText">
-                                    <span className="routineLabel">Morning Cleanse</span>
-                                    <span className="routineSub">Hydrating Foam</span>
-                                </div>
-                            </div>
-                            <div className="routineItem">
-                                <div className="routineIcon">💧</div>
-                                <div className="routineText">
-                                    <span className="routineLabel">Treat</span>
-                                    <span className="routineSub">Vitamin C Serum</span>
-                                </div>
-                            </div>
-                            <div className="routineItem">
-                                <div className="routineIcon">🛡️</div>
-                                <div className="routineText">
-                                    <span className="routineLabel">Protect</span>
-                                    <span className="routineSub">Invisible SPF 50</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+  return (
+    <section className="py-[64px]" aria-labelledby="quiz-heading">
+      <div className="w-full px-0 sm:px-[10px]">
+        <div className="bg-[linear-gradient(135deg,#fdfbfb_0%,#ebedee_100%)] rounded-[24px] overflow-hidden flex flex-col-reverse md:flex-row relative shadow-[0_20px_40px_rgba(0,0,0,0.04)] border border-black/4">
+          <div className="flex-1 p-[32px_24px] md:p-[48px] flex flex-col justify-center z-[2] text-center md:text-left items-center md:items-stretch">
+            <h2 id="quiz-heading" className="text-[32px] font-[900] mb-[12px] text-[#1b1b1b] tracking-[-0.5px]">Unlock Your Best Skin</h2>
+            <p className="text-[16px] leading-[1.6] text-muted-custom mb-[32px] max-w-[440px]">
+              Not sure where to start? Take our 2-minute quiz to build a personalized routine targeted to your concerns.
+            </p>
+            <div className="flex gap-[12px] flex-wrap justify-center md:justify-start">
+              <button
+                className="bg-[#1b1b1b] text-white p-[14px_28px] rounded-[99px] font-[700] text-[14px] uppercase tracking-[0.5px] border-none cursor-pointer transition-all duration-200 ease-out shadow-[0_8px_16px_rgba(0,0,0,0.1)] hover:-translate-y-[2px] hover:shadow-[0_12px_24px_rgba(0,0,0,0.15)] hover:bg-black"
+                onClick={() => alert("Skin quiz functionality would open here")}
+              >
+                Start Skin Quiz
+              </button>
+              <a href={`tel:${supportPhone}`} className="bg-transparent text-[#1b1b1b] p-[14px_28px] rounded-[99px] font-[700] text-[14px] uppercase tracking-[0.5px] border border-black/10 cursor-pointer transition-all duration-200 ease-out inline-block no-underline hover:bg-white hover:border-[#1b1b1b]">
+                Talk to an Expert
+              </a>
             </div>
-        </section>
-    );
+          </div>
+
+          <div className="flex-1 bg-white relative grid place-items-center min-h-[200px] md:min-h-[300px] overflow-hidden" aria-hidden="true">
+            <div className="absolute top-0 left-0 w-full h-full opacity-60 bg-[radial-gradient(circle_at_80%_20%,#e0c3fc_0%,transparent_40%),radial-gradient(circle_at_20%_80%,#a8edea_0%,transparent_40%)]" />
+            <div className="relative bg-white/80 backdrop-blur-[12px] p-[24px] rounded-[16px] border border-white/60 shadow-[0_12px_32px_rgba(0,0,0,0.08)] w-[280px] scale-90 md:scale-100 rotate-0 md:-rotate-2">
+              <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', color: '#999', fontWeight: '700' }}>Your Personal Routine</div>
+              <div className="flex items-center gap-[12px] mb-[12px]">
+                <div className="w-[32px] h-[32px] bg-[#f1f5f9] rounded-full grid place-items-center text-[12px]">☀️</div>
+                <div className="flex flex-col">
+                  <span className="text-[12px] font-[700] text-[#1b1b1b]">Morning Cleanse</span>
+                  <span className="text-[10px] text-[#888]">Hydrating Foam</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-[12px] mb-[12px]">
+                <div className="w-[32px] h-[32px] bg-[#f1f5f9] rounded-full grid place-items-center text-[12px]">💧</div>
+                <div className="flex flex-col">
+                  <span className="text-[12px] font-[700] text-[#1b1b1b]">Treat</span>
+                  <span className="text-[10px] text-[#888]">Vitamin C Serum</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-[12px] mb-0">
+                <div className="w-[32px] h-[32px] bg-[#f1f5f9] rounded-full grid place-items-center text-[12px]">🛡️</div>
+                <div className="flex flex-col">
+                  <span className="text-[12px] font-[700] text-[#1b1b1b]">Protect</span>
+                  <span className="text-[10px] text-[#888]">Invisible SPF 50</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }

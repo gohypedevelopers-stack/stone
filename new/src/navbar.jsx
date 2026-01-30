@@ -32,65 +32,62 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
 
   return (
     <header className="header">
-      <div className="container headerRow">
-
-
-        <a className="brand" href="#" onClick={(e) => { e.preventDefault(); onNavigate('home'); }}>
-          <img className="brandLogo" src={logo} alt="omwskincare logo" />
-          <div className="brandText">
-            <span className="brandName">omw</span>
-            <span className="brandTag">skin-first essentials</span>
+      <div className="w-full flex items-center justify-between gap-[14px] py-[6px] px-[10px]">
+        <a className="flex items-center gap-[10px] leading-[1.05] mr-auto" href="#" onClick={(e) => { e.preventDefault(); onNavigate('home'); }}>
+          <img className="w-[60px] h-[60px] object-contain" src={logo} alt="omwskincare logo" />
+          <div className="flex flex-col justify-center">
+            <span className="bg-gradient-to-r from-[#ff4fa3] to-[#ff77c8] bg-clip-text text-transparent font-[800] text-[35px]">omw</span>
+            <span className="text-[11px] text-muted-custom tracking-[1.2px] uppercase mt-[4px]">skin-first essentials</span>
           </div>
         </a>
 
-        <div className="headerActions">
-
-          <a href="#" className="navLink" onClick={(e) => { e.preventDefault(); onNavigate('shop'); }} style={{ marginRight: '15px', fontWeight: 'bold' }}>
+        <div className="flex items-center gap-[8px] ml-auto">
+          <a href="#" className="mr-[15px] font-bold" onClick={(e) => { e.preventDefault(); onNavigate('shop'); }}>
             Shop
           </a>
 
-          <button className="iconBtn" aria-label="Wishlist">
-            <img className="iconImg" src={favIcon} alt="" />
+          <button className="border border-line-custom bg-white h-[40px] w-[40px] rounded-[999px] grid place-items-center cursor-pointer hover:shadow-[0_8px_20px_rgba(0,0,0,0.08)]" aria-label="Wishlist">
+            <img className="w-[30px] h-[30px] object-contain block" src={favIcon} alt="" />
           </button>
-          <button className="iconBtn" aria-label="Account">
-            <img className="iconImg" src={accountIcon} alt="" />
+          <button className="border border-line-custom bg-white h-[40px] w-[40px] rounded-[999px] grid place-items-center cursor-pointer hover:shadow-[0_8px_20px_rgba(0,0,0,0.08)]" aria-label="Account">
+            <img className="w-[30px] h-[30px] object-contain block" src={accountIcon} alt="" />
           </button>
 
-          <button className="cartBtn" onClick={onToggleCart} aria-label="Cart">
-            <img className="iconImg" src={cartIcon} alt="" />
-            {cartCount > 0 && <span className="badge">{cartCount}</span>}
+          <button className="relative border border-line-custom bg-white h-[40px] w-[44px] rounded-[999px] grid place-items-center cursor-pointer hover:shadow-[0_8px_20px_rgba(0,0,0,0.08)]" onClick={onToggleCart} aria-label="Cart">
+            <img className="w-[30px] h-[30px] object-contain block" src={cartIcon} alt="" />
+            {cartCount > 0 && <span className="absolute -top-[6px] -right-[6px] bg-[#151515] text-white text-[11px] px-[6px] py-[3px] rounded-[999px]">{cartCount}</span>}
           </button>
         </div>
       </div>
 
-      <nav className="catbar" aria-label="Primary categories">
-        <div className="container catbarInner">
+      <nav className="border-t border-b border-line-custom" aria-label="Primary categories">
+        <div className="w-full py-[8px] flex gap-[12px] items-center overflow-auto no-scrollbar px-[10px]">
           {categories.map((c) => (
-            <a key={c.key} className="catItem" href="#">
-              <img className="catThumb" src={c.image} alt="" style={{ objectFit: "cover" }} />
-              <span className="catLabel">{c.title}</span>
+            <a key={c.key} className="flex flex-col items-center gap-[2px] min-w-[70px] text-text-custom" href="#">
+              <img className="w-[50px] h-[50px] rounded-full border border-black/6 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.8),transparent_60%),linear-gradient(135deg,rgba(180,140,255,0.55),rgba(255,193,219,0.6))] shadow-[0_10px_22px_rgba(0,0,0,0.12)] object-cover" src={c.image} alt="" />
+              <span className="text-[12px] text-text-custom whitespace-nowrap">{c.title}</span>
             </a>
           ))}
-          <div className="catSearch">
-            <span className="catSearchIcon" aria-hidden="true">
-              <img className="catSearchIconImg" src={searchIcon} alt="" />
+          <div className="ml-auto mr-[11px] flex items-center gap-[10px] px-[12px] py-[12px] rounded-[999px] border border-black/14 bg-white min-w-[340px] shadow-[0_8px_18px_rgba(0,0,0,0.06)] relative">
+            <span className="w-[28px] h-[28px] rounded-[999px] grid place-items-center bg-[rgba(255,89,184,0.12)] text-[#ff59b8] text-[14px]" aria-hidden="true">
+              <img className="w-[30px] h-[30px] object-contain block" src={searchIcon} alt="" />
             </span>
             <input
-              className="catSearchInput"
+              className="border-none outline-none w-full text-[15px] bg-transparent text-text-custom placeholder-shown:opacity-100 peer"
               value={query}
               onChange={onQueryChange}
               placeholder=" "
               aria-label="Search products"
             />
-            <span className="catSearchHint" aria-hidden="true">
-              <span className="catSearchHintPrefix">Search for</span>
-              <span className="catSearchHintValue">{PLACEHOLDERS[placeholderIndex]}</span>
+            <span className="absolute left-[50px] top-1/2 -translate-y-1/2 flex gap-[11px] text-[15px] pointer-events-none transition-opacity duration-150 peer-not-placeholder-shown:opacity-0" aria-hidden="true">
+              <span className="text-[#8e8e8e] font-normal">Search for</span>
+              <span className="text-[#d1408e] font-bold">{PLACEHOLDERS[placeholderIndex]}</span>
             </span>
           </div>
-          <div className="catOfferWrap">
-            <img className="catOfferOuterIcon" src={locationIcon} alt="" />
-            <a className="catOffer" href="#">
-              <img className="catOfferIcon" src={discountIcon} alt="" />
+          <div className="ml-0 inline-flex items-center gap-[8px]">
+            <img className="w-[55px] h-[40px] object-contain block" src={locationIcon} alt="" />
+            <a className="ml-0 self-center inline-flex items-center gap-[8px] px-[12px] py-[4px] rounded-[999px] border border-black/8 bg-white text-text-custom text-[16px] font-[700] whitespace-nowrap" href="#">
+              <img className="w-[40px] h-[40px] object-contain block" src={discountIcon} alt="" />
               Offers
             </a>
           </div>
