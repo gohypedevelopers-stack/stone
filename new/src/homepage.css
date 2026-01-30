@@ -978,7 +978,7 @@ a {
 
 .brandCard {
   flex: 0 0 var(--card-w, 160px);
-  height: 140px;
+  height: 200px;
   border-radius: 10px;
   background: rgba(255, 255, 255, .65);
   border: 1px solid rgba(255, 255, 255, .8);
