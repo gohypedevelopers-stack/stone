@@ -1,6 +1,42 @@
 import banner8 from "./assets/9.png";
 import categorySphere from "./assets/category-sphere.png";
 
+import bbCreamImg from "./assets/category/b.b cream.jpg";
+import blenderImg from "./assets/category/blender.jpg";
+import blushImg from "./assets/category/blush.jpeg";
+import brushImg from "./assets/category/brush.jpeg";
+import cleanserImg from "./assets/category/cleanser.jpeg";
+import cleansingOilImg from "./assets/category/cleansing oil.jpg";
+import compactPowderImg from "./assets/category/compact powder.jpg";
+import concealerImg from "./assets/category/concealer.jpg";
+import cushionFoundationImg from "./assets/category/cushion foundation.jpg";
+import essenceImg from "./assets/category/Essence.jpg";
+import exfoliateImg from "./assets/category/Exfoliate.jpg";
+import eyeCreamImg from "./assets/category/Eye cream.jpeg";
+import faceMistsImg from "./assets/category/Face mists.jpeg";
+import foundationImg from "./assets/category/Foundation.jpg";
+import hairSetImg from "./assets/category/Hair set.jpg";
+import internationalMakeupImg from "./assets/category/International makeup.jpeg";
+import internationalSkincareImg from "./assets/category/International skincare.jpg";
+import japaneseSkincareImg from "./assets/category/Japanese Skincare.jpeg";
+import koreanSkincareImg from "./assets/category/Korean skincare.jpg";
+import lipBalmImg from "./assets/category/Lip blam.jpg";
+import lipstickImg from "./assets/category/Lipstick.jpg";
+import makeupRemoverImg from "./assets/category/Makeup remover.jpeg";
+import mascaraImg from "./assets/category/Mascara.jpg";
+import moisturizerImg from "./assets/category/Moisturizer.jpg";
+import primerImg from "./assets/category/Primer.jpeg";
+import razorImg from "./assets/category/Razor.jpg";
+import serumsImg from "./assets/category/Serums.jpg";
+import sheetMasksImg from "./assets/category/Sheet masks.jpeg";
+import skin1004Img from "./assets/category/skin1004.jpg";
+import sunscreenImg from "./assets/category/Sunscreen.jpg";
+import sunsprayImg from "./assets/category/Sunspray.jpg";
+import sunstickImg from "./assets/category/Sunstick.jpg";
+import tonerImg from "./assets/category/toner.jpg";
+import tonerPadsImg from "./assets/category/toner pads.avif";
+import treatmentMaskImg from "./assets/category/Treatment mask.jpg";
+
 const CATEGORIES = [
   "B.b cream",
   "Blender",
@@ -39,6 +75,44 @@ const CATEGORIES = [
   "Treatment mask",
 ];
 
+const CATEGORY_IMAGES = {
+  "B.b cream": bbCreamImg,
+  "Blender": blenderImg,
+  "Blush": blushImg,
+  "Brush": brushImg,
+  "Cleanser": cleanserImg,
+  "cleansing oil": cleansingOilImg,
+  "compact powders": compactPowderImg,
+  "Concealer": concealerImg,
+  "Cushion foundation": cushionFoundationImg,
+  "Essence": essenceImg,
+  "Exfoliate": exfoliateImg,
+  "Eye cream": eyeCreamImg,
+  "Face mists": faceMistsImg,
+  "Foundation": foundationImg,
+  "Hair set": hairSetImg,
+  "International makeup": internationalMakeupImg,
+  "International skincare": internationalSkincareImg,
+  "Japanese Skincare": japaneseSkincareImg,
+  "Korean skincare": koreanSkincareImg,
+  "Lip blam": lipBalmImg,
+  "Lipstick": lipstickImg,
+  "Makeup remover": makeupRemoverImg,
+  "Mascara": mascaraImg,
+  "Moisturizer": moisturizerImg,
+  "Primer": primerImg,
+  "Razor": razorImg,
+  "Serums": serumsImg,
+  "Sheet masks": sheetMasksImg,
+  "SKIN1004": skin1004Img,
+  "Sunscreen": sunscreenImg,
+  "Sunspray": sunsprayImg,
+  "Sunstick": sunstickImg,
+  "toner": tonerImg,
+  "toner pads": tonerPadsImg,
+  "Treatment mask": treatmentMaskImg,
+};
+
 export default function ByCategory() {
   const rows = [
     { visible: 7, items: CATEGORIES.slice(0, 14) },
@@ -66,8 +140,8 @@ export default function ByCategory() {
                 }}
               >
                 {row.items.map((label) => (
-                  <div key={label} className="text-center flex-none w-[clamp(120px,calc((100vw-30px-6*14px)/7),180px)] snap-center">
-                    <img className="h-[140px] w-full rounded-[22px] border border-black/6 shadow-[0_10px_22px_rgba(0,0,0,0.08)] bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.75),transparent_55%),linear-gradient(135deg,rgba(255,255,255,0.65),rgba(255,255,255,0.15)),linear-gradient(160deg,#f2d8ff_0%,#ffd7f1_60%,#ffe9f7_100%)] object-contain" src={categorySphere} alt="" />
+                  <div key={label} className="text-center flex-none w-[clamp(170px,calc((100vw-20px-6*14px)/7),210px)] snap-center">
+                    <img className="w-full aspect-square rounded-[22px] border border-black/6 shadow-[0_10px_22px_rgba(0,0,0,0.08)] object-cover" src={CATEGORY_IMAGES[label] || categorySphere} alt={label} />
                     <div className="mt-[8px] font-[800] text-[14px]">{label}</div>
                   </div>
                 ))}
