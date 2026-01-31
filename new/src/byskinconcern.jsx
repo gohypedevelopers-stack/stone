@@ -9,6 +9,7 @@ import oilControlImg from "./assets/skinconcern/oilyskin.jpg";
 import rednessImg from "./assets/skinconcern/skinredness.jpg";
 import antiAgingImg from "./assets/skinconcern/antiaging.jpg";
 import sunImg from "./assets/skinconcern/sunprotection.jpg";
+import unevenToneImg from "./assets/category/Face mists.jpeg";
 
 const CONCERNS = [
   {
@@ -71,6 +72,12 @@ const CONCERNS = [
     desc: "Daily SPF",
     gradient: "linear-gradient(135deg, #fff6d7 0%, #fffbdf 55%, #fffdf0 100%)",
   },
+  {
+    key: "uneven-tone",
+    label: "Uneven Tone",
+    desc: "Smooth texture",
+    gradient: "linear-gradient(135deg, #fdfbf7 0%, #fffefc 55%, #ffffff 100%)",
+  },
 ];
 
 const FEATURED = {
@@ -111,6 +118,9 @@ const ICONS = {
   ),
   sun: (
     <img src={sunImg} alt="Sun Protection" className="w-full h-full object-cover" />
+  ),
+  "uneven-tone": (
+    <img src={unevenToneImg} alt="Uneven Tone" className="w-full h-full object-cover" />
   ),
 };
 

@@ -71,8 +71,8 @@ export default function HomePage({ addToCart, query }) {
       {/* Featured products */}
       <section id="shop" className="py-[28px]">
         <div className="w-full px-0 sm:px-[10px]">
-          <div className="flex items-end justify-between gap-[16px] mb-[14px]">
-            <h2 className="m-0 text-[22px]">Best sellers</h2>
+          <div className="flex items-end justify-between gap-[16px] mb-[14px] text-align-center">
+            <h2 className="m-0 text-[22px] text-align-center">Best sellers</h2>
           </div>
 
           <div className="relative overflow-x-auto py-[6px] no-scrollbar" ref={scrollRef}>

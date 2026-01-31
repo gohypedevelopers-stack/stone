@@ -33,29 +33,9 @@ const OFFERS = [
     gradient: "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)",
     link: "combo-deals",
   },
-  {
-    id: "freegift",
-    label: "Free Gifts",
-    sub: "With all orders ₹1500+",
-    badge: "Limited",
-    gradient: "linear-gradient(135deg, #fccb90 0%, #d57eeb 100%)",
-    link: "free-gifts",
-  },
-  {
-    id: "clearance",
-    label: "Clearance",
-    sub: "Up to 50% off",
-    gradient: "linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)",
-    link: "clearance",
-  },
-  {
-    id: "newuser",
-    label: "New User Offer",
-    sub: "Extra 10% off first order",
-    badge: "New",
-    gradient: "linear-gradient(135deg, #cfd9df 0%, #e2ebf0 100%)",
-    link: "new-user",
-  },
+  
+  
+  
   {
     id: "weekend",
     label: "Weekend Specials",
