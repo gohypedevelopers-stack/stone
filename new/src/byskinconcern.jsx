@@ -140,7 +140,7 @@ export default function BySkinConcern() {
           <p className="m-0 text-muted-custom text-[15px]">Find products tailored to your skin goals—fast.</p>
         </header>
 
-        <div className="grid gap-[16px] no-scrollbar grid-flow-col grid-rows-[repeat(2,minmax(148px,1fr))] auto-cols-[180px] overflow-x-auto pb-[6px] snap-x snap-mandatory lg:grid-flow-row lg:grid-cols-[repeat(5,minmax(160px,1fr))] lg:grid-rows-none lg:overflow-visible lg:pb-0 lg:auto-cols-auto" role="list">
+        <div className="grid gap-[16px] no-scrollbar grid-flow-col grid-rows-[repeat(2,minmax(240px,1fr))] auto-cols-[180px] overflow-x-auto px-5 scroll-px-5 pb-[6px] snap-x snap-mandatory lg:grid-flow-row lg:grid-cols-[repeat(5,minmax(160px,1fr))] lg:grid-rows-none lg:overflow-visible lg:pb-0 lg:auto-cols-auto lg:px-0" role="list">
           {/* Featured Card */}
           <button
             type="button"
@@ -166,29 +166,17 @@ export default function BySkinConcern() {
               key={item.key}
               type="button"
               role="listitem"
-              className={`relative cursor-pointer appearance-none rounded-[18px] shadow-[0_10px_22px_rgba(0,0,0,0.08)] flex flex-col text-center transition-all duration-180 ease-out hover:-translate-y-[4px] hover:shadow-[0_16px_30px_rgba(0,0,0,0.12),0_0_20px_rgba(255,255,255,0.9)] focus-visible:outline-2 focus-visible:outline-black/40 focus-visible:outline-offset-3 font-inherit min-h-[148px] snap-start group ${['dark-spots', 'hydration', 'pores', 'acne', 'dullness', 'sensitive', 'oil-control', 'redness', 'anti-aging', 'sun'].includes(item.key) ? 'p-0 items-stretch overflow-hidden' : 'items-center justify-center gap-[8px] p-[16px]'
-                }`}
-              style={{ background: item.gradient }}
+              className="relative cursor-pointer appearance-none rounded-[20px] shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-black/5 flex flex-col text-center transition-all duration-300 ease-out hover:-translate-y-[4px] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] focus-visible:outline-2 focus-visible:outline-black/40 focus-visible:outline-offset-3 font-inherit min-h-[160px] snap-start group bg-white overflow-hidden p-0 items-stretch"
               onClick={() => applyFilter(item.key)}
               aria-pressed={selected === item.key}
             >
-              {['dark-spots', 'hydration', 'pores', 'acne', 'dullness', 'sensitive', 'oil-control', 'redness', 'anti-aging', 'sun'].includes(item.key) ? (
-                <>
-                  <div className="w-full flex-1 overflow-hidden">
-                    {ICONS[item.key]}
-                  </div>
-                  <div className="w-full flex-none flex flex-col items-center justify-center pt-[8px] pb-[7px] px-[4px]">
-                    <div className="font-[800] text-[15px] text-[#1b1b1b] leading-tight mb-[2px]">{item.label}</div>
-                    <div className="text-[12px] font-[600] text-[#6f6f6f] tracking-[0.3px] uppercase">{item.desc}</div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="w-[44px] h-[44px] rounded-[14px] grid place-items-center bg-white/70 border border-black/5 transition-transform duration-180 ease-out group-hover:scale-105 [&>svg]:w-[26px] [&>svg]:h-[26px] [&>svg]:fill-none [&>svg]:stroke-[#1b1b1b] [&>svg]:stroke-[1.6] [&>svg]:stroke-linecap-round [&>svg]:stroke-linejoin-round">{ICONS[item.key]}</div>
-                  <div className="font-[800] text-[14px]">{item.label}</div>
-                  {item.desc ? <div className="text-[12px] text-[#6f6f6f]">{item.desc}</div> : null}
-                </>
-              )}
+              <div className="w-full h-[160px] overflow-hidden [&_img]:transform [&_img]:transition-transform [&_img]:duration-700 [&_img]:ease-out [&_img]:scale-110 group-hover:[&_img]:scale-100">
+                {ICONS[item.key]}
+              </div>
+              <div className="w-full flex-1 flex flex-col items-center justify-center py-[10px] px-[6px] bg-white transform transition-transform duration-500 ease-out group-hover:scale-105 origin-center z-10 relative">
+                <div className="font-[600] text-[14px] text-[#1a1a1a] leading-tight mb-[3px] group-hover:text-black transition-colors">{item.label}</div>
+                <div className="text-[12px] font-[400] text-[#888] tracking-[0.2px] uppercase">{item.desc}</div>
+              </div>
             </button>
           ))}
         </div>
