@@ -79,7 +79,7 @@ export default function ShopByBrand() {
     <section className="pt-[50px] pb-[60px] rounded-[24px] bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.7),transparent_55%),radial-gradient(circle_at_80%_30%,rgba(255,255,255,0.6),transparent_55%),linear-gradient(180deg,rgba(235,215,255,0.55),rgba(255,225,243,0.45))]">
       <div className="w-full px-0 sm:px-[10px]">
         <div className="text-center">
-          <h2 className="m-0 text-[28px] font-bold">Brands You'll Love</h2>
+          <h2 className="m-0 text-[28px] font-bold">Shop by Brand</h2>
           <p className="mt-2 text-[#7a6b86] text-base tracking-[0.2px] italic">Explore best-loved brands and new beauty breakthroughs</p>
         </div>
 
@@ -88,7 +88,7 @@ export default function ShopByBrand() {
             {BRANDS.slice(0, 17).map((brand, idx) => (
               <div
                 key={`r1-${brand.name}-${idx}`}
-                className="group w-[340px] h-[180px] p-2 flex items-center justify-center rounded-[10px] bg-white/65 border border-white/80 shadow-[0_10px_22px_rgba(0,0,0,0.08)] snap-center transition-transform duration-300 ease-out overflow-hidden hover:scale-105 hover:shadow-[0_14px_28px_rgba(0,0,0,0.12)] hover:border-white hover:bg-white hover:z-10 shrink-0"
+                className="group w-[270px] h-[140px] p-2 flex items-center justify-center rounded-[10px] bg-white/65 border border-white/80 shadow-[0_10px_22px_rgba(0,0,0,0.08)] snap-center transition-transform duration-300 ease-out overflow-hidden hover:scale-105 hover:shadow-[0_14px_28px_rgba(0,0,0,0.12)] hover:border-white hover:bg-white hover:z-10 shrink-0"
               >
                 <img
                   src={brand.logo}
@@ -103,7 +103,7 @@ export default function ShopByBrand() {
             {BRANDS.slice(17).map((brand, idx) => (
               <div
                 key={`r2-${brand.name}-${idx}`}
-                className="group w-[340px] h-[180px] p-2 flex items-center justify-center rounded-[10px] bg-white/65 border border-white/80 shadow-[0_10px_22px_rgba(0,0,0,0.08)] snap-center transition-transform duration-300 ease-out overflow-hidden hover:scale-105 hover:shadow-[0_14px_28px_rgba(0,0,0,0.12)] hover:border-white hover:bg-white hover:z-10 shrink-0"
+                className="group w-[270px] h-[140px] p-2 flex items-center justify-center rounded-[10px] bg-white/65 border border-white/80 shadow-[0_10px_22px_rgba(0,0,0,0.08)] snap-center transition-transform duration-300 ease-out overflow-hidden hover:scale-105 hover:shadow-[0_14px_28px_rgba(0,0,0,0.12)] hover:border-white hover:bg-white hover:z-10 shrink-0"
               >
                 <img
                   src={brand.logo}
