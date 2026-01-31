@@ -45,7 +45,7 @@ const ProductCard = ({
         ${cardClasses}
       `}>
       {/* Image Container */}
-      <div className="relative aspect-square overflow-hidden bg-gray-50">
+      <div className="relative overflow-hidden bg-gray-50" style={{ aspectRatio: '1/1' }}>
         <img
           src={product.image}
           alt={product.name}

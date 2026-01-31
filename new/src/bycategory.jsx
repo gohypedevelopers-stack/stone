@@ -49,13 +49,7 @@ export default function ByCategory() {
   return (
     <section className="relative py-[26px] pb-[60px] overflow-hidden">
       <div className="w-full px-0 sm:px-[10px] relative">
-        <div className="relative overflow-hidden pb-[16px]">
-          {/* Left Curtain */}
-          <div className="absolute top-0 bottom-0 left-0 w-[60px] bg-gradient-to-r from-[#e7c6ff] to-transparent z-[2] rounded-tr-[50%_100%] rounded-br-[50%_100%] pointer-events-none opacity-60 mix-blend-multiply" />
-
-          {/* Right Curtain */}
-          <div className="absolute top-0 bottom-0 right-0 w-[60px] bg-gradient-to-l from-[#e7c6ff] to-transparent z-[2] rounded-tl-[50%_100%] rounded-bl-[50%_100%] pointer-events-none opacity-60 mix-blend-multiply" />
-
+        <div className="relative overflow-hidden pb-[16px] before:content-[''] before:absolute before:top-0 before:bottom-0 before:w-[90px] before:bg-gradient-to-b before:from-[#e7c6ff] before:via-[#f2d9ff_45%] before:to-[#c98bff] before:opacity-85 before:z-0 before:pointer-events-none before:left-0 before:rounded-tr-[120px] before:rounded-br-[120px] before:[clip-path:polygon(0_0,100%_0,65%_100%,0_100%)] after:content-[''] after:absolute after:top-0 after:bottom-0 after:w-[90px] after:bg-gradient-to-b after:from-[#e7c6ff] after:via-[#f2d9ff_45%] after:to-[#c98bff] after:opacity-85 after:z-0 after:pointer-events-none after:right-0 after:rounded-tl-[120px] after:rounded-bl-[120px] after:[clip-path:polygon(35%_0,100%_0,100%_100%,0_100%)]">
           <div className="relative z-10 text-center mb-[18px]">
             <span className="text-[28px] font-[900] tracking-[1px] uppercase">
               Shop by <span className="text-[#b36cff] italic font-[700] ml-[6px]">Category</span>
@@ -66,7 +60,7 @@ export default function ByCategory() {
             {rows.map((row, rowIndex) => (
               <div
                 key={`row-${rowIndex}`}
-                className="flex gap-[14px] overflow-x-auto snap-x snap-mandatory py-[4px] px-[60px] pb-[8px] w-full mx-auto no-scrollbar relative z-10"
+                className="flex gap-[14px] overflow-x-auto snap-x snap-mandatory py-[4px] px-[2px] pb-[8px] w-full mx-auto no-scrollbar relative before:content-[''] before:sticky before:top-0 before:self-center before:w-[38px] before:h-[38px] before:rounded-[999px] before:border before:border-black/8 before:bg-white/60 before:shadow-[0_10px_22px_rgba(0,0,0,0.12)] before:opacity-100 before:z-[2] before:pointer-events-none before:left-[6px] before:-mr-[32px] before:[mask:radial-gradient(circle_at_65%_50%,transparent_12px,#000_13px)] after:content-[''] after:sticky after:top-0 after:self-center after:w-[38px] after:h-[38px] after:rounded-[999px] after:border after:border-black/8 after:bg-white/60 after:shadow-[0_10px_22px_rgba(0,0,0,0.12)] after:opacity-100 after:z-[2] after:pointer-events-none after:right-[6px] after:-ml-[32px] after:[mask:radial-gradient(circle_at_35%_50%,transparent_12px,#000_13px)]"
                 style={{
                   maxWidth: `calc(${row.visible} * clamp(120px, calc((100vw - 30px - 6 * 14px) / 7), 180px) + (${row.visible} - 1) * 14px)`
                 }}

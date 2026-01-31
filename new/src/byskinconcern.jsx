@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import darkspotImg from "./assets/skinconcern/darkspot.jpg";
 
 const CONCERNS = [
   {
@@ -70,6 +71,7 @@ const FEATURED = {
   gradient: "linear-gradient(135deg, #e2f9f3 0%, #f0fffb 55%, #ffffff 100%)",
 };
 
+
 const ICONS = {
   acne: (
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -79,11 +81,7 @@ const ICONS = {
     </svg>
   ),
   "dark-spots": (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M7 4h10l-1.2 6H8.2L7 4z" />
-      <path d="M9.5 13.5h5M11 16h2" />
-      <circle cx="12" cy="6.5" r="1.2" />
-    </svg>
+    <img src={darkspotImg} alt="Dark Spots" className="w-full h-full object-cover" />
   ),
   dullness: (
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -189,15 +187,29 @@ export default function BySkinConcern() {
               key={item.key}
               type="button"
               role="listitem"
-              className="relative cursor-pointer appearance-none rounded-[18px] shadow-[0_10px_22px_rgba(0,0,0,0.08)] flex flex-col items-center justify-center text-center gap-[8px] text-inherit transition-all duration-180 ease-out hover:-translate-y-[4px] hover:shadow-[0_16px_30px_rgba(0,0,0,0.12),0_0_20px_rgba(255,255,255,0.9)] focus-visible:outline-2 focus-visible:outline-black/40 focus-visible:outline-offset-3 font-inherit min-h-[148px] p-[16px] snap-start group"
+              className={`relative cursor-pointer appearance-none rounded-[18px] shadow-[0_10px_22px_rgba(0,0,0,0.08)] flex flex-col text-center transition-all duration-180 ease-out hover:-translate-y-[4px] hover:shadow-[0_16px_30px_rgba(0,0,0,0.12),0_0_20px_rgba(255,255,255,0.9)] focus-visible:outline-2 focus-visible:outline-black/40 focus-visible:outline-offset-3 font-inherit min-h-[148px] snap-start group ${item.key === 'dark-spots' ? 'p-0 items-stretch overflow-hidden' : 'items-center justify-center gap-[8px] p-[16px]'
+                }`}
               style={{ background: item.gradient }}
               onClick={() => applyFilter(item.key)}
               aria-pressed={selected === item.key}
             >
-              <div className="w-[44px] h-[44px] rounded-[14px] grid place-items-center bg-white/70 border border-black/5 transition-transform duration-180 ease-out group-hover:scale-105 [&>svg]:w-[26px] [&>svg]:h-[26px] [&>svg]:fill-none [&>svg]:stroke-[#1b1b1b] [&>svg]:stroke-[1.6] [&>svg]:stroke-linecap-round [&>svg]:stroke-linejoin-round">{ICONS[item.key]}</div>
-              <div className="font-[800] text-[14px]">{item.label}</div>
-              {item.desc ? <div className="text-[12px] text-[#6f6f6f]">{item.desc}</div> : null}
-
+              {item.key === 'dark-spots' ? (
+                <>
+                  <div className="w-full flex-1 overflow-hidden">
+                    {ICONS[item.key]}
+                  </div>
+                  <div className="w-full flex-none flex flex-col items-center justify-center pt-[8px] pb-[10px] px-[4px]">
+                    <div className="font-[800] text-[15px] text-[#1b1b1b] leading-tight mb-[2px]">{item.label}</div>
+                    <div className="text-[12px] font-[600] text-[#6f6f6f] tracking-[0.3px] uppercase">{item.desc}</div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-[44px] h-[44px] rounded-[14px] grid place-items-center bg-white/70 border border-black/5 transition-transform duration-180 ease-out group-hover:scale-105 [&>svg]:w-[26px] [&>svg]:h-[26px] [&>svg]:fill-none [&>svg]:stroke-[#1b1b1b] [&>svg]:stroke-[1.6] [&>svg]:stroke-linecap-round [&>svg]:stroke-linejoin-round">{ICONS[item.key]}</div>
+                  <div className="font-[800] text-[14px]">{item.label}</div>
+                  {item.desc ? <div className="text-[12px] text-[#6f6f6f]">{item.desc}</div> : null}
+                </>
+              )}
             </button>
           ))}
         </div>
