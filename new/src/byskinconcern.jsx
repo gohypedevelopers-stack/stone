@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
 import darkspotImg from "./assets/skinconcern/darkspot.jpg";
+import hydrationImg from "./assets/skinconcern/hydration.jpg";
+import poresImg from "./assets/skinconcern/skin pores.jpg";
+import acneImg from "./assets/skinconcern/acne and breakout.JPG";
+import dullnessImg from "./assets/skinconcern/dullness.jpeg";
+import sensitiveImg from "./assets/skinconcern/sensitive.jpg";
+import oilControlImg from "./assets/skinconcern/oilyskin.jpg";
+import rednessImg from "./assets/skinconcern/skinredness.jpg";
+import antiAgingImg from "./assets/skinconcern/antiaging.jpg";
+import sunImg from "./assets/skinconcern/sunprotection.jpg";
 
 const CONCERNS = [
   {
@@ -74,64 +83,34 @@ const FEATURED = {
 
 const ICONS = {
   acne: (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M4 12a8 8 0 1 0 16 0" />
-      <path d="M9 10h.01M12 8h.01M15 11h.01" />
-      <path d="M8 16c1.6 1.2 3.5 1.6 5.8 1.2" />
-    </svg>
+    <img src={acneImg} alt="Acne & Breakouts" className="w-full h-full object-cover" />
   ),
   "dark-spots": (
     <img src={darkspotImg} alt="Dark Spots" className="w-full h-full object-cover" />
   ),
   dullness: (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M12 3v3M12 18v3M4 12h3M17 12h3" />
-      <path d="M7 7l2 2M15 15l2 2M7 17l2-2M15 9l2-2" />
-      <circle cx="12" cy="12" r="3.2" />
-    </svg>
+    <img src={dullnessImg} alt="Dullness" className="w-full h-full object-cover" />
   ),
   hydration: (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M12 3c3.8 4 6 6.6 6 10a6 6 0 1 1-12 0c0-3.4 2.2-6 6-10z" />
-    </svg>
+    <img src={hydrationImg} alt="Hydration" className="w-full h-full object-cover" />
   ),
   sensitive: (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M12 3l7 4v5c0 4.2-3 7.4-7 9-4-1.6-7-4.8-7-9V7l7-4z" />
-      <path d="M9.5 12.2l1.8 1.8L14.8 10" />
-    </svg>
+    <img src={sensitiveImg} alt="Sensitive Skin" className="w-full h-full object-cover" />
   ),
   pores: (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <circle cx="7" cy="8" r="2.2" />
-      <circle cx="16.5" cy="7" r="1.6" />
-      <circle cx="12.5" cy="13.5" r="2.4" />
-      <circle cx="7.5" cy="16.5" r="1.6" />
-    </svg>
+    <img src={poresImg} alt="Pores" className="w-full h-full object-cover" />
   ),
   "oil-control": (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M7 5h10M6 9h12M8 13h8" />
-      <path d="M12 19c-3 0-5-2-5-4h10c0 2-2 4-5 4z" />
-    </svg>
+    <img src={oilControlImg} alt="Oil Control" className="w-full h-full object-cover" />
   ),
   redness: (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M6 14c2.5 0 3.5-4 6-4s3.5 4 6 4" />
-      <path d="M5 6c2 1 4 1 6 0" />
-      <path d="M13 6c2 1 4 1 6 0" />
-    </svg>
+    <img src={rednessImg} alt="Redness" className="w-full h-full object-cover" />
   ),
   "anti-aging": (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M12 4l2.2 4.5L19 9l-3.6 3.4L16 17l-4-2.2L8 17l.6-4.6L5 9l4.8-.5L12 4z" />
-    </svg>
+    <img src={antiAgingImg} alt="Anti-Aging" className="w-full h-full object-cover" />
   ),
   sun: (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <circle cx="12" cy="12" r="4" />
-      <path d="M12 2v3M12 19v3M4.2 4.2l2.2 2.2M17.6 17.6l2.2 2.2M2 12h3M19 12h3M4.2 19.8l2.2-2.2M17.6 6.4l2.2-2.2" />
-    </svg>
+    <img src={sunImg} alt="Sun Protection" className="w-full h-full object-cover" />
   ),
 };
 
@@ -187,18 +166,18 @@ export default function BySkinConcern() {
               key={item.key}
               type="button"
               role="listitem"
-              className={`relative cursor-pointer appearance-none rounded-[18px] shadow-[0_10px_22px_rgba(0,0,0,0.08)] flex flex-col text-center transition-all duration-180 ease-out hover:-translate-y-[4px] hover:shadow-[0_16px_30px_rgba(0,0,0,0.12),0_0_20px_rgba(255,255,255,0.9)] focus-visible:outline-2 focus-visible:outline-black/40 focus-visible:outline-offset-3 font-inherit min-h-[148px] snap-start group ${item.key === 'dark-spots' ? 'p-0 items-stretch overflow-hidden' : 'items-center justify-center gap-[8px] p-[16px]'
+              className={`relative cursor-pointer appearance-none rounded-[18px] shadow-[0_10px_22px_rgba(0,0,0,0.08)] flex flex-col text-center transition-all duration-180 ease-out hover:-translate-y-[4px] hover:shadow-[0_16px_30px_rgba(0,0,0,0.12),0_0_20px_rgba(255,255,255,0.9)] focus-visible:outline-2 focus-visible:outline-black/40 focus-visible:outline-offset-3 font-inherit min-h-[148px] snap-start group ${['dark-spots', 'hydration', 'pores', 'acne', 'dullness', 'sensitive', 'oil-control', 'redness', 'anti-aging', 'sun'].includes(item.key) ? 'p-0 items-stretch overflow-hidden' : 'items-center justify-center gap-[8px] p-[16px]'
                 }`}
               style={{ background: item.gradient }}
               onClick={() => applyFilter(item.key)}
               aria-pressed={selected === item.key}
             >
-              {item.key === 'dark-spots' ? (
+              {['dark-spots', 'hydration', 'pores', 'acne', 'dullness', 'sensitive', 'oil-control', 'redness', 'anti-aging', 'sun'].includes(item.key) ? (
                 <>
                   <div className="w-full flex-1 overflow-hidden">
                     {ICONS[item.key]}
                   </div>
-                  <div className="w-full flex-none flex flex-col items-center justify-center pt-[8px] pb-[10px] px-[4px]">
+                  <div className="w-full flex-none flex flex-col items-center justify-center pt-[8px] pb-[7px] px-[4px]">
                     <div className="font-[800] text-[15px] text-[#1b1b1b] leading-tight mb-[2px]">{item.label}</div>
                     <div className="text-[12px] font-[600] text-[#6f6f6f] tracking-[0.3px] uppercase">{item.desc}</div>
                   </div>
