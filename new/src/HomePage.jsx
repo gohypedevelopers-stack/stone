@@ -1,7 +1,9 @@
 import { useMemo, useRef, useEffect } from "react";
 // import "./homepage.css"; // Removed
 import HeroSlider from "./Hero.jsx";
-import CuratedCollection from "./curatedcollection.jsx";
+import OfferTimer from "./OfferTimer.jsx";
+import UpcomingDrops from "./UpcomingDrops.jsx";
+
 import ByCategory from "./bycategory.jsx";
 import ShopByBrand from "./shopbybrand.jsx";
 import BySkinConcern from "./byskinconcern.jsx";
@@ -64,7 +66,9 @@ export default function HomePage({ addToCart, query }) {
   return (
     <main>
       <HeroSlider />
-      <CuratedCollection />
+      <OfferTimer />
+      <UpcomingDrops />
+
 
       <ByCategory />
 

@@ -10,7 +10,7 @@ const SLIDES = [
 
 export default function HeroSlider() {
   return (
-    <section className="pt-[18px] pb-[10px]">
+    <section className="pt-[18px]">
       <div className="w-full px-0 sm:px-[10px]">
         <div className="relative overflow-hidden rounded-[26px] border border-black/6 shadow-[0_18px_40px_rgba(0,0,0,0.12)] bg-white" aria-label="Featured banner">
           <div className="flex w-[300%] animate-[heroSlide_18s_ease-in-out_infinite]">

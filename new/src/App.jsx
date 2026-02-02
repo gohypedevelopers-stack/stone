@@ -3,6 +3,8 @@ import HomePage from "./HomePage";
 import Shop from "./Shop";
 import Navbar from "./navbar";
 import Footer from "./footer";
+import NewArrivals from "./NewArrivals";
+import BestSellers from "./BestSellers";
 import { getAllProducts } from "./data/products";
 import imgNewArrival from "./assets/newarrival.jpg";
 import imgBestSeller from "./assets/bestsellerproducts.jpg";
@@ -16,7 +18,7 @@ function formatINR(amount) {
 }
 
 export default function App() {
-  const [currentView, setCurrentView] = useState("home"); // 'home' | 'shop'
+  const [currentView, setCurrentView] = useState("home"); // 'home' | 'shop' | 'new-arrivals' | 'best-sellers'
   const [query, setQuery] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
   const [cart, setCart] = useState([]); // {id, qty}
@@ -172,11 +174,11 @@ export default function App() {
       </aside>
 
       {/* Main Content Area */}
-      {currentView === "home" ? (
-        <HomePage addToCart={addToCart} query={query} />
-      ) : (
-        <Shop addToCart={addToCart} />
-      )}
+      {currentView === "home" && <HomePage addToCart={addToCart} query={query} />}
+      {currentView === "shop" && <Shop addToCart={addToCart} />}
+      {currentView === "new-arrivals" && <NewArrivals addToCart={addToCart} />}
+      {currentView === "best-sellers" && <BestSellers addToCart={addToCart} />}
+
 
       <Footer supportPhone={supportPhone} />
     </div>

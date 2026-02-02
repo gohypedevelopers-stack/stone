@@ -1,34 +1,14 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import logo from "./assets/logo.png";
 import searchIcon from "./assets/search.png";
 import discountIcon from "./assets/sale_16767126.gif";
-import locationIcon from "./assets/location.png";
 import favIcon from "./assets/favourite.png";
 import accountIcon from "./assets/user-account.png";
 import cartIcon from "./assets/shopping-cart.png";
 
-const PLACEHOLDERS = [
-  "Sunscreen",
-  "Serums",
-  "Moisturizer",
-  "Lipstick",
-  "Face Mists",
-  "Exfoliate",
-  "Concealer",
-  "Cleanser",
-  "Blender",
-  "Blush",
-];
+
 
 export default function Navbar({ categories, query, onQueryChange, cartCount, onToggleCart, onNavigate }) {
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setPlaceholderIndex((i) => (i + 1) % PLACEHOLDERS.length);
-    }, 2200);
-    return () => clearInterval(id);
-  }, []);
 
   return (
     <header className="header">
@@ -60,34 +40,79 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
         </div>
       </div>
 
-      <nav className="border-t border-b border-line-custom" aria-label="Primary categories">
-        <div className="w-full py-[8px] flex gap-[12px] items-center overflow-auto no-scrollbar px-[10px]">
-          {categories.map((c) => (
-            <a key={c.key} className="flex flex-col items-center gap-[2px] min-w-[70px] text-text-custom" href="#">
-              <img className="w-[50px] h-[50px] rounded-full border border-black/6 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.8),transparent_60%),linear-gradient(135deg,rgba(180,140,255,0.55),rgba(255,193,219,0.6))] shadow-[0_10px_22px_rgba(0,0,0,0.12)] object-cover" src={c.image} alt="" />
-              <span className="text-[12px] text-text-custom whitespace-nowrap">{c.title}</span>
-            </a>
-          ))}
-          <div className="ml-auto mr-[11px] flex items-center gap-[10px] px-[12px] py-[12px] rounded-[999px] border border-black/14 bg-white min-w-[340px] shadow-[0_8px_18px_rgba(0,0,0,0.06)] relative">
-            <span className="w-[28px] h-[28px] rounded-[999px] grid place-items-center bg-[rgba(255,89,184,0.12)] text-[#ff59b8] text-[14px]" aria-hidden="true">
-              <img className="w-[30px] h-[30px] object-contain block" src={searchIcon} alt="" />
+      <nav className="border-t border-b border-line-custom relative" aria-label="Primary categories">
+        <div className="w-full py-[14px] flex gap-[28px] items-center px-[20px]">
+          {categories.map((c) => {
+            const isDirectLink = ["New Arrivals", "Best Sellers"].includes(c.title);
+
+            if (isDirectLink) {
+              const targetView = c.title === "New Arrivals" ? 'new-arrivals' : 'best-sellers';
+              return (
+                <div key={c.key} className="static">
+                  <a
+                    className="flex items-center gap-[6px] text-text-custom font-[700] text-[15px] cursor-pointer hover:text-[#d1408e] transition-colors py-[4px]"
+                    href={`#${targetView}`}
+                    onClick={(e) => { e.preventDefault(); onNavigate && onNavigate(targetView); }}
+                  >
+                    {c.title}
+                  </a>
+                </div>
+              );
+            }
+
+            return (
+              <div key={c.key} className="group static">
+                <a
+                  className="flex items-center gap-[6px] text-text-custom font-[700] text-[15px] cursor-pointer hover:text-[#d1408e] transition-colors py-[4px]"
+                  href="#"
+                >
+                  {c.title}
+                  <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg" className="group-hover:rotate-180 transition-transform duration-200">
+                    <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </a>
+
+                {/* Mega Dropdown */}
+                <div className="absolute left-0 right-0 top-[100%] w-full bg-white border-b border-black/6 shadow-[0_10px_40px_rgba(0,0,0,0.08)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                  <div className="max-w-[1240px] mx-auto p-[30px] grid grid-cols-[300px_1fr] gap-[40px]">
+                    {/* Featured Image */}
+                    <div>
+                      <img src={c.image} alt="" className="w-full h-[180px] object-cover rounded-[12px] shadow-sm" />
+                    </div>
+
+                    {/* Description & Links */}
+                    <div className="flex flex-col justify-center">
+                      <h3 className="text-[24px] font-[800] mb-[8px]">{c.title}</h3>
+                      <p className="text-muted-custom text-[15px] leading-[1.6] max-w-[400px] mb-[20px]">
+                        {c.desc || "Explore our premium collection curated just for you. Find the best products to enhance your beauty routine."}
+                      </p>
+                      <a href="#" className="text-[#d1408e] font-[700] text-[14px] flex items-center gap-[6px] hover:underline">
+                        Shop {c.title}
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          <div className="ml-auto flex items-center gap-[10px] px-[12px] py-[8px] rounded-[999px] border border-black/14 bg-white min-w-[300px] shadow-[0_4px_12px_rgba(0,0,0,0.04)] relative">
+            <span className="w-[24px] h-[24px] rounded-[999px] grid place-items-center text-[#888]" aria-hidden="true">
+              <img className="w-[20px] h-[20px] object-contain block opacity-60" src={searchIcon} alt="" />
             </span>
             <input
-              className="border-none outline-none w-full text-[15px] bg-transparent text-text-custom placeholder-shown:opacity-100 peer"
+              className="border-none outline-none w-full text-[14px] bg-transparent text-text-custom placeholder-shown:opacity-100 peer"
               value={query}
               onChange={onQueryChange}
-              placeholder=" "
+              placeholder="Search products..."
               aria-label="Search products"
             />
-            <span className="absolute left-[50px] top-1/2 -translate-y-1/2 flex gap-[11px] text-[15px] pointer-events-none transition-opacity duration-150 peer-not-placeholder-shown:opacity-0" aria-hidden="true">
-              <span className="text-[#8e8e8e] font-normal">Search for</span>
-              <span className="text-[#d1408e] font-bold">{PLACEHOLDERS[placeholderIndex]}</span>
-            </span>
           </div>
+
           <div className="ml-0 inline-flex items-center gap-[8px]">
-            <img className="w-[55px] h-[40px] object-contain block" src={locationIcon} alt="" />
-            <a className="ml-0 self-center inline-flex items-center gap-[8px] px-[12px] py-[4px] rounded-[999px] border border-black/8 bg-white text-text-custom text-[16px] font-[700] whitespace-nowrap" href="#">
-              <img className="w-[40px] h-[40px] object-contain block" src={discountIcon} alt="" />
+            <a className="ml-0 self-center inline-flex items-center gap-[8px] text-text-custom text-[15px] font-[700] whitespace-nowrap hover:text-[#d1408e] transition-colors" href="#">
+              <img className="w-[24px] h-[24px] object-contain block" src={discountIcon} alt="" />
               Offers
             </a>
           </div>

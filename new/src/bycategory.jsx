@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import banner8 from "./assets/9.png";
 import categorySphere from "./assets/category-sphere.png";
 
@@ -114,22 +115,24 @@ const CATEGORY_IMAGES = {
 };
 
 export default function ByCategory() {
-  /* ✅ Only change gap here */
+  const scrollRef = useRef(null);
   const GAP = 14;
 
-  /* ✅ Row visibility requirement */
-  const rows = [
-    { visible: 5, items: CATEGORIES.slice(0, 14) },
-    { visible: 4, items: CATEGORIES.slice(14, 26) },
-    { visible: 3, items: CATEGORIES.slice(26, 35) },
-  ];
-
-  /* ✅ Card width stays EXACTLY same */
   const CARD_WIDTH = `clamp(
     170px,
     calc((100vw - 20px - 6 * ${GAP}px) / 7),
     210px
   )`;
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const scrollAmount = 300;
+      scrollRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
 
   return (
     <section className="relative py-[26px] pb-[60px] overflow-hidden">
@@ -146,51 +149,79 @@ export default function ByCategory() {
             </span>
           </div>
 
-          {/* Category Rows */}
-          <div className="relative z-10 flex flex-col gap-[14px]">
-            {rows.map((row, rowIndex) => (
-              <div
-                key={`row-${rowIndex}`}
-                className="flex overflow-x-auto snap-x snap-mandatory py-[4px] px-5 scroll-px-5 pb-[8px] w-full mx-auto no-scrollbar relative
-                before:content-[''] before:sticky before:top-0 before:self-center before:w-[38px] before:h-[38px] before:rounded-[999px]
-                before:border before:border-black/8 before:bg-white/60 before:shadow-[0_10px_22px_rgba(0,0,0,0.12)]
-                before:opacity-100 before:z-[2] before:pointer-events-none before:left-[6px] before:-mr-[32px]
-                before:[mask:radial-gradient(circle_at_65%_50%,transparent_12px,#000_13px)]
-                after:content-[''] after:sticky after:top-0 after:self-center after:w-[38px] after:h-[38px] after:rounded-[999px]
-                after:border after:border-black/8 after:bg-white/60 after:shadow-[0_10px_22px_rgba(0,0,0,0.12)]
-                after:opacity-100 after:z-[2] after:pointer-events-none after:right-[6px] after:-ml-[32px]
-                after:[mask:radial-gradient(circle_at_35%_50%,transparent_12px,#000_13px)]"
-                style={{
-                  /* ✅ Gap auto updates here */
-                  gap: `${GAP}px`,
-
-                  /* ✅ Perfect integer card visibility */
-                  maxWidth: `calc(
-                    ${row.visible} * ${CARD_WIDTH} +
-                    (${row.visible} - 1) * ${GAP}px
-                  )`,
-                }}
+          {/* Category List with Arrows */}
+          <div className="relative z-10 group">
+            {/* Left Button */}
+            <button
+              onClick={() => scroll("left")}
+              className="absolute left-[10px] top-1/2 -translate-y-1/2 z-20 w-[40px] h-[40px] bg-white/80 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center border border-black/10 hover:bg-white transition-all cursor-pointer"
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                {row.items.map((label) => (
-                  <div
-                    key={label}
-                    className="text-center flex-none snap-center"
-                    style={{
-                      width: CARD_WIDTH,
-                    }}
-                  >
-                    <img
-                      className="w-full aspect-square rounded-[22px] border border-black/6 shadow-[0_10px_22px_rgba(0,0,0,0.08)] object-cover"
-                      src={CATEGORY_IMAGES[label] || categorySphere}
-                      alt={label}
-                    />
-                    <div className="mt-[8px] font-[800] text-[14px]">
-                      {label}
-                    </div>
+                <path
+                  d="M15 18L9 12L15 6"
+                  stroke="black"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+
+            {/* Scroll Container */}
+            <div
+              ref={scrollRef}
+              className="flex overflow-x-auto snap-x snap-mandatory py-[4px] px-5 scroll-px-5 pb-[8px] w-full mx-auto no-scrollbar scroll-smooth"
+              style={{
+                gap: `${GAP}px`,
+              }}
+            >
+              {CATEGORIES.map((label) => (
+                <div
+                  key={label}
+                  className="text-center flex-none snap-center"
+                  style={{
+                    width: CARD_WIDTH,
+                  }}
+                >
+                  <img
+                    className="w-full aspect-square rounded-[22px] border border-black/6 shadow-[0_10px_22px_rgba(0,0,0,0.08)] object-cover"
+                    src={CATEGORY_IMAGES[label] || categorySphere}
+                    alt={label}
+                  />
+                  <div className="mt-[8px] font-[800] text-[14px]">
+                    {label}
                   </div>
-                ))}
-              </div>
-            ))}
+                </div>
+              ))}
+            </div>
+
+            {/* Right Button */}
+            <button
+              onClick={() => scroll("right")}
+              className="absolute right-[10px] top-1/2 -translate-y-1/2 z-20 w-[40px] h-[40px] bg-white/80 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center border border-black/10 hover:bg-white transition-all cursor-pointer"
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M9 6L15 12L9 18"
+                  stroke="black"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
           </div>
         </div>
 
