@@ -5,6 +5,7 @@ import Navbar from "./navbar";
 import Footer from "./footer";
 import NewArrivals from "./NewArrivals";
 import BestSellers from "./BestSellers";
+import ProductPage from "./productpage.jsx";
 import { getAllProducts } from "./data/products";
 import imgNewArrival from "./assets/newarrival.jpg";
 import imgBestSeller from "./assets/bestsellerproducts.jpg";
@@ -178,6 +179,7 @@ export default function App() {
       {currentView === "shop" && <Shop addToCart={addToCart} />}
       {currentView === "new-arrivals" && <NewArrivals addToCart={addToCart} />}
       {currentView === "best-sellers" && <BestSellers addToCart={addToCart} />}
+      {currentView === "product-page" && <ProductPage addToCart={addToCart} />}
 
 
       <Footer supportPhone={supportPhone} />

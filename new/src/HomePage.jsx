@@ -3,6 +3,7 @@ import { useMemo, useRef, useEffect } from "react";
 import HeroSlider from "./Hero.jsx";
 import OfferTimer from "./OfferTimer.jsx";
 import UpcomingDrops from "./UpcomingDrops.jsx";
+import WatchAndShop from "./WatchAndShop.jsx";
 
 import ByCategory from "./bycategory.jsx";
 import ShopByBrand from "./shopbybrand.jsx";
@@ -75,9 +76,16 @@ export default function HomePage({ addToCart, query }) {
       {/* Featured products */}
       <section id="shop" className="py-[28px]">
         <div className="w-full px-0 sm:px-[10px]">
-          <div className="flex items-end justify-between gap-[16px] mb-[14px] text-align-center">
-            <h2 className="m-0 text-[22px] text-align-center">Best sellers</h2>
-          </div>
+          <div className="flex items-end justify-between gap-[16px] mb-[14px] text-center">
+  <h2 className="m-0 text-[32px] font-extrabold tracking-wide">
+    Best{" "}
+    <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent">
+      sellers
+    </span>
+  </h2>
+</div>
+
+
 
           <div className="relative overflow-x-auto py-[6px] no-scrollbar" ref={scrollRef}>
             <div className="flex gap-[14px] w-max">
@@ -97,6 +105,7 @@ export default function HomePage({ addToCart, query }) {
       <ShopByBrand />
 
       <BySkinConcern />
+      <WatchAndShop />
       <ByOffer />
 
       {/* Offers + Loyalty */}

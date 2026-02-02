@@ -26,16 +26,16 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
             Shop
           </a>
 
-          <button className="border border-line-custom bg-white h-[40px] w-[40px] rounded-[999px] grid place-items-center cursor-pointer hover:shadow-[0_8px_20px_rgba(0,0,0,0.08)]" aria-label="Wishlist">
+          <button className="grid place-items-center cursor-pointer p-1" aria-label="Wishlist">
             <img className="w-[30px] h-[30px] object-contain block" src={favIcon} alt="" />
           </button>
-          <button className="border border-line-custom bg-white h-[40px] w-[40px] rounded-[999px] grid place-items-center cursor-pointer hover:shadow-[0_8px_20px_rgba(0,0,0,0.08)]" aria-label="Account">
+          <button className="grid place-items-center cursor-pointer p-1" aria-label="Account">
             <img className="w-[30px] h-[30px] object-contain block" src={accountIcon} alt="" />
           </button>
 
-          <button className="relative border border-line-custom bg-white h-[40px] w-[44px] rounded-[999px] grid place-items-center cursor-pointer hover:shadow-[0_8px_20px_rgba(0,0,0,0.08)]" onClick={onToggleCart} aria-label="Cart">
+          <button className="relative grid place-items-center cursor-pointer p-1" onClick={onToggleCart} aria-label="Cart">
             <img className="w-[30px] h-[30px] object-contain block" src={cartIcon} alt="" />
-            {cartCount > 0 && <span className="absolute -top-[6px] -right-[6px] bg-[#151515] text-white text-[11px] px-[6px] py-[3px] rounded-[999px]">{cartCount}</span>}
+            {cartCount > 0 && <span className="absolute -top-[2px] -right-[2px] bg-[#151515] text-white text-[10px] px-[5px] py-[2px] rounded-full font-bold min-w-[18px] text-center border-2 border-white">{cartCount}</span>}
           </button>
         </div>
       </div>

@@ -1,30 +1,36 @@
 import React, { useState, useEffect } from "react";
 import { Bell, Lock, Sparkles, Clock } from "lucide-react";
 
+// Import local images
+import imgG from "./assets/COMINGSOON/G.jpg";
+import imgH from "./assets/COMINGSOON/H.jpg";
+import imgI from "./assets/COMINGSOON/I.jpg";
+import imgJ from "./assets/COMINGSOON/J.jpg";
+
 // Mock upcoming products data
 const UPCOMING_PRODUCTS = [
     {
         id: "up1",
         name: "Sakura Silk Essence",
-        image: "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?auto=format&fit=crop&w=600&q=80",
+        image: imgG,
         launchDate: "Feb 10, 10:00 AM"
     },
     {
         id: "up2",
         name: "Glass Skin Barrier Cream",
-        image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=600&q=80",
+        image: imgH,
         launchDate: "Feb 12, 12:00 PM"
     },
     {
         id: "up3",
         name: "Rose Quartz Roller Set",
-        image: "https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&w=600&q=80",
+        image: imgI,
         launchDate: "Feb 14, 09:00 AM"
     },
     {
         id: "up4",
         name: "Lavender Sleeping Mask",
-        image: "https://images.unsplash.com/photo-1556228720-1987599988d3?auto=format&fit=crop&w=600&q=80",
+        image: imgJ,
         launchDate: "Feb 15, 08:00 PM"
     }
 ];
@@ -73,10 +79,7 @@ export default function UpcomingDrops() {
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row items-end md:items-center justify-between mb-12 gap-8">
                     <div>
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/60 border border-purple-100 backdrop-blur-sm mb-4 animate-fade-in-up">
-                            <Sparkles size={14} className="text-purple-500" />
-                            <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500">Sneak Peek</span>
-                        </div>
+                        
                         <h2 className="text-4xl md:text-5xl font-[800] text-[#151515] tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
                             Upcoming <br className="hidden md:block" />Beauty Drop
                         </h2>

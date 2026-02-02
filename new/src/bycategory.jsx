@@ -156,21 +156,7 @@ export default function ByCategory() {
               onClick={() => scroll("left")}
               className="absolute left-[10px] top-1/2 -translate-y-1/2 z-20 w-[40px] h-[40px] bg-white/80 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center border border-black/10 hover:bg-white transition-all cursor-pointer"
             >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M15 18L9 12L15 6"
-                  stroke="black"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+             
             </button>
 
             {/* Scroll Container */}
