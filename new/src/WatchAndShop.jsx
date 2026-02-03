@@ -10,7 +10,7 @@ import vidD from "./assets/reels/D.mp4";
 import vidE from "./assets/reels/E.mp4";
 import vidF from "./assets/reels/F.mp4";
 
-export default function WatchAndShop() {
+export default function WatchAndShop({ onNavigate }) {
     const scrollRef = useRef(null);
     const products = getAllProducts().slice(0, 6); // Use first 6 products for demo
 
@@ -67,12 +67,12 @@ export default function WatchAndShop() {
                 {/* Header */}
                 <div className="flex items-end justify-between mb-10 px-2">
                     <div>
-                        
+
                         <h2 className="text-4xl md:text-5xl font-[800] text-[#151515] tracking-tight">
                             Watch & <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500">Shop</span>
                         </h2>
                     </div>
-                    
+
                 </div>
 
                 {/* Carousel */}
@@ -82,8 +82,9 @@ export default function WatchAndShop() {
                 >
                     {videoCards.map((card) => (
                         <div
+                            onClick={() => onNavigate && onNavigate("product-page")}
                             key={card.id}
-                            className="relative flex-shrink-0 w-[260px] md:w-[280px] h-[450px] md:h-[500px] rounded-[32px] overflow-hidden group snap-center shadow-[0_10px_30px_rgba(0,0,0,0.1)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] transition-all duration-500 bg-gray-100"
+                            className="relative flex-shrink-0 w-[260px] md:w-[280px] h-[450px] md:h-[500px] rounded-[32px] overflow-hidden group snap-center shadow-[0_10px_30px_rgba(0,0,0,0.1)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] transition-all duration-500 bg-gray-100 cursor-pointer"
                         >
                             {/* Video Player */}
                             <video
@@ -110,7 +111,10 @@ export default function WatchAndShop() {
                                 </h3>
 
                                 {/* Shop Button */}
-                                <button className="w-full bg-white text-[#151515] font-bold py-3.5 rounded-[20px] flex items-center justify-center gap-2 shadow-lg hover:bg-gradient-to-r hover:from-pink-500 hover:to-purple-500 hover:text-white transition-all duration-300 active:scale-95 group/btn">
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onNavigate && onNavigate("product-page"); }}
+                                    className="w-full bg-white text-[#151515] font-bold py-3.5 rounded-[20px] flex items-center justify-center gap-2 shadow-lg hover:bg-gradient-to-r hover:from-pink-500 hover:to-purple-500 hover:text-white transition-all duration-300 active:scale-95 group/btn"
+                                >
                                     <ShoppingBag size={18} className="text-[#151515] group-hover/btn:text-white transition-colors" />
                                     <span className="uppercase tracking-wide text-xs">Shop Now</span>
                                 </button>

@@ -143,10 +143,10 @@ export default function BySkinConcern() {
   }
 
   return (
-    <section className="py-[56px]" aria-labelledby="skin-concern-title">
+    <section className="mt-[50px] py-[56px]" aria-labelledby="skin-concern-title">
       <div className="w-full px-0 sm:px-[10px] flex flex-col gap-[22px]">
         <header className="text-center max-w-[640px] mx-auto">
-          <h2 id="skin-concern-title" className="m-[0_0_8px] text-[28px] font-[700] tracking-[-0.4px]">Shop by Skin Concern</h2>
+          <h2 id="skin-concern-title" className="m-[0_0_8px] text-[28px] font-[700] tracking-[-0.4px]">SHOP BY SKIN CONCERN</h2>
           <p className="m-0 text-muted-custom text-[15px]">Find products tailored to your skin goals—fast.</p>
         </header>
 

@@ -212,7 +212,7 @@ export default function ByCategory() {
         </div>
 
         {/* Bottom Banner */}
-        <div className="mt-[28px]">
+        <div className="mt-[100px]">
           <img
             className="w-full h-[570px] object-cover object-center rounded-[18px]"
             src={banner8}

@@ -35,7 +35,7 @@ export default function NewArrivals({ addToCart }) {
                     {/* Text Content */}
                     <div className="max-w-xl relative z-10 text-center md:text-left">
                         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 border border-pink-100 shadow-sm mb-6">
-                            <Sparkles size={14} className="text-pink-500" />
+                            
                             <span className="text-xs font-bold uppercase tracking-widest text-[#151515]">Just Dropped</span>
                         </div>
                         <h1 className="text-5xl md:text-7xl font-[800] text-[#151515] leading-[1.1] mb-6 tracking-tight">
@@ -195,7 +195,57 @@ export default function NewArrivals({ addToCart }) {
                 </div>
             </section>
 
-            {/* 6. Newsletter & Trust */}
+            {/* 6. Dream Product Request */}
+            <section className="px-6 max-w-[1440px] mx-auto mb-20">
+                <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 border border-white/60 shadow-[0_10px_40px_rgba(255,223,235,0.4)] p-8 md:p-14 text-center">
+
+                    {/* Glassmorphism Overlay */}
+                    <div className="absolute inset-0 bg-white/30 backdrop-blur-sm pointer-events-none" />
+
+                    {/* Decorative Elements */}
+                    <div className="absolute top-4 left-4 text-pink-300 opacity-50"><Sparkles size={24} /></div>
+                    <div className="absolute bottom-10 right-10 text-purple-300 opacity-50"><Sparkles size={32} /></div>
+                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-pink-200/30 rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-indigo-200/30 rounded-full blur-3xl pointer-events-none" />
+
+                    <div className="relative z-10 max-w-2xl mx-auto">
+                       
+
+                        <h2 className="text-3xl md:text-4xl font-[900] text-[#151515] mb-3 tracking-tight">Want Something Special?</h2>
+                        <p className="text-gray-600 text-base md:text-lg mb-8 font-light">
+                            Tell us what you want — we’ll try to stock it. <br className="hidden md:block" />
+                            Help us curate the perfect shelf for you.
+                        </p>
+
+                        <form className="flex flex-col gap-4 max-w-md mx-auto" onSubmit={(e) => { e.preventDefault(); alert("Thanks for your request! We'll look into it."); }}>
+
+                            <div className="group relative">
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="Product Name or Link *"
+                                    className="w-full bg-white/80 backdrop-blur-md border border-white focus:border-pink-300 focus:ring-4 focus:ring-pink-100 rounded-2xl px-5 py-4 text-sm font-medium text-[#151515] placeholder:text-gray-400 outline-none transition-all shadow-sm"
+                                />
+                            </div>
+
+                            <div className="group relative">
+                                <textarea
+                                    rows={2} // Use integer 
+                                    placeholder="Any specific shades or notes? (Optional)"
+                                    className="w-full bg-white/80 backdrop-blur-md border border-white focus:border-pink-300 focus:ring-4 focus:ring-pink-100 rounded-2xl px-5 py-4 text-sm font-medium text-[#151515] placeholder:text-gray-400 outline-none transition-all shadow-sm resize-none"
+                                />
+                            </div>
+
+                            <button type="submit" className="mt-2 w-full bg-gradient-to-r from-[#151515] to-[#333] hover:from-pink-600 hover:to-purple-600 text-white font-bold uppercase tracking-widest text-xs py-4 rounded-2xl shadow-lg hover:shadow-pink-200 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2">
+                                Request Product <Sparkles size={16} />
+                            </button>
+
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            {/* 7. Newsletter & Trust */}
             <section className="px-6 max-w-[1440px] mx-auto mb-20">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="bg-[#151515] rounded-[32px] p-8 md:p-12 text-white flex flex-col justify-center text-center md:text-left">

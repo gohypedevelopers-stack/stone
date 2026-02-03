@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Bell, Lock, Sparkles, Clock } from "lucide-react";
+import { Bell, Lock, Clock } from "lucide-react";
 
 // Import local images
 import imgG from "./assets/COMINGSOON/G.jpg";
@@ -35,7 +35,7 @@ const UPCOMING_PRODUCTS = [
     }
 ];
 
-export default function UpcomingDrops() {
+export default function UpcomingDrops({ onNavigate }) {
     const [timeLeft, setTimeLeft] = useState({
         days: 0,
         hours: 0,
@@ -79,7 +79,7 @@ export default function UpcomingDrops() {
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row items-end md:items-center justify-between mb-12 gap-8">
                     <div>
-                        
+
                         <h2 className="text-4xl md:text-5xl font-[800] text-[#151515] tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
                             Upcoming <br className="hidden md:block" />Beauty Drop
                         </h2>
@@ -103,7 +103,11 @@ export default function UpcomingDrops() {
                 {/* Product Cards Row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {UPCOMING_PRODUCTS.map((product) => (
-                        <div key={product.id} className="group relative bg-white/60 backdrop-blur-md rounded-[24px] border border-white/60 overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-2 transition-all duration-500">
+                        <div
+                            key={product.id}
+                            onClick={() => onNavigate && onNavigate("product-page")}
+                            className="group relative bg-white/60 backdrop-blur-md rounded-[24px] border border-white/60 overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-2 transition-all duration-500 cursor-pointer"
+                        >
 
                             {/* Image Container */}
                             <div className="relative aspect-[4/5] overflow-hidden m-2 rounded-[20px] bg-gray-100">

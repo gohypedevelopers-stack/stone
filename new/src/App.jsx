@@ -175,7 +175,7 @@ export default function App() {
       </aside>
 
       {/* Main Content Area */}
-      {currentView === "home" && <HomePage addToCart={addToCart} query={query} />}
+      {currentView === "home" && <HomePage addToCart={addToCart} query={query} onNavigate={setCurrentView} />}
       {currentView === "shop" && <Shop addToCart={addToCart} />}
       {currentView === "new-arrivals" && <NewArrivals addToCart={addToCart} />}
       {currentView === "best-sellers" && <BestSellers addToCart={addToCart} />}

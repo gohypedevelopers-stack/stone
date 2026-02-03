@@ -17,7 +17,7 @@ function formatINR(amount) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount);
 }
 
-export default function HomePage({ addToCart, query }) {
+export default function HomePage({ addToCart, query, onNavigate }) {
   const PRODUCTS = getAllProducts();
   const scrollRef = useRef(null);
 
@@ -68,7 +68,7 @@ export default function HomePage({ addToCart, query }) {
     <main>
       <HeroSlider />
       <OfferTimer />
-      <UpcomingDrops />
+      <UpcomingDrops onNavigate={onNavigate} />
 
 
       <ByCategory />
@@ -77,13 +77,13 @@ export default function HomePage({ addToCart, query }) {
       <section id="shop" className="py-[28px]">
         <div className="w-full px-0 sm:px-[10px]">
           <div className="flex items-end justify-between gap-[16px] mb-[14px] text-center">
-  <h2 className="m-0 text-[32px] font-extrabold tracking-wide">
-    Best{" "}
-    <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent">
-      sellers
-    </span>
-  </h2>
-</div>
+            <h2 className="m-0 text-[32px] font-extrabold tracking-wide">
+              BEST{" "}
+              <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent">
+                SELLERS
+              </span>
+            </h2>
+          </div>
 
 
 
@@ -105,7 +105,7 @@ export default function HomePage({ addToCart, query }) {
       <ShopByBrand />
 
       <BySkinConcern />
-      <WatchAndShop />
+      <WatchAndShop onNavigate={onNavigate} />
       <ByOffer />
 
       {/* Offers + Loyalty */}

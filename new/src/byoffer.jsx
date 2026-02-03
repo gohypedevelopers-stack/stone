@@ -73,7 +73,7 @@ export default function ByOffer() {
       <div className="w-full px-0 sm:px-[10px]">
         <div className="text-center mb-[32px]">
           <SparklesText
-            text="Shop by Offer"
+            text="SHOP BY OFFER"
             className="text-[40px] leading-tight"
             colors={{ first: "#FF4FA3", second: "#efd31eff", third: "#184ac0ff", fourth: "#ff4f4fff" }}
           />

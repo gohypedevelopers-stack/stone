@@ -79,7 +79,7 @@ export default function ShopByBrand() {
     <section className="pt-[50px] pb-[60px] rounded-[24px] bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.7),transparent_55%),radial-gradient(circle_at_80%_30%,rgba(255,255,255,0.6),transparent_55%),linear-gradient(180deg,rgba(235,215,255,0.55),rgba(255,225,243,0.45))]">
       <div className="w-full px-0 sm:px-[10px]">
         <div className="text-center">
-          <h2 className="m-0 text-[28px] font-bold">Shop by Brand</h2>
+          <h2 className="m-0 text-[28px] font-bold">SHOP BY BRAND</h2>
           <p className="mt-2 text-[#7a6b86] text-base tracking-[0.2px] italic">Explore best-loved brands and new beauty breakthroughs</p>
         </div>
 
