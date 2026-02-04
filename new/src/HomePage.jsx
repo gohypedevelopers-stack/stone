@@ -17,7 +17,7 @@ function formatINR(amount) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount);
 }
 
-export default function HomePage({ addToCart, query, onNavigate, onSelectCategory }) {
+export default function HomePage({ addToCart, query, onNavigate, onSelectCategory, onSelectBrand, onSelectConcern }) {
   const PRODUCTS = getAllProducts();
   const scrollRef = useRef(null);
 
@@ -94,6 +94,7 @@ export default function HomePage({ addToCart, query, onNavigate, onSelectCategor
                   <ProductCard
                     product={{ ...p, category: p.tag, inStock: true }}
                     onAddToCart={() => addToCart(p.id)}
+                    onClick={() => onNavigate("best-sellers")}
                   />
                 </div>
               ))}
@@ -102,9 +103,9 @@ export default function HomePage({ addToCart, query, onNavigate, onSelectCategor
         </div>
       </section>
 
-      <ShopByBrand />
+      <ShopByBrand onSelectBrand={onSelectBrand} />
 
-      <BySkinConcern />
+      <BySkinConcern onSelectConcern={onSelectConcern} />
       <WatchAndShop onNavigate={onNavigate} />
       <ByOffer />
 

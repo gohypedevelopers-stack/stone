@@ -5,7 +5,8 @@ const ProductCard = ({
   product,
   isDark = false,
   onAddToCart,
-  onToggleWishlist
+  onToggleWishlist,
+  onClick
 }) => {
   const [isWishlisted, setIsWishlisted] = useState(false);
 
@@ -39,9 +40,10 @@ const ProductCard = ({
 
   return (
     <div
+      onClick={onClick}
       className={`
         max-w-sm mx-auto rounded-[18px] border shadow-[0_10px_30px_rgba(0,0,0,0.05)] hover:shadow-[0_14px_40px_rgba(0,0,0,0.10)]
-        transition-all duration-300 overflow-hidden group transform hover:-translate-y-[4px]
+        transition-all duration-300 overflow-hidden group transform hover:-translate-y-[4px] cursor-pointer
         ${cardClasses}
       `}>
       {/* Image Container */}

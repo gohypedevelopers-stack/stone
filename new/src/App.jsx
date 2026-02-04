@@ -7,6 +7,8 @@ import NewArrivals from "./NewArrivals";
 import BestSellers from "./BestSellers";
 import ProductPage from "./productpage.jsx";
 import CategoryPage from "./CategoryPage.jsx";
+import BrandPage from "./BrandPage.jsx";
+import SkinConcernPage from "./SkinConcernPage.jsx";
 import { getAllProducts } from "./data/products";
 import imgNewArrival from "./assets/newarrival.jpg";
 import imgBestSeller from "./assets/bestsellerproducts.jpg";
@@ -20,8 +22,10 @@ function formatINR(amount) {
 }
 
 export default function App() {
-  const [currentView, setCurrentView] = useState("home"); // 'home' | 'shop' | 'new-arrivals' | 'best-sellers' | 'category-page'
+  const [currentView, setCurrentView] = useState("home"); // 'home' | 'shop' | 'new-arrivals' | 'best-sellers' | 'category-page' | 'brand-page'
   const [selectedCategory, setSelectedCategory] = useState("Serums");
+  const [selectedBrand, setSelectedBrand] = useState("Laneige");
+  const [selectedConcern, setSelectedConcern] = useState("acne");
   const [query, setQuery] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
   const [cart, setCart] = useState([]); // {id, qty}
@@ -186,6 +190,14 @@ export default function App() {
             setSelectedCategory(cat);
             setCurrentView("category-page");
           }}
+          onSelectBrand={(brand) => {
+            setSelectedBrand(brand);
+            setCurrentView("brand-page");
+          }}
+          onSelectConcern={(concern) => {
+            setSelectedConcern(concern);
+            setCurrentView("skin-concern-page");
+          }}
         />
       )}
       {currentView === "shop" && <Shop addToCart={addToCart} />}
@@ -197,6 +209,20 @@ export default function App() {
           category={selectedCategory}
           addToCart={addToCart}
           onCategoryChange={setSelectedCategory}
+        />
+      )}
+      {currentView === "brand-page" && (
+        <BrandPage
+          brandName={selectedBrand}
+          addToCart={addToCart}
+          onBrandChange={setSelectedBrand}
+        />
+      )}
+      {currentView === "skin-concern-page" && (
+        <SkinConcernPage
+          userConcern={selectedConcern}
+          addToCart={addToCart}
+          onConcernChange={setSelectedConcern}
         />
       )}
 

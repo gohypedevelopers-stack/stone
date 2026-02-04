@@ -124,22 +124,14 @@ const ICONS = {
   ),
 };
 
-export default function BySkinConcern() {
+export default function BySkinConcern({ onSelectConcern }) {
   const [selected, setSelected] = useState("");
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      setSelected(params.get("concern") || "");
-    }
-  }, []);
 
   function applyFilter(key) {
     setSelected(key);
-    if (typeof window === "undefined") return;
-    const url = new URL(window.location.href);
-    url.searchParams.set("concern", key);
-    window.history.replaceState({}, "", url);
+    if (onSelectConcern) {
+      onSelectConcern(key);
+    }
   }
 
   return (

@@ -4,6 +4,13 @@ import {
     Truck, ShieldCheck, RefreshCw, Zap, Search, ArrowRight, Sparkles
 } from "lucide-react";
 
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "./components/ui/dropdown-menu.jsx";
+
 export default function CategoryPage({ category = "Serums", addToCart, onCategoryChange }) {
     const [activeFilter, setActiveFilter] = useState("All");
     const [sortOption, setSortOption] = useState("Most Popular");
@@ -37,88 +44,114 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
 
     const FILTERS = ["All", "Hydration", "Brightening", "Acne Care", "Anti-Aging", "Sensitive Skin"];
 
+    // Content Mapping
+    const CATEGORY_CONTENT = {
+        "Serums": { title: "Concentrated Perfection", desc: "Targeted treatments to transform your skin." },
+        "Sunscreen": { title: "Daily Invisible Shield", desc: "Protect your glow with zero white cast." },
+        "Moisturizer": { title: "Deep Hydration Lock", desc: "Plump, dewy, and nourished skin all day." },
+        "Hair set": { title: "Crown of Glory", desc: "Salon-quality care for stronger, shinier hair." },
+        "Cleanser": { title: "The First Step", desc: "Gentle yet effective daily purification." },
+        "Lipstick": { title: "Bold & Beautiful", desc: "High-pigment shades for every mood." },
+        "Korean skincare": { title: "K-Beauty Essentials", desc: "The secrets to the glass skin look." },
+        "default": { title: "Curated Beauty", desc: "Premium essentials for your daily routine." }
+    };
+
+    const currentContent = CATEGORY_CONTENT[category] || CATEGORY_CONTENT["default"];
+
     return (
         <div className="min-h-screen bg-[#fdfbf7] font-sans text-[#1a1a1a] pb-20 fade-in">
-            {/* 1. HERO HEADER */}
-            <section className="relative pt-24 pb-20 px-6 overflow-hidden bg-gradient-to-b from-white to-[#fcfcfc]">
-                {/* Abstract Background */}
-                <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                    <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-pink-100/40 rounded-full blur-[100px]" />
-                    <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-purple-100/30 rounded-full blur-[80px]" />
-                    <Sparkles className="absolute top-20 left-20 text-yellow-300 opacity-50" size={32} />
-                    <Sparkles className="absolute bottom-40 right-40 text-pink-300 opacity-40" size={24} />
+            {/* 1. HERO HEADER (Redesigned) */}
+            <section className="relative pt-32 pb-24 px-6 overflow-hidden bg-white">
+                {/* Modern Minimal Background */}
+                <div className="absolute inset-0 opacity-30">
+                    <div className="absolute top-0 right-0 w-[50%] h-full bg-gradient-to-l from-pink-50 to-transparent" />
+                    <div className="absolute bottom-0 left-0 w-[50%] h-[50%] bg-gradient-to-t from-purple-50 to-transparent" />
                 </div>
 
-                <div className="relative z-10 max-w-[1440px] mx-auto text-center">
-                    <span className="inline-block bg-white/80 backdrop-blur border border-gray-100 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-4 shadow-sm">
-                        {MOCK_PRODUCTS.length} Products Found
-                    </span>
-                    <h1 className="text-5xl md:text-7xl font-[900] tracking-tight mb-4 capitalize text-[#1a1a1a]">
-                        {category}
+                <div className="relative z-10 max-w-4xl mx-auto text-center">
+                    <div className="flex items-center justify-center gap-3 mb-6">
+                        <div className="h-px w-8 bg-[#1a1a1a]/20" />
+                        <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#1a1a1a]/60">
+                            {category} Collection
+                        </span>
+                        <div className="h-px w-8 bg-[#1a1a1a]/20" />
+                    </div>
+
+                    <h1 className="text-5xl md:text-7xl font-[450] tracking-tight mb-6 text-[#1a1a1a] font-serif italic">
+                        {currentContent.title}
                     </h1>
-                    <p className="text-gray-500 max-w-2xl mx-auto text-lg font-light leading-relaxed">
-                        Glow, hydration & repair essentials. Discover the finest collection curated for your skin's needs.
+
+                    <p className="text-gray-500 max-w-xl mx-auto text-lg font-light leading-relaxed">
+                        {currentContent.desc}
                     </p>
                 </div>
             </section>
 
             {/* 2. STICKY FILTER BAR */}
-            <div className="sticky top-[70px] z-40 bg-[#fdfbf7]/95 backdrop-blur-md border-y border-gray-200/50 py-4 shadow-sm">
+            <div className="sticky top-[70px] z-40 bg-[#fdfbf7]/90 backdrop-blur-xl border-y border-gray-100 py-3 shadow-sm transition-all">
                 <div className="max-w-[1440px] mx-auto px-6 flex flex-col lg:flex-row items-center justify-between gap-4">
 
-                    {/* Category Dropdown (NEW) */}
-                    <div className="relative min-w-[200px] w-full lg:w-auto">
-                        <select
-                            value={category}
-                            onChange={(e) => onCategoryChange && onCategoryChange(e.target.value)}
-                            className="w-full appearance-none bg-[#1a1a1a] text-white border border-[#1a1a1a] pl-5 pr-10 py-3 rounded-full text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-black focus:outline-none shadow-md transition-colors"
-                        >
-                            {ALL_CATEGORIES.map(cat => (
-                                <option key={cat} value={cat} className="text-gray-900 bg-white">{cat}</option>
-                            ))}
-                        </select>
-                        <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-white pointer-events-none" />
+                    {/* Category Dropdown (Clean) */}
+                    {/* Category Dropdown (Clean) */}
+                    <div className="relative min-w-[220px] w-full lg:w-auto">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger className="flex items-center justify-between w-full bg-white border border-gray-200 pl-6 pr-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-gray-400 focus:outline-none focus:ring-1 focus:ring-black transition-all shadow-sm outline-none text-left">
+                                {category}
+                                <ChevronDown size={14} className="text-gray-400" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-[220px] max-h-96 overflow-y-auto p-1 bg-white border border-gray-100 rounded-xl shadow-lg animate-in fade-in-0 zoom-in-95">
+                                {ALL_CATEGORIES.map(cat => (
+                                    <DropdownMenuItem
+                                        key={cat}
+                                        onClick={() => onCategoryChange && onCategoryChange(cat)}
+                                        className={`
+                                            flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wide cursor-pointer transition-colors
+                                            ${cat === category ? "bg-gray-100 text-black" : "text-gray-500 hover:bg-gray-50 hover:text-black"}
+                                        `}
+                                    >
+                                        {cat === category && <Check size={12} className="text-black shrink-0" />}
+                                        <span className={cat !== category ? "pl-5" : ""}>{cat}</span>
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
 
                     {/* Search */}
-                    <div className="relative w-full lg:w-96">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <div className="relative w-full lg:w-80">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                         <input
                             type="text"
-                            placeholder={`Search within ${category}...`}
-                            className="w-full bg-white border border-gray-200 rounded-full pl-12 pr-6 py-3 text-sm font-medium focus:outline-none focus:border-[#1a1a1a] transition-colors"
+                            placeholder="Find your favorite..."
+                            className="w-full bg-gray-50/50 border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm font-medium focus:outline-none focus:bg-white focus:border-black transition-all placeholder:text-gray-400"
                         />
                     </div>
 
                     {/* Filters */}
-                    <div className="flex items-center gap-2 overflow-x-auto w-full lg:w-auto no-scrollbar pb-1">
-                        {FILTERS.map(f => (
-                            <button
-                                key={f}
-                                onClick={() => setActiveFilter(f)}
-                                className={`px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all border ${activeFilter === f
-                                    ? "bg-[#1a1a1a] text-white border-[#1a1a1a]"
-                                    : "bg-white border-gray-200 text-gray-500 hover:border-gray-400"
-                                    }`}
-                            >
-                                {f}
-                            </button>
-                        ))}
-                    </div>
 
                     {/* Sort */}
+                    {/* Sort */}
                     <div className="relative min-w-[160px] hidden lg:block">
-                        <select
-                            value={sortOption}
-                            onChange={(e) => setSortOption(e.target.value)}
-                            className="w-full appearance-none bg-white border border-gray-200 pl-5 pr-10 py-3 rounded-full text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-black focus:outline-none"
-                        >
-                            <option>Most Popular</option>
-                            <option>Latest Drops</option>
-                            <option>Price: Low to High</option>
-                            <option>Top Rated</option>
-                        </select>
-                        <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+                        <DropdownMenu>
+                            <DropdownMenuTrigger className="flex items-center justify-between gap-3 w-full bg-white border border-gray-200 pl-5 pr-4 py-3 rounded-full text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-black focus:outline-none transition-all outline-none">
+                                <span className="truncate">{sortOption}</span>
+                                <ChevronDown size={14} className="text-gray-500 shrink-0" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-[180px] p-1 bg-white border border-gray-100 rounded-xl shadow-lg animate-in fade-in-0 zoom-in-95">
+                                {["Most Popular", "Latest Drops", "Price: Low to High", "Top Rated"].map((option) => (
+                                    <DropdownMenuItem
+                                        key={option}
+                                        onClick={() => setSortOption(option)}
+                                        className={`
+                                            px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wide cursor-pointer transition-colors
+                                            ${sortOption === option ? "bg-gray-100 text-black" : "text-gray-500 hover:bg-gray-50 hover:text-black"}
+                                        `}
+                                    >
+                                        {option}
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </div>
             </div>
