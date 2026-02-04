@@ -17,7 +17,7 @@ function formatINR(amount) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount);
 }
 
-export default function HomePage({ addToCart, query, onNavigate }) {
+export default function HomePage({ addToCart, query, onNavigate, onSelectCategory }) {
   const PRODUCTS = getAllProducts();
   const scrollRef = useRef(null);
 
@@ -71,7 +71,7 @@ export default function HomePage({ addToCart, query, onNavigate }) {
       <UpcomingDrops onNavigate={onNavigate} />
 
 
-      <ByCategory />
+      <ByCategory onNavigate={onNavigate} onSelectCategory={onSelectCategory} />
 
       {/* Featured products */}
       <section id="shop" className="py-[28px]">

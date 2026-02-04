@@ -99,7 +99,7 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
 
           <div className="ml-auto flex items-center gap-[10px] px-[12px] py-[8px] rounded-[999px] border border-black/14 bg-white min-w-[300px] shadow-[0_4px_12px_rgba(0,0,0,0.04)] relative">
             <span className="w-[24px] h-[24px] rounded-[999px] grid place-items-center text-[#888]" aria-hidden="true">
-              <img className="w-[20px] h-[20px] object-contain block opacity-60" src={searchIcon} alt="" />
+              <img className="w-[20px] h-[20px] object-contain block opacity-100" src={searchIcon} alt="" />
             </span>
             <input
               className="border-none outline-none w-full text-[14px] bg-transparent text-text-custom placeholder-shown:opacity-100 peer"

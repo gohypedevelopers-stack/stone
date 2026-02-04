@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { getAllProducts } from "./data/products";
 import ProductCard from "./components/card.jsx";
 import { Clock, Filter, Sparkles, CheckCircle, Mail, ChevronRight, Heart } from "lucide-react";
+import ImageReveal from "./components/image-tiles";
+import imgNew1 from "./assets/newprod/new1.jpg";
+import imgNew2 from "./assets/newprod/new2.jpg";
+import imgNew3 from "./assets/newprod/new3.jpg";
 
 export default function NewArrivals({ addToCart }) {
     const allProducts = getAllProducts();
@@ -35,7 +39,7 @@ export default function NewArrivals({ addToCart }) {
                     {/* Text Content */}
                     <div className="max-w-xl relative z-10 text-center md:text-left">
                         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 border border-pink-100 shadow-sm mb-6">
-                            
+
                             <span className="text-xs font-bold uppercase tracking-widest text-[#151515]">Just Dropped</span>
                         </div>
                         <h1 className="text-5xl md:text-7xl font-[800] text-[#151515] leading-[1.1] mb-6 tracking-tight">
@@ -55,16 +59,12 @@ export default function NewArrivals({ addToCart }) {
                         <div className="absolute top-0 right-0 w-64 h-64 bg-pink-300/20 rounded-full blur-3xl" />
                         <div className="absolute bottom-0 left-10 w-64 h-64 bg-purple-300/20 rounded-full blur-3xl" />
 
-                        {/* Product Mockups */}
-                        <div className="relative z-10 w-full max-w-sm grid grid-cols-2 gap-4 rotate-[-6deg] hover:rotate-0 transition-transform duration-700 ease-out">
-                            <div className="bg-white p-4 rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.08)] flex flex-col items-center transform translate-y-8">
-                                <img src="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=400&q=80" alt="" className="w-full h-auto rounded-xl mb-3" />
-                                <span className="text-xs font-bold">Hydra Glow</span>
-                            </div>
-                            <div className="bg-white p-4 rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.08)] flex flex-col items-center transform -translate-y-8">
-                                <img src="https://images.unsplash.com/photo-1556228720-1987599988d3?auto=format&fit=crop&w=400&q=80" alt="" className="w-full h-auto rounded-xl mb-3" />
-                                <span className="text-xs font-bold">Sun Veil</span>
-                            </div>
+                        <div className="relative z-10 scale-75 md:scale-100">
+                            <ImageReveal
+                                leftImage={imgNew1}
+                                middleImage={imgNew2}
+                                rightImage={imgNew3}
+                            />
                         </div>
                     </div>
                 </div>
@@ -151,12 +151,12 @@ export default function NewArrivals({ addToCart }) {
 
                         {/* BOGO Visual */}
                         <div className="flex items-center gap-4 relative">
-                            <div className="bg-white p-3 rounded-2xl shadow-xl transform -rotate-3 border border-white">
-                                <img src={allProducts[0]?.image} alt="Product 1" className="w-32 h-32 object-cover rounded-xl" />
+                            <div className="bg-white p-1 rounded-2xl shadow-xl transform -rotate-3 border border-white">
+                                <img src={allProducts[0]?.image} alt="Product 1" className="w-38 h-38 object-cover rounded-xl" />
                             </div>
                             <div className="w-8 h-8 bg-[#151515] text-white rounded-full flex items-center justify-center font-bold absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 border-4 border-white shadow-sm">+</div>
-                            <div className="bg-pink-50 p-3 rounded-2xl shadow-xl transform rotate-3 border border-white relative">
-                                <img src={allProducts[1]?.image} alt="Product 2" className="w-32 h-32 object-cover rounded-xl grayscale opacity-90" />
+                            <div className="bg-pink-50 p-1 rounded-2xl shadow-xl transform rotate-3 border border-white relative">
+                                <img src={allProducts[1]?.image} alt="new2" className="w-38 h-38 object-cover rounded-xl grayscale opacity-90" />
                                 <div className="absolute top-2 right-2 bg-pink-500 text-white text-[8px] font-bold px-2 py-0.5 rounded-sm">FREE</div>
                             </div>
                         </div>
@@ -209,7 +209,7 @@ export default function NewArrivals({ addToCart }) {
                     <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-indigo-200/30 rounded-full blur-3xl pointer-events-none" />
 
                     <div className="relative z-10 max-w-2xl mx-auto">
-                       
+
 
                         <h2 className="text-3xl md:text-4xl font-[900] text-[#151515] mb-3 tracking-tight">Want Something Special?</h2>
                         <p className="text-gray-600 text-base md:text-lg mb-8 font-light">

@@ -114,7 +114,7 @@ const CATEGORY_IMAGES = {
   "Treatment mask": treatmentMaskImg,
 };
 
-export default function ByCategory() {
+export default function ByCategory({ onNavigate, onSelectCategory }) {
   const scrollRef = useRef(null);
   const GAP = 14;
 
@@ -156,7 +156,21 @@ export default function ByCategory() {
               onClick={() => scroll("left")}
               className="absolute left-[10px] top-1/2 -translate-y-1/2 z-20 w-[40px] h-[40px] bg-white/80 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center border border-black/10 hover:bg-white transition-all cursor-pointer"
             >
-             
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M15 6L9 12L15 18"
+                  stroke="black"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </button>
 
             {/* Scroll Container */}
@@ -170,9 +184,13 @@ export default function ByCategory() {
               {CATEGORIES.map((label) => (
                 <div
                   key={label}
-                  className="text-center flex-none snap-center"
+                  className="text-center flex-none snap-center cursor-pointer group"
                   style={{
                     width: CARD_WIDTH,
+                  }}
+                  onClick={() => {
+                    if (onSelectCategory) onSelectCategory(label);
+                    if (onNavigate) onNavigate("category-page");
                   }}
                 >
                   <img

@@ -34,7 +34,7 @@ export default function OfferTimer() {
                 <div className="relative overflow-hidden rounded-[20px] px-[32px] py-[16px] flex flex-col md:flex-row items-center justify-between gap-[24px] bg-gradient-to-r from-[#e3e3e3] to-[#f2f2f2] shadow-[inset_0_1px_4px_rgba(255,255,255,0.8)] border border-white/50">
 
                     <div className="flex items-center gap-[20px]">
-                        <span className="text-[22px] font-[800] text-[#1a1a1a] tracking-tight">
+                        <span className="text-[22px] font-[500] text-[#1a1a1a] tracking-tight">
                             20% OFF on orders over $100
                         </span>
                         <button
