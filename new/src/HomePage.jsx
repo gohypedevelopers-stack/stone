@@ -17,7 +17,7 @@ function formatINR(amount) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount);
 }
 
-export default function HomePage({ addToCart, query, onNavigate, onSelectCategory, onSelectBrand, onSelectConcern }) {
+export default function HomePage({ addToCart, query, onNavigate, onSelectCategory, onSelectBrand, onSelectConcern, onSelectOffer }) {
   const PRODUCTS = getAllProducts();
   const scrollRef = useRef(null);
 
@@ -107,7 +107,7 @@ export default function HomePage({ addToCart, query, onNavigate, onSelectCategor
 
       <BySkinConcern onSelectConcern={onSelectConcern} />
       <WatchAndShop onNavigate={onNavigate} />
-      <ByOffer />
+      <ByOffer onNavigate={onNavigate} onSelectOffer={onSelectOffer} />
 
       {/* Offers + Loyalty */}
       <section className="py-[28px]">

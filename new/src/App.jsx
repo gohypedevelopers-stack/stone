@@ -9,6 +9,7 @@ import ProductPage from "./productpage.jsx";
 import CategoryPage from "./CategoryPage.jsx";
 import BrandPage from "./BrandPage.jsx";
 import SkinConcernPage from "./SkinConcernPage.jsx";
+import ShopByOfferPage from "./ShopByOfferPage.jsx";
 import { getAllProducts } from "./data/products";
 import imgNewArrival from "./assets/newarrival.jpg";
 import imgBestSeller from "./assets/bestsellerproducts.jpg";
@@ -26,6 +27,7 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState("Serums");
   const [selectedBrand, setSelectedBrand] = useState("Laneige");
   const [selectedConcern, setSelectedConcern] = useState("acne");
+  const [selectedOffer, setSelectedOffer] = useState("flat-20");
   const [query, setQuery] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
   const [cart, setCart] = useState([]); // {id, qty}
@@ -198,6 +200,10 @@ export default function App() {
             setSelectedConcern(concern);
             setCurrentView("skin-concern-page");
           }}
+          onSelectOffer={(offer) => {
+            setSelectedOffer(offer);
+            setCurrentView("shop-by-offer-page");
+          }}
         />
       )}
       {currentView === "shop" && <Shop addToCart={addToCart} />}
@@ -223,6 +229,12 @@ export default function App() {
           userConcern={selectedConcern}
           addToCart={addToCart}
           onConcernChange={setSelectedConcern}
+        />
+      )}
+      {currentView === "shop-by-offer-page" && (
+        <ShopByOfferPage
+          initialOffer={selectedOffer}
+          addToCart={addToCart}
         />
       )}
 

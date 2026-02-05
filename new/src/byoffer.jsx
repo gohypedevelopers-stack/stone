@@ -33,9 +33,9 @@ const OFFERS = [
     gradient: "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)",
     link: "combo-deals",
   },
-  
-  
-  
+
+
+
   {
     id: "weekend",
     label: "Weekend Specials",
@@ -61,10 +61,10 @@ const FEATURED = {
   link: "mega-sale",
 };
 
-export default function ByOffer() {
+export default function ByOffer({ onNavigate, onSelectOffer }) {
   function handleOfferClick(link) {
-    if (typeof window !== "undefined") {
-      window.location.href = `/shop?offer=${link}`;
+    if (onSelectOffer) {
+      onSelectOffer(link);
     }
   }
 
