@@ -11,15 +11,7 @@ import {
     DropdownMenuTrigger,
 } from "./components/ui/dropdown-menu.jsx";
 
-import bbCreamImg0 from "./assets/category/B.B CREM PAGE/MISSHA-M-Perfect-Cover-BB-Cream-SPF42-PA-shade-23.jpg";
-import bbCreamImg1 from "./assets/category/B.B CREM PAGE/MISSHA-M-Perfect-Cover-BB-Cream-SPF42-PA-shade-21.jpeg";
-import bbCreamImg2 from "./assets/category/B.B CREM PAGE/MISSHA-Perfect-Cover-Serum-B.B-Cream-23.jpg";
-import bbCreamImg3 from "./assets/category/B.B CREM PAGE/MISSHA-Perfect-Cover-Serum-B.B-Cream-25.png";
-import bbCreamImg4 from "./assets/category/B.B CREM PAGE/poetic-blooms-lotion.png";
-import bbCreamImg5 from "./assets/category/B.B CREM PAGE/MISSHA-Perfect-Cover-Serum-B.B-Cream-21.jpg";
-import bbCreamImg6 from "./assets/category/B.B CREM PAGE/MISSHA-Perfect-Cover-Serum-B.B-Cream-27.jpg";
-import bbCreamImg7 from "./assets/category/B.B CREM PAGE/fresh-pomelo.png";
-import bbCreamImg8 from "./assets/category/B.B CREM PAGE/VELVET-PLUM.png";
+import { CATEGORY_DATA_GENERATED } from "./productData.js";
 
 export default function CategoryPage({ category = "Serums", addToCart, onCategoryChange }) {
     const [activeFilter, setActiveFilter] = useState("All");
@@ -302,108 +294,9 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
         }
     ];
 
-    const BB_CREAM_DATA = [
-        {
-            id: "omw-bb-0",
-            name: "MISSHA – M Perfect Cover BB Cream SPF42 PA+++ shade 23",
-            brand: "Missha",
-            price: 2200,
-            rating: 4.5,
-            reviews: 96,
-            image: bbCreamImg0,
-            tag: "Best Seller",
-            benefits: ["SPF 42", "PA+++"]
-        },
-        {
-            id: "omw-bb-1",
-            name: "MISSHA – M Perfect Cover BB Cream SPF42 PA+++ shade 21",
-            brand: "Missha",
-            price: 2200,
-            rating: 4.5,
-            reviews: 104,
-            image: bbCreamImg1,
-            tag: "",
-            benefits: ["SPF 42", "PA+++"]
-        },
-        {
-            id: "omw-bb-2",
-            name: "MISSHA – Perfect Cover Serum B.B Cream 23",
-            brand: "Missha",
-            price: 1800,
-            rating: 4.5,
-            reviews: 99,
-            image: bbCreamImg2,
-            tag: "",
-            benefits: ["SPF 42", "PA+++"]
-        },
-        {
-            id: "omw-bb-3",
-            name: "MISSHA – Perfect Cover Serum B.B Cream 25",
-            brand: "Missha",
-            price: 1800,
-            rating: 4.5,
-            reviews: 80,
-            image: bbCreamImg3,
-            tag: "",
-            benefits: ["SPF 42", "PA+++"]
-        },
-        {
-            id: "omw-bb-4",
-            name: "poetic blooms lotion",
-            brand: "Poetic Blooms",
-            price: 1350,
-            rating: 4.5,
-            reviews: 25,
-            image: bbCreamImg4,
-            tag: "",
-            benefits: ["SPF 42", "PA+++"]
-        },
-        {
-            id: "omw-bb-5",
-            name: "MISSHA – Perfect Cover Serum B.B Cream 21",
-            brand: "Missha",
-            price: 1800,
-            rating: 4.5,
-            reviews: 82,
-            image: bbCreamImg5,
-            tag: "",
-            benefits: ["SPF 42", "PA+++"]
-        },
-        {
-            id: "omw-bb-6",
-            name: "MISSHA – Perfect Cover Serum B.B Cream 27",
-            brand: "Missha",
-            price: 1800,
-            rating: 4.5,
-            reviews: 68,
-            image: bbCreamImg6,
-            tag: "",
-            benefits: ["SPF 42", "PA+++"]
-        },
-        {
-            id: "omw-bb-7",
-            name: "fresh pomelo",
-            brand: "Fresh",
-            price: 1000,
-            rating: 4.5,
-            reviews: 83,
-            image: bbCreamImg7,
-            tag: "",
-            benefits: ["SPF 42", "PA+++"]
-        },
-        {
-            id: "omw-bb-8",
-            name: "VELVET PLUM",
-            brand: "Velvet",
-            price: 1000,
-            rating: 4.5,
-            reviews: 75,
-            image: bbCreamImg8,
-            tag: "",
-            benefits: ["SPF 42", "PA+++"]
-        },
-    ];
 
+
+    // Top Picks for BB Cream (Re-using images from the main data source to match previous hardcoded values)
     const BB_CREAM_TOP_PICKS = [
         {
             id: "bb-top-1",
@@ -412,7 +305,7 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
             price: 2200,
             rating: 4.9,
             reviews: 1205,
-            image: bbCreamImg0,
+            image: CATEGORY_DATA_GENERATED["B.b cream"]?.[0]?.image,
             tag: "Bestseller",
             benefits: ["SPF 42", "High Coverage"]
         },
@@ -423,7 +316,7 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
             price: 1000,
             rating: 4.7,
             reviews: 432,
-            image: bbCreamImg7,
+            image: CATEGORY_DATA_GENERATED["B.b cream"]?.[7]?.image,
             tag: "Trending",
             benefits: ["Vitamin C", "Radiance"]
         },
@@ -434,7 +327,7 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
             price: 1000,
             rating: 4.8,
             reviews: 310,
-            image: bbCreamImg8,
+            image: CATEGORY_DATA_GENERATED["B.b cream"]?.[8]?.image,
             tag: "New Arrival",
             benefits: ["Matte Finish", "Long Wear"]
         }
@@ -447,8 +340,10 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
             // Use the full 24-product foundation list directly
             return FOUNDATION_DATA;
         }
-        if (category === "B.b cream") {
-            return BB_CREAM_DATA;
+
+        // Use generated data if available
+        if (CATEGORY_DATA_GENERATED[category]) {
+            return CATEGORY_DATA_GENERATED[category];
         }
 
         return Array.from({ length: 12 }).map((_, i) => ({
@@ -505,8 +400,10 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
             ? BB_CREAM_TOP_PICKS
             : MOCK_PRODUCTS.slice(0, 3);
 
-    const GRID_PRODUCTS = category === "Foundation" || category === "B.b cream"
-        ? MOCK_PRODUCTS // Show ALL real products in grid for Foundation and B.b cream
+    // Show all products in grid for Foundation, or if we have generated data (assuming generated data is the full set)
+    // Otherwise obey the slice(3) rule for random mock data
+    const GRID_PRODUCTS = category === "Foundation" || CATEGORY_DATA_GENERATED[category]
+        ? MOCK_PRODUCTS
         : MOCK_PRODUCTS.slice(3);
 
     const FILTERS = ["All", "Hydration", "Brightening", "Acne Care", "Anti-Aging", "Sensitive Skin"];
