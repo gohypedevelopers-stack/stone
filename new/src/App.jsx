@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import HomePage from "./HomePage";
 import Shop from "./Shop";
 import Navbar from "./navbar";
@@ -22,12 +23,10 @@ function formatINR(amount) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount);
 }
 
+// Navigation logic handled directly in App due to Router being in main.jsx
 export default function App() {
-  const [currentView, setCurrentView] = useState("home"); // 'home' | 'shop' | 'new-arrivals' | 'best-sellers' | 'category-page' | 'brand-page'
-  const [selectedCategory, setSelectedCategory] = useState("Serums");
-  const [selectedBrand, setSelectedBrand] = useState("Laneige");
-  const [selectedConcern, setSelectedConcern] = useState("acne");
-  const [selectedOffer, setSelectedOffer] = useState("flat-20");
+  const navigate = useNavigate();
+  const location = useLocation();
   const [query, setQuery] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
   const [cart, setCart] = useState([]); // {id, qty}
@@ -72,45 +71,35 @@ export default function App() {
   }
 
   // Categories Data
-  // Categories Data
   const CATEGORIES = [
-    {
-      key: "serums",
-      title: "New Arrivals",
-      desc: "Brightening, acne, barrier",
-      image: imgNewArrival
-    },
-    {
-      key: "makeup",
-      title: "Best Sellers",
-      desc: "Tint, blush, lips",
-      image: imgBestSeller
-    },
-    {
-      key: "cleansers",
-      title: "Foundation",
-      desc: "Oil, foam & gel",
-      image: imgFoundation
-    },
-    {
-      key: "sunscreen",
-      title: "Moisturizers",
-      desc: "Daily UV protection",
-      image: imgMoisturizer
-    },
-    {
-      key: "korean",
-      title: "Perfume",
-      desc: "Essences, toners, ampoules",
-      image: imgPerfume
-    },
-    {
-      key: "japanese",
-      title: "Lipstick",
-      desc: "Gentle hydration & SPF",
-      image: imgLipstick
-    },
+    { key: "serums", title: "New Arrivals", desc: "Brightening, acne, barrier", image: imgNewArrival },
+    { key: "makeup", title: "Best Sellers", desc: "Tint, blush, lips", image: imgBestSeller },
+    { key: "cleansers", title: "Foundation", desc: "Oil, foam & gel", image: imgFoundation },
+    { key: "sunscreen", title: "Moisturizers", desc: "Daily UV protection", image: imgMoisturizer },
+    { key: "korean", title: "Perfume", desc: "Essences, toners, ampoules", image: imgPerfume },
+    { key: "japanese", title: "Lipstick", desc: "Gentle hydration & SPF", image: imgLipstick },
   ];
+
+  const handleNavigate = (view) => {
+    // Map legacy view names to routes
+    const routeMap = {
+      "home": "/",
+      "shop": "/shop",
+      "new-arrivals": "/new-arrivals",
+      "best-sellers": "/best-sellers",
+      "category-page": "/category/Serums", // Default category
+      "brand-page": "/brand/Laneige", // Default brand
+      "skin-concern-page": "/concern/acne", // Default concern
+      "shop-by-offer-page": "/offer/flat-20" // Default offer
+    };
+
+    if (routeMap[view]) {
+      navigate(routeMap[view]);
+    } else {
+      // Fallback for direct route names if passed
+      navigate(view.startsWith("/") ? view : "/" + view);
+    }
+  };
 
   return (
     <div className="relative overflow-x-hidden">
@@ -120,8 +109,33 @@ export default function App() {
         onQueryChange={(e) => setQuery(e.target.value)}
         cartCount={cartCount}
         onToggleCart={() => setCartOpen((v) => !v)}
-        onNavigate={setCurrentView}
+        onNavigate={handleNavigate}
       />
+
+      {/* Main Content Area */}
+      <Routes>
+        <Route path="/" element={
+          <HomePage
+            addToCart={addToCart}
+            query={query}
+            onNavigate={handleNavigate}
+            onSelectCategory={(cat) => navigate(`/category/${cat}`)}
+            onSelectBrand={(brand) => navigate(`/brand/${brand}`)}
+            onSelectConcern={(concern) => navigate(`/concern/${concern}`)}
+            onSelectOffer={(offer) => navigate(`/offer/${offer}`)}
+          />
+        } />
+        <Route path="/shop" element={<Shop addToCart={addToCart} />} />
+        <Route path="/new-arrivals" element={<NewArrivals addToCart={addToCart} />} />
+        <Route path="/best-sellers" element={<BestSellers addToCart={addToCart} />} />
+
+        {/* Dynamic Routes */}
+        <Route path="/product/:id" element={<ProductPage addToCart={addToCart} />} />
+        <Route path="/category/:category" element={<CategoryPageWrapper addToCart={addToCart} />} />
+        <Route path="/brand/:brandName" element={<BrandPageWrapper addToCart={addToCart} />} />
+        <Route path="/concern/:concern" element={<SkinConcernPageWrapper addToCart={addToCart} />} />
+        <Route path="/offer/:offer" element={<ShopByOfferPageWrapper addToCart={addToCart} />} />
+      </Routes>
 
       {/* Persistent Cart Drawer */}
       <aside className={`fixed top-0 right-0 w-[min(420px,92vw)] h-[100vh] bg-white shadow-[-20px_0_60px_rgba(0,0,0,0.15)] transform transition-transform duration-250 z-50 flex flex-col ${cartOpen ? "translate-x-0" : "translate-x-[110%]"}`} aria-label="Shopping cart">
@@ -140,6 +154,8 @@ export default function App() {
           <button className="border border-line-custom bg-white h-[40px] w-[40px] rounded-[999px] grid place-items-center cursor-pointer hover:shadow-[0_8px_20px_rgba(0,0,0,0.08)]" onClick={() => setCartOpen(false)} aria-label="Close cart">✕</button>
         </div>
 
+        {/* Persistent Cart Drawer */}
+
         <div className="p-[14px_16px_18px] overflow-auto">
           {cartItems.length === 0 ? (
             <div className="text-muted-custom">
@@ -152,7 +168,7 @@ export default function App() {
                 {cartItems.map((it) => (
                   <li key={it.id} className="grid grid-cols-[54px_1fr_auto] gap-[12px] items-center p-[10px] border border-line-custom rounded-[14px]">
                     <div className="h-[54px] w-[54px] rounded-[12px] bg-[linear-gradient(135deg,rgba(111,92,255,0.25),rgba(255,93,177,0.18),rgba(255,138,42,0.18))]" aria-hidden="true" />
-                    <div className="">
+                    <div>
                       <div className="font-[650] text-[13px]">{it.name}</div>
                       <div className="text-[12px] text-muted-custom mt-[2px]">{formatINR(it.price)}</div>
                       <div className="flex items-center gap-[10px] mt-[6px]">
@@ -182,64 +198,33 @@ export default function App() {
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      {currentView === "home" && (
-        <HomePage
-          addToCart={addToCart}
-          query={query}
-          onNavigate={setCurrentView}
-          onSelectCategory={(cat) => {
-            setSelectedCategory(cat);
-            setCurrentView("category-page");
-          }}
-          onSelectBrand={(brand) => {
-            setSelectedBrand(brand);
-            setCurrentView("brand-page");
-          }}
-          onSelectConcern={(concern) => {
-            setSelectedConcern(concern);
-            setCurrentView("skin-concern-page");
-          }}
-          onSelectOffer={(offer) => {
-            setSelectedOffer(offer);
-            setCurrentView("shop-by-offer-page");
-          }}
-        />
-      )}
-      {currentView === "shop" && <Shop addToCart={addToCart} />}
-      {currentView === "new-arrivals" && <NewArrivals addToCart={addToCart} />}
-      {currentView === "best-sellers" && <BestSellers addToCart={addToCart} />}
-      {currentView === "product-page" && <ProductPage addToCart={addToCart} />}
-      {currentView === "category-page" && (
-        <CategoryPage
-          category={selectedCategory}
-          addToCart={addToCart}
-          onCategoryChange={setSelectedCategory}
-        />
-      )}
-      {currentView === "brand-page" && (
-        <BrandPage
-          brandName={selectedBrand}
-          addToCart={addToCart}
-          onBrandChange={setSelectedBrand}
-        />
-      )}
-      {currentView === "skin-concern-page" && (
-        <SkinConcernPage
-          userConcern={selectedConcern}
-          addToCart={addToCart}
-          onConcernChange={setSelectedConcern}
-        />
-      )}
-      {currentView === "shop-by-offer-page" && (
-        <ShopByOfferPage
-          initialOffer={selectedOffer}
-          addToCart={addToCart}
-        />
-      )}
-
-
       <Footer supportPhone={supportPhone} />
     </div>
   );
+}
+
+// Wrappers to extract route params and pass them as props
+import { useParams } from "react-router-dom";
+
+function CategoryPageWrapper({ addToCart }) {
+  const { category } = useParams();
+  const navigate = useNavigate();
+  return <CategoryPage category={category} addToCart={addToCart} onCategoryChange={(cat) => navigate(`/category/${cat}`)} />;
+}
+
+function BrandPageWrapper({ addToCart }) {
+  const { brandName } = useParams();
+  const navigate = useNavigate();
+  return <BrandPage brandName={brandName} addToCart={addToCart} onBrandChange={(b) => navigate(`/brand/${b}`)} />;
+}
+
+function SkinConcernPageWrapper({ addToCart }) {
+  const { concern } = useParams();
+  const navigate = useNavigate();
+  return <SkinConcernPage userConcern={concern} addToCart={addToCart} onConcernChange={(c) => navigate(`/concern/${c}`)} />;
+}
+
+function ShopByOfferPageWrapper({ addToCart }) {
+  const { offer } = useParams();
+  return <ShopByOfferPage initialOffer={offer} addToCart={addToCart} />;
 }

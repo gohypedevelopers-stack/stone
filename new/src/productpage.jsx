@@ -94,22 +94,61 @@ const ProductCardMini = ({ product, onAddToCart }) => (
 );
 
 
-export default function ProductDetail({ addToCart }) {
-    // Grab a product to display (using first Bestseller or just first product for demo)
-    const products = getAllProducts() || [];
-    const product = products.find(p => p.tag === "Best Seller") || products[0];
+import { useParams } from "react-router-dom";
+import { CATEGORY_DATA_GENERATED } from "./productData.js";
 
-    // Guard Clause to prevent crashes if no products
-    if (!product) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <p className="text-gray-500 text-lg">Loading product details...</p>
-            </div>
-        );
+// Helper to find product by ID across all data sources
+const findProductById = (id) => {
+    if (!id) return null;
+
+    // Check manual products first
+    const manualProducts = getAllProducts();
+    const foundManual = manualProducts.find(p => p.id === id);
+    if (foundManual) return foundManual;
+
+    // Check generated category data
+    for (const category in CATEGORY_DATA_GENERATED) {
+        const found = CATEGORY_DATA_GENERATED[category].find(p => p.id === id);
+        if (found) return found;
     }
+
+    return null;
+};
+
+export default function ProductDetail({ addToCart }) {
+    const { id } = useParams();
+
+    // Fetch product data
+    const productData = findProductById(id);
+
+    // Fallback if not found (should be handled better in production, e.g. 404)
+    const products = getAllProducts() || [];
+    const defaultProduct = products.find(p => p.tag === "Best Seller") || products[0];
+
+    const product = productData || defaultProduct;
 
     // Merge with Mock Data for full experience
     const fullProduct = { ...product, ...MOCK_PDP_DATA };
+
+    // Reset state when product changes
+    useEffect(() => {
+        setMainImage(fullProduct.images[0]);
+        setQty(1);
+        setSelectedShade(fullProduct.shades[0]);
+    }, [id]); // Depend on ID or product. Using ID is safer if product object reference is unstable.
+
+    if (!product) return <div className="p-20 text-center">Loading...</div>;
+
+    // Ensure images array exists
+    const images = product.images || (product.image ? [product.image] : []);
+    // If only one image and it's from the simple object structure, might need to mock a gallery
+    const displayImages = images.length > 0 ? images : ["https://via.placeholder.com/600"];
+
+    const stockStatus = "In Stock"; // Mock
+    const rating = product.rating || 4.8;
+    const reviewCount = product.reviews || 120;
+
+
 
     const [mainImage, setMainImage] = useState(fullProduct.images[0]);
     const [selectedShade, setSelectedShade] = useState(fullProduct.shades[0]);

@@ -86,7 +86,11 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
                       <p className="text-muted-custom text-[15px] leading-[1.6] max-w-[400px] mb-[20px]">
                         {c.desc || "Explore our premium collection curated just for you. Find the best products to enhance your beauty routine."}
                       </p>
-                      <a href="#" className="text-[#d1408e] font-[700] text-[14px] flex items-center gap-[6px] hover:underline">
+                      <a
+                        href="#"
+                        onClick={(e) => { e.preventDefault(); onNavigate && onNavigate(`/category/${c.title}`); }}
+                        className="text-[#d1408e] font-[700] text-[14px] flex items-center gap-[6px] hover:underline"
+                      >
                         Shop {c.title}
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
                       </a>

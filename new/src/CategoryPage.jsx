@@ -11,9 +11,11 @@ import {
     DropdownMenuTrigger,
 } from "./components/ui/dropdown-menu.jsx";
 
+import { useNavigate } from "react-router-dom";
 import { CATEGORY_DATA_GENERATED } from "./productData.js";
 
 export default function CategoryPage({ category = "Serums", addToCart, onCategoryChange }) {
+    const navigate = useNavigate();
     const [activeFilter, setActiveFilter] = useState("All");
     const [sortOption, setSortOption] = useState("Most Popular");
 
@@ -533,7 +535,7 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {TOP_PICKS.map((p, i) => (
-                            <div key={p.id} className="relative group bg-white rounded-[32px] overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500">
+                            <div key={p.id} className="relative group bg-white rounded-[32px] overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 cursor-pointer" onClick={() => navigate(`/product/${p.id}`)}>
                                 <div className="absolute top-4 left-4 z-10">
                                     <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-white shadow-md ${i === 0 ? "bg-[#1a1a1a]" : "bg-pink-500"}`}>
                                         {i === 0 ? "Bestseller" : "Trending Now"}
@@ -554,7 +556,7 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
                                     </div>
                                     <div className="flex items-center justify-between mt-auto">
                                         <div className="text-lg font-bold">{new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(p.price)}</div>
-                                        <button onClick={() => addToCart(p.id)} className="w-10 h-10 rounded-full bg-[#1a1a1a] text-white flex items-center justify-center hover:bg-pink-600 transition-colors shadow-lg">
+                                        <button onClick={(e) => { e.stopPropagation(); addToCart(p.id); }} className="w-10 h-10 rounded-full bg-[#1a1a1a] text-white flex items-center justify-center hover:bg-pink-600 transition-colors shadow-lg">
                                             <ShoppingBag size={18} />
                                         </button>
                                     </div>
@@ -568,9 +570,9 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
                 <section>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
                         {GRID_PRODUCTS.map(p => (
-                            <div key={p.id} className="group flex flex-col">
+                            <div key={p.id} className="group flex flex-col cursor-pointer" onClick={() => navigate(`/product/${p.id}`)}>
                                 <div className="relative aspect-[4/5] rounded-[24px] overflow-hidden bg-gray-100 mb-4 shadow-sm group-hover:shadow-lg transition-all">
-                                    <button className="absolute top-4 right-4 z-10 w-9 h-9 bg-white/60 backdrop-blur rounded-full flex items-center justify-center hover:bg-white hover:text-red-500 transition-colors">
+                                    <button className="absolute top-4 right-4 z-10 w-9 h-9 bg-white/60 backdrop-blur rounded-full flex items-center justify-center hover:bg-white hover:text-red-500 transition-colors" onClick={(e) => e.stopPropagation()}>
                                         <Heart size={18} />
                                     </button>
                                     <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
@@ -578,7 +580,7 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
                                     {/* Quick Add Button */}
                                     <div className="absolute inset-x-4 bottom-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 opacity-0 group-hover:opacity-100">
                                         <button
-                                            onClick={() => addToCart(p.id)}
+                                            onClick={(e) => { e.stopPropagation(); addToCart(p.id); }}
                                             className="w-full bg-white text-[#1a1a1a] py-3 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg hover:bg-[#1a1a1a] hover:text-white transition-colors flex items-center justify-center gap-2"
                                         >
                                             <ShoppingBag size={14} /> Add to Cart
