@@ -11,6 +11,16 @@ import {
     DropdownMenuTrigger,
 } from "./components/ui/dropdown-menu.jsx";
 
+import bbCreamImg0 from "./assets/category/B.B CREM PAGE/MISSHA-M-Perfect-Cover-BB-Cream-SPF42-PA-shade-23.jpg";
+import bbCreamImg1 from "./assets/category/B.B CREM PAGE/MISSHA-M-Perfect-Cover-BB-Cream-SPF42-PA-shade-21.jpeg";
+import bbCreamImg2 from "./assets/category/B.B CREM PAGE/MISSHA-Perfect-Cover-Serum-B.B-Cream-23.jpg";
+import bbCreamImg3 from "./assets/category/B.B CREM PAGE/MISSHA-Perfect-Cover-Serum-B.B-Cream-25.png";
+import bbCreamImg4 from "./assets/category/B.B CREM PAGE/poetic-blooms-lotion.png";
+import bbCreamImg5 from "./assets/category/B.B CREM PAGE/MISSHA-Perfect-Cover-Serum-B.B-Cream-21.jpg";
+import bbCreamImg6 from "./assets/category/B.B CREM PAGE/MISSHA-Perfect-Cover-Serum-B.B-Cream-27.jpg";
+import bbCreamImg7 from "./assets/category/B.B CREM PAGE/fresh-pomelo.png";
+import bbCreamImg8 from "./assets/category/B.B CREM PAGE/VELVET-PLUM.png";
+
 export default function CategoryPage({ category = "Serums", addToCart, onCategoryChange }) {
     const [activeFilter, setActiveFilter] = useState("All");
     const [sortOption, setSortOption] = useState("Most Popular");
@@ -24,23 +34,444 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
         "Sunstick", "toner", "toner pads", "Treatment mask"
     ];
 
+    // -- REAL DATA from omwskincare.com for Foundation --
+    const FOUNDATION_DATA = [
+        {
+            id: "omw-found-1",
+            name: "L.A. girl pro coverage foundation",
+            brand: "L.A. Girl",
+            price: 1450,
+            rating: 4.5,
+            reviews: 42,
+            image: "https://www.omwskincare.com/wp-content/uploads/2024/05/s-l500.jpg",
+            tag: "Best Seller",
+            benefits: ["Illuminating", "Full Coverage"]
+        },
+        {
+            id: "omw-found-2",
+            name: "Infallible 32 Hour Fresh Wear Foundation (140) Cool Rose",
+            brand: "L'Oreal Paris",
+            price: 2150,
+            rating: 4.8,
+            reviews: 156,
+            image: "https://www.omwskincare.com/wp-content/uploads/2025/03/Best-LOreal-Paris-foundation-reviewed-by-skin-type-4.jpg",
+            tag: "Long Wear",
+            benefits: ["Waterproof", "Breathable"]
+        },
+        {
+            id: "omw-found-3",
+            name: "Maybelline Fit Me Foundation (228) Soft Tan",
+            brand: "Maybelline",
+            price: 1600,
+            rating: 4.6,
+            reviews: 890,
+            image: "https://www.omwskincare.com/wp-content/uploads/2024/09/maybelline-fit-me-matte-poreless-normal-to-oily-spf22-228-golden-caramel-30ml-IMG1-20211105_1200x1200.webp",
+            tag: "Matte",
+            benefits: ["Poreless", "Oil Control"]
+        },
+        {
+            id: "omw-found-4",
+            name: "Estée Lauder Double Wear Foundation",
+            brand: "Estée Lauder",
+            price: 6400,
+            rating: 4.9,
+            reviews: 320,
+            image: "https://www.omwskincare.com/wp-content/uploads/2024/05/3A0A9919_2b-e1629903857564.jpg",
+            tag: "Luxury",
+            benefits: ["Flawless", "24H Wear"]
+        },
+        {
+            id: "omw-found-5",
+            name: "Maybelline Fit me foudation(128)",
+            brand: "Maybelline",
+            price: 1550,
+            rating: 4.4,
+            reviews: 120,
+            image: "https://www.omwskincare.com/wp-content/uploads/2024/09/maybelline-fit-me-matte-poreless-normal-to-oily-spf22-228-golden-caramel-30ml-IMG1-20211105_1200x1200.webp",
+            tag: "",
+            benefits: ["Matte", "Poreless"]
+        },
+        {
+            id: "omw-found-6",
+            name: "Maybelline Fit me foudation(120)",
+            brand: "Maybelline",
+            price: 1550,
+            rating: 4.5,
+            reviews: 98,
+            image: "https://www.omwskincare.com/wp-content/uploads/2024/09/maybelline-fit-me-matte-poreless-normal-to-oily-spf22-228-golden-caramel-30ml-IMG1-20211105_1200x1200.webp",
+            tag: "",
+            benefits: ["Natural", "SPF 22"]
+        },
+        {
+            id: "omw-found-7",
+            name: "Estee lauder foudation",
+            brand: "Estée Lauder",
+            price: 6400,
+            rating: 4.9,
+            reviews: 410,
+            image: "https://www.omwskincare.com/wp-content/uploads/2024/05/3A0A9919_2b-e1629903857564.jpg",
+            tag: "Premium",
+            benefits: ["Full Coverage", "Oil Free"]
+        },
+        {
+            id: "omw-found-8",
+            name: "Infallible 32H (125) Warm Dore",
+            brand: "L'Oreal Paris",
+            price: 2150,
+            rating: 4.7,
+            reviews: 85,
+            image: "https://www.omwskincare.com/wp-content/uploads/2025/03/Best-LOreal-Paris-foundation-reviewed-by-skin-type-4.jpg",
+            tag: "",
+            benefits: ["Transfer-proof", "Vitamin C"]
+        },
+        {
+            id: "omw-found-9",
+            name: "Maybelline Fit Me (230)",
+            brand: "Maybelline",
+            price: 1600,
+            rating: 4.6,
+            reviews: 230,
+            image: "https://www.omwskincare.com/wp-content/uploads/2024/09/maybelline-fit-me-matte-poreless-normal-to-oily-spf22-228-golden-caramel-30ml-IMG1-20211105_1200x1200.webp",
+            tag: "",
+            benefits: ["Matte", "Daily Wear"]
+        },
+        {
+            id: "omw-found-10",
+            name: "Super stay foudation",
+            brand: "Maybelline",
+            price: 1850,
+            rating: 4.8,
+            reviews: 560,
+            image: "https://images.unsplash.com/photo-1631730359585-38a4935cbec4?auto=format&fit=crop&w=800&q=80",
+            tag: "High Coverage",
+            benefits: ["30H Wear", "Breathable"]
+        },
+        {
+            id: "omw-found-11",
+            name: "Infallible 32 Hour Fresh Wear (220) Neutral",
+            brand: "L'Oreal Paris",
+            price: 2150,
+            rating: 4.7,
+            reviews: 112,
+            image: "https://www.omwskincare.com/wp-content/uploads/2025/03/Best-LOreal-Paris-foundation-reviewed-by-skin-type-4.jpg",
+            tag: "",
+            benefits: ["Fresh Wear", "Sweatproof"]
+        },
+        {
+            id: "omw-found-12",
+            name: "Maybelline Fit me foudation (310)",
+            brand: "Maybelline",
+            price: 1600,
+            rating: 4.5,
+            reviews: 180,
+            image: "https://www.omwskincare.com/wp-content/uploads/2024/09/maybelline-fit-me-matte-poreless-normal-to-oily-spf22-228-golden-caramel-30ml-IMG1-20211105_1200x1200.webp",
+            tag: "",
+            benefits: ["Control Oil", "Blurring"]
+        },
+        {
+            id: "omw-found-13",
+            name: "L.A. Colors Foundation",
+            brand: "L.A. Colors",
+            price: 950,
+            rating: 4.2,
+            reviews: 65,
+            image: "https://images.unsplash.com/photo-1596462502278-27bfdd403cc2?auto=format&fit=crop&w=800&q=80",
+            tag: "Budget Buy",
+            benefits: ["Radiant", "Lightweight"]
+        },
+        {
+            id: "omw-found-14",
+            name: "HUDA BEAUTY Foundation",
+            brand: "Huda Beauty",
+            price: 3800,
+            rating: 4.9,
+            reviews: 940,
+            image: "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?auto=format&fit=crop&w=800&q=80",
+            tag: "Luxury",
+            benefits: ["#FauxFilter", "Luminous"]
+        },
+        {
+            id: "omw-found-15",
+            name: "NARS Foundation",
+            brand: "NARS",
+            price: 4200,
+            rating: 4.8,
+            reviews: 720,
+            image: "https://images.unsplash.com/photo-1596462502278-27bfdd403cc2?auto=format&fit=crop&w=800&q=80",
+            tag: "MUA Fav",
+            benefits: ["Light Reflecting", "Skincare"]
+        },
+        {
+            id: "omw-found-16",
+            name: "Milani Foundation",
+            brand: "Milani",
+            price: 2100,
+            rating: 4.6,
+            reviews: 310,
+            image: "https://images.unsplash.com/photo-1631730359585-38a4935cbec4?auto=format&fit=crop&w=800&q=80",
+            tag: "",
+            benefits: ["Conceal + Perfect", "2-in-1"]
+        },
+        {
+            id: "omw-found-17",
+            name: "MAC Foundation",
+            brand: "MAC Cosmetics",
+            price: 3400,
+            rating: 4.7,
+            reviews: 1200,
+            image: "https://images.unsplash.com/photo-1596462502278-27bfdd403cc2?auto=format&fit=crop&w=800&q=80",
+            tag: "Classic",
+            benefits: ["Studio Fix", "Matte"]
+        },
+        {
+            id: "omw-found-18",
+            name: "L.A. Girl Foundation Matte",
+            brand: "L.A. Girl",
+            price: 1250,
+            rating: 4.4,
+            reviews: 210,
+            image: "https://www.omwskincare.com/wp-content/uploads/2024/05/s-l500.jpg",
+            tag: "",
+            benefits: ["Velvet Finish", "Soft Focus"]
+        },
+        {
+            id: "omw-found-19",
+            name: "Infallible 32H (145) Sous Ton Rose",
+            brand: "L'Oreal Paris",
+            price: 2150,
+            rating: 4.8,
+            reviews: 88,
+            image: "https://www.omwskincare.com/wp-content/uploads/2025/03/Best-LOreal-Paris-foundation-reviewed-by-skin-type-4.jpg",
+            tag: "",
+            benefits: ["Waterproof", "High Coverage"]
+        },
+        {
+            id: "omw-found-20",
+            name: "Infallible 32H (250) Radiant Sand",
+            brand: "L'Oreal Paris",
+            price: 2150,
+            rating: 4.7,
+            reviews: 67,
+            image: "https://www.omwskincare.com/wp-content/uploads/2025/03/Best-LOreal-Paris-foundation-reviewed-by-skin-type-4.jpg",
+            tag: "",
+            benefits: ["Long Wear", "Fresh Look"]
+        },
+        {
+            id: "omw-found-21",
+            name: "Maybelline Fit Me (118) Light Beige",
+            brand: "Maybelline",
+            price: 1600,
+            rating: 4.6,
+            reviews: 340,
+            image: "https://www.omwskincare.com/wp-content/uploads/2024/09/maybelline-fit-me-matte-poreless-normal-to-oily-spf22-228-golden-caramel-30ml-IMG1-20211105_1200x1200.webp",
+            tag: "",
+            benefits: ["Matte", "Poreless"]
+        },
+        {
+            id: "omw-found-22",
+            name: "Infallible 32H (145) Cool Rose",
+            brand: "L'Oreal Paris",
+            price: 2150,
+            rating: 4.8,
+            reviews: 145,
+            image: "https://www.omwskincare.com/wp-content/uploads/2025/03/Best-LOreal-Paris-foundation-reviewed-by-skin-type-4.jpg",
+            tag: "",
+            benefits: ["Waterproof", "Transfer-Resistant"]
+        },
+        {
+            id: "omw-found-23",
+            name: "Sheglam Foundation",
+            brand: "Sheglam",
+            price: 1800,
+            rating: 4.3,
+            reviews: 550,
+            image: "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?auto=format&fit=crop&w=800&q=80",
+            tag: "Viral",
+            benefits: ["Complexion Pro", "Matte"]
+        },
+        {
+            id: "omw-found-24",
+            name: "Elf Primer",
+            brand: "Elf Cosmetics",
+            price: 1350,
+            rating: 4.4,
+            reviews: 890,
+            image: "https://images.unsplash.com/photo-1631730359585-38a4935cbec4?auto=format&fit=crop&w=800&q=80",
+            tag: "Best Prep",
+            benefits: ["Grip", "Smooth Base"]
+        }
+    ];
+
+    const BB_CREAM_DATA = [
+        {
+            id: "omw-bb-0",
+            name: "MISSHA – M Perfect Cover BB Cream SPF42 PA+++ shade 23",
+            brand: "Missha",
+            price: 2200,
+            rating: 4.5,
+            reviews: 96,
+            image: bbCreamImg0,
+            tag: "Best Seller",
+            benefits: ["SPF 42", "PA+++"]
+        },
+        {
+            id: "omw-bb-1",
+            name: "MISSHA – M Perfect Cover BB Cream SPF42 PA+++ shade 21",
+            brand: "Missha",
+            price: 2200,
+            rating: 4.5,
+            reviews: 104,
+            image: bbCreamImg1,
+            tag: "",
+            benefits: ["SPF 42", "PA+++"]
+        },
+        {
+            id: "omw-bb-2",
+            name: "MISSHA – Perfect Cover Serum B.B Cream 23",
+            brand: "Missha",
+            price: 1800,
+            rating: 4.5,
+            reviews: 99,
+            image: bbCreamImg2,
+            tag: "",
+            benefits: ["SPF 42", "PA+++"]
+        },
+        {
+            id: "omw-bb-3",
+            name: "MISSHA – Perfect Cover Serum B.B Cream 25",
+            brand: "Missha",
+            price: 1800,
+            rating: 4.5,
+            reviews: 80,
+            image: bbCreamImg3,
+            tag: "",
+            benefits: ["SPF 42", "PA+++"]
+        },
+        {
+            id: "omw-bb-4",
+            name: "poetic blooms lotion",
+            brand: "Poetic Blooms",
+            price: 1350,
+            rating: 4.5,
+            reviews: 25,
+            image: bbCreamImg4,
+            tag: "",
+            benefits: ["SPF 42", "PA+++"]
+        },
+        {
+            id: "omw-bb-5",
+            name: "MISSHA – Perfect Cover Serum B.B Cream 21",
+            brand: "Missha",
+            price: 1800,
+            rating: 4.5,
+            reviews: 82,
+            image: bbCreamImg5,
+            tag: "",
+            benefits: ["SPF 42", "PA+++"]
+        },
+        {
+            id: "omw-bb-6",
+            name: "MISSHA – Perfect Cover Serum B.B Cream 27",
+            brand: "Missha",
+            price: 1800,
+            rating: 4.5,
+            reviews: 68,
+            image: bbCreamImg6,
+            tag: "",
+            benefits: ["SPF 42", "PA+++"]
+        },
+        {
+            id: "omw-bb-7",
+            name: "fresh pomelo",
+            brand: "Fresh",
+            price: 1000,
+            rating: 4.5,
+            reviews: 83,
+            image: bbCreamImg7,
+            tag: "",
+            benefits: ["SPF 42", "PA+++"]
+        },
+        {
+            id: "omw-bb-8",
+            name: "VELVET PLUM",
+            brand: "Velvet",
+            price: 1000,
+            rating: 4.5,
+            reviews: 75,
+            image: bbCreamImg8,
+            tag: "",
+            benefits: ["SPF 42", "PA+++"]
+        },
+    ];
+
     // -- MOCK DATA Generator Based on Category --
     // In a real app, this would fetch from an API based on the 'category' prop
-    const MOCK_PRODUCTS = Array.from({ length: 12 }).map((_, i) => ({
-        id: `cat-${i}`,
-        name: `${category} Perfector ${i + 1}`,
-        brand: ["COSRX", "Laneige", "Innisfree", "Some By Mi"][i % 4],
-        price: 800 + (i * 150),
-        rating: 4.5 + (i % 5) * 0.1,
-        reviews: 120 + i * 20,
-        image: `https://images.unsplash.com/photo-${1600000000000 + i}?auto=format&fit=crop&w=800&q=80`,
-        tag: i === 0 ? "Best Seller" : i === 2 ? "Trending" : null,
-        benefits: ["Hydrating", "Glow", "Soothing", "Brightening"].slice(0, 2)
-    }));
+    // -- MOCK DATA Generator Based on Category --
+    // In a real app, this would fetch from an API based on the 'category' prop
+    const MOCK_PRODUCTS = useMemo(() => {
+        if (category === "Foundation") {
+            // Use the full 24-product foundation list directly
+            return FOUNDATION_DATA;
+        }
+        if (category === "B.b cream") {
+            return BB_CREAM_DATA;
+        }
+
+        return Array.from({ length: 12 }).map((_, i) => ({
+            id: `cat-${i}`,
+            name: `${category} Perfector ${i + 1}`,
+            brand: ["COSRX", "Laneige", "Innisfree", "Some By Mi"][i % 4],
+            price: 800 + (i * 150),
+            rating: 4.5 + (i % 5) * 0.1,
+            reviews: 120 + i * 20,
+            image: `https://images.unsplash.com/photo-${1600000000000 + i}?auto=format&fit=crop&w=800&q=80`,
+            tag: i === 0 ? "Best Seller" : i === 2 ? "Trending" : null,
+            benefits: ["Hydrating", "Glow", "Soothing", "Brightening"].slice(0, 2)
+        }));
+    }, [category]);
 
     // Top Picks
-    const TOP_PICKS = MOCK_PRODUCTS.slice(0, 3);
-    const GRID_PRODUCTS = MOCK_PRODUCTS.slice(3);
+    const TOP_PICKS = category === "Foundation"
+        ? [
+            {
+                id: "dummy-top-1",
+                name: "Radiant Finish Foundation",
+                brand: "Luxe Beauty",
+                price: 1200,
+                rating: 4.9,
+                reviews: 150,
+                image: "https://images.unsplash.com/photo-1631730359585-38a4935cbec4?auto=format&fit=crop&w=800&q=80",
+                tag: "Trending",
+                benefits: ["Glow", "Hydrating"]
+            },
+            {
+                id: "dummy-top-2",
+                name: "Matte Poreless Foundation",
+                brand: "Pro Studio",
+                price: 950,
+                rating: 4.7,
+                reviews: 320,
+                image: "https://images.unsplash.com/photo-1596462502278-27bfdd403cc2?auto=format&fit=crop&w=800&q=80",
+                tag: "Bestseller",
+                benefits: ["Matte", "Oil Control"]
+            },
+            {
+                id: "dummy-top-3",
+                name: "High Coverage Stick",
+                brand: "Artist Choice",
+                price: 1500,
+                rating: 4.8,
+                reviews: 85,
+                image: "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?auto=format&fit=crop&w=800&q=80",
+                tag: "New",
+                benefits: ["Full Coverage", "Creamy"]
+            }
+        ]
+        : MOCK_PRODUCTS.slice(0, 3);
+
+    const GRID_PRODUCTS = category === "Foundation"
+        ? MOCK_PRODUCTS // Show ALL real products in grid for Foundation
+        : MOCK_PRODUCTS.slice(3);
 
     const FILTERS = ["All", "Hydration", "Brightening", "Acne Care", "Anti-Aging", "Sensitive Skin"];
 
