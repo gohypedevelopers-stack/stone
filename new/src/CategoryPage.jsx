@@ -404,8 +404,42 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
         },
     ];
 
-    // -- MOCK DATA Generator Based on Category --
-    // In a real app, this would fetch from an API based on the 'category' prop
+    const BB_CREAM_TOP_PICKS = [
+        {
+            id: "bb-top-1",
+            name: "M Perfect Cover BB Cream",
+            brand: "Missha",
+            price: 2200,
+            rating: 4.9,
+            reviews: 1205,
+            image: bbCreamImg0,
+            tag: "Bestseller",
+            benefits: ["SPF 42", "High Coverage"]
+        },
+        {
+            id: "bb-top-2",
+            name: "Fresh Pomelo Glow",
+            brand: "Fresh",
+            price: 1000,
+            rating: 4.7,
+            reviews: 432,
+            image: bbCreamImg7,
+            tag: "Trending",
+            benefits: ["Vitamin C", "Radiance"]
+        },
+        {
+            id: "bb-top-3",
+            name: "Velvet Plum Tint",
+            brand: "Velvet",
+            price: 1000,
+            rating: 4.8,
+            reviews: 310,
+            image: bbCreamImg8,
+            tag: "New Arrival",
+            benefits: ["Matte Finish", "Long Wear"]
+        }
+    ];
+
     // -- MOCK DATA Generator Based on Category --
     // In a real app, this would fetch from an API based on the 'category' prop
     const MOCK_PRODUCTS = useMemo(() => {
@@ -467,10 +501,12 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
                 benefits: ["Full Coverage", "Creamy"]
             }
         ]
-        : MOCK_PRODUCTS.slice(0, 3);
+        : category === "B.b cream"
+            ? BB_CREAM_TOP_PICKS
+            : MOCK_PRODUCTS.slice(0, 3);
 
-    const GRID_PRODUCTS = category === "Foundation"
-        ? MOCK_PRODUCTS // Show ALL real products in grid for Foundation
+    const GRID_PRODUCTS = category === "Foundation" || category === "B.b cream"
+        ? MOCK_PRODUCTS // Show ALL real products in grid for Foundation and B.b cream
         : MOCK_PRODUCTS.slice(3);
 
     const FILTERS = ["All", "Hydration", "Brightening", "Acne Care", "Anti-Aging", "Sensitive Skin"];
@@ -482,10 +518,12 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
         "Moisturizer": { title: "Deep Hydration Lock", desc: "Plump, dewy, and nourished skin all day." },
         "Hair set": { title: "Crown of Glory", desc: "Salon-quality care for stronger, shinier hair." },
         "Cleanser": { title: "The First Step", desc: "Gentle yet effective daily purification." },
+        "B.b cream": { title: "B.B. Cream", desc: "Perfect coverage meets skincare." },
         "Lipstick": { title: "Bold & Beautiful", desc: "High-pigment shades for every mood." },
         "Korean skincare": { title: "K-Beauty Essentials", desc: "The secrets to the glass skin look." },
         "default": { title: "Curated Beauty", desc: "Premium essentials for your daily routine." }
     };
+
 
     const currentContent = CATEGORY_CONTENT[category] || CATEGORY_CONTENT["default"];
 

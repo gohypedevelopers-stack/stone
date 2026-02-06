@@ -8,8 +8,8 @@ import { promisify } from 'util';
 
 const streamPipeline = promisify(pipeline);
 
-const TARGET_URL = 'https://www.omwskincare.com/product-category/b-b-cream/';
-const TARGET_DIR = path.join('src', 'assets', 'category', 'B.B CREM PAGE');
+const TARGET_URL = 'https://www.omwskincare.com/product-category/treatment-mask/';
+const TARGET_DIR = path.join('src', 'assets', 'category', 'Treatment mask');
 
 async function downloadImage(url, filepath) {
     try {
