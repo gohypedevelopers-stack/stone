@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import logo from "./assets/logo.png";
 import searchIcon from "./assets/search.png";
+import locationIcon from "./assets/location.png";
 import discountIcon from "./assets/sale_16767126.gif";
 import favIcon from "./assets/favourite.png";
 import accountIcon from "./assets/user-account.png";
@@ -9,6 +10,22 @@ import cartIcon from "./assets/shopping-cart.png";
 
 
 export default function Navbar({ categories, query, onQueryChange, cartCount, onToggleCart, onNavigate }) {
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const searchTerms = [
+    "B.b cream", "Blender", "Blush", "Brush", "Cleanser", "cleansing oil", "compact powders",
+    "Concealer", "Cushion foundation", "Essence", "Exfoliate", "Eye cream", "Face mists",
+    "Foundation", "Hair set", "International makeup", "International skincare", "Japanese Skincare",
+    "Korean skincare", "Lip blam", "Lipstick", "Makeup remover", "Mascara", "Moisturizer",
+    "Primer", "Razor", "Serums", "Sheet masks", "SKIN1004", "Sunscreen", "Sunspray",
+    "Sunstick", "toner", "toner pads", "Treatment mask"
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % searchTerms.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <header className="header">
@@ -26,13 +43,24 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
             <span className="w-[24px] h-[24px] rounded-[999px] grid place-items-center text-[#888]" aria-hidden="true">
               <img className="w-[20px] h-[20px] object-contain block opacity-100" src={searchIcon} alt="" />
             </span>
-            <input
-              className="border-none outline-none w-full text-[14px] bg-transparent text-text-custom placeholder-shown:opacity-100 peer"
-              value={query}
-              onChange={onQueryChange}
-              placeholder="Search products..."
-              aria-label="Search products"
-            />
+            <div className="relative w-full">
+              {!query && (
+                <div className="absolute inset-0 flex items-center pointer-events-none text-[14px] text-text-custom whitespace-nowrap overflow-hidden">
+                  <span className="opacity-50 mr-1">Search for</span>
+                  <span className="text-pink-500 
+                   font-bold animate-fade-in-up key={placeholderIndex}">
+                    {searchTerms[placeholderIndex]}
+                  </span>
+                </div>
+              )}
+              <input
+                className="border-none outline-none w-full text-[14px] bg-transparent text-text-custom placeholder-transparent relative z-10"
+                value={query}
+                onChange={onQueryChange}
+                placeholder=""
+                aria-label="Search products"
+              />
+            </div>
           </div>
 
 
@@ -54,6 +82,7 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
           </button>
           <div className="ml-0 inline-flex items-center gap-[2px]">
             <a className="ml-0 self-center inline-flex items-center gap-[8px] text-text-custom text-[15px] font-[700] whitespace-nowrap hover:text-[#d1408e] transition-colors" href="#">
+              <img className="w-[30px] h-[30px] object-contain block" src={locationIcon} alt="" />
               <img className="w-[40px] h-[40px] object-contain block" src={discountIcon} alt="" />
 
             </a>

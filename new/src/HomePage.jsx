@@ -11,6 +11,7 @@ import BySkinConcern from "./byskinconcern.jsx";
 import ByOffer from "./byoffer.jsx";
 import SkinQuiz from "./skinquiz.jsx";
 import ProductCard from "./components/card.jsx";
+import NewArrivalsSection from "./NewArrivalsSection.jsx";
 import { getAllProducts } from "./data/products";
 
 function formatINR(amount) {
@@ -106,6 +107,7 @@ export default function HomePage({ addToCart, query, onNavigate, onSelectCategor
       <ShopByBrand onSelectBrand={onSelectBrand} />
 
       <BySkinConcern onSelectConcern={onSelectConcern} />
+      <NewArrivalsSection onNavigate={onNavigate} />
       <WatchAndShop onNavigate={onNavigate} />
       <ByOffer onNavigate={onNavigate} onSelectOffer={onSelectOffer} />
 

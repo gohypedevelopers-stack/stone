@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
     Star, Heart, ShoppingBag, Eye, X, Filter, ChevronDown, Check,
     Truck, ShieldCheck, RefreshCw, Zap, Search, ArrowRight, Sparkles
@@ -10,6 +10,14 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "./components/ui/dropdown-menu.jsx";
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from "./components/ui/pagination";
 
 import { useNavigate } from "react-router-dom";
 import { CATEGORY_DATA_GENERATED } from "./productData.js";
@@ -18,6 +26,8 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
     const navigate = useNavigate();
     const [activeFilter, setActiveFilter] = useState("All");
     const [sortOption, setSortOption] = useState("Most Popular");
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 15;
 
     const ALL_CATEGORIES = [
         "B.b cream", "Blender", "Blush", "Brush", "Cleanser", "cleansing oil", "compact powders",
@@ -31,105 +41,6 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
     // -- REAL DATA from omwskincare.com for Foundation --
     const FOUNDATION_DATA = [
         {
-            id: "omw-found-1",
-            name: "L.A. girl pro coverage foundation",
-            brand: "L.A. Girl",
-            price: 1450,
-            rating: 4.5,
-            reviews: 42,
-            image: "https://www.omwskincare.com/wp-content/uploads/2024/05/s-l500.jpg",
-            tag: "Best Seller",
-            benefits: ["Illuminating", "Full Coverage"]
-        },
-        {
-            id: "omw-found-2",
-            name: "Infallible 32 Hour Fresh Wear Foundation (140) Cool Rose",
-            brand: "L'Oreal Paris",
-            price: 2150,
-            rating: 4.8,
-            reviews: 156,
-            image: "https://www.omwskincare.com/wp-content/uploads/2025/03/Best-LOreal-Paris-foundation-reviewed-by-skin-type-4.jpg",
-            tag: "Long Wear",
-            benefits: ["Waterproof", "Breathable"]
-        },
-        {
-            id: "omw-found-3",
-            name: "Maybelline Fit Me Foundation (228) Soft Tan",
-            brand: "Maybelline",
-            price: 1600,
-            rating: 4.6,
-            reviews: 890,
-            image: "https://www.omwskincare.com/wp-content/uploads/2024/09/maybelline-fit-me-matte-poreless-normal-to-oily-spf22-228-golden-caramel-30ml-IMG1-20211105_1200x1200.webp",
-            tag: "Matte",
-            benefits: ["Poreless", "Oil Control"]
-        },
-        {
-            id: "omw-found-4",
-            name: "Estée Lauder Double Wear Foundation",
-            brand: "Estée Lauder",
-            price: 6400,
-            rating: 4.9,
-            reviews: 320,
-            image: "https://www.omwskincare.com/wp-content/uploads/2024/05/3A0A9919_2b-e1629903857564.jpg",
-            tag: "Luxury",
-            benefits: ["Flawless", "24H Wear"]
-        },
-        {
-            id: "omw-found-5",
-            name: "Maybelline Fit me foudation(128)",
-            brand: "Maybelline",
-            price: 1550,
-            rating: 4.4,
-            reviews: 120,
-            image: "https://www.omwskincare.com/wp-content/uploads/2024/09/maybelline-fit-me-matte-poreless-normal-to-oily-spf22-228-golden-caramel-30ml-IMG1-20211105_1200x1200.webp",
-            tag: "",
-            benefits: ["Matte", "Poreless"]
-        },
-        {
-            id: "omw-found-6",
-            name: "Maybelline Fit me foudation(120)",
-            brand: "Maybelline",
-            price: 1550,
-            rating: 4.5,
-            reviews: 98,
-            image: "https://www.omwskincare.com/wp-content/uploads/2024/09/maybelline-fit-me-matte-poreless-normal-to-oily-spf22-228-golden-caramel-30ml-IMG1-20211105_1200x1200.webp",
-            tag: "",
-            benefits: ["Natural", "SPF 22"]
-        },
-        {
-            id: "omw-found-7",
-            name: "Estee lauder foudation",
-            brand: "Estée Lauder",
-            price: 6400,
-            rating: 4.9,
-            reviews: 410,
-            image: "https://www.omwskincare.com/wp-content/uploads/2024/05/3A0A9919_2b-e1629903857564.jpg",
-            tag: "Premium",
-            benefits: ["Full Coverage", "Oil Free"]
-        },
-        {
-            id: "omw-found-8",
-            name: "Infallible 32H (125) Warm Dore",
-            brand: "L'Oreal Paris",
-            price: 2150,
-            rating: 4.7,
-            reviews: 85,
-            image: "https://www.omwskincare.com/wp-content/uploads/2025/03/Best-LOreal-Paris-foundation-reviewed-by-skin-type-4.jpg",
-            tag: "",
-            benefits: ["Transfer-proof", "Vitamin C"]
-        },
-        {
-            id: "omw-found-9",
-            name: "Maybelline Fit Me (230)",
-            brand: "Maybelline",
-            price: 1600,
-            rating: 4.6,
-            reviews: 230,
-            image: "https://www.omwskincare.com/wp-content/uploads/2024/09/maybelline-fit-me-matte-poreless-normal-to-oily-spf22-228-golden-caramel-30ml-IMG1-20211105_1200x1200.webp",
-            tag: "",
-            benefits: ["Matte", "Daily Wear"]
-        },
-        {
             id: "omw-found-10",
             name: "Super stay foudation",
             brand: "Maybelline",
@@ -139,28 +50,6 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
             image: "https://images.unsplash.com/photo-1631730359585-38a4935cbec4?auto=format&fit=crop&w=800&q=80",
             tag: "High Coverage",
             benefits: ["30H Wear", "Breathable"]
-        },
-        {
-            id: "omw-found-11",
-            name: "Infallible 32 Hour Fresh Wear (220) Neutral",
-            brand: "L'Oreal Paris",
-            price: 2150,
-            rating: 4.7,
-            reviews: 112,
-            image: "https://www.omwskincare.com/wp-content/uploads/2025/03/Best-LOreal-Paris-foundation-reviewed-by-skin-type-4.jpg",
-            tag: "",
-            benefits: ["Fresh Wear", "Sweatproof"]
-        },
-        {
-            id: "omw-found-12",
-            name: "Maybelline Fit me foudation (310)",
-            brand: "Maybelline",
-            price: 1600,
-            rating: 4.5,
-            reviews: 180,
-            image: "https://www.omwskincare.com/wp-content/uploads/2024/09/maybelline-fit-me-matte-poreless-normal-to-oily-spf22-228-golden-caramel-30ml-IMG1-20211105_1200x1200.webp",
-            tag: "",
-            benefits: ["Control Oil", "Blurring"]
         },
         {
             id: "omw-found-13",
@@ -174,13 +63,134 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
             benefits: ["Radiant", "Lightweight"]
         },
         {
+            id: "omw-found-1",
+            name: "L.A. girl pro coverage foundation",
+            brand: "L.A. Girl",
+            price: 1450,
+            rating: 4.5,
+            reviews: 42,
+            image: "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?auto=format&fit=crop&w=800&q=80",
+            tag: "Best Seller",
+            benefits: ["Illuminating", "Full Coverage"]
+        },
+        {
+            id: "omw-found-3",
+            name: "Maybelline Fit Me Foundation (228) Soft Tan",
+            brand: "Maybelline",
+            price: 1600,
+            rating: 4.6,
+            reviews: 890,
+            image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=800&q=80",
+            tag: "Matte",
+            benefits: ["Poreless", "Oil Control"]
+        },
+        {
+            id: "omw-found-4",
+            name: "Estée Lauder Double Wear Foundation",
+            brand: "Estée Lauder",
+            price: 6400,
+            rating: 4.9,
+            reviews: 320,
+            image: "https://images.unsplash.com/photo-1611080541599-8c6dbde6ed28?auto=format&fit=crop&w=800&q=80",
+            tag: "Luxury",
+            benefits: ["Flawless", "24H Wear"]
+        },
+        {
+            id: "omw-found-5",
+            name: "Maybelline Fit me foudation(128)",
+            brand: "Maybelline",
+            price: 1550,
+            rating: 4.4,
+            reviews: 120,
+            image: "https://images.unsplash.com/photo-1596462502278-27bfdd403cc2?auto=format&fit=crop&w=800&q=80",
+            tag: "",
+            benefits: ["Matte", "Poreless"]
+        },
+        {
+            id: "omw-found-6",
+            name: "Maybelline Fit me foudation(120)",
+            brand: "Maybelline",
+            price: 1550,
+            rating: 4.5,
+            reviews: 98,
+            image: "https://images.unsplash.com/photo-1631729353982-596ad1ba980c?auto=format&fit=crop&w=800&q=80",
+            tag: "",
+            benefits: ["Natural", "SPF 22"]
+        },
+        {
+            id: "omw-found-7",
+            name: "Estee lauder foudation",
+            brand: "Estée Lauder",
+            price: 6400,
+            rating: 4.9,
+            reviews: 410,
+            image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=800&q=80",
+            tag: "Premium",
+            benefits: ["Full Coverage", "Oil Free"]
+        },
+        {
+            id: "omw-found-8",
+            name: "Infallible 32H (125) Warm Dore",
+            brand: "L'Oreal Paris",
+            price: 2150,
+            rating: 4.7,
+            reviews: 85,
+            image: "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?auto=format&fit=crop&w=800&q=80",
+            tag: "",
+            benefits: ["Transfer-proof", "Vitamin C"]
+        },
+        {
+            id: "omw-found-9",
+            name: "Maybelline Fit Me (230)",
+            brand: "Maybelline",
+            price: 1600,
+            rating: 4.6,
+            reviews: 230,
+            image: "https://images.unsplash.com/photo-1599305090598-fe179d501227?auto=format&fit=crop&w=800&q=80",
+            tag: "",
+            benefits: ["Matte", "Daily Wear"]
+        },
+        {
+            id: "omw-found-2",
+            name: "Infallible 32 Hour Fresh Wear Foundation (140) Cool Rose",
+            brand: "L'Oreal Paris",
+            price: 2150,
+            rating: 4.8,
+            reviews: 156,
+            image: "https://images.unsplash.com/photo-1631730359585-38a4935cbec4?auto=format&fit=crop&w=800&q=80",
+            tag: "Long Wear",
+            benefits: ["Waterproof", "Breathable"]
+        },
+        {
+            id: "omw-found-11",
+            name: "Infallible 32 Hour Fresh Wear (220) Neutral",
+            brand: "L'Oreal Paris",
+            price: 2150,
+            rating: 4.7,
+            reviews: 112,
+            image: "https://images.unsplash.com/photo-1596462502278-27bfdd403cc2?auto=format&fit=crop&w=800&q=80",
+            tag: "",
+            benefits: ["Fresh Wear", "Sweatproof"]
+        },
+        {
+            id: "omw-found-12",
+            name: "Maybelline Fit me foudation (310)",
+            brand: "Maybelline",
+            price: 1600,
+            rating: 4.5,
+            reviews: 180,
+            image: "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?auto=format&fit=crop&w=800&q=80",
+            tag: "",
+            benefits: ["Control Oil", "Blurring"]
+        },
+        {
             id: "omw-found-14",
             name: "HUDA BEAUTY Foundation",
             brand: "Huda Beauty",
             price: 3800,
             rating: 4.9,
             reviews: 940,
-            image: "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?auto=format&fit=crop&w=800&q=80",
+            image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=800&q=80",
             tag: "Luxury",
             benefits: ["#FauxFilter", "Luminous"]
         },
@@ -191,7 +201,7 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
             price: 4200,
             rating: 4.8,
             reviews: 720,
-            image: "https://images.unsplash.com/photo-1596462502278-27bfdd403cc2?auto=format&fit=crop&w=800&q=80",
+            image: "https://images.unsplash.com/photo-1611080541599-8c6dbde6ed28?auto=format&fit=crop&w=800&q=80",
             tag: "MUA Fav",
             benefits: ["Light Reflecting", "Skincare"]
         },
@@ -224,7 +234,7 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
             price: 1250,
             rating: 4.4,
             reviews: 210,
-            image: "https://www.omwskincare.com/wp-content/uploads/2024/05/s-l500.jpg",
+            image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=800&q=80",
             tag: "",
             benefits: ["Velvet Finish", "Soft Focus"]
         },
@@ -235,7 +245,7 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
             price: 2150,
             rating: 4.8,
             reviews: 88,
-            image: "https://www.omwskincare.com/wp-content/uploads/2025/03/Best-LOreal-Paris-foundation-reviewed-by-skin-type-4.jpg",
+            image: "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?auto=format&fit=crop&w=800&q=80",
             tag: "",
             benefits: ["Waterproof", "High Coverage"]
         },
@@ -246,7 +256,7 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
             price: 2150,
             rating: 4.7,
             reviews: 67,
-            image: "https://www.omwskincare.com/wp-content/uploads/2025/03/Best-LOreal-Paris-foundation-reviewed-by-skin-type-4.jpg",
+            image: "https://images.unsplash.com/photo-1631730359585-38a4935cbec4?auto=format&fit=crop&w=800&q=80",
             tag: "",
             benefits: ["Long Wear", "Fresh Look"]
         },
@@ -257,7 +267,7 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
             price: 1600,
             rating: 4.6,
             reviews: 340,
-            image: "https://www.omwskincare.com/wp-content/uploads/2024/09/maybelline-fit-me-matte-poreless-normal-to-oily-spf22-228-golden-caramel-30ml-IMG1-20211105_1200x1200.webp",
+            image: "https://images.unsplash.com/photo-1596462502278-27bfdd403cc2?auto=format&fit=crop&w=800&q=80",
             tag: "",
             benefits: ["Matte", "Poreless"]
         },
@@ -268,7 +278,7 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
             price: 2150,
             rating: 4.8,
             reviews: 145,
-            image: "https://www.omwskincare.com/wp-content/uploads/2025/03/Best-LOreal-Paris-foundation-reviewed-by-skin-type-4.jpg",
+            image: "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?auto=format&fit=crop&w=800&q=80",
             tag: "",
             benefits: ["Waterproof", "Transfer-Resistant"]
         },
@@ -279,7 +289,7 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
             price: 1800,
             rating: 4.3,
             reviews: 550,
-            image: "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?auto=format&fit=crop&w=800&q=80",
+            image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=800&q=80",
             tag: "Viral",
             benefits: ["Complexion Pro", "Matte"]
         },
@@ -355,7 +365,14 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
             price: 800 + (i * 150),
             rating: 4.5 + (i % 5) * 0.1,
             reviews: 120 + i * 20,
-            image: `https://images.unsplash.com/photo-${1600000000000 + i}?auto=format&fit=crop&w=800&q=80`,
+            image: [
+                "https://images.unsplash.com/photo-1631730359585-38a4935cbec4",
+                "https://images.unsplash.com/photo-1596462502278-27bfdd403cc2",
+                "https://images.unsplash.com/photo-1620916566398-39f1143ab7be",
+                "https://images.unsplash.com/photo-1611080541599-8c6dbde6ed28",
+                "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec",
+                "https://images.unsplash.com/photo-1599305090598-fe179d501227"
+            ][i % 6] + "?auto=format&fit=crop&w=800&q=80",
             tag: i === 0 ? "Best Seller" : i === 2 ? "Trending" : null,
             benefits: ["Hydrating", "Glow", "Soothing", "Brightening"].slice(0, 2)
         }));
@@ -407,6 +424,22 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
     const GRID_PRODUCTS = category === "Foundation" || CATEGORY_DATA_GENERATED[category]
         ? MOCK_PRODUCTS
         : MOCK_PRODUCTS.slice(3);
+
+    // Pagination Logic
+    const indexOfLastProduct = currentPage * itemsPerPage;
+    const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
+    const currentProducts = GRID_PRODUCTS.slice(indexOfFirstProduct, indexOfLastProduct);
+    const totalPages = Math.ceil(GRID_PRODUCTS.length / itemsPerPage);
+
+    // Reset page when category changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [category]);
+
+    const paginate = (pageNumber) => {
+        setCurrentPage(pageNumber);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     const FILTERS = ["All", "Hydration", "Brightening", "Acne Care", "Anti-Aging", "Sensitive Skin"];
 
@@ -543,7 +576,15 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
                                 </div>
 
                                 <div className="h-64 overflow-hidden bg-gray-50 relative">
-                                    <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                                    <img
+                                        src={p.image}
+                                        alt={p.name}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = "https://images.unsplash.com/photo-1631730359585-38a4935cbec4?auto=format&fit=crop&w=800&q=80";
+                                        }}
+                                    />
                                 </div>
 
                                 <div className="p-8">
@@ -569,13 +610,21 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
                 {/* 4. MAIN GRID */}
                 <section>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
-                        {GRID_PRODUCTS.map(p => (
+                        {currentProducts.map(p => (
                             <div key={p.id} className="group flex flex-col cursor-pointer" onClick={() => navigate(`/product/${p.id}`)}>
                                 <div className="relative aspect-[4/5] rounded-[24px] overflow-hidden bg-gray-100 mb-4 shadow-sm group-hover:shadow-lg transition-all">
                                     <button className="absolute top-4 right-4 z-10 w-9 h-9 bg-white/60 backdrop-blur rounded-full flex items-center justify-center hover:bg-white hover:text-red-500 transition-colors" onClick={(e) => e.stopPropagation()}>
                                         <Heart size={18} />
                                     </button>
-                                    <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                    <img
+                                        src={p.image}
+                                        alt={p.name}
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = "https://images.unsplash.com/photo-1631730359585-38a4935cbec4?auto=format&fit=crop&w=800&q=80";
+                                        }}
+                                    />
 
                                     {/* Quick Add Button */}
                                     <div className="absolute inset-x-4 bottom-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 opacity-0 group-hover:opacity-100">
@@ -603,11 +652,49 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
                             </div>
                         ))}
                     </div>
+
+
+
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                        <div className="mt-12">
+                            <Pagination>
+                                <PaginationContent>
+                                    <PaginationItem>
+                                        <PaginationPrevious
+                                            onClick={() => paginate(Math.max(1, currentPage - 1))}
+                                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                        />
+                                    </PaginationItem>
+
+                                    {Array.from({ length: totalPages }, (_, i) => (
+                                        <PaginationItem key={i + 1}>
+                                            <PaginationLink
+                                                isActive={currentPage === i + 1}
+                                                onClick={() => paginate(i + 1)}
+                                                className="cursor-pointer"
+                                            >
+                                                {i + 1}
+                                            </PaginationLink>
+                                        </PaginationItem>
+                                    ))}
+
+                                    <PaginationItem>
+                                        <PaginationNext
+                                            onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
+                                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                        />
+                                    </PaginationItem>
+                                </PaginationContent>
+                            </Pagination>
+                        </div>
+                    )}
                 </section>
-            </div>
+
+            </div >
 
             {/* 5. TRUST BADGES */}
-            <section className="border-t border-gray-200 mt-20 pt-16 pb-8">
+            < section className="border-t border-gray-200 mt-20 pt-16 pb-8" >
                 <div className="max-w-[1440px] mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
                     {[
                         { icon: ShieldCheck, title: "Authentic Products", sub: "100% Sourced from Brands" },
@@ -626,10 +713,10 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
                         </div>
                     ))}
                 </div>
-            </section>
+            </section >
 
             {/* 6. NEWSLETTER */}
-            <section className="max-w-[1440px] mx-auto px-6 mt-12">
+            < section className="max-w-[1440px] mx-auto px-6 mt-12" >
                 <div className="bg-[#1a1a1a] rounded-[32px] p-8 md:p-16 text-center text-white relative overflow-hidden">
                     <div className="relative z-10 max-w-2xl mx-auto">
                         <span className="text-pink-400 text-xs font-bold uppercase tracking-[0.2em] mb-4 block">Don't Miss Out</span>
@@ -640,7 +727,8 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
                         </div>
                     </div>
                 </div>
-            </section>
-        </div>
+            </section >
+        </div >
     );
 }
+

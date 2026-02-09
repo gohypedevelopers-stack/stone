@@ -1,10 +1,40 @@
-import { useState } from "react";
+import { Droplet, ShieldCheck, Sun } from "lucide-react";
+import DisplayCards from "./components/ui/display-cards.jsx";
 
 export default function SkinQuiz() {
   const supportPhone = "+91 90000 00000";
+  const routineCards = [
+    {
+      title: "Morning Cleanse",
+      description: "Hydrating Foam",
+      date: "AM",
+      icon: <Sun className="size-4 text-amber-200" />,
+      titleClassName: "text-[#1b1b1b]",
+      className:
+        "[grid-area:stack] hover:-translate-y-10 before:absolute before:w-[100%] before:outline-1 before:rounded-xl before:outline-border before:h-[100%] before:content-[''] before:bg-blend-overlay before:bg-background/50 grayscale-[100%] hover:before:opacity-0 before:transition-opacity before:duration:700 hover:grayscale-0 before:left-0 before:top-0",
+    },
+    {
+      title: "Treat",
+      description: "Vitamin C Serum",
+      date: "AM",
+      icon: <Droplet className="size-4 text-sky-200" />,
+      titleClassName: "text-[#1b1b1b]",
+      className:
+        "[grid-area:stack] translate-x-16 translate-y-10 hover:-translate-y-1 before:absolute before:w-[100%] before:outline-1 before:rounded-xl before:outline-border before:h-[100%] before:content-[''] before:bg-blend-overlay before:bg-background/50 grayscale-[100%] hover:before:opacity-0 before:transition-opacity before:duration:700 hover:grayscale-0 before:left-0 before:top-0",
+    },
+    {
+      title: "Protect",
+      description: "Invisible SPF 50",
+      date: "Daily",
+      icon: <ShieldCheck className="size-4 text-emerald-200" />,
+      titleClassName: "text-[#1b1b1b]",
+      className:
+        "[grid-area:stack] translate-x-32 translate-y-20 hover:translate-y-10",
+    },
+  ];
 
   return (
-    <section className="py-[64px]" aria-labelledby="quiz-heading">
+    <section className="py-[70px]" aria-labelledby="quiz-heading">
       <div className="w-full px-0 sm:px-[10px]">
         <div className="bg-[linear-gradient(135deg,#fdfbfb_0%,#ebedee_100%)] rounded-[24px] overflow-hidden flex flex-col-reverse md:flex-row relative shadow-[0_20px_40px_rgba(0,0,0,0.04)] border border-black/4">
           <div className="flex-1 p-[32px_24px] md:p-[48px] flex flex-col justify-center z-[2] text-center md:text-left items-center md:items-stretch">
@@ -25,30 +55,14 @@ export default function SkinQuiz() {
             </div>
           </div>
 
-          <div className="flex-1 bg-white relative grid place-items-center min-h-[200px] md:min-h-[300px] overflow-hidden" aria-hidden="true">
+          <div className="flex-1 bg-white relative grid place-items-center min-h-[240px] md:min-h-[320px] overflow-hidden" aria-hidden="true">
             <div className="absolute top-0 left-0 w-full h-full opacity-60 bg-[radial-gradient(circle_at_80%_20%,#e0c3fc_0%,transparent_40%),radial-gradient(circle_at_20%_80%,#a8edea_0%,transparent_40%)]" />
-            <div className="relative bg-white/80 backdrop-blur-[12px] p-[24px] rounded-[16px] border border-white/60 shadow-[0_12px_32px_rgba(0,0,0,0.08)] w-[280px] scale-90 md:scale-100 rotate-0 md:-rotate-2">
-              <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', color: '#999', fontWeight: '700' }}>Your Personal Routine</div>
-              <div className="flex items-center gap-[12px] mb-[12px]">
-                <div className="w-[32px] h-[32px] bg-[#f1f5f9] rounded-full grid place-items-center text-[12px]">☀️</div>
-                <div className="flex flex-col">
-                  <span className="text-[12px] font-[700] text-[#1b1b1b]">Morning Cleanse</span>
-                  <span className="text-[10px] text-[#888]">Hydrating Foam</span>
-                </div>
+            <div className="relative z-[1] flex flex-col items-center">
+              <div className="text-[10px] uppercase tracking-[1px] mb-[12px] text-[#999] font-[700]">
+                Your Personal Routine
               </div>
-              <div className="flex items-center gap-[12px] mb-[12px]">
-                <div className="w-[32px] h-[32px] bg-[#f1f5f9] rounded-full grid place-items-center text-[12px]">💧</div>
-                <div className="flex flex-col">
-                  <span className="text-[12px] font-[700] text-[#1b1b1b]">Treat</span>
-                  <span className="text-[10px] text-[#888]">Vitamin C Serum</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-[12px] mb-0">
-                <div className="w-[32px] h-[32px] bg-[#f1f5f9] rounded-full grid place-items-center text-[12px]">🛡️</div>
-                <div className="flex flex-col">
-                  <span className="text-[12px] font-[700] text-[#1b1b1b]">Protect</span>
-                  <span className="text-[10px] text-[#888]">Invisible SPF 50</span>
-                </div>
+              <div className="scale-[0.9] md:scale-100 -rotate-1 -translate-y-8 md:-translate-y-10">
+                <DisplayCards cards={routineCards} />
               </div>
             </div>
           </div>
