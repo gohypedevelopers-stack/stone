@@ -128,21 +128,28 @@ export default function ProductDetail({ addToCart }) {
     const product = productData || defaultProduct;
 
     // Merge with Mock Data for full experience
-    const fullProduct = { ...product, ...MOCK_PDP_DATA };
+    // We carefully merge to ensure real product data (like image) isn't hidden by mock arrays
+    const listImages = product.image ? [product.image, ...MOCK_PDP_DATA.images] : MOCK_PDP_DATA.images;
+
+    const fullProduct = {
+        ...MOCK_PDP_DATA,
+        ...product,
+        images: listImages
+    };
 
     // Reset state when product changes
     useEffect(() => {
         setMainImage(fullProduct.images[0]);
         setQty(1);
         setSelectedShade(fullProduct.shades[0]);
-    }, [id]); // Depend on ID or product. Using ID is safer if product object reference is unstable.
+    }, [id]); // Depend on ID.
 
     if (!product) return <div className="p-20 text-center">Loading...</div>;
 
-    // Ensure images array exists
-    const images = product.images || (product.image ? [product.image] : []);
+    // Ensure images array exists (fallback handled in fullProduct)
+    const images = fullProduct.images;
     // If only one image and it's from the simple object structure, might need to mock a gallery
-    const displayImages = images.length > 0 ? images : ["https://via.placeholder.com/600"];
+    const displayImages = images;
 
     const stockStatus = "In Stock"; // Mock
     const rating = product.rating || 4.8;
