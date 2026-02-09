@@ -22,6 +22,21 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
         </a>
 
         <div className="flex items-center gap-[8px] ml-auto">
+          <div className="ml-auto flex items-center gap-[10px] px-[12px] py-[8px] rounded-[999px] border border-black/14 bg-white min-w-[300px] shadow-[0_4px_12px_rgba(0,0,0,0.04)] relative">
+            <span className="w-[24px] h-[24px] rounded-[999px] grid place-items-center text-[#888]" aria-hidden="true">
+              <img className="w-[20px] h-[20px] object-contain block opacity-100" src={searchIcon} alt="" />
+            </span>
+            <input
+              className="border-none outline-none w-full text-[14px] bg-transparent text-text-custom placeholder-shown:opacity-100 peer"
+              value={query}
+              onChange={onQueryChange}
+              placeholder="Search products..."
+              aria-label="Search products"
+            />
+          </div>
+
+
+
           <a href="#" className="mr-[15px] font-bold" onClick={(e) => { e.preventDefault(); onNavigate('shop'); }}>
             Shop
           </a>
@@ -37,6 +52,12 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
             <img className="w-[30px] h-[30px] object-contain block" src={cartIcon} alt="" />
             {cartCount > 0 && <span className="absolute -top-[2px] -right-[2px] bg-[#151515] text-white text-[10px] px-[5px] py-[2px] rounded-full font-bold min-w-[18px] text-center border-2 border-white">{cartCount}</span>}
           </button>
+          <div className="ml-0 inline-flex items-center gap-[2px]">
+            <a className="ml-0 self-center inline-flex items-center gap-[8px] text-text-custom text-[15px] font-[700] whitespace-nowrap hover:text-[#d1408e] transition-colors" href="#">
+              <img className="w-[40px] h-[40px] object-contain block" src={discountIcon} alt="" />
+
+            </a>
+          </div>
         </div>
       </div>
 
@@ -101,25 +122,7 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
             );
           })}
 
-          <div className="ml-auto flex items-center gap-[10px] px-[12px] py-[8px] rounded-[999px] border border-black/14 bg-white min-w-[300px] shadow-[0_4px_12px_rgba(0,0,0,0.04)] relative">
-            <span className="w-[24px] h-[24px] rounded-[999px] grid place-items-center text-[#888]" aria-hidden="true">
-              <img className="w-[20px] h-[20px] object-contain block opacity-100" src={searchIcon} alt="" />
-            </span>
-            <input
-              className="border-none outline-none w-full text-[14px] bg-transparent text-text-custom placeholder-shown:opacity-100 peer"
-              value={query}
-              onChange={onQueryChange}
-              placeholder="Search products..."
-              aria-label="Search products"
-            />
-          </div>
 
-          <div className="ml-0 inline-flex items-center gap-[8px]">
-            <a className="ml-0 self-center inline-flex items-center gap-[8px] text-text-custom text-[15px] font-[700] whitespace-nowrap hover:text-[#d1408e] transition-colors" href="#">
-              <img className="w-[24px] h-[24px] object-contain block" src={discountIcon} alt="" />
-              Offers
-            </a>
-          </div>
         </div>
       </nav>
     </header>
