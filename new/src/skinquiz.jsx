@@ -43,12 +43,7 @@ export default function SkinQuiz() {
               Not sure where to start? Take our 2-minute quiz to build a personalized routine targeted to your concerns.
             </p>
             <div className="flex gap-[12px] flex-wrap justify-center md:justify-start">
-              <button
-                className="bg-[#1b1b1b] text-white p-[14px_28px] rounded-[99px] font-[700] text-[14px] uppercase tracking-[0.5px] border-none cursor-pointer transition-all duration-200 ease-out shadow-[0_8px_16px_rgba(0,0,0,0.1)] hover:-translate-y-[2px] hover:shadow-[0_12px_24px_rgba(0,0,0,0.15)] hover:bg-black"
-                onClick={() => alert("Skin quiz functionality would open here")}
-              >
-                Start Skin Quiz
-              </button>
+
               <a href={`tel:${supportPhone}`} className="bg-transparent text-[#1b1b1b] p-[14px_28px] rounded-[99px] font-[700] text-[14px] uppercase tracking-[0.5px] border border-black/10 cursor-pointer transition-all duration-200 ease-out inline-block no-underline hover:bg-white hover:border-[#1b1b1b]">
                 Talk to an Expert
               </a>

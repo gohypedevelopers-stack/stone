@@ -7,7 +7,7 @@ function formatINR(amount) {
     return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: 0 }).format(amount);
 }
 
-export default function Shop({ addToCart }) {
+export default function Shop({ addToCart, wishlist, toggleWishlist }) {
     const allProducts = getAllProducts();
 
     // Filter States
@@ -132,6 +132,8 @@ export default function Shop({ addToCart }) {
                             <ProductCard
                                 product={{ ...p, category: p.tag, inStock: true }}
                                 onAddToCart={() => addToCart(p.id)}
+                                wishlist={wishlist}
+                                toggleWishlist={toggleWishlist}
                             />
                         </div>
                     ))}

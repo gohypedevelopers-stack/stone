@@ -5,38 +5,30 @@ const ProductCard = ({
   product,
   isDark = false,
   onAddToCart,
-  onToggleWishlist,
+  wishlist = [],
+  toggleWishlist,
   onClick
 }) => {
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const cardClasses = "bg-white border-gray-100 hover:border-pink-100";
+  const wishlistButton = "bg-white text-gray-400 hover:bg-red-50 hover:text-red-500";
+  const textMuted = "text-gray-400";
+  const textSecondary = "text-gray-500";
+  const buttonPrimary = "bg-[#1a1a1a] text-white hover:bg-[#d1408e]";
 
-  const handleWishlistClick = () => {
-    setIsWishlisted(!isWishlisted);
-    onToggleWishlist?.(product.id, !isWishlisted);
+  // Check if this product is in the wishlist
+  const isWishlisted = wishlist.some((item) => item.id === product.id);
+
+  const handleWishlistClick = (e) => {
+    e.stopPropagation(); // Prevent card click
+    toggleWishlist?.(product);
   };
 
-  const handleAddToCart = () => {
-    onAddToCart?.(product);
+  const handleAddToCart = (e) => {
+    e.stopPropagation();
+    onAddToCart?.(product.id);
   };
 
-  // Theme classes
-  // Using brand specific classes
-  const cardClasses = isDark
-    ? 'bg-[#151515] text-white border-white/10'
-    : 'bg-white text-text-custom border-line-custom';
-
-  const textSecondary = isDark ? 'text-gray-300' : 'text-text-custom';
-  const textMuted = isDark ? 'text-gray-400' : 'text-muted-custom';
-
-  // Brand primary button is usually black in this design (SkinQuiz used black)
-  const buttonPrimary = isDark
-    ? 'bg-white text-black hover:bg-gray-200'
-    : 'bg-[#1b1b1b] hover:bg-black text-white';
-
-  // Wishlist button
-  const wishlistButton = isDark
-    ? 'bg-white/10 hover:bg-white/20 text-white'
-    : 'bg-white hover:bg-gray-50 text-black/70';
+  // ... (existing styles)
 
   return (
     <div

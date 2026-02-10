@@ -8,7 +8,7 @@ export default function Footer({ supportPhone }) {
         <div>
           <div className="flex items-center gap-[10px]">
             <img className="w-[50px] h-[50px] object-contain" src={logo} alt="omwskincare logo" />
-            <div className="bg-gradient-to-r from-[#ff4fa3] to-[#ff77c8] bg-clip-text text-transparent font-[800] text-[35px]">omw</div>
+            <div className="bg-gradient-to-r from-[#ff4fa3] to-[#ff77c8] bg-clip-text text-transparent font-[800] text-[35px]">OMW</div>
           </div>
           <p className="text-muted-custom">
             Curated skincare & cosmetics across Korean,<br /> Japanese and everyday essentials.

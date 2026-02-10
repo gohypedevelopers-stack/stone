@@ -22,7 +22,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { CATEGORY_DATA_GENERATED } from "./productData.js";
 
-export default function CategoryPage({ category = "Serums", addToCart, onCategoryChange }) {
+export default function CategoryPage({ category = "Serums", addToCart, onCategoryChange, wishlist = [], toggleWishlist }) {
     const navigate = useNavigate();
     const [activeFilter, setActiveFilter] = useState("All");
     const [sortOption, setSortOption] = useState("Most Popular");
@@ -613,8 +613,15 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
                         {currentProducts.map(p => (
                             <div key={p.id} className="group flex flex-col cursor-pointer" onClick={() => navigate(`/product/${p.id}`)}>
                                 <div className="relative aspect-[4/5] rounded-[24px] overflow-hidden bg-gray-100 mb-4 shadow-sm group-hover:shadow-lg transition-all">
-                                    <button className="absolute top-4 right-4 z-10 w-9 h-9 bg-white/60 backdrop-blur rounded-full flex items-center justify-center hover:bg-white hover:text-red-500 transition-colors" onClick={(e) => e.stopPropagation()}>
-                                        <Heart size={18} />
+
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleWishlist && toggleWishlist(p);
+                                        }}
+                                        className={`absolute top-4 right-4 z-10 w-9 h-9 rounded-full flex items-center justify-center transition-colors bg-white/60 backdrop-blur ${wishlist.some(i => i.id === p.id) ? 'text-red-500 bg-red-50' : 'hover:bg-white hover:text-red-500'}`}
+                                    >
+                                        <Heart size={18} fill={wishlist.some(i => i.id === p.id) ? "currentColor" : "none"} />
                                     </button>
                                     <img
                                         src={p.image}

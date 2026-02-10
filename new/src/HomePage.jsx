@@ -12,13 +12,16 @@ import ByOffer from "./byoffer.jsx";
 import SkinQuiz from "./skinquiz.jsx";
 import ProductCard from "./components/card.jsx";
 import NewArrivalsSection from "./NewArrivalsSection.jsx";
+import LimitedOfferBanner from "./LimitedOfferBanner.jsx";
+import RequestProductSection from "./RequestProductSection.jsx";
+import PreOrderSection from "./PreOrderSection.jsx";
 import { getAllProducts } from "./data/products";
 
 function formatINR(amount) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount);
 }
 
-export default function HomePage({ addToCart, query, onNavigate, onSelectCategory, onSelectBrand, onSelectConcern, onSelectOffer }) {
+export default function HomePage({ addToCart, query, onNavigate, onSelectCategory, onSelectBrand, onSelectConcern, onSelectOffer, wishlist, toggleWishlist }) {
   const PRODUCTS = getAllProducts();
   const scrollRef = useRef(null);
 
@@ -69,7 +72,7 @@ export default function HomePage({ addToCart, query, onNavigate, onSelectCategor
     <main>
       <HeroSlider />
       <OfferTimer />
-      <UpcomingDrops onNavigate={onNavigate} />
+      <UpcomingDrops onNavigate={onNavigate} wishlist={wishlist} toggleWishlist={toggleWishlist} />
 
 
       <ByCategory onNavigate={onNavigate} onSelectCategory={onSelectCategory} />
@@ -96,6 +99,8 @@ export default function HomePage({ addToCart, query, onNavigate, onSelectCategor
                     product={{ ...p, category: p.tag, inStock: true }}
                     onAddToCart={() => addToCart(p.id)}
                     onClick={() => onNavigate("best-sellers")}
+                    wishlist={wishlist}
+                    toggleWishlist={toggleWishlist}
                   />
                 </div>
               ))}
@@ -109,30 +114,17 @@ export default function HomePage({ addToCart, query, onNavigate, onSelectCategor
       <BySkinConcern onSelectConcern={onSelectConcern} />
       <NewArrivalsSection onNavigate={onNavigate} />
       <WatchAndShop onNavigate={onNavigate} />
+      <LimitedOfferBanner />
       <ByOffer onNavigate={onNavigate} onSelectOffer={onSelectOffer} />
+      <PreOrderSection wishlist={wishlist} toggleWishlist={toggleWishlist} />
 
       {/* Offers + Loyalty */}
-      <section className="py-[28px]">
-        <div className="w-full px-0 sm:px-[10px] grid grid-cols-1 md:grid-cols-2 gap-[14px]">
-          <div className="border border-black/6 rounded-[18px] p-[18px] bg-[linear-gradient(90deg,rgba(111,92,255,0.10),rgba(255,93,177,0.08),rgba(255,138,42,0.08))]">
-            <h3 className="m-[0_0_8px]">Offers you’ll actually use</h3>
-            <p className="text-muted-custom m-[0_0_12px]">
-              Bundle routines, unlock free delivery, and get seasonal discounts on skincare essentials.
-            </p>
-            <a className="border border-line-custom bg-white rounded-[999px] h-[42px] px-[16px] inline-flex items-center justify-center gap-[10px] cursor-pointer hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)]" href="#">Explore offers</a>
-          </div>
-          <div className="border border-black/6 rounded-[18px] p-[18px] bg-[linear-gradient(90deg,rgba(255,138,42,0.10),rgba(255,93,177,0.08),rgba(111,92,255,0.10))]">
-            <h3 className="m-[0_0_8px]">Loyalty points on every order</h3>
-            <p className="text-muted-custom m-[0_0_12px]">
-              Earn points automatically. Redeem for discounts on your next checkout.
-            </p>
-            <a className="border border-line-custom bg-white rounded-[999px] h-[42px] px-[16px] inline-flex items-center justify-center gap-[10px] cursor-pointer hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)]" href="#">How it works</a>
-          </div>
-        </div>
-      </section>
+
 
       {/* Skin guidance */}
       <SkinQuiz />
+
+      <RequestProductSection />
     </main>
   );
 }

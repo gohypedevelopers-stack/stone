@@ -115,7 +115,7 @@ const findProductById = (id) => {
     return null;
 };
 
-export default function ProductDetail({ addToCart }) {
+export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist }) {
     const { id } = useParams();
 
     // Fetch product data
@@ -162,7 +162,9 @@ export default function ProductDetail({ addToCart }) {
     const [qty, setQty] = useState(1);
     const [activeTab, setActiveTab] = useState("description"); // For Desktop Tabs
     const [openAccordions, setOpenAccordions] = useState({ description: true }); // For Mobile Accordions
-    const [isWishlisted, setIsWishlisted] = useState(false);
+
+    // Check if product is in wishlist
+    const isWishlisted = wishlist.some(item => item.id === product.id);
 
     const toggleAccordion = (key) => {
         setOpenAccordions(prev => ({ ...prev, [key]: !prev[key] }));
@@ -285,7 +287,7 @@ export default function ProductDetail({ addToCart }) {
 
                                 {/* Wishlist */}
                                 <button
-                                    onClick={() => setIsWishlisted(!isWishlisted)}
+                                    onClick={() => toggleWishlist && toggleWishlist(product)}
                                     className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all ${isWishlisted ? "border-pink-200 bg-pink-50 text-pink-500" : "border-pink-200 text-pink-400 hover:border-pink-400 hover:text-pink-900"}`}
                                 >
                                     <Heart size={20} fill={isWishlisted ? "currentColor" : "none"} />

@@ -11,6 +11,8 @@ import CategoryPage from "./CategoryPage.jsx";
 import BrandPage from "./BrandPage.jsx";
 import SkinConcernPage from "./SkinConcernPage.jsx";
 import ShopByOfferPage from "./ShopByOfferPage.jsx";
+import PreOrderProductPage from "./PreOrderProductPage.jsx";
+import WishlistDrawer from "./WishlistDrawer.jsx";
 import { getAllProducts } from "./data/products";
 import imgNewArrival from "./assets/newarrival.jpg";
 import imgBestSeller from "./assets/bestsellerproducts.jpg";
@@ -30,6 +32,9 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
   const [cart, setCart] = useState([]); // {id, qty}
+  // Wishlist State
+  const [wishlistOpen, setWishlistOpen] = useState(false);
+  const [wishlist, setWishlist] = useState([]); // Array of full product objects
 
   const PRODUCTS = getAllProducts();
   const freeDeliveryThreshold = 999;
@@ -68,6 +73,18 @@ export default function App() {
 
   function incQty(id) {
     setCart((prev) => prev.map((x) => (x.id === id ? { ...x, qty: x.qty + 1 } : x)));
+  }
+
+  // Wishlist Logic
+  function toggleWishlist(product) {
+    setWishlist((prev) => {
+      const exists = prev.find((p) => p.id === product.id);
+      if (exists) {
+        return prev.filter((p) => p.id !== product.id);
+      } else {
+        return [...prev, product];
+      }
+    });
   }
 
   // Categories Data
@@ -110,6 +127,8 @@ export default function App() {
         cartCount={cartCount}
         onToggleCart={() => setCartOpen((v) => !v)}
         onNavigate={handleNavigate}
+        wishlistCount={wishlist.length}
+        onToggleWishlist={() => setWishlistOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -123,18 +142,21 @@ export default function App() {
             onSelectBrand={(brand) => navigate(`/brand/${brand}`)}
             onSelectConcern={(concern) => navigate(`/concern/${concern}`)}
             onSelectOffer={(offer) => navigate(`/offer/${offer}`)}
+            wishlist={wishlist}
+            toggleWishlist={toggleWishlist}
           />
         } />
-        <Route path="/shop" element={<Shop addToCart={addToCart} />} />
-        <Route path="/new-arrivals" element={<NewArrivals addToCart={addToCart} />} />
-        <Route path="/best-sellers" element={<BestSellers addToCart={addToCart} />} />
+        <Route path="/shop" element={<Shop addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
+        <Route path="/new-arrivals" element={<NewArrivals addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
+        <Route path="/best-sellers" element={<BestSellers addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
 
         {/* Dynamic Routes */}
-        <Route path="/product/:id" element={<ProductPage addToCart={addToCart} />} />
-        <Route path="/category/:category" element={<CategoryPageWrapper addToCart={addToCart} />} />
-        <Route path="/brand/:brandName" element={<BrandPageWrapper addToCart={addToCart} />} />
-        <Route path="/concern/:concern" element={<SkinConcernPageWrapper addToCart={addToCart} />} />
-        <Route path="/offer/:offer" element={<ShopByOfferPageWrapper addToCart={addToCart} />} />
+        <Route path="/product/:id" element={<ProductPage addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
+        <Route path="/preorder/:id" element={<PreOrderProductPage addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
+        <Route path="/category/:category" element={<CategoryPageWrapper addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
+        <Route path="/brand/:brandName" element={<BrandPageWrapper addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
+        <Route path="/concern/:concern" element={<SkinConcernPageWrapper addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
+        <Route path="/offer/:offer" element={<ShopByOfferPageWrapper addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
       </Routes>
 
       {/* Persistent Cart Drawer */}
@@ -198,6 +220,15 @@ export default function App() {
         </div>
       </aside>
 
+      {/* Wishlist Drawer */}
+      <WishlistDrawer
+        open={wishlistOpen}
+        onClose={() => setWishlistOpen(false)}
+        wishlist={wishlist}
+        onToggleWishlist={toggleWishlist}
+        onAddToCart={addToCart}
+      />
+
       <Footer supportPhone={supportPhone} />
     </div>
   );
@@ -206,25 +237,25 @@ export default function App() {
 // Wrappers to extract route params and pass them as props
 import { useParams } from "react-router-dom";
 
-function CategoryPageWrapper({ addToCart }) {
+function CategoryPageWrapper({ addToCart, wishlist, toggleWishlist }) {
   const { category } = useParams();
   const navigate = useNavigate();
-  return <CategoryPage category={category} addToCart={addToCart} onCategoryChange={(cat) => navigate(`/category/${cat}`)} />;
+  return <CategoryPage category={category} addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} onCategoryChange={(cat) => navigate(`/category/${cat}`)} />;
 }
 
-function BrandPageWrapper({ addToCart }) {
+function BrandPageWrapper({ addToCart, wishlist, toggleWishlist }) {
   const { brandName } = useParams();
   const navigate = useNavigate();
-  return <BrandPage brandName={brandName} addToCart={addToCart} onBrandChange={(b) => navigate(`/brand/${b}`)} />;
+  return <BrandPage brandName={brandName} addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} onBrandChange={(b) => navigate(`/brand/${b}`)} />;
 }
 
-function SkinConcernPageWrapper({ addToCart }) {
+function SkinConcernPageWrapper({ addToCart, wishlist, toggleWishlist }) {
   const { concern } = useParams();
   const navigate = useNavigate();
-  return <SkinConcernPage userConcern={concern} addToCart={addToCart} onConcernChange={(c) => navigate(`/concern/${c}`)} />;
+  return <SkinConcernPage userConcern={concern} addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} onConcernChange={(c) => navigate(`/concern/${c}`)} />;
 }
 
-function ShopByOfferPageWrapper({ addToCart }) {
+function ShopByOfferPageWrapper({ addToCart, wishlist, toggleWishlist }) {
   const { offer } = useParams();
-  return <ShopByOfferPage initialOffer={offer} addToCart={addToCart} />;
+  return <ShopByOfferPage initialOffer={offer} addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />;
 }

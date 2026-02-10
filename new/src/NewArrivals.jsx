@@ -7,7 +7,7 @@ import imgNew1 from "./assets/newprod/new1.jpg";
 import imgNew2 from "./assets/newprod/new2.jpg";
 import imgNew3 from "./assets/newprod/new3.jpg";
 
-export default function NewArrivals({ addToCart }) {
+export default function NewArrivals({ addToCart, wishlist = [], toggleWishlist }) {
     const allProducts = getAllProducts();
     const [activeFilter, setActiveFilter] = useState("Latest");
     const [timeLeft, setTimeLeft] = useState({ h: 12, m: 45, s: 30 });
@@ -101,8 +101,14 @@ export default function NewArrivals({ addToCart }) {
                                 <div className="relative rounded-[20px] overflow-hidden bg-gray-50 aspect-square mb-4">
                                     <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                                     <div className="absolute top-3 left-3 bg-[#151515] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">New</div>
-                                    <button className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:scale-110 transition-all shadow-sm">
-                                        <Heart size={16} strokeWidth={2.5} />
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleWishlist && toggleWishlist(p);
+                                        }}
+                                        className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm bg-white/90 backdrop-blur ${wishlist.some(i => i.id === p.id) ? 'text-red-500 bg-red-50' : 'text-gray-400 hover:text-red-500 hover:scale-110'}`}
+                                    >
+                                        <Heart size={16} strokeWidth={2.5} fill={wishlist.some(i => i.id === p.id) ? "currentColor" : "none"} />
                                     </button>
                                     {/* Add to Cart Overlay */}
                                     <div className="absolute inset-x-4 bottom-4 translate-y-[120%] group-hover:translate-y-0 transition-transform duration-300">

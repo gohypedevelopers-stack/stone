@@ -9,7 +9,7 @@ import cartIcon from "./assets/shopping-cart.png";
 
 
 
-export default function Navbar({ categories, query, onQueryChange, cartCount, onToggleCart, onNavigate }) {
+export default function Navbar({ categories, query, onQueryChange, cartCount, onToggleCart, onNavigate, wishlistCount, onToggleWishlist }) {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const searchTerms = [
     "B.b cream", "Blender", "Blush", "Brush", "Cleanser", "cleansing oil", "compact powders",
@@ -33,7 +33,7 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
         <a className="flex items-center gap-[10px] leading-[1.05] mr-auto" href="#" onClick={(e) => { e.preventDefault(); onNavigate('home'); }}>
           <img className="w-[60px] h-[60px] object-contain" src={logo} alt="omwskincare logo" />
           <div className="flex flex-col justify-center">
-            <span className="bg-gradient-to-r from-[#ff4fa3] to-[#ff77c8] bg-clip-text text-transparent font-[800] text-[35px]">omw</span>
+            <span className="bg-gradient-to-r from-[#ff4fa3] to-[#ff77c8] bg-clip-text text-transparent font-[800] text-[35px]">OMW</span>
             <span className="text-[11px] text-muted-custom tracking-[1.2px] uppercase mt-[4px]">skin-first essentials</span>
           </div>
         </a>
@@ -69,8 +69,9 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
             Shop
           </a>
 
-          <button className="grid place-items-center cursor-pointer p-1" aria-label="Wishlist">
+          <button className="grid place-items-center cursor-pointer p-1 relative" onClick={onToggleWishlist} aria-label="Wishlist">
             <img className="w-[30px] h-[30px] object-contain block" src={favIcon} alt="" />
+            {wishlistCount > 0 && <span className="absolute -top-[2px] -right-[2px] bg-[#151515] text-white text-[10px] px-[5px] py-[2px] rounded-full font-bold min-w-[18px] text-center border-2 border-white">{wishlistCount}</span>}
           </button>
           <button className="grid place-items-center cursor-pointer p-1" aria-label="Account">
             <img className="w-[30px] h-[30px] object-contain block" src={accountIcon} alt="" />
@@ -100,11 +101,14 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
               return (
                 <div key={c.key} className="static">
                   <a
-                    className="flex items-center gap-[6px] text-text-custom font-[700] text-[15px] cursor-pointer hover:text-[#d1408e] transition-colors py-[4px]"
+                    className="flex flex-col items-center gap-[6px] text-text-custom font-[700] text-[15px] cursor-pointer hover:text-[#d1408e] transition-colors py-[0px]"
                     href={`#${targetView}`}
                     onClick={(e) => { e.preventDefault(); onNavigate && onNavigate(targetView); }}
                   >
-                    {c.title}
+                    <div className="w-[60px] h-[60px] rounded-full overflow-hidden border border-gray-200 ">
+                      <img src={c.image} alt={c.title} className="w-full h-full object-cover rounded-full" />
+                    </div>
+                    <span>{c.title}</span>
                   </a>
                 </div>
               );
@@ -113,13 +117,18 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
             return (
               <div key={c.key} className="group static">
                 <a
-                  className="flex items-center gap-[6px] text-text-custom font-[700] text-[15px] cursor-pointer hover:text-[#d1408e] transition-colors py-[4px]"
+                  className="flex flex-col items-center gap-[6px] text-text-custom font-[700] text-[15px] cursor-pointer hover:text-[#d1408e] transition-colors py-[0px]"
                   href="#"
                 >
-                  {c.title}
-                  <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg" className="group-hover:rotate-180 transition-transform duration-200">
-                    <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                  <div className="w-[60px] h-[60px] rounded-full overflow-hidden border border-gray-200 ">
+                    <img src={c.image} alt={c.title} className="w-full h-full object-cover rounded-full" />
+                  </div>
+                  <div className="flex items-center gap-[4px]">
+                    {c.title}
+                    <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg" className="group-hover:rotate-180 transition-transform duration-200">
+                      <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
                 </a>
 
                 {/* Mega Dropdown */}

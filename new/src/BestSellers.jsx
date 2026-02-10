@@ -5,7 +5,7 @@ import {
     Truck, ShieldCheck, RefreshCw, Zap
 } from "lucide-react";
 
-export default function BestSellers({ addToCart }) {
+export default function BestSellers({ addToCart, wishlist = [], toggleWishlist }) {
     const allProducts = getAllProducts();
     const [activeFilter, setActiveFilter] = useState("Skincare");
     const [sortOption, setSortOption] = useState("Most Popular");
@@ -61,8 +61,8 @@ export default function BestSellers({ addToCart }) {
                                 key={f}
                                 onClick={() => setActiveFilter(f)}
                                 className={`px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all ${activeFilter === f
-                                        ? "bg-[#1a1a1a] text-white shadow-md"
-                                        : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+                                    ? "bg-[#1a1a1a] text-white shadow-md"
+                                    : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
                                     }`}
                             >
                                 {f}
@@ -106,8 +106,14 @@ export default function BestSellers({ addToCart }) {
                                     </div>
 
                                     {/* Wishlist */}
-                                    <button className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-white/80 backdrop-blur text-gray-600 flex items-center justify-center hover:bg-white hover:text-red-500 hover:scale-110 transition-all shadow-sm">
-                                        <Heart size={18} strokeWidth={2} />
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleWishlist && toggleWishlist(p);
+                                        }}
+                                        className={`absolute top-4 right-4 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-sm bg-white/80 backdrop-blur ${wishlist.some(i => i.id === p.id) ? 'text-red-500 bg-red-50' : 'text-gray-600 hover:text-red-500 hover:scale-110'}`}
+                                    >
+                                        <Heart size={18} strokeWidth={2} fill={wishlist.some(i => i.id === p.id) ? "currentColor" : "none"} />
                                     </button>
 
                                     {/* Image */}
@@ -273,8 +279,11 @@ export default function BestSellers({ addToCart }) {
                             </div>
 
                             <div className="flex gap-4 mt-4">
-                                <button className="w-14 h-14 border border-gray-200 rounded-xl flex items-center justify-center hover:bg-gray-50 transition-colors">
-                                    <Heart size={24} />
+                                <button
+                                    onClick={() => toggleWishlist && toggleWishlist(quickViewProduct)}
+                                    className={`w-14 h-14 border rounded-xl flex items-center justify-center transition-colors ${wishlist.some(i => i.id === quickViewProduct.id) ? 'bg-red-50 text-red-500 border-red-200' : 'border-gray-200 hover:bg-gray-50'}`}
+                                >
+                                    <Heart size={24} fill={wishlist.some(i => i.id === quickViewProduct.id) ? "currentColor" : "none"} />
                                 </button>
                                 <button
                                     onClick={() => {
