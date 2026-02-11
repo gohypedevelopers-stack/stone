@@ -209,10 +209,10 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                                                 <span className="text-sm text-gray-400 line-through">{formatINR(p.price)}</span>
                                             </div>
                                             <button
-                                                onClick={() => addToCart(p.id)}
+                                                onClick={() => addToCart(p)}
                                                 className="w-full bg-[#1b1b1b] text-white py-3 rounded-xl text-sm font-bold hover:bg-black transition-colors shadow-lg shadow-black/10"
                                             >
-                                                Add to Bag
+                                                Add to Cart
                                             </button>
                                         </div>
                                     </div>
@@ -235,7 +235,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                                         salePrice: p.salePrice, // Passing calculated sale price
                                         inStock: true
                                     }}
-                                    onAddToCart={() => addToCart(p.id)}
+                                    onAddToCart={() => addToCart(p)}
                                 // Customizing styles via props if ProductCard supports it, or relying on passed data
                                 />
                             ))}
@@ -281,7 +281,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                                 <div key={p.id} className="min-w-[160px] w-[160px]">
                                     <ProductCard
                                         product={{ ...p, category: p.tag, inStock: true }}
-                                        onAddToCart={() => addToCart(p.id)}
+                                        onAddToCart={() => addToCart(p)}
                                     />
                                 </div>
                             ))}
@@ -410,7 +410,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                                                 <span className="text-xl font-black">{formatINR(p.price)}</span>
                                             </div>
                                             <button
-                                                onClick={() => addToCart(p.id)}
+                                                onClick={() => addToCart(p)}
                                                 className="bg-black text-white w-12 h-12 rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-lg"
                                             >
                                                 <ShoppingBag size={20} />
@@ -439,7 +439,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                                             category: p.tag,
                                             inStock: true
                                         }}
-                                        onAddToCart={() => addToCart(p.id)}
+                                        onAddToCart={() => addToCart(p)}
                                     />
                                     {/* Visual nudge overlay */}
                                     {/* <div className="absolute inset-x-0 bottom-0 pointer-events-none p-4 opacity-0 group-hover:opacity-100 transition-opacity flex justify-center z-20">
@@ -546,10 +546,10 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                                                 <span className="text-2xl font-bold text-[#1b1b1b]">{formatINR(p.price)}</span>
                                             </div>
                                             <button
-                                                onClick={() => addToCart(p.id)}
+                                                onClick={() => addToCart(p)}
                                                 className="w-full bg-white border border-gray-200 text-[#1b1b1b] py-3 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors"
                                             >
-                                                Add to Bag
+                                                Add to Cart
                                             </button>
                                         </div>
                                     </div>
@@ -570,7 +570,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                                             category: p.tag,
                                             inStock: true
                                         }}
-                                        onAddToCart={() => addToCart(p.id)}
+                                        onAddToCart={() => addToCart(p)}
                                     />
                                 </div>
                             ))}
@@ -1044,7 +1044,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                                                 onClick={() => addToCart(p.id)}
                                                 className="w-full bg-red-500 text-white py-3 rounded-xl text-sm font-bold shadow-lg shadow-red-500/20 hover:bg-red-600 transition-all"
                                             >
-                                                Add to Bag
+                                                Add to Cart
                                             </button>
                                         </div>
                                     </div>

@@ -292,7 +292,7 @@ export default function BestSellers({ addToCart, wishlist = [], toggleWishlist }
                                     }}
                                     className="flex-1 bg-[#1a1a1a] text-white rounded-xl font-bold uppercase tracking-widest text-sm hover:bg-pink-600 transition-all shadow-lg flex items-center justify-center gap-2"
                                 >
-                                    <ShoppingBag size={18} /> Add to Bag
+                                    <ShoppingBag size={18} /> Add to Cart
                                 </button>
                             </div>
                         </div>

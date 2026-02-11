@@ -112,8 +112,8 @@ export default function NewArrivals({ addToCart, wishlist = [], toggleWishlist }
                                     </button>
                                     {/* Add to Cart Overlay */}
                                     <div className="absolute inset-x-4 bottom-4 translate-y-[120%] group-hover:translate-y-0 transition-transform duration-300">
-                                        <button onClick={() => addToCart(p.id)} className="w-full bg-white/95 backdrop-blur text-[#151515] py-3 rounded-xl font-bold text-sm shadow-lg hover:bg-[#151515] hover:text-white transition-colors">
-                                            Add to Bag
+                                        <button onClick={() => addToCart(p)} className="w-full bg-white/95 backdrop-blur text-[#151515] py-3 rounded-xl font-bold text-sm shadow-lg hover:bg-[#151515] hover:text-white transition-colors">
+                                            Add to Cart
                                         </button>
                                     </div>
                                 </div>

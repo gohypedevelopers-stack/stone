@@ -151,6 +151,10 @@ export default function CartPage({
     const recommendations = useMemo(() => getAllProducts().slice(0, 6), []);
 
     // ---------- Handlers ----------
+    const handleItemClick = (item) => {
+        navigate(`/product/${item.id}`, { state: { product: item } });
+    };
+
     const handleQty = (item, nextQty) => {
         const min = 1;
         const max = Math.min(
@@ -299,6 +303,7 @@ export default function CartPage({
                                                 onUpdateQty={handleQty}
                                                 onRemove={() => removeFromCart(item.id)}
                                                 onWishlist={() => moveToWishlist(item)}
+                                                onItemClick={() => handleItemClick(item)}
                                             />
                                         ))}
                                     </div>
@@ -325,6 +330,7 @@ export default function CartPage({
                                                 onWishlist={() => moveToWishlist(item)}
                                                 isPreOrder
                                                 cardClassName="bg-white/70 hover:bg-white border border-white/40"
+                                                onItemClick={() => handleItemClick(item)}
                                             />
                                         ))}
 
@@ -461,7 +467,7 @@ export default function CartPage({
 
 /* ---------------- Subcomponents ---------------- */
 
-function CartItem({ item, selected, onToggle, onUpdateQty, onRemove, onWishlist, isPreOrder, cardClassName = "" }) {
+function CartItem({ item, selected, onToggle, onUpdateQty, onRemove, onWishlist, isPreOrder, cardClassName = "", onItemClick }) {
     const isOutOfStock = (typeof item.stockLeft === "number" && item.stockLeft <= 0) || item.inStock === false;
     const [imgError, setImgError] = useState(false);
 
@@ -481,7 +487,10 @@ function CartItem({ item, selected, onToggle, onUpdateQty, onRemove, onWishlist,
 
             <div className="flex gap-5 pl-8">
                 {/* image */}
-                <div className="w-24 h-28 rounded-[18px] bg-stone-50 overflow-hidden shrink-0 relative flex items-center justify-center">
+                <div
+                    onClick={onItemClick}
+                    className="w-24 h-28 rounded-[18px] bg-stone-50 overflow-hidden shrink-0 relative flex items-center justify-center cursor-pointer"
+                >
                     {!imgError ? (
                         <img
                             src={item.image}
@@ -511,7 +520,12 @@ function CartItem({ item, selected, onToggle, onUpdateQty, onRemove, onWishlist,
                                     <Sparkles size={10} /> Pre-Order
                                 </span>
                             )}
-                            <h3 className="text-base font-[900] text-stone-900 leading-tight mb-1 truncate">{item.name}</h3>
+                            <h3
+                                onClick={onItemClick}
+                                className="text-base font-[900] text-stone-900 leading-tight mb-1 truncate cursor-pointer hover:text-pink-600 transition-colors"
+                            >
+                                {item.name}
+                            </h3>
                             <p className="text-xs text-stone-500 font-semibold truncate">{item.tag || "Standard Size"}</p>
                         </div>
 
@@ -594,7 +608,7 @@ function RecCard({ product, onAdd }) {
                 <button
                     onClick={onAdd}
                     className="absolute bottom-3 right-3 w-9 h-9 bg-white/90 backdrop-blur rounded-full shadow-md flex items-center justify-center text-stone-900 hover:bg-pink-500 hover:text-white transition-all"
-                    title="Add to bag"
+                    title="Add to Cart"
                 >
                     <Plus size={16} />
                 </button>

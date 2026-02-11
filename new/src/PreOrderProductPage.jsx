@@ -130,7 +130,9 @@ export default function PreOrderProductPage({ addToCart, wishlist = [], toggleWi
 
                         {/* Actions */}
                         <div className="flex flex-col gap-3">
-                            <button className="w-full h-[56px] bg-gradient-to-r from-[#1a1a1a] to-[#333] text-white rounded-[16px] font-[800] text-[15px] uppercase tracking-wide hover:shadow-lg hover:from-[#d1408e] hover:to-[#b03075] transition-all flex items-center justify-center gap-2">
+                            <button
+                                onClick={() => addToCart && addToCart(product)}
+                                className="w-full h-[56px] bg-gradient-to-r from-[#1a1a1a] to-[#333] text-white rounded-[16px] font-[800] text-[15px] uppercase tracking-wide hover:shadow-lg hover:from-[#d1408e] hover:to-[#b03075] transition-all flex items-center justify-center gap-2">
                                 Pre-Order Now
                             </button>
                             <p className="text-center text-[11px] text-[#666] font-medium flex items-center justify-center gap-1.5">
@@ -183,7 +185,9 @@ export default function PreOrderProductPage({ addToCart, wishlist = [], toggleWi
 
             {/* Mobile Sticky CTA */}
             <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 pb-6 z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
-                <button className="w-full h-[52px] bg-[#1a1a1a] text-white rounded-[14px] font-[800] text-[14px] uppercase tracking-wide">
+                <button
+                    onClick={() => addToCart && addToCart(product)}
+                    className="w-full h-[52px] bg-[#1a1a1a] text-white rounded-[14px] font-[800] text-[14px] uppercase tracking-wide">
                     Pre-Order • {typeof product.price === 'string' ? product.price : `₹${product.price}`}
                 </button>
             </div>

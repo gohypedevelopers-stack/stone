@@ -234,7 +234,7 @@ export default function SkinConcernPage({ userConcern = "acne", onConcernChange,
                                         <span className="text-lg font-bold">
                                             {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(p.price)}
                                         </span>
-                                        <button onClick={() => addToCart(p.id)} className="w-10 h-10 rounded-full bg-gray-100 hover:bg-black hover:text-white flex items-center justify-center transition-all shadow-sm">
+                                        <button onClick={() => addToCart(p)} className="w-10 h-10 rounded-full bg-gray-100 hover:bg-black hover:text-white flex items-center justify-center transition-all shadow-sm">
                                             <ShoppingBag size={18} />
                                         </button>
                                     </div>
@@ -263,7 +263,7 @@ export default function SkinConcernPage({ userConcern = "acne", onConcernChange,
                                     {/* Quick Add */}
                                     <div className="absolute inset-x-4 bottom-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 opacity-0 group-hover:opacity-100">
                                         <button
-                                            onClick={() => addToCart(p.id)}
+                                            onClick={() => addToCart(p)}
                                             className="w-full bg-white text-[#1a1a1a] py-3 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg hover:bg-[#1a1a1a] hover:text-white transition-colors flex items-center justify-center gap-2"
                                         >
                                             <ShoppingBag size={14} /> Add to Cart

@@ -12,11 +12,9 @@ export default function WishlistDrawer({ open, onClose, wishlist, onToggleWishli
     const handleItemClick = (item) => {
         onClose();
         const id = item.id.toString();
-        if (id.startsWith("po") || id.startsWith("up")) {
-            navigate(`/preorder/${id}`);
-        } else {
-            navigate(`/product/${id}`);
-        }
+        // Always navigate to the unified product page, passing the item data in state
+        // This ensures products from mock pages (Brand/Concern) load correctly even if not in global registry
+        navigate(`/product/${id}`, { state: { product: item } });
     };
 
     return (

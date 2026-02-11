@@ -186,7 +186,7 @@ export default function BrandPage({ brandName = "Laneige", onBrandChange, addToC
                                         <span className="font-bold text-lg">
                                             {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(p.price)}
                                         </span>
-                                        <button onClick={() => addToCart(p.id)} className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center hover:bg-pink-500 transition-colors">
+                                        <button onClick={() => addToCart(p)} className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center hover:bg-pink-500 transition-colors">
                                             <ShoppingBag size={18} />
                                         </button>
                                     </div>
@@ -210,7 +210,7 @@ export default function BrandPage({ brandName = "Laneige", onBrandChange, addToC
 
                                     {/* Overlay Add Button */}
                                     <button
-                                        onClick={() => addToCart(p.id)}
+                                        onClick={() => addToCart(p)}
                                         className="absolute bottom-3 right-3 w-10 h-10 bg-white text-black rounded-full shadow-lg flex items-center justify-center translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 hover:bg-black hover:text-white"
                                     >
                                         <ShoppingBag size={18} />

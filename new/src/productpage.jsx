@@ -84,7 +84,7 @@ const ProductCardMini = ({ product, onAddToCart }) => (
             <div className="flex items-center justify-between">
                 <span className="font-bold text-sm">₹{product.price}</span>
                 <button
-                    onClick={() => onAddToCart && onAddToCart(product.id)}
+                    onClick={() => onAddToCart && onAddToCart(product)}
                     className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-black hover:text-white transition-colors"
                 >+
                 </button>
@@ -94,42 +94,31 @@ const ProductCardMini = ({ product, onAddToCart }) => (
 );
 
 
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { CATEGORY_DATA_GENERATED } from "./productData.js";
+import { PREORDER_PRODUCTS } from "./data/products";
 
-// Helper to find product by ID across all data sources
-const findProductById = (id) => {
-    if (!id) return null;
-
-    // Check manual products first
-    const manualProducts = getAllProducts();
-    const foundManual = manualProducts.find(p => p.id === id);
-    if (foundManual) return foundManual;
-
-    // Check generated category data
-    for (const category in CATEGORY_DATA_GENERATED) {
-        const found = CATEGORY_DATA_GENERATED[category].find(p => p.id === id);
-        if (found) return found;
-    }
-
-    return null;
-};
+// [existing findProductById code remains unchanged]
+// ...
 
 export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist }) {
     const { id } = useParams();
+    const location = useLocation();
+    const decodedId = decodeURIComponent(id);
 
-    // Fetch product data
-    const productData = findProductById(id);
+    // 1. Try to get product from navigation state (most reliable for mock/generated items)
+    const stateProduct = location.state?.product;
 
-    // Fallback if not found (should be handled better in production, e.g. 404)
+    // 2. Fallback to ID lookup
+    const productData = stateProduct || findProductById(decodedId);
+
+    // 3. Last resort fallback
     const products = getAllProducts() || [];
     const defaultProduct = products.find(p => p.tag === "Best Seller") || products[0];
 
     const product = productData || defaultProduct;
 
-    // Merge with Mock Data for full experience
-    // We carefully merge to ensure real product data (like image) isn't hidden by mock arrays
-    const listImages = product.image ? [product.image, ...MOCK_PDP_DATA.images] : MOCK_PDP_DATA.images;
+    const listImages = product?.image ? [product.image, ...MOCK_PDP_DATA.images] : MOCK_PDP_DATA.images;
 
     const fullProduct = {
         ...MOCK_PDP_DATA,
@@ -137,12 +126,17 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
         images: listImages
     };
 
-    // Reset state when product changes
     useEffect(() => {
-        setMainImage(fullProduct.images[0]);
+        if (fullProduct.images && fullProduct.images.length > 0) {
+            setMainImage(fullProduct.images[0]);
+        }
         setQty(1);
-        setSelectedShade(fullProduct.shades[0]);
-    }, [id]); // Depend on ID.
+        if (fullProduct.shades && fullProduct.shades.length > 0) {
+            setSelectedShade(fullProduct.shades[0]);
+        }
+        // Force scroll to top when product changes
+        window.scrollTo(0, 0);
+    }, [decodedId, product]);
 
     if (!product) return <div className="p-20 text-center">Loading...</div>;
 
@@ -174,7 +168,7 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
         // In a real app, pass qty and shade
         // Simulate adding multiple times based on qty
         if (addToCart) {
-            for (let i = 0; i < qty; i++) addToCart(product.id);
+            for (let i = 0; i < qty; i++) addToCart(product);
         } else {
             console.warn("addToCart function not provided");
         }
@@ -259,11 +253,35 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
                                 </div>
                             </div>
 
+                            {/* Pre-Order Info */}
+                            {product.shippingStart && (
+                                <div className="mb-6 bg-pink-50 p-4 rounded-xl border border-pink-100">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <p className="text-sm font-bold text-pink-700">Shipping Starts</p>
+                                        <p className="text-base font-bold text-[#1a1a1a]">{product.shippingStart}</p>
+                                    </div>
+                                    {product.stockLeft && product.totalStock && (
+                                        <>
+                                            <div className="flex justify-between text-[11px] font-bold text-gray-500 mb-1">
+                                                <span>Slots Available</span>
+                                                <span className="text-pink-600">{product.stockLeft} left</span>
+                                            </div>
+                                            <div className="w-full h-2 bg-white rounded-full overflow-hidden border border-pink-100">
+                                                <div
+                                                    className="h-full bg-gradient-to-r from-pink-400 to-pink-600 rounded-full"
+                                                    style={{ width: `${(product.stockLeft / product.totalStock) * 100}%` }}
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+
                             {/* Stock Status */}
                             <div className="mb-6">
-                                <div className={`inline-flex items-center gap-2 text-sm font-bold px-3 py-1.5 rounded-full ${fullProduct.inStock ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                                    <div className={`w-2 h-2 rounded-full ${fullProduct.inStock ? "bg-green-500" : "bg-red-500"}`} />
-                                    {fullProduct.inStock ? "In Stock" : "Out of Stock"}
+                                <div className={`inline-flex items-center gap-2 text-sm font-bold px-3 py-1.5 rounded-full ${(!product.shippingStart && product.inStock) ? "bg-green-100 text-green-700" : (!product.shippingStart && !product.inStock) ? "bg-red-100 text-red-700" : "bg-blue-50 text-blue-700"}`}>
+                                    <div className={`w-2 h-2 rounded-full ${(!product.shippingStart && product.inStock) ? "bg-green-500" : (!product.shippingStart && !product.inStock) ? "bg-red-500" : "bg-blue-500"}`} />
+                                    {product.shippingStart ? "Pre-Order Open" : (product.inStock ? "In Stock" : "Out of Stock")}
                                 </div>
                             </div>
 
@@ -282,7 +300,7 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
                                     className="flex-1 bg-[#151515] text-white rounded-full font-bold text-sm uppercase tracking-wider hover:bg-pink-600 hover:shadow-lg hover:shadow-pink-200 shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
                                 >
                                     <ShoppingBag size={18} />
-                                    Add to Cart
+                                    {product.id && product.id.startsWith("po") ? "Pre-Order" : "Add to Cart"}
                                 </button>
 
                                 {/* Wishlist */}

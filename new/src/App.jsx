@@ -45,9 +45,17 @@ export default function App() {
   // Cart Logic
   const cartItems = useMemo(() => {
     return cart.map((c) => {
-      const p = PRODUCTS.find((x) => x.id === c.id);
+      const p = PRODUCTS.find((x) => x.id === c.id) || c.productData;
       if (!p) return null;
-      return { ...p, qty: c.qty, line: p.price * c.qty };
+
+      // Ensure price is a number for calculation
+      let price = p.price;
+      if (typeof price === 'string') {
+        // Remove currency symbols and commas
+        price = parseFloat(price.replace(/[^0-9.]/g, ''));
+      }
+
+      return { ...p, price, qty: c.qty, line: price * c.qty };
     }).filter(Boolean);
   }, [cart, PRODUCTS]);
 
@@ -56,11 +64,22 @@ export default function App() {
   const remainingForFreeDelivery = Math.max(0, freeDeliveryThreshold - subtotal);
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
-  function addToCart(id) {
+  function addToCart(item) {
+    let id = item;
+    let productData = null;
+
+    if (typeof item === 'object' && item !== null) {
+      id = item.id;
+      productData = item;
+    }
+
     setCart((prev) => {
       const found = prev.find((x) => x.id === id);
-      if (found) return prev.map((x) => (x.id === id ? { ...x, qty: x.qty + 1 } : x));
-      return [...prev, { id, qty: 1 }];
+      if (found) {
+        // Update qty and keep existing productData if we don't have new one
+        return prev.map((x) => (x.id === id ? { ...x, qty: x.qty + 1, productData: productData || x.productData } : x));
+      }
+      return [...prev, { id, qty: 1, productData }];
     });
     // setCartOpen(true); // Disable drawer auto-open now that we have a Cart Page
   }
