@@ -13,6 +13,8 @@ import SkinConcernPage from "./SkinConcernPage.jsx";
 import ShopByOfferPage from "./ShopByOfferPage.jsx";
 import PreOrderProductPage from "./PreOrderProductPage.jsx";
 import WishlistDrawer from "./WishlistDrawer.jsx";
+import CartPage from "./CartPage.jsx";
+import CheckoutPage from "./CheckoutPage.jsx";
 import { getAllProducts } from "./data/products";
 import imgNewArrival from "./assets/newarrival.jpg";
 import imgBestSeller from "./assets/bestsellerproducts.jpg";
@@ -60,7 +62,7 @@ export default function App() {
       if (found) return prev.map((x) => (x.id === id ? { ...x, qty: x.qty + 1 } : x));
       return [...prev, { id, qty: 1 }];
     });
-    setCartOpen(true);
+    // setCartOpen(true); // Disable drawer auto-open now that we have a Cart Page
   }
 
   function decQty(id) {
@@ -73,6 +75,25 @@ export default function App() {
 
   function incQty(id) {
     setCart((prev) => prev.map((x) => (x.id === id ? { ...x, qty: x.qty + 1 } : x)));
+  }
+
+  function updateQty(id, newQty) {
+    if (newQty < 1) return;
+    setCart((prev) => prev.map((x) => (x.id === id ? { ...x, qty: newQty } : x)));
+  }
+
+  function removeFromCart(id) {
+    setCart((prev) => prev.filter((x) => x.id !== id));
+  }
+
+  function moveToWishlist(item) {
+    // Add to wishlist
+    setWishlist((prev) => {
+      if (prev.some(p => p.id === item.id)) return prev;
+      return [...prev, item];
+    });
+    // Remove from cart
+    removeFromCart(item.id);
   }
 
   // Wishlist Logic
@@ -107,7 +128,8 @@ export default function App() {
       "category-page": "/category/Serums", // Default category
       "brand-page": "/brand/Laneige", // Default brand
       "skin-concern-page": "/concern/acne", // Default concern
-      "shop-by-offer-page": "/offer/flat-20" // Default offer
+      "shop-by-offer-page": "/offer/flat-20", // Default offer
+      "cart": "/cart"
     };
 
     if (routeMap[view]) {
@@ -125,7 +147,7 @@ export default function App() {
         query={query}
         onQueryChange={(e) => setQuery(e.target.value)}
         cartCount={cartCount}
-        onToggleCart={() => setCartOpen((v) => !v)}
+        onToggleCart={() => navigate('/cart')}
         onNavigate={handleNavigate}
         wishlistCount={wishlist.length}
         onToggleWishlist={() => setWishlistOpen(true)}
@@ -149,6 +171,16 @@ export default function App() {
         <Route path="/shop" element={<Shop addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
         <Route path="/new-arrivals" element={<NewArrivals addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
         <Route path="/best-sellers" element={<BestSellers addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
+        <Route path="/cart" element={
+          <CartPage
+            cartItems={cartItems}
+            updateQty={updateQty}
+            removeFromCart={removeFromCart}
+            moveToWishlist={moveToWishlist}
+            subtotal={subtotal}
+          />
+        } />
+        <Route path="/checkout" element={<CheckoutPage />} />
 
         {/* Dynamic Routes */}
         <Route path="/product/:id" element={<ProductPage addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />

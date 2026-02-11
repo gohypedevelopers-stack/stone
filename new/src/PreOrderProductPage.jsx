@@ -5,29 +5,24 @@ import {
     CheckCircle, RefreshCcw, Info, Heart, Minus, Plus
 } from "lucide-react";
 
-// Mock Data (In a real app, fetch based on ID)
-import img1 from "./assets/COMINGSOON/G.jpg";
+import { PREORDER_PRODUCTS } from "./data/products";
 
-const MOCK_PRODUCT = {
-    id: "po1",
-    name: "Luminous Silk Foundation",
-    tag: "New Launch",
-    price: 2499,
-    rating: 4.8,
-    reviews: 124,
-    description: "Experience the weightless, silky texture that glides onto your skin, providing a luminous, natural glow. Formulated with hydrating silk proteins for all-day moisture.",
-    images: [img1, img1, img1, img1], // Using same image for demo
-    releaseDate: "10 Mar 2026",
-    shippingStart: "12 Mar 2026",
-    stockLeft: 42,
-    totalStock: 100,
-    ingredients: "Water, Silk Protein, Hyaluronic Acid, Niacinamide...",
-    usage: "Apply a small amount to the center of the face and blend outwards.",
-};
-
-export default function PreOrderProductPage({ addToCart }) {
+export default function PreOrderProductPage({ addToCart, wishlist = [], toggleWishlist }) {
     const { id } = useParams();
     const navigate = useNavigate();
+
+    const product = PREORDER_PRODUCTS.find(p => p.id === id);
+
+    // Fallback if not found
+    if (!product) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-[#fffcfc]">
+                <p className="text-xl font-bold text-[#1a1a1a] mb-4">Product Not Found</p>
+                <button onClick={() => navigate(-1)} className="text-[#d1408e] hover:underline">Go Back</button>
+            </div>
+        );
+    }
+
     const [qty, setQty] = useState(1);
     const [selectedImage, setSelectedImage] = useState(0);
     const [openAccordion, setOpenAccordion] = useState("description");
@@ -57,7 +52,7 @@ export default function PreOrderProductPage({ addToCart }) {
                 <div className="flex flex-col-reverse md:flex-row gap-4 sticky top-[80px] h-fit">
                     {/* Thumbnails */}
                     <div className="flex md:flex-col gap-3 overflow-x-auto md:overflow-visible pb-2 md:pb-0 hide-scrollbar">
-                        {MOCK_PRODUCT.images.map((img, idx) => (
+                        {product.images.map((img, idx) => (
                             <button
                                 key={idx}
                                 onClick={() => setSelectedImage(idx)}
@@ -72,15 +67,15 @@ export default function PreOrderProductPage({ addToCart }) {
                     {/* Main Image */}
                     <div className="flex-1 aspect-[4/5] md:aspect-square bg-gray-50 rounded-[24px] overflow-hidden relative shadow-sm">
                         <img
-                            src={MOCK_PRODUCT.images[selectedImage]}
-                            alt={MOCK_PRODUCT.name}
+                            src={product.images[selectedImage]}
+                            alt={product.name}
                             className="w-full h-full object-cover"
                         />
                         <button
-                            onClick={() => toggleWishlist && toggleWishlist(MOCK_PRODUCT)}
-                            className={`absolute top-4 right-4 w-10 h-10 rounded-full backdrop-blur flex items-center justify-center transition-colors shadow-sm ${wishlist.some(i => i.id === MOCK_PRODUCT.id) ? 'bg-red-50 text-red-500' : 'bg-white/80 text-[#111] hover:bg-[#d1408e] hover:text-white'}`}
+                            onClick={() => toggleWishlist && toggleWishlist(product)}
+                            className={`absolute top-4 right-4 w-10 h-10 rounded-full backdrop-blur flex items-center justify-center transition-colors shadow-sm ${wishlist.some(i => i.id === product.id) ? 'bg-red-50 text-red-500' : 'bg-white/80 text-[#111] hover:bg-[#d1408e] hover:text-white'}`}
                         >
-                            <Heart size={20} fill={wishlist.some(i => i.id === MOCK_PRODUCT.id) ? "currentColor" : "none"} />
+                            <Heart size={20} fill={wishlist.some(i => i.id === product.id) ? "currentColor" : "none"} />
                         </button>
                     </div>
                 </div>
@@ -90,17 +85,17 @@ export default function PreOrderProductPage({ addToCart }) {
 
                     <div className="mb-6">
                         <span className="inline-block bg-[#d1408e]/10 text-[#d1408e] text-[11px] font-[800] px-3 py-1 rounded-full uppercase tracking-wider mb-3">
-                            Pre-Order Exclusive
+                            {product.tag}
                         </span>
                         <h1 className="text-3xl md:text-4xl font-[900] text-[#1a1a1a] mb-2 leading-tight">
-                            {MOCK_PRODUCT.name}
+                            {product.name}
                         </h1>
                         <div className="flex items-center gap-4 text-sm text-[#666]">
                             <div className="flex items-center gap-1 text-yellow-500">
                                 <Star size={16} fill="currentColor" />
-                                <span className="font-bold text-[#111] pt-0.5">{MOCK_PRODUCT.rating}</span>
+                                <span className="font-bold text-[#111] pt-0.5">{product.rating}</span>
                             </div>
-                            <span>{MOCK_PRODUCT.reviews} Reviews</span>
+                            <span>{product.reviews} Reviews</span>
                         </div>
                     </div>
 
@@ -108,14 +103,14 @@ export default function PreOrderProductPage({ addToCart }) {
                         <div className="flex justify-between items-start mb-6">
                             <div>
                                 <p className="text-[13px] font-bold text-[#666] mb-1">Pre-Order Price</p>
-                                <div className="text-3xl font-[900] text-[#1a1a1a]">₹{MOCK_PRODUCT.price.toLocaleString('en-IN')}</div>
+                                <div className="text-3xl font-[900] text-[#1a1a1a]">{typeof product.price === 'string' ? product.price : `₹${product.price.toLocaleString('en-IN')}`}</div>
                                 <p className="text-[11px] text-[#888] mt-1">Charged upon shipping</p>
                             </div>
                             <div className="text-right">
                                 <p className="text-[13px] font-bold text-[#d1408e] flex items-center justify-end gap-1.5">
                                     <Clock size={14} /> Shipping Starts
                                 </p>
-                                <p className="text-lg font-bold text-[#1a1a1a]">{MOCK_PRODUCT.shippingStart}</p>
+                                <p className="text-lg font-bold text-[#1a1a1a]">{product.shippingStart}</p>
                             </div>
                         </div>
 
@@ -123,12 +118,12 @@ export default function PreOrderProductPage({ addToCart }) {
                         <div className="mb-6">
                             <div className="flex justify-between text-[11px] font-bold text-[#555] mb-2">
                                 <span>Demand is high!</span>
-                                <span className="text-[#d1408e]">{MOCK_PRODUCT.stockLeft} slots left</span>
+                                <span className="text-[#d1408e]">{product.stockLeft} slots left</span>
                             </div>
                             <div className="w-full h-[6px] bg-white rounded-full overflow-hidden">
                                 <div
                                     className="h-full bg-gradient-to-r from-[#ff4fa3] to-[#d1408e] rounded-full"
-                                    style={{ width: `${(MOCK_PRODUCT.stockLeft / MOCK_PRODUCT.totalStock) * 100}%` }}
+                                    style={{ width: `${(product.stockLeft / product.totalStock) * 100}%` }}
                                 />
                             </div>
                         </div>
@@ -161,9 +156,9 @@ export default function PreOrderProductPage({ addToCart }) {
                     {/* Accordions */}
                     <div className="space-y-4">
                         {[
-                            { id: "description", title: "Product Description", content: MOCK_PRODUCT.description },
-                            { id: "ingredients", title: "Ingredients", content: MOCK_PRODUCT.ingredients },
-                            { id: "usage", title: "How to Use", content: MOCK_PRODUCT.usage },
+                            { id: "description", title: "Product Description", content: product.description },
+                            { id: "ingredients", title: "Ingredients", content: product.ingredients },
+                            { id: "usage", title: "How to Use", content: product.usage },
                             { id: "howworks", title: "How Pre-Order Works", content: "1. Reserve your slot now.\n2. We secure your item directly from the brand.\n3. Your order ships on the official launch date." }
                         ].map((section) => (
                             <div key={section.id} className="border-b border-gray-100 last:border-0 pb-4">
@@ -189,10 +184,10 @@ export default function PreOrderProductPage({ addToCart }) {
             {/* Mobile Sticky CTA */}
             <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 pb-6 z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
                 <button className="w-full h-[52px] bg-[#1a1a1a] text-white rounded-[14px] font-[800] text-[14px] uppercase tracking-wide">
-                    Pre-Order • ₹{MOCK_PRODUCT.price}
+                    Pre-Order • {typeof product.price === 'string' ? product.price : `₹${product.price}`}
                 </button>
             </div>
 
         </div>
     );
-} 
+}

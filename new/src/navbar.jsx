@@ -71,7 +71,7 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
 
           <button className="grid place-items-center cursor-pointer p-1 relative" onClick={onToggleWishlist} aria-label="Wishlist">
             <img className="w-[30px] h-[30px] object-contain block" src={favIcon} alt="" />
-            {wishlistCount > 0 && <span className="absolute -top-[2px] -right-[2px] bg-[#151515] text-white text-[10px] px-[5px] py-[2px] rounded-full font-bold min-w-[18px] text-center border-2 border-white">{wishlistCount}</span>}
+            {wishlistCount > 0 && <span className="absolute -top-[2px] -right-[2px]  text-pink-700 text-[15px] px-[4px] py-[17px] rounded-full font-bold min-w-[1px] text-center border-2 border-white">{wishlistCount}</span>}
           </button>
           <button className="grid place-items-center cursor-pointer p-1" aria-label="Account">
             <img className="w-[30px] h-[30px] object-contain block" src={accountIcon} alt="" />

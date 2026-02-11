@@ -5,64 +5,7 @@ import {
     ChevronLeft, ChevronRight, Clock, Sparkles
 } from "lucide-react";
 
-// Placeholder images
-import img1 from "./assets/COMINGSOON/G.jpg";
-import img2 from "./assets/COMINGSOON/H.jpg";
-import img3 from "./assets/COMINGSOON/I.jpg";
-import img4 from "./assets/COMINGSOON/J.jpg";
-
-const PREORDER_PRODUCTS = [
-    {
-        id: "po1",
-        name: "Luminous Silk Foundation",
-        tag: "Exclusive",
-        image: img1,
-        unlockDate: "10 Mar, 10:00 AM",
-        stockLeft: 42,
-        totalStock: 100,
-        price: "₹2,499"
-    },
-    {
-        id: "po2",
-        name: "Velvet Blur Lip Tint",
-        tag: "Exclusive",
-        image: img2,
-        unlockDate: "15 Mar, 12:00 PM",
-        stockLeft: 12,
-        totalStock: 50,
-        price: "₹1,299"
-    },
-    {
-        id: "po3",
-        name: "Crystal Glow Serum",
-        tag: "Exclusive",
-        image: img3,
-        unlockDate: "20 Mar, 09:00 AM",
-        stockLeft: 85,
-        totalStock: 200,
-        price: "₹1,899"
-    },
-    {
-        id: "po4",
-        name: "Moonlight Night Cream",
-        tag: "Exclusive",
-        image: img4,
-        unlockDate: "25 Mar, 08:00 PM",
-        stockLeft: 20,
-        totalStock: 60,
-        price: "₹1,599"
-    },
-    {
-        id: "po5",
-        name: "Rose Quartz Roller",
-        tag: "Exclusive",
-        image: img1, // Reusing img1 for demo
-        unlockDate: "28 Mar, 10:00 AM",
-        stockLeft: 5,
-        totalStock: 30,
-        price: "₹1,999"
-    }
-];
+import { PREORDER_PRODUCTS } from "./data/products";
 
 export default function PreOrderSection({ wishlist = [], toggleWishlist }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -110,13 +53,13 @@ export default function PreOrderSection({ wishlist = [], toggleWishlist }) {
                     {/* Desktop Navigation Arrows */}
                     <button
                         onClick={() => scroll("left")}
-                        className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/80 backdrop-blur text-[#1a1a1a] rounded-full items-center justify-center shadow-lg hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100 disabled:opacity-30"
+                        className="hidden md:flex absolute -left-4 top-1/3 -translate-y-1/2 z-20 w-12 h-12 bg-white/80 backdrop-blur text-[#1a1a1a] rounded-full items-center justify-center shadow-lg hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100 disabled:opacity-30"
                     >
                         <ChevronLeft size={24} />
                     </button>
                     <button
                         onClick={() => scroll("right")}
-                        className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/80 backdrop-blur text-[#1a1a1a] rounded-full items-center justify-center shadow-lg hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100 disabled:opacity-30"
+                        className="hidden md:flex absolute -right-4 top-1/3 -translate-y-1/2 z-20 w-12 h-12 bg-white/80 backdrop-blur text-[#1a1a1a] rounded-full items-center justify-center shadow-lg hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100 disabled:opacity-30"
                     >
                         <ChevronRight size={24} />
                     </button>

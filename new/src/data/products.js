@@ -113,6 +113,106 @@ export const PRODUCTS = [
     }
 ];
 
+
+// Pre-order images
+import img1 from "../assets/COMINGSOON/G.jpg";
+import img2 from "../assets/COMINGSOON/H.jpg";
+import img3 from "../assets/COMINGSOON/I.jpg";
+import img4 from "../assets/COMINGSOON/J.jpg";
+
+export const PREORDER_PRODUCTS = [
+    {
+        id: "po1",
+        name: "Luminous Silk Foundation",
+        tag: "Exclusive",
+        image: img1,
+        unlockDate: "10 Mar, 10:00 AM",
+        stockLeft: 42,
+        totalStock: 100,
+        price: "₹2,499",
+        rating: 4.8,
+        reviews: 124,
+        description: "Experience the weightless, silky texture that glides onto your skin, providing a luminous, natural glow. Formulated with hydrating silk proteins for all-day moisture.",
+        images: [img1, img1, img1, img1],
+        releaseDate: "10 Mar 2026",
+        shippingStart: "12 Mar 2026",
+        ingredients: "Water, Silk Protein, Hyaluronic Acid, Niacinamide...",
+        usage: "Apply a small amount to the center of the face and blend outwards.",
+    },
+    {
+        id: "po2",
+        name: "Velvet Blur Lip Tint",
+        tag: "Exclusive",
+        image: img2,
+        unlockDate: "15 Mar, 12:00 PM",
+        stockLeft: 12,
+        totalStock: 50,
+        price: "₹1,299",
+        rating: 4.7,
+        reviews: 89,
+        description: "A soft-focus lip tint that blurs fine lines and delivers a velvet-matte finish. Long-wearing and comfortable.",
+        images: [img2, img2, img2, img2],
+        releaseDate: "15 Mar 2026",
+        shippingStart: "18 Mar 2026",
+        ingredients: "Dimethicone, Vinyl Dimethicone Cross-polymer, Water...",
+        usage: "Apply directly to lips for a bold look, or dab with fingers for a blotted effect.",
+    },
+    {
+        id: "po3",
+        name: "Crystal Glow Serum",
+        tag: "Exclusive",
+        image: img3,
+        unlockDate: "20 Mar, 09:00 AM",
+        stockLeft: 85,
+        totalStock: 200,
+        price: "₹1,899",
+        rating: 4.9,
+        reviews: 210,
+        description: "Achieve glass skin with this crystal-infused serum. Brightens, hydrates, and refines texture.",
+        images: [img3, img3, img3, img3],
+        releaseDate: "20 Mar 2026",
+        shippingStart: "22 Mar 2026",
+        ingredients: "Water, Niacinamide, Crystal Extract, Glycerin...",
+        usage: "Apply 2-3 drops to clean skin morning and night.",
+    },
+    {
+        id: "po4",
+        name: "Moonlight Night Cream",
+        tag: "Exclusive",
+        image: img4,
+        unlockDate: "25 Mar, 08:00 PM",
+        stockLeft: 20,
+        totalStock: 60,
+        price: "₹1,599",
+        rating: 4.6,
+        reviews: 55,
+        description: "Repair and rejuvenate your skin overnight with this rich, nourishing cream. Wake up to a plump, glowing complexion.",
+        images: [img4, img4, img4, img4],
+        releaseDate: "25 Mar 2026",
+        shippingStart: "27 Mar 2026",
+        ingredients: "Water, Shea Butter, Ceramides, Peptides...",
+        usage: "Apply as the last step of your night routine.",
+    },
+    {
+        id: "po5",
+        name: "Rose Quartz Roller",
+        tag: "Exclusive",
+        image: img1, // Reusing img1 for demo
+        unlockDate: "28 Mar, 10:00 AM",
+        stockLeft: 5,
+        totalStock: 30,
+        price: "₹1,999",
+        rating: 4.5,
+        reviews: 30,
+        description: "De-puff and sculpt with this authentic rose quartz roller. Promotes lymphatic drainage and enhances product absorption.",
+        images: [img1, img1, img1, img1],
+        releaseDate: "28 Mar 2026",
+        shippingStart: "30 Mar 2026",
+        ingredients: "100% Authentic Rose Quartz Stone...",
+        usage: "Roll upwards and outwards on clean skin, preferably with a serum or oil.",
+    }
+];
+
 export function getAllProducts() {
     return PRODUCTS;
 }
