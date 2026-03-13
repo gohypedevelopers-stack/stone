@@ -226,6 +226,30 @@
   background: linear-gradient(160deg, #ffe3f1 0%, #f7e6ff 55%, #ffe9f6 100%);
 }
 
+/* Performance Utilities */
+.gpu-accelerated {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Optimized Smooth Marquee */
+@keyframes smoothMarquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-smooth-marquee {
+  display: flex;
+  width: fit-content;
+  animation: smoothMarquee 60s linear infinite;
+  will-change: transform;
+}
+
+.pause-on-hover:hover {
+  animation-play-state: paused;
+}
+
 /* Utility to hide scrollbar */
 .no-scrollbar {
   -ms-overflow-style: none;

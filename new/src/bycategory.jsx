@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import React, { useRef, memo } from "react";
 import banner8 from "./assets/9.png";
 import categorySphere from "./assets/category-sphere.png";
 
@@ -38,42 +38,18 @@ import tonerImg from "./assets/category/toner.jpg";
 import tonerPadsImg from "./assets/category/toner pads.avif";
 import treatmentMaskImg from "./assets/category/Treatment mask.jpg";
 
+const GAP = 14;
+const CARD_WIDTH = `clamp(170px, calc((100vw - 20px - 6 * ${GAP}px) / 7), 210px)`;
+
 const CATEGORIES = [
-  "B.b cream",
-  "Blender",
-  "Blush",
-  "Brush",
-  "Cleanser",
-  "cleansing oil",
-  "compact powders",
-  "Concealer",
-  "Cushion foundation",
-  "Essence",
-  "Exfoliate",
-  "Eye cream",
-  "Face mists",
-  "Foundation",
-  "Hair set",
-  "International makeup",
-  "International skincare",
-  "Japanese Skincare",
-  "Korean skincare",
-  "Lip blam",
-  "Lipstick",
-  "Makeup remover",
-  "Mascara",
-  "Moisturizer",
-  "Primer",
-  "Razor",
-  "Serums",
-  "Sheet masks",
-  "SKIN1004",
-  "Sunscreen",
-  "Sunspray",
-  "Sunstick",
-  "toner",
-  "toner pads",
-  "Treatment mask",
+  "B.b cream", "Blender", "Blush", "Brush", "Cleanser", "cleansing oil",
+  "compact powders", "Concealer", "Cushion foundation", "Essence",
+  "Exfoliate", "Eye cream", "Face mists", "Foundation", "Hair set",
+  "International makeup", "International skincare", "Japanese Skincare",
+  "Korean skincare", "Lip blam", "Lipstick", "Makeup remover",
+  "Mascara", "Moisturizer", "Primer", "Razor", "Serums", "Sheet masks",
+  "SKIN1004", "Sunscreen", "Sunspray", "Sunstick", "toner", "toner pads",
+  "Treatment mask"
 ];
 
 const CATEGORY_IMAGES = {
@@ -114,127 +90,105 @@ const CATEGORY_IMAGES = {
   "Treatment mask": treatmentMaskImg,
 };
 
+const CategoryCard = memo(({ label, onClick }) => (
+  <div
+    className="text-center flex-none snap-center cursor-pointer group"
+    style={{ width: CARD_WIDTH }}
+    onClick={() => onClick(label)}
+  >
+    <div className="relative aspect-square rounded-[22px] overflow-hidden border border-black/5 shadow-[0_8px_20px_rgba(0,0,0,0.06)] group-hover:shadow-[0_12px_28px_rgba(0,0,0,0.1)] transition-all duration-300">
+      <img
+        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 will-change-transform"
+        src={CATEGORY_IMAGES[label] || categorySphere}
+        alt={label}
+        loading="lazy"
+      />
+    </div>
+    <div className="mt-2.5 font-black text-[14px] text-[#151515] group-hover:text-[#b36cff] transition-colors uppercase tracking-tight">
+      {label}
+    </div>
+  </div>
+));
+
 export default function ByCategory({ onNavigate, onSelectCategory }) {
   const scrollRef = useRef(null);
-  const GAP = 14;
 
-  const CARD_WIDTH = `clamp(
-    170px,
-    calc((100vw - 20px - 6 * ${GAP}px) / 7),
-    210px
-  )`;
-
-  const scroll = (direction) => {
+  const handleScroll = (direction) => {
     if (scrollRef.current) {
-      const scrollAmount = 300;
+      // We rely on CSS 'scroll-smooth' in the container class for the animation
+      // Calling scrollBy without behavior: 'smooth' avoids JS-CSS conflict lag
+      const scrollAmount = window.innerWidth < 768 ? 240 : 480;
       scrollRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
+        left: direction === "left" ? -scrollAmount : scrollAmount
       });
     }
   };
 
+  const handleCategoryClick = (label) => {
+    if (onSelectCategory) onSelectCategory(label);
+    if (onNavigate) onNavigate("category-page");
+  };
+
   return (
-    <section className="relative py-[26px] pb-[60px] overflow-hidden">
-      <div className="w-full px-0 sm:px-[10px] relative">
+    <section className="relative py-12 md:py-20 overflow-hidden">
+      <div className="w-full px-0 sm:px-4 relative mx-auto max-w-[1440px]">
         {/* Main Category Block */}
-        <div className="relative overflow-hidden pb-[16px] before:content-[''] before:absolute before:top-0 before:bottom-0 before:w-[90px] before:bg-gradient-to-b before:from-[#e7c6ff] before:via-[#f2d9ff_45%] before:to-[#c98bff] before:opacity-85 before:z-0 before:pointer-events-none before:left-0 before:rounded-tr-[120px] before:rounded-br-[120px] before:[clip-path:polygon(0_0,100%_0,65%_100%,0_100%)] after:content-[''] after:absolute after:top-0 after:bottom-0 after:w-[90px] after:bg-gradient-to-b after:from-[#e7c6ff] after:via-[#f2d9ff_45%] after:to-[#c98bff] after:opacity-85 after:z-0 after:pointer-events-none after:right-0 after:rounded-tl-[120px] after:rounded-bl-[120px] after:[clip-path:polygon(35%_0,100%_0,100%_100%,0_100%)]">
+        <div className="relative bg-white/40 backdrop-blur-xl rounded-[40px] border border-white/60 py-10 md:py-16 shadow-sm overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:w-32 before:h-full before:bg-linear-to-r before:from-[#e7c6ff]/20 before:to-transparent before:z-0 after:content-[''] after:absolute after:top-0 after:right-0 after:w-32 after:h-full after:bg-linear-to-l after:from-[#e7c6ff]/20 after:to-transparent after:z-0">
+          
           {/* Heading */}
-          <div className="relative z-10 text-center mb-[18px]">
-            <span className="text-[28px] font-[900] tracking-[1px] uppercase">
+          <div className="relative z-10 text-center mb-10 md:mb-14">
+            <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-[#151515]">
               Shop by{" "}
-              <span className="text-[#b36cff] italic font-[700] ml-[6px]">
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-[#b36cff] to-[#ff5db1] italic">
                 Category
               </span>
-            </span>
+            </h2>
           </div>
 
           {/* Category List with Arrows */}
-          <div className="relative z-10 group">
+          <div className="relative z-10 group px-4 md:px-12">
             {/* Left Button */}
             <button
-              onClick={() => scroll("left")}
-              className="absolute left-[10px] top-1/2 -translate-y-1/2 z-20 w-[40px] h-[40px] bg-white/80 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center border border-black/10 hover:bg-white transition-all cursor-pointer"
+              onClick={() => handleScroll("left")}
+              className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 z-20 w-10 md:w-12 h-10 md:h-12 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center border border-black/5 hover:bg-white transition-all cursor-pointer hover:scale-110 active:scale-95 group-hover:opacity-100 opacity-0 md:opacity-100"
+              aria-label="Scroll Left"
             >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M15 6L9 12L15 18"
-                  stroke="black"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
               </svg>
             </button>
 
             {/* Scroll Container */}
             <div
               ref={scrollRef}
-              className="flex overflow-x-auto snap-x snap-mandatory py-[4px] px-5 scroll-px-5 pb-[8px] w-full mx-auto no-scrollbar scroll-smooth"
-              style={{
-                gap: `${GAP}px`,
-              }}
+              className="flex overflow-x-auto snap-x snap-mandatory gap-4 md:gap-6 py-4 no-scrollbar scroll-smooth gpu-accelerated"
             >
               {CATEGORIES.map((label) => (
-                <div
-                  key={label}
-                  className="text-center flex-none snap-center cursor-pointer group"
-                  style={{
-                    width: CARD_WIDTH,
-                  }}
-                  onClick={() => {
-                    if (onSelectCategory) onSelectCategory(label);
-                    if (onNavigate) onNavigate("category-page");
-                  }}
-                >
-                  <img
-                    className="w-full aspect-square rounded-[22px] border border-black/6 shadow-[0_10px_22px_rgba(0,0,0,0.08)] object-cover"
-                    src={CATEGORY_IMAGES[label] || categorySphere}
-                    alt={label}
-                  />
-                  <div className="mt-[8px] font-[800] text-[14px]">
-                    {label}
-                  </div>
-                </div>
+                <CategoryCard key={label} label={label} onClick={handleCategoryClick} />
               ))}
             </div>
 
             {/* Right Button */}
             <button
-              onClick={() => scroll("right")}
-              className="absolute right-[10px] top-1/2 -translate-y-1/2 z-20 w-[40px] h-[40px] bg-white/80 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center border border-black/10 hover:bg-white transition-all cursor-pointer"
+              onClick={() => handleScroll("right")}
+              className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 z-20 w-10 md:w-12 h-10 md:h-12 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center border border-black/5 hover:bg-white transition-all cursor-pointer hover:scale-110 active:scale-95 group-hover:opacity-100 opacity-0 md:opacity-100"
+              aria-label="Scroll Right"
             >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M9 6L15 12L9 18"
-                  stroke="black"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
               </svg>
             </button>
           </div>
         </div>
 
         {/* Bottom Banner */}
-        <div className="mt-[100px]">
+        <div className="mt-20 md:mt-32 group relative rounded-[40px] overflow-hidden shadow-2xl">
+          <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors duration-500 z-10" />
           <img
-            className="w-full h-[570px] object-cover object-center rounded-[18px]"
+            className="w-full h-[400px] md:h-[600px] object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
             src={banner8}
             alt="Featured skincare banner"
+            loading="lazy"
           />
         </div>
       </div>

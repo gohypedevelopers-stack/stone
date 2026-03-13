@@ -42,9 +42,12 @@ export default function PreOrderSection({ wishlist = [], toggleWishlist }) {
                             Reserve your favorites before they drop — limited quantities available.
                         </p>
                     </div>
-                    <a href="#" className="hidden md:flex items-center gap-1 text-[#d1408e] font-bold text-sm hover:underline">
+                    <button 
+                        onClick={() => navigate('/pre-orders')}
+                        className="hidden md:flex items-center gap-1 text-[#d1408e] font-bold text-sm hover:underline"
+                    >
                         View All <ChevronRight size={16} />
-                    </a>
+                    </button>
                 </div>
 
                 {/* Carousel Container */}
@@ -144,12 +147,15 @@ export default function PreOrderSection({ wishlist = [], toggleWishlist }) {
 
                         {/* View All Card (Mobile Only) */}
                         <div className="md:hidden min-w-[30%] snap-start flex items-center justify-center">
-                            <a href="#" className="flex flex-col items-center gap-2 text-[#d1408e] font-bold text-xs">
+                            <button 
+                                onClick={() => navigate('/pre-orders')}
+                                className="flex flex-col items-center gap-2 text-[#d1408e] font-bold text-xs"
+                            >
                                 <div className="w-12 h-12 rounded-full border-2 border-[#d1408e] flex items-center justify-center">
                                     <ChevronRight size={20} />
                                 </div>
                                 View All
-                            </a>
+                            </button>
                         </div>
 
                     </div>

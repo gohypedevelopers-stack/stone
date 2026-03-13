@@ -98,8 +98,27 @@ import { useParams, useLocation } from "react-router-dom";
 import { CATEGORY_DATA_GENERATED } from "./productData.js";
 import { PREORDER_PRODUCTS } from "./data/products";
 
-// [existing findProductById code remains unchanged]
-// ...
+const findProductById = (id) => {
+    const products = getAllProducts() || [];
+    let found = products.find(p => String(p.id) === String(id));
+    if (found) return found;
+
+    if (PREORDER_PRODUCTS) {
+        found = PREORDER_PRODUCTS.find(p => String(p.id) === String(id));
+        if (found) return found;
+    }
+
+    if (CATEGORY_DATA_GENERATED) {
+        for (const cat in CATEGORY_DATA_GENERATED) {
+            const catProducts = CATEGORY_DATA_GENERATED[cat];
+            if (Array.isArray(catProducts)) {
+                found = catProducts.find(p => String(p.id) === String(id));
+                if (found) return found;
+            }
+        }
+    }
+    return null;
+};
 
 export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist }) {
     const { id } = useParams();
@@ -236,22 +255,24 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
                             </div>
 
                             {/* Shade Selector */}
-                            <div className="mb-8">
-                                <span className="text-sm font-bold text-gray-900 mb-3 block">Select Shade: <span className="text-gray-500 font-normal">{selectedShade.name}</span></span>
-                                <div className="flex flex-wrap gap-3">
-                                    {fullProduct.shades.map(s => (
-                                        <button
-                                            key={s.name}
-                                            onClick={() => setSelectedShade(s)}
-                                            className={`w-10 h-10 rounded-full border-2 transition-all flex items-center justify-center relative ${selectedShade.name === s.name ? "border-black scale-110 shadow-md" : "border-gray-100 hover:border-gray-300"}`}
-                                            style={{ backgroundColor: s.color }}
-                                            aria-label={s.name}
-                                        >
-                                            {selectedShade.name === s.name && <div className="w-1.5 h-1.5 bg-white rounded-full box-content border border-black/10 shadow-sm" />}
-                                        </button>
-                                    ))}
+                            {fullProduct.shades && fullProduct.shades.length > 0 && (
+                                <div className="mb-8">
+                                    <span className="text-sm font-bold text-gray-900 mb-3 block">Select Shade: <span className="text-gray-500 font-normal">{selectedShade?.name}</span></span>
+                                    <div className="flex flex-wrap gap-3">
+                                        {fullProduct.shades.map(s => (
+                                            <button
+                                                key={s.name || s}
+                                                onClick={() => setSelectedShade(s)}
+                                                className={`w-10 h-10 rounded-full border-2 transition-all flex items-center justify-center relative ${selectedShade?.name === s.name || selectedShade === s ? "border-black scale-110 shadow-md" : "border-gray-100 hover:border-gray-300"}`}
+                                                style={{ backgroundColor: s.color || "#ccc" }}
+                                                aria-label={s.name || s}
+                                            >
+                                                {(selectedShade?.name === s.name || selectedShade === s) && <div className="w-1.5 h-1.5 bg-white rounded-full box-content border border-black/10 shadow-sm" />}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             {/* Pre-Order Info */}
                             {product.shippingStart && (

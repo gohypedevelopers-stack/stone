@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { InfiniteSlider } from "./components/ui/infinite-slider.jsx";
 
 // Import Brand Logos
@@ -36,7 +37,7 @@ import minimalist from "./assets/productlogo/brands/Minimalistinc_idImyDscM9_0.j
 // Placeholder/Fallback for potentially missing or misnamed files
 import unknown1 from "./assets/productlogo/brands/1713911.svg";
 
-const BRANDS = [
+export const BRANDS = [
   { name: "L'Oréal Paris", logo: loreal },
   { name: "Estée Lauder", logo: estee },
   { name: "Lancôme", logo: lancome },
@@ -75,6 +76,7 @@ const BRANDS = [
 ];
 
 export default function ShopByBrand({ onSelectBrand }) {
+  const navigate = useNavigate();
   return (
     <section className="pt-[50px] pb-[60px] rounded-[24px] bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.7),transparent_55%),radial-gradient(circle_at_80%_30%,rgba(255,255,255,0.6),transparent_55%),linear-gradient(180deg,rgba(235,215,255,0.55),rgba(255,225,243,0.45))]">
       <div className="w-full px-0 sm:px-[10px]">
@@ -94,7 +96,7 @@ export default function ShopByBrand({ onSelectBrand }) {
                 <img
                   src={brand.logo}
                   alt={brand.name}
-                  className="max-w-full max-h-full object-contain grayscale opacity-70 transition-all duration-300 ease-out group-hover:grayscale-0 group-hover:opacity-100"
+                  className="max-w-full max-h-full object-contain transition-all duration-300 ease-out"
                 />
               </div>
             ))}
@@ -110,11 +112,20 @@ export default function ShopByBrand({ onSelectBrand }) {
                 <img
                   src={brand.logo}
                   alt={brand.name}
-                  className="max-w-full max-h-full object-contain grayscale opacity-70 transition-all duration-300 ease-out group-hover:grayscale-0 group-hover:opacity-100"
+                  className="max-w-full max-h-full object-contain transition-all duration-300 ease-out"
                 />
               </div>
             ))}
           </InfiniteSlider>
+        </div>
+
+        <div className="mt-12 text-center">
+          <button
+            onClick={() => navigate("/brands")}
+            className="px-8 py-3 rounded-full bg-[#151515] text-white font-black text-sm uppercase tracking-widest hover:bg-pink-600 hover:scale-105 transition-all shadow-lg active:scale-95"
+          >
+            View All Brands
+          </button>
         </div>
       </div>
     </section>

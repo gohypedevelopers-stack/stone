@@ -10,9 +10,30 @@ import cartIcon from "./assets/shopping-cart.png";
 
 
 import AddressModal from "./components/AddressModal";
+import AnnouncementBar from "./components/AnnouncementBar";
+
+
+function SearchPlaceholder({ searchTerms }) {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % searchTerms.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [searchTerms]);
+
+  return (
+    <div className="absolute inset-0 flex items-center pointer-events-none text-[16px] text-text-custom whitespace-nowrap overflow-hidden">
+      <span className="opacity-50 mr-1">Search for</span>
+      <span key={index} className="text-pink-500 font-bold animate-fade-in-up">
+        {searchTerms[index]}
+      </span>
+    </div>
+  );
+}
 
 export default function Navbar({ categories, query, onQueryChange, cartCount, onToggleCart, onNavigate, wishlistCount, onToggleWishlist }) {
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
 
   const searchTerms = [
@@ -24,42 +45,32 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
     "Sunstick", "toner", "toner pads", "Treatment mask"
   ];
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPlaceholderIndex((prev) => (prev + 1) % searchTerms.length);
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <>
+      <AnnouncementBar />
       <header className="header">
-        <div className="w-full flex items-center justify-between gap-[14px] py-[6px] px-[10px]">
-          <a className="flex items-center gap-[10px] leading-[1.05] mr-auto" href="#" onClick={(e) => { e.preventDefault(); onNavigate('home'); }}>
-            <img className="w-[60px] h-[60px] object-contain" src={logo} alt="omwskincare logo" />
-            <div className="flex flex-col justify-center">
-              <span className="bg-gradient-to-r from-[#ff4fa3] to-[#ff77c8] bg-clip-text text-transparent font-[800] text-[35px]">OMW</span>
-              <span className="text-[11px] text-muted-custom tracking-[1.2px] uppercase mt-[4px]">skin-first essentials</span>
-            </div>
-          </a>
+        <div className="w-full flex items-center justify-between py-2 px-6 border-b border-stone-100">
+          {/* Left Block: Logo */}
+          <div className="flex-1">
+            <a className="flex items-center gap-3 leading-none w-fit" href="#" onClick={(e) => { e.preventDefault(); onNavigate('home'); }}>
+              <img className="w-12 h-12 object-contain" src={logo} alt="omwskincare logo" />
+              <div className="flex flex-col justify-center">
+                <span className="bg-linear-to-r from-[#ff4fa3] to-[#ff77c8] bg-clip-text text-transparent font-black text-2xl tracking-tight">OMW</span>
+                <span className="text-[9px] text-stone-400 tracking-[1.5px] uppercase font-bold">skin-first essentials</span>
+              </div>
+            </a>
+          </div>
 
-          <div className="flex items-center gap-[8px] ml-auto">
-            <div className="ml-auto flex items-center gap-[10px] px-[12px] py-[8px] rounded-[999px] border border-black/14 bg-white min-w-[300px] shadow-[0_4px_12px_rgba(0,0,0,0.04)] relative">
-              <span className="w-[24px] h-[24px] rounded-[999px] grid place-items-center text-[#888]" aria-hidden="true">
-                <img className="w-[20px] h-[20px] object-contain block opacity-100" src={searchIcon} alt="" />
+          {/* Center Block: Search Bar */}
+          <div className="flex-[4] flex justify-center px-2">
+            <div className="w-full flex items-center gap-3 px-5 py-2.5 rounded-full border border-stone-200 bg-stone-50/50 hover:bg-white hover:border-stone-300 hover:shadow-sm transition-all relative">
+              <span className="w-5 h-5 grid place-items-center opacity-70" aria-hidden="true">
+                <img className="w-full h-full object-contain" src={searchIcon} alt="" />
               </span>
               <div className="relative w-full">
-                {!query && (
-                  <div className="absolute inset-0 flex items-center pointer-events-none text-[14px] text-text-custom whitespace-nowrap overflow-hidden">
-                    <span className="opacity-50 mr-1">Search for</span>
-                    <span className="text-pink-500 
-                     font-bold animate-fade-in-up key={placeholderIndex}">
-                      {searchTerms[placeholderIndex]}
-                    </span>
-                  </div>
-                )}
+                {!query && <SearchPlaceholder searchTerms={searchTerms} />}
                 <input
-                  className="border-none outline-none w-full text-[14px] bg-transparent text-text-custom placeholder-transparent relative z-10"
+                  className="border-none outline-none w-full text-sm bg-transparent text-stone-800 placeholder-transparent relative z-10"
                   value={query}
                   onChange={onQueryChange}
                   placeholder=""
@@ -67,35 +78,47 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
                 />
               </div>
             </div>
+          </div>
 
-
-
-            <a href="#" className="mr-[15px] font-bold" onClick={(e) => { e.preventDefault(); onNavigate('shop'); }}>
+          {/* Right Block: Actions */}
+          <div className="flex-1 flex items-center justify-end gap-5">
+            <a href="#" className="text-sm font-black text-stone-800 hover:text-pink-500 transition-colors" onClick={(e) => { e.preventDefault(); onNavigate('shop'); }}>
               Shop
             </a>
 
-            <button className="grid place-items-center cursor-pointer p-1 relative" onClick={onToggleWishlist} aria-label="Wishlist">
-              <img className="w-[30px] h-[30px] object-contain block" src={favIcon} alt="" />
-              {wishlistCount > 0 && <span className="absolute -top-[2px] -right-[2px]  text-pink-700 text-[15px] px-[4px] py-[17px] rounded-full font-bold min-w-[1px] text-center border-2 border-white">{wishlistCount}</span>}
-            </button>
-            <button className="grid place-items-center cursor-pointer p-1" aria-label="Account">
-              <img className="w-[30px] h-[30px] object-contain block" src={accountIcon} alt="" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button className="p-2 relative group" onClick={onToggleWishlist} aria-label="Wishlist">
+                <img className="w-6 h-6 object-contain group-hover:scale-110 transition-transform" src={favIcon} alt="" />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold border-2 border-white">
+                    {wishlistCount}
+                  </span>
+                )}
+              </button>
+              
+              <button className="p-2 group" aria-label="Account">
+                <img className="w-6 h-6 object-contain group-hover:scale-110 transition-transform" src={accountIcon} alt="" />
+              </button>
 
-            <button className="relative grid place-items-center cursor-pointer p-1" onClick={onToggleCart} aria-label="Cart">
-              <img className="w-[35px] h-[35px] object-contain block" src={cartIcon} alt="" />
-              {cartCount > 0 && <span className="absolute -top-[2px] -right-[2px] bg-[#151515] text-white text-[10px] px-[5px] py-[2px] rounded-full font-bold min-w-[18px] text-center border-2 border-white">{cartCount}</span>}
-            </button>
-            <div className="ml-0 inline-flex items-center gap-[2px]">
-              <a
-                className="ml-0 self-center inline-flex items-center gap-[8px] text-text-custom text-[15px] font-[700] whitespace-nowrap hover:text-[#d1408e] transition-colors cursor-pointer"
+              <button className="p-2 relative group" onClick={onToggleCart} aria-label="Cart">
+                <img className="w-7 h-7 object-contain group-hover:scale-110 transition-transform" src={cartIcon} alt="" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-stone-900 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold border-2 border-white">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3 pl-2 border-l border-stone-100">
+              <button
+                className="hover:scale-110 transition-transform"
                 onClick={(e) => { e.preventDefault(); setIsAddressModalOpen(true); }}
+                title="Change Location"
               >
-                <img className="w-[35px] h-[35px] object-contain block" src={locationIcon} alt="Location" />
-              </a>
-              <img className="w-[45px] h-[45px] object-contain block" src={discountIcon} alt="Offers" />
-
-
+                <img className="w-7 h-7 object-contain" src={locationIcon} alt="Location" />
+              </button>
+              <img className="w-10 h-10 object-contain animate-pulse" src={discountIcon} alt="Offers" />
             </div>
           </div>
         </div>

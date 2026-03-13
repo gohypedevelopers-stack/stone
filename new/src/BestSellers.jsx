@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { getAllProducts } from "./data/products";
+import ProductCard from "./components/card.jsx";
 import {
     Star, Heart, ShoppingBag, Eye, X, Filter, ChevronDown, Check,
     Truck, ShieldCheck, RefreshCw, Zap
@@ -7,6 +9,7 @@ import {
 
 export default function BestSellers({ addToCart, wishlist = [], toggleWishlist }) {
     const allProducts = getAllProducts();
+    const navigate = useNavigate();
     const [activeFilter, setActiveFilter] = useState("Skincare");
     const [sortOption, setSortOption] = useState("Most Popular");
     const [quickViewProduct, setQuickViewProduct] = useState(null);
@@ -88,75 +91,18 @@ export default function BestSellers({ addToCart, wishlist = [], toggleWishlist }
                 </div>
             </div>
 
-            {/* 3. PRODUCT GRID */}
             <div className="max-w-[1440px] mx-auto px-6 mb-24">
                 {filteredProducts.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
                         {filteredProducts.map(p => (
-                            <div key={p.id} className="group relative">
-                                {/* Image Area */}
-                                <div className="relative aspect-[4/5] rounded-[24px] overflow-hidden bg-gray-100 mb-5 shadow-sm group-hover:shadow-xl transition-all duration-500">
-                                    {/* Badges */}
-                                    <div className="absolute top-4 left-4 flex flex-col gap-2 z-20">
-                                        {p.tag && (
-                                            <span className="bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm">
-                                                {p.tag}
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    {/* Wishlist */}
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            toggleWishlist && toggleWishlist(p);
-                                        }}
-                                        className={`absolute top-4 right-4 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-sm bg-white/80 backdrop-blur ${wishlist.some(i => i.id === p.id) ? 'text-red-500 bg-red-50' : 'text-gray-600 hover:text-red-500 hover:scale-110'}`}
-                                    >
-                                        <Heart size={18} strokeWidth={2} fill={wishlist.some(i => i.id === p.id) ? "currentColor" : "none"} />
-                                    </button>
-
-                                    {/* Image */}
-                                    <img
-                                        src={p.image}
-                                        alt={p.name}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                                    />
-
-                                    {/* Quick Actions Overlay (Desktop) */}
-                                    <div className="absolute inset-x-4 bottom-4 flex gap-2 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-                                        <button
-                                            onClick={() => addToCart(p.id)}
-                                            className="flex-1 bg-[#1a1a1a] text-white py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-black shadow-lg"
-                                        >
-                                            Add to Cart
-                                        </button>
-                                        <button
-                                            onClick={() => setQuickViewProduct(p)}
-                                            className="w-12 bg-white text-[#1a1a1a] rounded-xl flex items-center justify-center hover:bg-gray-50 shadow-lg"
-                                            title="Quick View"
-                                        >
-                                            <Eye size={18} />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Details */}
-                                <div>
-                                    <div className="flex justify-between items-start mb-1">
-                                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{p.brand}</span>
-                                        <div className="flex items-center gap-1">
-                                            <Star size={12} className="fill-yellow-400 text-yellow-400" />
-                                            <span className="text-xs font-bold">{p.rating}</span>
-                                            <span className="text-[10px] text-gray-400">({p.reviews})</span>
-                                        </div>
-                                    </div>
-                                    <h3 className="font-bold text-lg leading-tight mb-2 text-[#1a1a1a] group-hover:text-pink-600 transition-colors">{p.name}</h3>
-                                    <div className="font-bold text-[#1a1a1a]">
-                                        {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(p.price)}
-                                    </div>
-                                </div>
-                            </div>
+                            <ProductCard
+                                key={p.id}
+                                product={p}
+                                onAddToCart={() => addToCart(p.id)}
+                                onClick={() => navigate(`/product/${p.id}`)}
+                                wishlist={wishlist}
+                                toggleWishlist={toggleWishlist}
+                            />
                         ))}
                     </div>
                 ) : (

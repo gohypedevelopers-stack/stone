@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import HomePage from "./HomePage";
 import Shop from "./Shop";
@@ -9,9 +9,11 @@ import BestSellers from "./BestSellers";
 import ProductPage from "./productpage.jsx";
 import CategoryPage from "./CategoryPage.jsx";
 import BrandPage from "./BrandPage.jsx";
+import AllBrandsPage from "./AllBrandsPage.jsx";
 import SkinConcernPage from "./SkinConcernPage.jsx";
 import ShopByOfferPage from "./ShopByOfferPage.jsx";
 import PreOrderProductPage from "./PreOrderProductPage.jsx";
+import PreOrderListPage from "./PreOrderListPage";
 import WishlistDrawer from "./WishlistDrawer.jsx";
 import CartPage from "./CartPage.jsx";
 import CheckoutPage from "./CheckoutPage.jsx";
@@ -37,6 +39,15 @@ export default function App() {
   // Wishlist State
   const [wishlistOpen, setWishlistOpen] = useState(false);
   const [wishlist, setWishlist] = useState([]); // Array of full product objects
+  
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'instant' // Immediate jump for navigation
+    });
+  }, [location.pathname]);
 
   const PRODUCTS = getAllProducts();
   const freeDeliveryThreshold = 999;
@@ -190,6 +201,7 @@ export default function App() {
         <Route path="/shop" element={<Shop addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
         <Route path="/new-arrivals" element={<NewArrivals addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
         <Route path="/best-sellers" element={<BestSellers addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
+        <Route path="/pre-orders" element={<PreOrderListPage wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
         <Route path="/cart" element={
           <CartPage
             cartItems={cartItems}
@@ -200,6 +212,7 @@ export default function App() {
           />
         } />
         <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/brands" element={<AllBrandsPage />} />
 
         {/* Dynamic Routes */}
         <Route path="/product/:id" element={<ProductPage addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />

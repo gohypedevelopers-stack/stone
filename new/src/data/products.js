@@ -1,3 +1,8 @@
+import imgHydra from "../assets/products/hydra_barrier.png";
+import imgBiore from "../assets/products/biore_uv.png";
+import imgRice from "../assets/products/rice_glow.png";
+import imgRoller from "../assets/products/rose_quartz.png";
+
 export const PRODUCTS = [
     {
         id: "p1",
@@ -8,7 +13,7 @@ export const PRODUCTS = [
         rating: 4.8,
         reviews: 1240,
         category: "Skincare",
-        image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=800&q=80",
+        image: imgHydra,
         ingredients: "Snail Mucin, Hyaluronic Acid",
         size: "100ml",
         shades: []
@@ -22,7 +27,7 @@ export const PRODUCTS = [
         rating: 4.9,
         reviews: 890,
         category: "Sun Care",
-        image: "https://images.unsplash.com/photo-1556228720-1987599988d3?auto=format&fit=crop&w=800&q=80",
+        image: imgBiore,
         ingredients: "Water, Ethylhexyl Methoxycinnamate",
         size: "50g",
         shades: []
@@ -36,7 +41,7 @@ export const PRODUCTS = [
         rating: 4.7,
         reviews: 560,
         category: "Skincare",
-        image: "https://images.unsplash.com/photo-1571781535092-132d8c97356c?auto=format&fit=crop&w=800&q=80",
+        image: imgRice,
         ingredients: "Rice Extract, Niacinamide",
         size: "150ml",
         shades: []
@@ -92,7 +97,7 @@ export const PRODUCTS = [
         rating: 4.5,
         reviews: 150,
         category: "Tools",
-        image: "https://images.unsplash.com/photo-1600858963579-450f6d7a42b8?auto=format&fit=crop&w=800&q=80",
+        image: imgRoller,
         ingredients: "Rose Quartz",
         size: "Standard",
         shades: []

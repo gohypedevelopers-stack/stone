@@ -73,31 +73,64 @@ export default function UpcomingDrops({ onNavigate, wishlist = [], toggleWishlis
     }, []);
 
     return (
-        <section className="py-16 md:py-24 px-4 bg-gradient-to-br from-pink-50 via-white to-purple-50 overflow-hidden relative">
+        <section className="py-16 md:py-24 px-4 bg-linear-to-br from-pink-50 via-white to-purple-50 overflow-hidden relative">
             {/* Background Decor */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-b from-pink-200/20 to-purple-200/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-t from-blue-100/30 to-teal-100/30 rounded-full blur-3xl translate-y-1/4 -translate-x-1/4 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-linear-to-b from-pink-200/20 to-purple-200/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-linear-to-t from-blue-100/30 to-teal-100/30 rounded-full blur-3xl translate-y-1/4 -translate-x-1/4 pointer-events-none" />
 
             <div className="max-w-[1240px] mx-auto relative z-10">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row items-end md:items-center justify-between mb-12 gap-8">
-                    <h2 className="text-4xl md:text-5xl font-[800] text-[#151515] tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
-                        Upcoming <br className="hidden md:block" />Beauty Drop
-                    </h2>
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-16 gap-10">
+                    <div className="relative group">
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-pink-100 border border-pink-200 shadow-sm">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-pink-500"></span>
+                                </span>
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-600">Exclusive Drop</span>
+                            </div>
+                        </div>
+                        <style>
+                            {`
+                            @keyframes gradientFlow {
+                                0% { background-position: 0% 50%; }
+                                50% { background-position: 100% 50%; }
+                                100% { background-position: 0% 50%; }
+                            }
+                            .animate-text-gradient {
+                                background-size: 200% auto;
+                                animation: gradientFlow 5s linear infinite;
+                            }
+                            `}
+                        </style>
+                        <h2 className="text-5xl md:text-7xl font-black text-[#151515] tracking-tight leading-[0.9]">
+                            Upcoming <br className="hidden md:block" />
+                            <span className="relative inline-block mt-2">
+                                <span className="text-transparent bg-clip-text bg-linear-to-r from-pink-500 to-purple-600 animate-text-gradient">
+                                    Beauty Drop
+                                </span>
+                                <div className="absolute -bottom-2 left-0 w-full h-2 bg-linear-to-r from-pink-500/20 to-purple-500/20 rounded-full blur-[2px]" />
+                            </span>
+                        </h2>
+                    </div>
 
                     {/* Countdown */}
-                    <div className="bg-white/40 backdrop-blur-md border border-white/50 rounded-2xl p-1 shadow-lg shadow-purple-900/5">
-                        <div className="bg-white/80 rounded-xl px-6 py-4 flex items-center gap-6 md:gap-8">
-                            {Object.entries(timeLeft).map(([unit, value]) => (
-                                <div key={unit} className="flex flex-col items-center">
-                                    <span className="text-2xl md:text-3xl font-[900] tabular-nums text-[#151515] leading-none mb-1">
-                                        {value.toString().padStart(2, "0")}
-                                    </span>
-                                    <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
-                                        {unit}
-                                    </span>
-                                </div>
-                            ))}
+                    <div className="relative">
+                        <div className="absolute -inset-4 bg-linear-to-r from-pink-400/20 to-purple-400/20 rounded-3xl blur-2xl opacity-50" />
+                        <div className="relative bg-white/40 backdrop-blur-xl border border-white/50 rounded-2xl p-1 shadow-2xl shadow-purple-900/10">
+                            <div className="bg-white/80 rounded-xl px-8 py-5 flex items-center gap-8 md:gap-12">
+                                {Object.entries(timeLeft).map(([unit, value]) => (
+                                    <div key={unit} className="flex flex-col items-center">
+                                        <span className="text-3xl md:text-4xl font-black tabular-nums leading-none mb-2 bg-clip-text text-transparent bg-linear-to-b from-gray-900 to-gray-600">
+                                            {value.toString().padStart(2, "0")}
+                                        </span>
+                                        <span className="text-[11px] uppercase font-black text-gray-400 tracking-[0.2em]">
+                                            {unit}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -111,7 +144,7 @@ export default function UpcomingDrops({ onNavigate, wishlist = [], toggleWishlis
                             className="group relative bg-white/60 backdrop-blur-md rounded-[24px] border border-white/60 overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-2 transition-all duration-500 cursor-pointer"
                         >
                             {/* Image */}
-                            <div className="relative aspect-[4/5] overflow-hidden m-2 rounded-[20px] bg-gray-100">
+                            <div className="relative aspect-4/5 overflow-hidden m-2 rounded-[20px] bg-gray-100">
                                 <img
                                     src={product.image}
                                     alt={product.name}
@@ -150,9 +183,9 @@ export default function UpcomingDrops({ onNavigate, wishlist = [], toggleWishlis
                                 </h3>
 
                                 {/* Notify Button */}
-                                <button className="w-full py-3 rounded-xl border border-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 p-[1px] group/btn overflow-hidden relative">
-                                    <div className="absolute inset-0 bg-white rounded-[10px] group-hover/btn:bg-opacity-90 transition-all" />
-                                    <div className="relative flex items-center justify-center gap-2 text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-600 to-purple-600 group-hover/btn:text-white transition-colors">
+                                <button className="w-full py-3 rounded-xl border border-transparent bg-linear-to-r from-pink-500 via-purple-500 to-indigo-500 p-px group/btn overflow-hidden relative shadow-sm hover:shadow-lg transition-all active:scale-95">
+                                    <div className="absolute inset-0 bg-white rounded-[10px] group-hover/btn:opacity-0 transition-opacity duration-300" />
+                                    <div className="relative flex items-center justify-center gap-2 text-sm font-black bg-clip-text text-transparent bg-linear-to-r from-pink-600 to-purple-600 group-hover/btn:bg-none group-hover/btn:text-white transition-all duration-300">
                                         <Bell size={16} className="text-purple-600 group-hover/btn:text-white transition-colors" />
                                         Notify Me
                                     </div>

@@ -18,70 +18,51 @@ import PreOrderSection from "./PreOrderSection.jsx";
 import { getAllProducts } from "./data/products";
 
 function formatINR(amount) {
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount);
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+  }).format(amount);
 }
 
-export default function HomePage({ addToCart, query, onNavigate, onSelectCategory, onSelectBrand, onSelectConcern, onSelectOffer, wishlist, toggleWishlist }) {
+export default function HomePage({
+  addToCart,
+  query,
+  onNavigate,
+  onSelectCategory,
+  onSelectBrand,
+  onSelectConcern,
+  onSelectOffer,
+  wishlist,
+  toggleWishlist,
+}) {
   const PRODUCTS = getAllProducts();
-  const scrollRef = useRef(null);
 
   const filteredProducts = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return PRODUCTS;
-    return PRODUCTS.filter((p) => p.name.toLowerCase().includes(q) || p.tag.toLowerCase().includes(q));
+    return PRODUCTS.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) || p.tag.toLowerCase().includes(q),
+    );
   }, [query, PRODUCTS]);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    let animationId;
-    let isPaused = false;
-
-    const scroll = () => {
-      if (!isPaused) {
-        if (el.scrollLeft >= el.scrollWidth / 2) {
-          el.scrollLeft = 0;
-        } else {
-          el.scrollLeft += 1;
-        }
-      }
-      animationId = requestAnimationFrame(scroll);
-    };
-
-    animationId = requestAnimationFrame(scroll);
-
-    const pause = () => { isPaused = true; };
-    const resume = () => { isPaused = false; };
-
-    el.addEventListener("mouseenter", pause);
-    el.addEventListener("mouseleave", resume);
-    el.addEventListener("touchstart", pause);
-    el.addEventListener("touchend", resume);
-
-    return () => {
-      cancelAnimationFrame(animationId);
-      el.removeEventListener("mouseenter", pause);
-      el.removeEventListener("mouseleave", resume);
-      el.removeEventListener("touchstart", pause);
-      el.removeEventListener("touchend", resume);
-    };
-  }, [filteredProducts]);
 
   return (
     <main>
       <HeroSlider />
       <OfferTimer />
-      <UpcomingDrops onNavigate={onNavigate} wishlist={wishlist} toggleWishlist={toggleWishlist} />
-
+      <UpcomingDrops
+        onNavigate={onNavigate}
+        wishlist={wishlist}
+        toggleWishlist={toggleWishlist}
+      />
 
       <ByCategory onNavigate={onNavigate} onSelectCategory={onSelectCategory} />
 
-      {/* Featured products */}
-      <section id="shop" className="py-[28px]">
+      {/* Featured products - Optimized with CSS Marquee */}
+      <section id="shop" className="py-[28px] overflow-hidden">
         <div className="w-full px-0 sm:px-[10px]">
-          <div className="flex items-end justify-between gap-[16px] mb-[14px] text-center">
-            <h2 className="m-0 text-[32px] font-extrabold tracking-wide">
+          <div className="flex items-end justify-between gap-[16px] mb-[11px]">
+            <h2 className="m-0 text-[32px] font-extrabold tracking-wide px-4">
               BEST{" "}
               <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent">
                 SELLERS
@@ -89,22 +70,36 @@ export default function HomePage({ addToCart, query, onNavigate, onSelectCategor
             </h2>
           </div>
 
-
-
-          <div className="relative overflow-x-auto py-[6px] no-scrollbar" ref={scrollRef}>
-            <div className="flex gap-[14px] w-max">
-              {[...filteredProducts, ...filteredProducts].map((p, idx) => (
-                <div key={`${p.id}-${idx}`} style={{ width: '320px', flexShrink: 0 }}>
+          <div className="relative py-[12px] group/marquee">
+            <div className="animate-smooth-marquee pause-on-hover flex gap-[14px] w-max">
+              {[
+                ...filteredProducts,
+                ...filteredProducts,
+                ...filteredProducts,
+              ].map((p, idx) => (
+                <div
+                  key={`${p.id}-${idx}`}
+                  className="w-[280px] md:w-[320px] flex-shrink-0"
+                >
                   <ProductCard
                     product={{ ...p, category: p.tag, inStock: true }}
                     onAddToCart={() => addToCart(p.id)}
-                    onClick={() => onNavigate("best-sellers")}
+                    onClick={() => onNavigate(`product/${p.id}`)}
                     wishlist={wishlist}
                     toggleWishlist={toggleWishlist}
                   />
                 </div>
               ))}
             </div>
+          </div>
+
+          <div className="mt-12 text-center">
+            <button
+              onClick={() => onNavigate("best-sellers")}
+              className="px-8 py-3 rounded-full bg-[#151515] text-white font-black text-sm uppercase tracking-widest hover:bg-pink-600 hover:scale-105 transition-all shadow-lg active:scale-95"
+            >
+              View All Products
+            </button>
           </div>
         </div>
       </section>
@@ -120,7 +115,6 @@ export default function HomePage({ addToCart, query, onNavigate, onSelectCategor
 
       {/* Offers + Loyalty */}
 
-
       {/* Skin guidance */}
       <SkinQuiz />
 
@@ -128,10 +122,3 @@ export default function HomePage({ addToCart, query, onNavigate, onSelectCategor
     </main>
   );
 }
-
-
-
-
-
-
-

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { getAllProducts } from "./data/products";
 import ProductCard from "./components/card.jsx";
 import { Clock, Filter, Sparkles, CheckCircle, Mail, ChevronRight, Heart } from "lucide-react";
@@ -9,6 +10,7 @@ import imgNew3 from "./assets/newprod/new3.jpg";
 
 export default function NewArrivals({ addToCart, wishlist = [], toggleWishlist }) {
     const allProducts = getAllProducts();
+    const navigate = useNavigate();
     const [activeFilter, setActiveFilter] = useState("Latest");
     const [timeLeft, setTimeLeft] = useState({ h: 12, m: 45, s: 30 });
 
@@ -95,37 +97,14 @@ export default function NewArrivals({ addToCart, wishlist = [], toggleWishlist }
             <section className="px-6 max-w-[1440px] mx-auto mb-20">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
                     {newArrivals.map(p => (
-                        <div key={p.id} className="group relative">
-                            {/* Custom Minimal Card Wrapper */}
-                            <div className="relative bg-white rounded-[24px] overflow-hidden shadow-sm hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] transition-all duration-300 border border-gray-100 p-3">
-                                <div className="relative rounded-[20px] overflow-hidden bg-gray-50 aspect-square mb-4">
-                                    <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                                    <div className="absolute top-3 left-3 bg-[#151515] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">New</div>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            toggleWishlist && toggleWishlist(p);
-                                        }}
-                                        className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm bg-white/90 backdrop-blur ${wishlist.some(i => i.id === p.id) ? 'text-red-500 bg-red-50' : 'text-gray-400 hover:text-red-500 hover:scale-110'}`}
-                                    >
-                                        <Heart size={16} strokeWidth={2.5} fill={wishlist.some(i => i.id === p.id) ? "currentColor" : "none"} />
-                                    </button>
-                                    {/* Add to Cart Overlay */}
-                                    <div className="absolute inset-x-4 bottom-4 translate-y-[120%] group-hover:translate-y-0 transition-transform duration-300">
-                                        <button onClick={() => addToCart(p)} className="w-full bg-white/95 backdrop-blur text-[#151515] py-3 rounded-xl font-bold text-sm shadow-lg hover:bg-[#151515] hover:text-white transition-colors">
-                                            Add to Cart
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="px-1 pb-2">
-                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{p.origin} Beauty</span>
-                                    <h3 className="text-base font-bold text-[#151515] mt-1 mb-1 line-clamp-1">{p.name}</h3>
-                                    <div className="text-sm font-semibold text-gray-900">
-                                        {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(p.price)}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <ProductCard
+                            key={p.id}
+                            product={p}
+                            onAddToCart={addToCart}
+                            onClick={() => navigate(`/product/${p.id}`)}
+                            wishlist={wishlist}
+                            toggleWishlist={toggleWishlist}
+                        />
                     ))}
                 </div>
             </section>
