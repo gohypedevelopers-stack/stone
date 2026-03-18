@@ -1,0 +1,279 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum VendorApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum OrderStatus {
+  PLACED
+  CONFIRMED
+  PACKED
+  SHIPPED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum RewardEntryType {
+  EARNED
+  REDEEMED
+  ADJUSTED
+}
+
+enum NotificationAudience {
+  CUSTOMER
+  VENDOR
+  ADMIN
+}
+
+enum NotificationChannel {
+  SMS
+  EMAIL
+  PUSH
+  DASHBOARD
+}
+
+model Customer {
+  id                 String              @id @default(cuid())
+  name               String
+  mobile             String              @unique
+  email              String?             @unique
+  rewardPoints       Int                 @default(0)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  addresses          Address[]
+  orders             Order[]
+  offlinePurchases   OfflinePurchase[]
+  rewardTransactions RewardTransaction[]
+  notifications      Notification[]
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  customerId String
+  label      String?
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  postalCode String
+  country    String   @default("India")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  orders     Order[]  @relation("OrderShippingAddress")
+
+  @@index([customerId])
+}
+
+model Vendor {
+  id                String               @id @default(cuid())
+  businessName      String
+  storeAddress      String
+  contactNumber     String
+  email             String?              @unique
+  businessCategory  String
+  identityDocument  String?
+  approvalStatus    VendorApprovalStatus @default(PENDING)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  products          Product[]
+  orders            Order[]
+  offlinePurchases  OfflinePurchase[]
+  notifications     Notification[]
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
+}
+
+model Product {
+  id             String        @id @default(cuid())
+  vendorId       String
+  categoryId     String?
+  name           String
+  slug           String        @unique
+  brand          String?
+  description    String?
+  imageUrls      String[]
+  tags           String[]
+  price          Decimal       @db.Decimal(10, 2)
+  discountPrice  Decimal?      @db.Decimal(10, 2)
+  stock          Int           @default(0)
+  status         ProductStatus @default(ACTIVE)
+  featured       Boolean       @default(false)
+  discounted     Boolean       @default(false)
+  rewardEligible Boolean       @default(false)
+  limitedOffer   Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  vendor         Vendor        @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  category       Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  orderItems     OrderItem[]
+
+  @@index([vendorId])
+  @@index([categoryId])
+  @@index([name])
+}
+
+model Order {
+  id                 String          @id @default(cuid())
+  orderNumber        String          @unique
+  customerId         String
+  vendorId           String
+  addressId          String?
+  status             OrderStatus     @default(PLACED)
+  subtotal           Decimal         @db.Decimal(10, 2)
+  discountAmount     Decimal         @default(0) @db.Decimal(10, 2)
+  totalAmount        Decimal         @db.Decimal(10, 2)
+  rewardPointsUsed   Int             @default(0)
+  rewardPointsEarned Int             @default(0)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  deliveredAt        DateTime?
+  customer           Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  vendor             Vendor          @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  shippingAddress    Address?        @relation("OrderShippingAddress", fields: [addressId], references: [id], onDelete: SetNull)
+  items              OrderItem[]
+  trackingEvents     OrderTracking[]
+
+  @@index([customerId])
+  @@index([vendorId])
+  @@index([status])
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  orderId     String
+  productId   String?
+  name        String
+  quantity    Int
+  unitPrice   Decimal  @db.Decimal(10, 2)
+  lineTotal   Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model OrderTracking {
+  id        String      @id @default(cuid())
+  orderId    String
+  status     OrderStatus
+  note       String?
+  createdAt  DateTime   @default(now())
+  order      Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+model OfflinePurchase {
+  id          String                @id @default(cuid())
+  customerId  String?
+  vendorId    String
+  mobile      String
+  amount      Decimal               @db.Decimal(10, 2)
+  purchaseDate DateTime             @default(now())
+  linkedAt    DateTime?
+  createdAt   DateTime              @default(now())
+  customer    Customer?             @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  vendor      Vendor                @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  items       OfflinePurchaseItem[]
+
+  @@index([customerId])
+  @@index([vendorId])
+  @@index([mobile])
+}
+
+model OfflinePurchaseItem {
+  id                String          @id @default(cuid())
+  offlinePurchaseId String
+  name              String
+  quantity          Int
+  unitPrice         Decimal         @db.Decimal(10, 2)
+  createdAt         DateTime        @default(now())
+  offlinePurchase   OfflinePurchase @relation(fields: [offlinePurchaseId], references: [id], onDelete: Cascade)
+
+  @@index([offlinePurchaseId])
+}
+
+model RewardTransaction {
+  id         String          @id @default(cuid())
+  customerId String
+  type       RewardEntryType
+  source     String
+  points     Int
+  note       String?
+  createdAt  DateTime        @default(now())
+  customer   Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+}
+
+model Campaign {
+  id          String           @id @default(cuid())
+  title       String
+  description String?
+  status      String           @default("draft")
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  banners     HomepageBanner[]
+}
+
+model HomepageBanner {
+  id          String    @id @default(cuid())
+  title       String
+  subtitle    String?
+  imageUrl    String?
+  ctaLabel    String?
+  ctaUrl      String?
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  campaignId  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  campaign    Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  @@index([campaignId])
+}
+
+model Notification {
+  id         String               @id @default(cuid())
+  audience   NotificationAudience
+  channel    NotificationChannel
+  customerId String?
+  vendorId   String?
+  title      String
+  message    String
+  isRead     Boolean              @default(false)
+  createdAt  DateTime             @default(now())
+  customer   Customer?            @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  vendor     Vendor?              @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+
+  @@index([customerId])
+  @@index([vendorId])
+  @@index([audience])
+}
