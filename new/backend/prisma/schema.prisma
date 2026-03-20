@@ -52,6 +52,7 @@ model Customer {
   name               String
   mobile             String              @unique
   email              String?             @unique
+  password           String?
   rewardPoints       Int                 @default(0)
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
