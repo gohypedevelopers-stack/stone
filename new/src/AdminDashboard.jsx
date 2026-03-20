@@ -333,35 +333,45 @@ const AdminDashboard = () => {
 
     return (
       <Card className={cn(
-        `relative overflow-hidden group border-0 ${THEME.animations.transitions} hover:-translate-y-1 duration-500 rounded-[1.25rem] bg-white cursor-pointer flex flex-col justify-between`,
-        "shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_10px_30px_rgb(0,0,0,0.06)] min-h-[145px]"
+        "relative overflow-hidden group border-0 transition-all duration-500 ease-out hover:-translate-y-1.5 rounded-[1.5rem] bg-white cursor-pointer flex flex-col",
+        "shadow-[0_4px_24px_rgb(0,0,0,0.04)] hover:shadow-[0_16px_40px_rgb(0,0,0,0.08)] min-h-[155px]"
       )}>
         {/* Soft glowing ambient orb in the top right corner */}
         <div className={cn(
-          "absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl opacity-30 group-hover:opacity-60 group-hover:scale-125 transition-all duration-700 ease-out",
+          "absolute -top-10 -right-10 w-36 h-36 rounded-full blur-3xl opacity-20 group-hover:opacity-50 group-hover:scale-150 transition-all duration-700 ease-out",
           bgColor
         )} />
 
-        {/* Subtle glass effect borders */}
-        <div className="absolute inset-0 ring-1 ring-inset ring-indigo-900/[0.04] rounded-[1.25rem] pointer-events-none" />
+        {/* Decorative sparkline at bottom */}
+        <div className="absolute bottom-0 left-0 right-0 h-[3px] overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+          <div className={cn("h-full w-full")} style={{background: `linear-gradient(90deg, transparent, ${textColor?.includes('blue') ? '#3b82f6' : textColor?.includes('emerald') ? '#10b981' : textColor?.includes('purple') ? '#8b5cf6' : '#ec4899'}, transparent)`}} />
+        </div>
 
-        <CardHeader className="flex flex-row items-center gap-3 pb-0 pt-6 px-6 relative z-20">
-          <div className={cn(`p-2.5 rounded-xl w-fit ${THEME.animations.transitions} group-hover:scale-105 shadow-sm border border-white/50`, colorClass)}>
-            <Icon className="h-5 w-5" strokeWidth={2.5} />
+        {/* Subtle glass effect borders */}
+        <div className="absolute inset-0 ring-1 ring-inset ring-indigo-900/[0.04] rounded-[1.5rem] pointer-events-none" />
+
+        <CardHeader className="flex flex-row items-center gap-3.5 pb-0 pt-6 px-6 relative z-20">
+          <div className={cn("p-2.5 rounded-xl w-fit transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-sm border border-white/60", colorClass)}>
+            <Icon className="h-5 w-5" strokeWidth={2.2} />
           </div>
-          <CardTitle className="text-stone-600 font-bold text-sm tracking-wide">
+          <CardTitle className="font-['Inter'] text-stone-500 font-semibold text-[13px] tracking-wide leading-tight">
             {title}
           </CardTitle>
         </CardHeader>
 
-        <CardContent className="px-6 pb-6 pt-4 relative z-20 flex flex-col justify-end h-full mt-2">
+        <CardContent className="px-6 pb-5 pt-3 relative z-20 flex flex-col justify-end flex-1">
           <div className={cn(
-            "text-4xl leading-none font-['Playfair_Display'] font-black tracking-tighter drop-shadow-sm transition-all duration-500 transform group-hover:translate-x-0.5"
+            "text-[38px] leading-none font-['DM_Sans'] font-bold tracking-tight transition-all duration-500 transform group-hover:translate-x-0.5"
           )}>
-            <span className={cn(textColor || "text-indigo-950")}>
+            <span className="text-indigo-950">
               {value}
             </span>
           </div>
+          {description && (
+            <p className="font-['Inter'] text-[11px] text-stone-400 font-medium leading-snug max-w-[180px] mt-1.5">
+              {description}
+            </p>
+          )}
         </CardContent>
       </Card>
     );
@@ -376,19 +386,19 @@ const AdminDashboard = () => {
   return (
     <SidebarProvider>
       <div className={`flex min-h-screen w-full ${THEME.colors.background.secondary} bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]`}>
-        <Sidebar className={`border-r border-indigo-900/10 ${THEME.colors.background.accentDark} text-white ${THEME.shadows.xl}`}>
-          <SidebarHeader className="p-8 pb-6 border-b border-white/5">
-            <div className="flex items-center gap-4">
-              <div className={`flex h-12 w-12 items-center justify-center ${THEME.borders.radius.lg} ${THEME.gradients.brand} text-white font-black text-2xl shadow-lg shadow-pink-500/20`}>O</div>
+        <Sidebar className="border-r border-stone-200/60 bg-white">
+          <SidebarHeader className="p-6 pb-5 border-b border-stone-100">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white font-black text-lg shadow-lg shadow-indigo-500/25">O</div>
               <div className="flex flex-col">
-                <span className={`font-black text-white leading-tight text-xl tracking-tight`}>OMW Admin</span>
-                <span className={`text-[9px] text-pink-400 font-black uppercase tracking-[0.25em] drop-shadow-sm`}>Enterprise OS</span>
+                <span className="font-['Inter'] font-extrabold text-indigo-950 leading-tight text-[15px] tracking-tight">OMW Admin</span>
+                <span className="font-['Inter'] text-[9px] text-purple-500 font-bold uppercase tracking-[0.2em]">Enterprise OS</span>
               </div>
             </div>
           </SidebarHeader>
 
-          <SidebarContent className="px-5 py-4">
-            <SidebarMenu className="mt-4 gap-2">
+          <SidebarContent className="px-3 py-3">
+            <SidebarMenu className="mt-2 gap-1">
               {[
                 { id: 'overview', label: 'Overview', icon: LayoutDashboard },
                 { id: 'homepage-builder', label: 'Homepage Builder', icon: LayoutTemplate },
@@ -399,11 +409,10 @@ const AdminDashboard = () => {
                   <SidebarMenuButton
                     isActive={activeView === item.id}
                     onClick={() => handleViewChange(item.id)}
-                    className={cn(`flex items-center gap-4 py-7 px-4 ${THEME.borders.radius.lg} transition-all duration-300 group overflow-hidden relative`, activeView === item.id ? `${THEME.gradients.brand} text-white shadow-xl shadow-purple-500/20` : "text-stone-300 hover:bg-white/5 hover:text-white")}
+                    className={cn("flex items-center gap-3 py-5 px-4 rounded-xl transition-all duration-200 group", activeView === item.id ? "!bg-indigo-50 !text-indigo-950 font-bold" : "text-stone-600 hover:bg-stone-50 hover:text-indigo-950")}
                   >
-                    {activeView === item.id && <div className="absolute inset-0 bg-white/10 blur-[2px]" />}
-                    <item.icon className={cn("h-5 w-5 relative z-10 transition-transform duration-300 group-hover:scale-110", activeView === item.id ? "text-white drop-shadow-md" : "text-stone-500 group-hover:text-pink-400")} />
-                    <span className="font-black tracking-wide relative z-10">{item.label}</span>
+                    <item.icon className={cn("h-[18px] w-[18px] transition-colors", activeView === item.id ? "!text-indigo-600" : "text-stone-400 group-hover:text-indigo-600")} />
+                    <span className="font-['Inter'] font-semibold text-[13px]">{item.label}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -411,21 +420,21 @@ const AdminDashboard = () => {
               <Collapsible defaultOpen className="group/collapsible">
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton className={`flex items-center gap-4 py-7 px-4 ${THEME.borders.radius.lg} transition-all duration-300 text-stone-300 hover:bg-white/5 hover:text-white w-full`}>
-                      <Users className="h-5 w-5 text-stone-500 group-hover:text-pink-400 transition-colors group-data-[state=open]/collapsible:rotate-90 group-data-[state=open]/collapsible:text-pink-400" />
-                      <span className="font-black tracking-wide flex-1 text-left">Vendors</span>
-                      <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90 text-stone-500" />
+                    <SidebarMenuButton className="flex items-center gap-3 py-5 px-4 rounded-xl transition-all duration-200 text-stone-600 hover:bg-stone-50 hover:text-indigo-950 w-full">
+                      <Users className="h-[18px] w-[18px] text-stone-400 group-hover:text-indigo-600 transition-colors" />
+                      <span className="font-['Inter'] font-semibold text-[13px] flex-1 text-left">Vendors</span>
+                      <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90 text-stone-400" />
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <SidebarMenuSub className="pl-6 border-l border-white/10 ml-6 py-2 mt-2 space-y-1 relative">
+                    <SidebarMenuSub className="pl-4 border-l-2 border-stone-100 ml-7 py-1 mt-1 space-y-0.5">
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
                           isActive={activeView === 'vendors'}
                           onClick={() => handleViewChange('vendors')}
-                          className={cn("font-bold text-xs py-5 px-4 rounded-xl transition-all duration-300", activeView === 'vendors' ? "bg-white/10 text-white shadow-inner" : "text-stone-400 hover:bg-white/5 hover:text-white")}
+                          className={cn("font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-lg transition-all duration-200", activeView === 'vendors' ? "bg-indigo-50 text-indigo-700 font-semibold" : "text-stone-500 hover:bg-stone-50 hover:text-stone-800")}
                         >
-                          <div className={cn("h-1.5 w-1.5 rounded-full mr-2 transition-all", activeView === 'vendors' ? 'bg-pink-500 shadow-[0_0_8px_rgba(236,72,153,0.8)]' : 'bg-transparent')} />
+                          {activeView === 'vendors' && <div className="h-1.5 w-1.5 rounded-full bg-indigo-600 mr-2" />}
                           Vendor Overview
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
@@ -433,9 +442,9 @@ const AdminDashboard = () => {
                         <SidebarMenuSubButton
                           isActive={activeView === 'vendor-analytics'}
                           onClick={() => handleViewChange('vendor-analytics')}
-                          className={cn("font-bold text-xs py-5 px-4 rounded-xl transition-all duration-300", activeView === 'vendor-analytics' ? "bg-white/10 text-white shadow-inner" : "text-stone-400 hover:bg-white/5 hover:text-white")}
+                          className={cn("font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-lg transition-all duration-200", activeView === 'vendor-analytics' ? "bg-indigo-50 text-indigo-700 font-semibold" : "text-stone-500 hover:bg-stone-50 hover:text-stone-800")}
                         >
-                          <div className={cn("h-1.5 w-1.5 rounded-full mr-2 transition-all", activeView === 'vendor-analytics' ? 'bg-pink-500 shadow-[0_0_8px_rgba(236,72,153,0.8)]' : 'bg-transparent')} />
+                          {activeView === 'vendor-analytics' && <div className="h-1.5 w-1.5 rounded-full bg-indigo-600 mr-2" />}
                           Vendor Analytics
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
@@ -443,8 +452,9 @@ const AdminDashboard = () => {
                         <SidebarMenuSubButton
                           isActive={activeView === 'offline-billing'}
                           onClick={() => handleViewChange('offline-billing')}
-                          className="font-bold text-xs py-4"
+                          className={cn("font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-lg transition-all duration-200", activeView === 'offline-billing' ? "bg-indigo-50 text-indigo-700 font-semibold" : "text-stone-500 hover:bg-stone-50 hover:text-stone-800")}
                         >
+                          {activeView === 'offline-billing' && <div className="h-1.5 w-1.5 rounded-full bg-indigo-600 mr-2" />}
                           Offline Billing
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
@@ -460,28 +470,27 @@ const AdminDashboard = () => {
                   <SidebarMenuButton
                     isActive={activeView === item.id}
                     onClick={() => handleViewChange(item.id)}
-                    className={cn(`flex items-center gap-4 py-7 px-4 ${THEME.borders.radius.lg} transition-all duration-300 group overflow-hidden relative`, activeView === item.id ? `${THEME.gradients.brand} text-white shadow-xl shadow-purple-500/20` : "text-stone-300 hover:bg-white/5 hover:text-white")}
+                    className={cn("flex items-center gap-3 py-5 px-4 rounded-xl transition-all duration-200 group", activeView === item.id ? "!bg-indigo-50 !text-indigo-950 font-bold" : "text-stone-600 hover:bg-stone-50 hover:text-indigo-950")}
                   >
-                    {activeView === item.id && <div className="absolute inset-0 bg-white/10 blur-[2px]" />}
-                    <item.icon className={cn("h-5 w-5 relative z-10 transition-transform duration-300 group-hover:scale-110", activeView === item.id ? "text-white drop-shadow-md" : "text-stone-500 group-hover:text-pink-400")} />
-                    <span className="font-black tracking-wide relative z-10">{item.label}</span>
+                    <item.icon className={cn("h-[18px] w-[18px] transition-colors", activeView === item.id ? "!text-indigo-600" : "text-stone-400 group-hover:text-indigo-600")} />
+                    <span className="font-['Inter'] font-semibold text-[13px]">{item.label}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
           </SidebarContent>
 
-          <SidebarFooter className="p-6 border-t border-white/5 relative z-10">
-            <div className={`flex items-center gap-4 p-4 bg-white/5 backdrop-blur-xl ${THEME.borders.radius.lg} border border-white/10 shadow-lg`}>
-              <Avatar className="h-10 w-10 outline outline-2 outline-offset-2 outline-pink-500">
-                <AvatarFallback className={`${THEME.colors.background.accentSolid} text-white ${THEME.typography.weights.heavy} text-xs tracking-wider`}>AD</AvatarFallback>
+          <SidebarFooter className="p-4 border-t border-stone-100">
+            <div className="flex items-center gap-3 p-3 bg-stone-50 rounded-xl">
+              <Avatar className="h-9 w-9 ring-2 ring-indigo-100">
+                <AvatarFallback className="bg-indigo-950 text-white font-bold text-xs">AD</AvatarFallback>
               </Avatar>
-              <div className="flex flex-col flex-1 overflow-hidden pointer-events-none">
-                <span className="text-sm font-black text-white truncate drop-shadow-md">A. Director</span>
-                <span className={THEME.typography.micro.muted}>Master Access</span>
+              <div className="flex flex-col flex-1 overflow-hidden">
+                <span className="font-['Inter'] text-sm font-bold text-stone-800 truncate">Admin</span>
+                <span className="font-['Inter'] text-[10px] text-stone-400 font-medium">Manager Access</span>
               </div>
-              <button onClick={logout} className="p-2.5 rounded-full hover:bg-rose-500/20 transition-all group pointer-events-auto" title="Logout">
-                <Activity className="h-4 w-4 text-stone-500 group-hover:text-rose-500 transition-colors" />
+              <button onClick={logout} className="p-2 rounded-lg hover:bg-rose-50 transition-all group" title="Logout">
+                <X className="h-4 w-4 text-stone-400 group-hover:text-rose-500 transition-colors" />
               </button>
             </div>
           </SidebarFooter>

@@ -39,7 +39,7 @@ const UPCOMING_PRODUCTS = [
     },
 ];
 
-export default function UpcomingDrops({ onNavigate, wishlist = [], toggleWishlist }) {
+export default function UpcomingDrops({ onNavigate, wishlist = [], toggleWishlist, products = [], deadline, title }) {
     const [timeLeft, setTimeLeft] = useState({
         days: 0,
         hours: 0,
@@ -48,15 +48,18 @@ export default function UpcomingDrops({ onNavigate, wishlist = [], toggleWishlis
     });
 
     useEffect(() => {
-        const targetDate = new Date();
-        targetDate.setDate(targetDate.getDate() + 3);
-        targetDate.setHours(10, 0, 0, 0);
+        const targetDate = deadline ? new Date(deadline) : new Date();
+        if (!deadline) {
+            targetDate.setDate(targetDate.getDate() + 3);
+            targetDate.setHours(10, 0, 0, 0);
+        }
 
         const interval = setInterval(() => {
             const now = new Date();
             const difference = targetDate - now;
 
             if (difference <= 0) {
+                setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
                 clearInterval(interval);
                 return;
             }
@@ -70,7 +73,9 @@ export default function UpcomingDrops({ onNavigate, wishlist = [], toggleWishlis
         }, 1000);
 
         return () => clearInterval(interval);
-    }, []);
+    }, [deadline]);
+
+    const displayProducts = products && products.length > 0 ? products : UPCOMING_PRODUCTS;
 
     return (
         <section className="py-16 md:py-24 px-4 bg-linear-to-br from-pink-50 via-white to-purple-50 overflow-hidden relative">
@@ -105,10 +110,10 @@ export default function UpcomingDrops({ onNavigate, wishlist = [], toggleWishlis
                             `}
                         </style>
                         <h2 className="text-5xl md:text-7xl font-black text-[#151515] tracking-tight leading-[0.9]">
-                            Upcoming <br className="hidden md:block" />
+                            {title?.split(' ')[0] || "Upcoming"} <br className="hidden md:block" />
                             <span className="relative inline-block mt-2">
                                 <span className="text-transparent bg-clip-text bg-linear-to-r from-pink-500 to-purple-600 animate-text-gradient">
-                                    Beauty Drop
+                                    {title?.split(' ').slice(1).join(' ') || "Beauty Drop"}
                                 </span>
                                 <div className="absolute -bottom-2 left-0 w-full h-2 bg-linear-to-r from-pink-500/20 to-purple-500/20 rounded-full blur-[2px]" />
                             </span>
@@ -137,16 +142,16 @@ export default function UpcomingDrops({ onNavigate, wishlist = [], toggleWishlis
 
                 {/* Product Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {UPCOMING_PRODUCTS.map((product) => (
+                    {displayProducts.map((product, pId) => (
                         <div
-                            key={product.id}
+                            key={product.id || pId}
                             onClick={() => onNavigate && onNavigate("product-page")}
                             className="group relative bg-white/60 backdrop-blur-md rounded-[24px] border border-white/60 overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-2 transition-all duration-500 cursor-pointer"
                         >
                             {/* Image */}
                             <div className="relative aspect-4/5 overflow-hidden m-2 rounded-[20px] bg-gray-100">
                                 <img
-                                    src={product.image}
+                                    src={product.image || product.imageUrl}
                                     alt={product.name}
                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 filter blur-[2px] group-hover:blur-0"
                                 />
@@ -166,14 +171,12 @@ export default function UpcomingDrops({ onNavigate, wishlist = [], toggleWishlis
                                     </span>
                                 </div>
 
-                                {/* Quantity Badge (✅ NEW) */}
+                                {/* Quantity Badge */}
                                 <div className="absolute top-3 right-3 bg-white/90 backdrop-blur px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm border border-white/50">
                                     <span className="text-[12px] font-extrabold tracking-wide text-gray-800">
-                                        Qty: {product.qty}
+                                        Qty: {product.qty || product.inventoryCount || 0}
                                     </span>
                                 </div>
-
-
                             </div>
 
                             {/* Content */}

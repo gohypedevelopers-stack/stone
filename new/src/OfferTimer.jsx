@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 
-export default function OfferTimer() {
+export default function OfferTimer({ offers = [] }) {
     const [timeLeft, setTimeLeft] = useState({
         days: 0,
         hours: 1,
         minutes: 36,
         seconds: 17,
     });
-    const [copied, setCopied] = useState(false);
+    const [copiedCode, setCopiedCode] = useState(null);
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -22,11 +22,15 @@ export default function OfferTimer() {
         return () => clearInterval(timer);
     }, []);
 
-    const handleCopy = () => {
-        navigator.clipboard.writeText("SAVE20");
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+    const handleCopy = (code) => {
+        navigator.clipboard.writeText(code);
+        setCopiedCode(code);
+        setTimeout(() => setCopiedCode(null), 2000);
     };
+
+    const displayOffers = offers && offers.length > 0 ? offers : [{ text: "20% OFF on orders over $100", code: "SAVE20" }];
+    // Repeat the offers to ensure a smooth infinite marquee scroll
+    const marqueeItems = [...displayOffers, ...displayOffers, ...displayOffers, ...displayOffers];
 
     return (
         <section className="pb-[18px]">
@@ -49,24 +53,26 @@ export default function OfferTimer() {
                         `}
                     </style>
                     <div className="animate-offer-marquee whitespace-nowrap flex items-center">
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => (
-                            <div key={i} className="flex items-center gap-[40px] px-[20px]">
-                                <span className="text-[22px] font-medium text-[#1a1a1a] tracking-tight">
-                                    20% OFF on orders over $100
+                        {marqueeItems.map((offer, i) => (
+                            <div key={i} className="flex items-center gap-[40px] px-[28px]">
+                                <span className="text-[20px] font-medium text-[#1a1a1a] tracking-tight">
+                                    {offer.text}
                                 </span>
-                                <button
-                                    onClick={handleCopy}
-                                    className="flex items-center gap-[8px] bg-white rounded-[999px] px-[14px] py-[6px] text-[13px] font-bold uppercase tracking-wide cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] active:scale-95 transition-all"
-                                    title="Click to copy"
-                                >
-                                    <span className="pt-px">{copied ? "COPIED" : "SAVE20"}</span>
-                                    {!copied && (
-                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#666]">
-                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                                        </svg>
-                                    )}
-                                </button>
+                                {offer.code && (
+                                    <button
+                                        onClick={() => handleCopy(offer.code)}
+                                        className="flex items-center gap-[8px] bg-white rounded-[999px] px-[14px] py-[6px] text-[13px] font-bold uppercase tracking-wide cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] active:scale-95 transition-all outline-none"
+                                        title="Click to copy"
+                                    >
+                                        <span className="pt-px">{copiedCode === offer.code ? "COPIED" : offer.code}</span>
+                                        {copiedCode !== offer.code && (
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#666]">
+                                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                            </svg>
+                                        )}
+                                    </button>
+                                )}
                             </div>
                         ))}
                     </div>

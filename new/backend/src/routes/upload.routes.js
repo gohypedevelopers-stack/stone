@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { upload } from '../middleware/upload.js';
 import { sendSuccess, sendError } from '../utils/http.js';
+import fs from 'fs';
+import path from 'path';
 
 const router = Router();
 
@@ -15,6 +17,22 @@ router.post('/', upload.array('images', 10), (req, res) => {
     });
 
     return sendSuccess(res, urls, 'Files uploaded successfully');
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+});
+
+router.delete('/:filename', (req, res) => {
+  try {
+    const { filename } = req.params;
+    const filePath = path.join(process.cwd(), 'public', 'uploads', filename);
+
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      return sendSuccess(res, null, 'File deleted successfully');
+    } else {
+      return sendError(res, 'File not found', 404);
+    }
   } catch (error) {
     return sendError(res, error.message, 500);
   }

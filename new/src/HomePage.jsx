@@ -98,10 +98,10 @@ export default function HomePage({
         );
 
       case "offer-timer":
-        return <OfferTimer key={key} deadline={settings?.deadline} title={settings?.promoText} maxItems={settings?.maxItems} />;
+        return <OfferTimer key={key} offers={settings?.offers} />;
 
       case "upcoming-drops":
-        return <UpcomingDrops key={key} onNavigate={onNavigate} wishlist={wishlist} toggleWishlist={toggleWishlist} deadline={settings?.deadline} title={settings?.promoText} maxItems={settings?.maxItems} />;
+        return <UpcomingDrops key={key} onNavigate={onNavigate} wishlist={wishlist} toggleWishlist={toggleWishlist} deadline={settings?.deadline} title={settings?.promoText} products={settings?.products} />;
 
       case "shop-by-category":
         return <ByCategory key={key} onNavigate={onNavigate} onSelectCategory={onSelectCategory} bgColor={settings?.bgColor} title={section.title} maxItems={settings?.maxItems} />;
