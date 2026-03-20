@@ -72,7 +72,8 @@ Body:
 {
   "name": "Test User",
   "mobile": "9999999999",
-  "email": "testuser@example.com"
+  "email": "testuser@example.com",
+  "password": "yourpassword123"
 }
 ```
 
@@ -116,7 +117,8 @@ Body:
 
 ```json
 {
-  "mobile": "9876543210"
+  "mobile": "9876543210",
+  "password": "yourpassword123"
 }
 ```
 

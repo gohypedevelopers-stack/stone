@@ -17,6 +17,7 @@ import PreOrderListPage from "./PreOrderListPage";
 import WishlistDrawer from "./WishlistDrawer.jsx";
 import CartPage from "./CartPage.jsx";
 import CheckoutPage from "./CheckoutPage.jsx";
+import AccountPage from "./AccountPage.jsx";
 import { getAllProducts } from "./data/products";
 import { AuthProvider } from "./context/AuthContext";
 import AuthModal from "./components/AuthModal";
@@ -164,6 +165,7 @@ export default function App() {
       "skin-concern-page": "/concern/acne", // Default concern
       "shop-by-offer-page": "/offer/flat-20", // Default offer
       "cart": "/cart",
+      "account": "/account",
       "admin": "/admin"
     };
 
@@ -225,6 +227,7 @@ export default function App() {
           />
         } />
         <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/account" element={<AccountPage />} />
         <Route path="/brands" element={<AllBrandsPage />} />
         <Route path="/admin/*" element={<AdminDashboard />} />
 

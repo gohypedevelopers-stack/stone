@@ -1,10 +1,11 @@
+import bcrypt from "bcryptjs";
 import prisma from "../lib/prisma.js";
 import { serializePrisma } from "../utils/data.js";
 import { sendError, sendSuccess } from "../utils/http.js";
 
 export const registerCustomer = async (req, res) => {
   try {
-    const { name, mobile, email } = req.body;
+    const { name, mobile, email, password } = req.body;
 
     if (!name || !mobile) {
       return sendError(res, "Name and mobile are required", 400);
@@ -18,15 +19,21 @@ export const registerCustomer = async (req, res) => {
       return sendError(res, "Customer already exists with this mobile number", 409);
     }
 
+    const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
+
     const customer = await prisma.customer.create({
       data: {
         name,
         mobile,
         email: email || null,
+        password: hashedPassword,
       },
     });
 
-    return sendSuccess(res, serializePrisma(customer), "Customer registered successfully", 201);
+    const customerData = serializePrisma(customer);
+    delete customerData.password;
+
+    return sendSuccess(res, customerData, "Customer registered successfully", 201);
   } catch (error) {
     return sendError(res, error.message, 500);
   }
@@ -34,7 +41,7 @@ export const registerCustomer = async (req, res) => {
 
 export const loginCustomer = async (req, res) => {
   try {
-    const { mobile } = req.body;
+    const { mobile, password } = req.body;
 
     if (!mobile) {
       return sendError(res, "Mobile number is required", 400);
@@ -51,11 +58,23 @@ export const loginCustomer = async (req, res) => {
       return sendError(res, "Customer not found", 404);
     }
 
+    if (customer.password && password) {
+      const isPasswordValid = await bcrypt.compare(password, customer.password);
+      if (!isPasswordValid) {
+        return sendError(res, "Invalid password", 401);
+      }
+    } else if (customer.password && !password) {
+      return sendError(res, "Password is required for this account", 400);
+    }
+
+    const customerData = serializePrisma(customer);
+    delete customerData.password;
+
     return sendSuccess(
       res,
       {
         token: "mock-jwt-token",
-        customer: serializePrisma(customer),
+        customer: customerData,
       },
       "Login successful",
     );
@@ -107,7 +126,10 @@ export const getProfile = async (req, res) => {
       return sendError(res, "Customer profile not found", 404);
     }
 
-    return sendSuccess(res, serializePrisma(customer), "Customer profile fetched");
+    const customerData = serializePrisma(customer);
+    delete customerData.password;
+
+    return sendSuccess(res, customerData, "Customer profile fetched");
   } catch (error) {
     return sendError(res, error.message, 500);
   }
