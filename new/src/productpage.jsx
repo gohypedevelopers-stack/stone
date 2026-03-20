@@ -137,12 +137,21 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
 
     const product = productData || defaultProduct;
 
-    const listImages = product?.image ? [product.image, ...MOCK_PDP_DATA.images] : MOCK_PDP_DATA.images;
+    let listImages = MOCK_PDP_DATA.images;
+    if (product?.imageUrls && Array.isArray(product.imageUrls) && product.imageUrls.length > 0) {
+        listImages = product.imageUrls;
+    } else if (product?.image) {
+        listImages = [product.image, ...MOCK_PDP_DATA.images];
+    }
 
     const fullProduct = {
         ...MOCK_PDP_DATA,
         ...product,
-        images: listImages
+        images: listImages,
+        ingredients: product?.ingredients || MOCK_PDP_DATA.ingredients,
+        whyWeLoveIt: product?.whyWeLoveIt || "Instantly plumps skin by +45% and repairs barrier in 2 weeks.",
+        benefits: (product?.benefits && Array.isArray(product.benefits) && product.benefits.length > 0) ? product.benefits : MOCK_PDP_DATA.benefits,
+        faq: (product?.faq && Array.isArray(product.faq) && product.faq.length > 0) ? product.faq : MOCK_PDP_DATA.faq,
     };
 
     useEffect(() => {
@@ -405,7 +414,7 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
                                     <p className="text-lg text-gray-600 leading-8 max-w-3xl">{fullProduct.description}</p>
                                     <div className="mt-8 p-6 bg-pink-50/30 rounded-2xl border border-pink-100 inline-block">
                                         <h5 className="font-bold text-xs uppercase mb-2 text-pink-400">Why we love it</h5>
-                                        <p className="text-base font-semibold text-gray-800">Instantly plumps skin by +45% and repairs barrier in 2 weeks.</p>
+                                        <p className="text-base font-semibold text-gray-800">{fullProduct.whyWeLoveIt}</p>
                                     </div>
                                 </div>
                             </div>
