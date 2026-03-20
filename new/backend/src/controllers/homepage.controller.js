@@ -1,6 +1,85 @@
 import prisma from "../lib/prisma.js";
-import { serializePrisma } from "../utils/data.js";
 import { sendError, sendSuccess } from "../utils/http.js";
+import { serializePrisma } from "../utils/data.js";
+
+const DEFAULT_SECTIONS = [
+  { title: "Hero Slider", componentId: "hero-slider", sortOrder: 0, type: "BUILT_IN" },
+  { title: "Offer Timer", componentId: "offer-timer", sortOrder: 1, type: "BUILT_IN" },
+  { title: "Upcoming Drops", componentId: "upcoming-drops", sortOrder: 2, type: "BUILT_IN" },
+  { title: "Shop By Category", componentId: "shop-by-category", sortOrder: 3, type: "BUILT_IN" },
+  { title: "Best Sellers", componentId: "best-sellers", sortOrder: 4, type: "BUILT_IN" },
+  { title: "Shop By Brand", componentId: "shop-by-brand", sortOrder: 5, type: "BUILT_IN" },
+  { title: "By Skin Concern", componentId: "by-skin-concern", sortOrder: 6, type: "BUILT_IN" },
+  { title: "New Arrivals", componentId: "new-arrivals", sortOrder: 7, type: "BUILT_IN" },
+  { title: "Watch And Shop", componentId: "watch-and-shop", sortOrder: 8, type: "BUILT_IN" },
+  { title: "Limited Offer", componentId: "limited-offer", sortOrder: 9, type: "BUILT_IN" },
+  { title: "Shop By Offer", componentId: "shop-by-offer", sortOrder: 10, type: "BUILT_IN" },
+  { title: "Pre Order", componentId: "pre-order", sortOrder: 11, type: "BUILT_IN" },
+  { title: "Skin Quiz", componentId: "skin-quiz", sortOrder: 12, type: "BUILT_IN" },
+  { title: "Request Product", componentId: "request-product", sortOrder: 13, type: "BUILT_IN" },
+];
+
+export const getHomepageSections = async (req, res) => {
+  try {
+    let sections = await prisma.homepageSection.findMany({
+      orderBy: { sortOrder: 'asc' },
+    });
+
+    if (sections.length === 0) {
+      await prisma.homepageSection.createMany({
+        data: DEFAULT_SECTIONS
+      });
+      sections = await prisma.homepageSection.findMany({
+        orderBy: { sortOrder: 'asc' },
+      });
+    }
+
+    return sendSuccess(res, sections, "Homepage sections fetched successfully");
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
+export const updateHomepageSection = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isActive, sortOrder, title, settings } = req.body;
+
+    const updates = {};
+    if (isActive !== undefined) updates.isActive = Boolean(isActive);
+    if (sortOrder !== undefined) updates.sortOrder = Number(sortOrder);
+    if (title !== undefined) updates.title = title;
+    if (settings !== undefined) updates.settings = settings;
+
+    const section = await prisma.homepageSection.update({
+      where: { id },
+      data: updates,
+    });
+
+    return sendSuccess(res, section, "Homepage section updated");
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
+export const reorderSections = async (req, res) => {
+  try {
+    const { orderedIds } = req.body;
+    if (!Array.isArray(orderedIds)) return sendError(res, "orderedIds array is required", 400);
+
+    const updates = orderedIds.map((id, index) => {
+      return prisma.homepageSection.update({
+        where: { id },
+        data: { sortOrder: index }
+      });
+    });
+
+    await prisma.$transaction(updates);
+    return sendSuccess(res, null, "Sections reordered successfully");
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
 
 const sortByOrderVolume = (products, orderItems) => {
   const scoreMap = new Map();
@@ -23,6 +102,7 @@ export const getHomepageContent = async (req, res) => {
       limitedOffers,
       newArrivals,
       trendingOrderItems,
+      sections,
     ] = await Promise.all([
       prisma.homepageBanner.findMany({
         where: { isActive: true },
@@ -72,6 +152,9 @@ export const getHomepageContent = async (req, res) => {
           },
         },
       }),
+      prisma.homepageSection.findMany({
+        orderBy: { sortOrder: "asc" },
+      }),
     ]);
 
     const trendingProducts = sortByOrderVolume(
@@ -82,6 +165,7 @@ export const getHomepageContent = async (req, res) => {
     return sendSuccess(
       res,
       serializePrisma({
+        sections,
         banners,
         featuredProducts,
         discountProducts,

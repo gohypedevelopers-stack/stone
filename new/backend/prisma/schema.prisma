@@ -273,7 +273,18 @@ model Notification {
   customer   Customer?            @relation(fields: [customerId], references: [id], onDelete: SetNull)
   vendor     Vendor?              @relation(fields: [vendorId], references: [id], onDelete: SetNull)
 
-  @@index([customerId])
   @@index([vendorId])
   @@index([audience])
+}
+
+model HomepageSection {
+  id          String   @id @default(cuid())
+  title       String
+  componentId String   @unique // e.g. "hero-slider", "best-sellers", "shop-by-brand"
+  type        String   @default("BUILT_IN") // "BUILT_IN" or "CUSTOM"
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  settings    Json?    // Optional JSON for configuration (e.g. maxItems, colors)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

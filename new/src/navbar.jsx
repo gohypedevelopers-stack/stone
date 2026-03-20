@@ -33,8 +33,12 @@ function SearchPlaceholder({ searchTerms }) {
   );
 }
 
-export default function Navbar({ categories, query, onQueryChange, cartCount, onToggleCart, onNavigate, wishlistCount, onToggleWishlist }) {
+import { useAuth } from "./context/AuthContext";
+
+export default function Navbar({ categories, query, onQueryChange, cartCount, onToggleCart, onNavigate, wishlistCount, onToggleWishlist, onOpenAuth }) {
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const searchTerms = [
     "B.b cream", "Blender", "Blush", "Brush", "Cleanser", "cleansing oil", "compact powders",
@@ -96,9 +100,49 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
                 )}
               </button>
               
-              <button className="p-2 group" aria-label="Account">
-                <img className="w-6 h-6 object-contain group-hover:scale-110 transition-transform" src={accountIcon} alt="" />
-              </button>
+              <div className="relative">
+                <button 
+                  className="p-2 group flex items-center gap-2" 
+                  aria-label="Account"
+                  onClick={() => user ? setShowProfileMenu(!showProfileMenu) : onOpenAuth()}
+                >
+                  <img className="w-6 h-6 object-contain group-hover:scale-110 transition-transform" src={accountIcon} alt="" />
+                  {user && (
+                    <span className="text-xs font-bold text-stone-700 max-w-[80px] truncate">
+                      {user.name.split(' ')[0]}
+                    </span>
+                  )}
+                </button>
+
+                {user && showProfileMenu && (
+                  <div className="absolute top-[100%] right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-stone-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="px-4 py-2 border-b border-stone-50 mb-1">
+                      <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Signed in as</p>
+                      <p className="text-sm font-bold text-stone-800 truncate">{user.name}</p>
+                    </div>
+                    <button className="w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 transition-colors font-medium">My Orders</button>
+                    <button className="w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 transition-colors font-medium">Rewards</button>
+                    <button 
+                      className="w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 transition-colors font-bold mt-2 pt-2 border-t border-stone-50"
+                      onClick={() => {
+                        onNavigate('admin');
+                        setShowProfileMenu(false);
+                      }}
+                    >
+                      Admin Dashboard
+                    </button>
+                    <button 
+                      className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors font-bold mt-2 pt-2 border-t border-stone-100"
+                      onClick={() => {
+                        logout();
+                        setShowProfileMenu(false);
+                      }}
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
 
               <button className="p-2 relative group" onClick={onToggleCart} aria-label="Cart">
                 <img className="w-7 h-7 object-contain group-hover:scale-110 transition-transform" src={cartIcon} alt="" />

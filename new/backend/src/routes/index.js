@@ -9,6 +9,7 @@ import homepageRoutes from "./homepage.routes.js";
 import adminRoutes from "./admin.routes.js";
 import analyticsRoutes from "./analytics.routes.js";
 import notificationsRoutes from "./notifications.routes.js";
+import uploadRoutes from "./upload.routes.js";
 
 const router = Router();
 
@@ -30,5 +31,6 @@ router.use("/homepage", homepageRoutes);
 router.use("/admin", adminRoutes);
 router.use("/analytics", analyticsRoutes);
 router.use("/notifications", notificationsRoutes);
+router.use("/upload", uploadRoutes);
 
 export default router;
