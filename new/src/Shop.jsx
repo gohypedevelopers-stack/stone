@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { getAllProducts } from "./data/products";
+import { useProducts } from "./context/ProductContext";
 import ProductCard from "./components/card.jsx";
 import { ChevronDown } from "lucide-react";
 
@@ -8,7 +8,7 @@ function formatINR(amount) {
 }
 
 export default function Shop({ addToCart, wishlist, toggleWishlist }) {
-    const allProducts = getAllProducts();
+    const { products: allProducts } = useProducts();
 
     // Filter States
     const [selectedOrigins, setSelectedOrigins] = useState([]);

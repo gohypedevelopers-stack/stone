@@ -80,6 +80,10 @@ export const createProduct = async (req, res) => {
       rewardEligible,
       limitedOffer,
       status,
+      ingredients,
+      whyWeLoveIt,
+      benefits,
+      faq,
     } = req.body;
 
     if (!vendorId || !name || price === undefined) {
@@ -102,10 +106,8 @@ export const createProduct = async (req, res) => {
 
     if (!resolvedCategoryId && categoryName) {
       const category = await prisma.category.upsert({
-        where: { slug: categorySlug || slugify(categoryName) },
-        update: {
-          name: categoryName,
-        },
+        where: { name: categoryName },
+        update: {},
         create: {
           name: categoryName,
           slug: categorySlug || slugify(categoryName),
@@ -147,6 +149,10 @@ export const createProduct = async (req, res) => {
           : false,
         rewardEligible: coerceBoolean(rewardEligible),
         limitedOffer: coerceBoolean(limitedOffer),
+        ingredients: ingredients || null,
+        whyWeLoveIt: whyWeLoveIt || null,
+        benefits: benefits || null,
+        faq: faq || null,
       },
       include: {
         vendor: true,
@@ -204,18 +210,32 @@ export const updateProduct = async (req, res) => {
       imageUrls,
       tags,
       vendorId,
+      categoryId,
+      categoryName,
       // Optional schema fields:
       ingredients,
       benefits,
       whyWeLoveIt,
       faq
     } = req.body;
+    
+    let resolvedCategoryId = categoryId || undefined;
+
+    if (!resolvedCategoryId && categoryName) {
+      const category = await prisma.category.upsert({
+        where: { name: categoryName },
+        update: {},
+        create: { name: categoryName, slug: slugify(categoryName) },
+      });
+      resolvedCategoryId = category.id;
+    }
 
     const data = {
       name,
       description,
       brand,
       vendorId,
+      categoryId: resolvedCategoryId,
       price: price ? Number(price) : undefined,
       discountPrice: discountPrice ? Number(discountPrice) : null,
       stock: stock !== undefined ? Number(stock) : undefined,
@@ -225,6 +245,10 @@ export const updateProduct = async (req, res) => {
       limitedOffer: limitedOffer !== undefined ? Boolean(limitedOffer) : undefined,
       imageUrls: Array.isArray(imageUrls) ? imageUrls : undefined,
       tags: Array.isArray(tags) ? tags : undefined,
+      ingredients,
+      benefits,
+      whyWeLoveIt,
+      faq,
     };
 
     // Remove undefined values

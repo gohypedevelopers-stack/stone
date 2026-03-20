@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllProducts } from "./data/products";
+import { useProducts } from "./context/ProductContext";
 import ProductCard from "./components/card.jsx";
 import { Clock, Filter, Sparkles, CheckCircle, Mail, ChevronRight, Heart } from "lucide-react";
 import ImageReveal from "./components/image-tiles";
@@ -9,7 +9,7 @@ import imgNew2 from "./assets/newprod/new2.jpg";
 import imgNew3 from "./assets/newprod/new3.jpg";
 
 export default function NewArrivals({ addToCart, wishlist = [], toggleWishlist }) {
-    const allProducts = getAllProducts();
+    const { products: allProducts } = useProducts();
     const navigate = useNavigate();
     const [activeFilter, setActiveFilter] = useState("Latest");
     const [timeLeft, setTimeLeft] = useState({ h: 12, m: 45, s: 30 });

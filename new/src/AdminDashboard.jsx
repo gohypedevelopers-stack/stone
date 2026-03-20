@@ -362,22 +362,35 @@ const AdminDashboard = () => {
         
         const deletedVendors = originalVendors.filter(v => v._existingId && !currentExistingIds.includes(v._existingId));
         
-        await Promise.all(deletedVendors.map(v => fetch(`${API_URL}/admin/products/${v._existingId}`, { method: 'DELETE' })));
+        // Sequentially delete removed variants
+        for (const v of deletedVendors) {
+          await fetch(`${API_URL}/admin/products/${v._existingId}`, { method: 'DELETE' });
+        }
 
-        await Promise.all(newProduct.vendors.map(async (v) => {
+        // Sequentially update or create variants
+        for (const v of newProduct.vendors) {
           const payload = { ...basePayload, vendorId: v.vendorId, stock: Number(v.stock) };
           if (v._existingId) {
-            const resp = await fetch(`${API_URL}/admin/products/${v._existingId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const resp = await fetch(`${API_URL}/admin/products/${v._existingId}`, { 
+              method: 'PUT', 
+              headers: { 'Content-Type': 'application/json' }, 
+              body: JSON.stringify(payload) 
+            });
             const data = await resp.json();
             if (!data.success) throw new Error(data.message || 'Failed to update bundled vendor product');
           } else {
-            const resp = await fetch(`${API_URL}/admin/products`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const resp = await fetch(`${API_URL}/admin/products`, { 
+              method: 'POST', 
+              headers: { 'Content-Type': 'application/json' }, 
+              body: JSON.stringify(payload) 
+            });
             const data = await resp.json();
             if (!data.success) throw new Error(data.message || 'Failed to create new bundled vendor product');
           }
-        }));
+        }
       } else {
-        await Promise.all(newProduct.vendors.map(async (v) => {
+        // Sequentially create new variants
+        for (const v of newProduct.vendors) {
           const payload = { ...basePayload, vendorId: v.vendorId, stock: Number(v.stock) };
           const resp = await fetch(`${API_URL}/admin/products`, {
             method: 'POST',
@@ -386,7 +399,7 @@ const AdminDashboard = () => {
           });
           const data = await resp.json();
           if (!data.success) throw new Error(data.message || 'Failed to create product for a vendor');
-        }));
+        }
       }
 
       setNewProduct({ name: '', brand: '', price: '', categoryName: '', description: '', tags: '', featured: false, rewardEligible: false, limitedOffer: false, ingredients: '', whyWeLoveIt: '', discountPrice: '', existingImages: [], vendors: [{ vendorId: '', stock: '' }] });

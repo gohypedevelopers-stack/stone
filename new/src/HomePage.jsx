@@ -15,7 +15,7 @@ import LimitedOfferBanner from "./LimitedOfferBanner.jsx";
 import RequestProductSection from "./RequestProductSection.jsx";
 import PreOrderSection from "./PreOrderSection.jsx";
 
-import { getAllProducts } from "./data/products";
+import { useProducts } from "./context/ProductContext";
 
 const API_URL = "http://localhost:5000/api";
 
@@ -48,7 +48,7 @@ export default function HomePage({
   const [sections, setSections] = useState([]);
   const [serverData, setServerData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const PRODUCTS = getAllProducts();
+  const { products: PRODUCTS } = useProducts();
 
   useEffect(() => {
     fetch(`${API_URL}/homepage`)

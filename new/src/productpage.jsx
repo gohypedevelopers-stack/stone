@@ -94,48 +94,42 @@ const ProductCardMini = ({ product, onAddToCart }) => (
 );
 
 
+import { useProducts } from "./context/ProductContext";
 import { useParams, useLocation } from "react-router-dom";
 import { CATEGORY_DATA_GENERATED } from "./productData.js";
 import { PREORDER_PRODUCTS } from "./data/products";
 
-const findProductById = (id) => {
-    const products = getAllProducts() || [];
-    let found = products.find(p => String(p.id) === String(id));
-    if (found) return found;
-
-    if (PREORDER_PRODUCTS) {
-        found = PREORDER_PRODUCTS.find(p => String(p.id) === String(id));
-        if (found) return found;
-    }
-
-    if (CATEGORY_DATA_GENERATED) {
-        for (const cat in CATEGORY_DATA_GENERATED) {
-            const catProducts = CATEGORY_DATA_GENERATED[cat];
-            if (Array.isArray(catProducts)) {
-                found = catProducts.find(p => String(p.id) === String(id));
-                if (found) return found;
-            }
-        }
-    }
-    return null;
-};
-
 export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist }) {
     const { id } = useParams();
+    const { products } = useProducts();
     const location = useLocation();
     const decodedId = decodeURIComponent(id);
 
     // 1. Try to get product from navigation state (most reliable for mock/generated items)
     const stateProduct = location.state?.product;
 
-    // 2. Fallback to ID lookup
-    const productData = stateProduct || findProductById(decodedId);
+    // 2. Fallback to lookup in the unified products list from context
+    const productData = stateProduct || products.find(p => String(p.id) === String(decodedId));
 
-    // 3. Last resort fallback
-    const products = getAllProducts() || [];
-    const defaultProduct = products.find(p => p.tag === "Best Seller") || products[0];
+    // 3. Keep existing fallback to static lists if not found in main context (for safety)
+    const findInStatic = () => {
+        if (PREORDER_PRODUCTS) {
+            const found = PREORDER_PRODUCTS.find(p => String(p.id) === String(decodedId));
+            if (found) return found;
+        }
+        if (CATEGORY_DATA_GENERATED) {
+            for (const cat in CATEGORY_DATA_GENERATED) {
+                const catProducts = CATEGORY_DATA_GENERATED[cat];
+                if (Array.isArray(catProducts)) {
+                    const found = catProducts.find(p => String(p.id) === String(decodedId));
+                    if (found) return found;
+                }
+            }
+        }
+        return null;
+    };
 
-    const product = productData || defaultProduct;
+    const product = productData || findInStatic() || products[0];
 
     let listImages = MOCK_PDP_DATA.images;
     if (product?.imageUrls && Array.isArray(product.imageUrls) && product.imageUrls.length > 0) {

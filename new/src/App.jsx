@@ -18,7 +18,7 @@ import WishlistDrawer from "./WishlistDrawer.jsx";
 import CartPage from "./CartPage.jsx";
 import CheckoutPage from "./CheckoutPage.jsx";
 import AccountPage from "./AccountPage.jsx";
-import { getAllProducts } from "./data/products";
+import { useProducts } from "./context/ProductContext";
 import { AuthProvider } from "./context/AuthContext";
 import AuthModal from "./components/AuthModal";
 import imgNewArrival from "./assets/newarrival.jpg";
@@ -54,7 +54,7 @@ export default function App() {
     });
   }, [location.pathname]);
 
-  const PRODUCTS = getAllProducts();
+  const { products: PRODUCTS } = useProducts();
   const freeDeliveryThreshold = 999;
   const supportPhone = "+91 90000 00000";
 

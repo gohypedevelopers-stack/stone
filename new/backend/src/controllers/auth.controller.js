@@ -30,6 +30,12 @@ export const registerCustomer = async (req, res) => {
       },
     });
 
+    // Link any existing legacy offline purchases by mobile
+    await prisma.offlinePurchase.updateMany({
+      where: { mobile, customerId: null },
+      data: { customerId: customer.id }
+    });
+
     const customerData = serializePrisma(customer);
     delete customerData.password;
 
@@ -126,7 +132,22 @@ export const getProfile = async (req, res) => {
       return sendError(res, "Customer profile not found", 404);
     }
 
+    // Safety: Link any unlinked offline purchases now
+    await prisma.offlinePurchase.updateMany({
+      where: { mobile: customer.mobile, customerId: null },
+      data: { customerId: customer.id }
+    });
+
     const customerData = serializePrisma(customer);
+    
+    // Replace relationship data with full mobile-based fetch to be 100% sure
+    const allOffline = await prisma.offlinePurchase.findMany({
+      where: { mobile: customer.mobile },
+      include: { items: true, vendor: true },
+      orderBy: { purchaseDate: 'desc' }
+    });
+    
+    customerData.offlinePurchases = serializePrisma(allOffline);
     delete customerData.password;
 
     return sendSuccess(res, customerData, "Customer profile fetched");

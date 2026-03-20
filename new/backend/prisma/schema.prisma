@@ -125,6 +125,10 @@ model Product {
   discounted     Boolean       @default(false)
   rewardEligible Boolean       @default(false)
   limitedOffer   Boolean       @default(false)
+  ingredients    String?
+  whyWeLoveIt    String?
+  benefits       Json?
+  faq            Json?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   vendor         Vendor        @relation(fields: [vendorId], references: [id], onDelete: Cascade)

@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllProducts } from "./data/products";
+import { useProducts } from "./context/ProductContext";
 import ProductCard from "./components/card.jsx";
 import {
     Star, Heart, ShoppingBag, Eye, X, Filter, ChevronDown, Check,
@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 export default function BestSellers({ addToCart, wishlist = [], toggleWishlist }) {
-    const allProducts = getAllProducts();
+    const { products: allProducts } = useProducts();
     const navigate = useNavigate();
     const [activeFilter, setActiveFilter] = useState("Skincare");
     const [sortOption, setSortOption] = useState("Most Popular");
