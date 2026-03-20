@@ -190,11 +190,12 @@ model OrderTracking {
 }
 
 model OfflinePurchase {
-  id          String                @id @default(cuid())
-  customerId  String?
-  vendorId    String
-  mobile      String
-  amount      Decimal               @db.Decimal(10, 2)
+  id           String                @id @default(cuid())
+  customerId   String?
+  vendorId     String
+  customerName String?
+  mobile       String
+  amount       Decimal               @db.Decimal(10, 2)
   purchaseDate DateTime             @default(now())
   linkedAt    DateTime?
   createdAt   DateTime              @default(now())

@@ -203,6 +203,7 @@ export const updateProduct = async (req, res) => {
       limitedOffer,
       imageUrls,
       tags,
+      vendorId,
       // Optional schema fields:
       ingredients,
       benefits,
@@ -214,6 +215,7 @@ export const updateProduct = async (req, res) => {
       name,
       description,
       brand,
+      vendorId,
       price: price ? Number(price) : undefined,
       discountPrice: discountPrice ? Number(discountPrice) : null,
       stock: stock !== undefined ? Number(stock) : undefined,
