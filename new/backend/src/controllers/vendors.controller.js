@@ -71,6 +71,7 @@ export const createVendor = async (req, res) => {
   try {
     const {
       businessName,
+      ownerName,
       storeAddress,
       address,
       contactNumber,
@@ -81,7 +82,7 @@ export const createVendor = async (req, res) => {
       approvalStatus,
     } = req.body;
 
-    if (!businessName || !(storeAddress || address) || !contactNumber || !(businessCategory || category)) {
+    if (!businessName || !ownerName || !(storeAddress || address) || !contactNumber || !(businessCategory || category)) {
       return sendError(
         res,
         "Business name, store address, contact number, and business category are required",
@@ -92,6 +93,7 @@ export const createVendor = async (req, res) => {
     const vendor = await prisma.vendor.create({
       data: {
         businessName,
+        ownerName,
         storeAddress: storeAddress || address,
         contactNumber,
         email: email || null,

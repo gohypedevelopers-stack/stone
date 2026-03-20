@@ -38,6 +38,7 @@ import {
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { HomepageManager } from "@/components/HomepageManager";
+import { VendorOfflineBilling } from "@/components/VendorOfflineBilling";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -89,7 +90,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ChartAreaInteractive } from "@/components/ChartAreaInteractive";
 
 const API_URL = "http://localhost:5000/api";
 
@@ -111,6 +111,10 @@ const AdminDashboard = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState(null);
   const [isVendorDetailOpen, setIsVendorDetailOpen] = useState(false);
+  const [isAddVendorOpen, setIsAddVendorOpen] = useState(false);
+  const [newVendorData, setNewVendorData] = useState({
+    businessName: '', ownerName: '', contactNumber: '', email: '', businessCategory: '', storeAddress: ''
+  });
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isOrderOpen, setIsOrderOpen] = useState(false);
   const [isManualOrderOpen, setIsManualOrderOpen] = useState(false);
@@ -297,6 +301,27 @@ const AdminDashboard = () => {
     finally { setLoading(false); }
   };
 
+  const handleAddVendor = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const resp = await fetch(`${API_URL}/admin/vendors`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...newVendorData, approvalStatus: 'APPROVED' })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        setIsAddVendorOpen(false);
+        setNewVendorData({ businessName: '', ownerName: '', contactNumber: '', email: '', businessCategory: '', storeAddress: '' });
+        fetchDataForView('vendors');
+      } else {
+        alert(data.message || 'Failed to add vendor.');
+      }
+    } catch (err) { console.error(err); alert('Something went wrong.'); }
+    finally { setLoading(false); }
+  };
+
   const handleViewChange = (view) => {
     navigate(view === 'overview' ? '/admin' : `/admin/${view}`);
   };
@@ -384,6 +409,15 @@ const AdminDashboard = () => {
                           Vendor Analytics
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton
+                          isActive={activeView === 'offline-billing'}
+                          onClick={() => handleViewChange('offline-billing')}
+                          className="font-bold text-xs py-4"
+                        >
+                          Offline Billing
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
                     </SidebarMenuSub>
                   </CollapsibleContent>
                 </SidebarMenuItem>
@@ -435,6 +469,7 @@ const AdminDashboard = () => {
 
           <main className="p-12 w-full">
             {activeView === 'homepage-builder' && <HomepageManager />}
+            {activeView === 'offline-billing' && <VendorOfflineBilling />}
             {activeView === 'overview' && (
               <div className="space-y-12 animate-in fade-in slide-in-from-bottom-5">
                 <header>
@@ -499,35 +534,54 @@ const AdminDashboard = () => {
                 </header>
 
                 <Card className="border-none shadow-sm rounded-3xl overflow-hidden">
+                  <div className="overflow-x-auto">
                   <Table>
                     <TableHeader className="bg-stone-50">
                       <TableRow className="border-stone-100 py-4 hover:bg-transparent">
-                        <TableHead className="font-bold text-stone-900 p-6">Product Information</TableHead>
-                        <TableHead className="font-bold text-stone-900 p-6">Vendor Authority</TableHead>
-                        <TableHead className="font-bold text-stone-900 p-6 text-right">Unit Price</TableHead>
-                        <TableHead className="font-bold text-stone-900 p-6 text-right">Available Stock</TableHead>
-                        <TableHead className="font-bold text-stone-900 p-6 text-center">Status</TableHead>
-                        <TableHead className="font-bold text-stone-900 p-6 text-center">Actions</TableHead>
+                        <TableHead className="font-bold text-stone-900 p-4 text-[10px] uppercase tracking-widest min-w-[280px]">Product</TableHead>
+                        <TableHead className="font-bold text-stone-900 p-4 text-[10px] uppercase tracking-widest min-w-[120px]">Category</TableHead>
+                        <TableHead className="font-bold text-stone-900 p-4 text-[10px] uppercase tracking-widest min-w-[120px]">Vendor</TableHead>
+                        <TableHead className="font-bold text-stone-900 p-4 text-[10px] uppercase tracking-widest text-right min-w-[100px]">Price</TableHead>
+                        <TableHead className="font-bold text-stone-900 p-4 text-[10px] uppercase tracking-widest text-right min-w-[100px]">Stock</TableHead>
+                        <TableHead className="font-bold text-stone-900 p-4 text-[10px] uppercase tracking-widest text-center min-w-[90px]">Status</TableHead>
+                        <TableHead className="font-bold text-stone-900 p-4 text-[10px] uppercase tracking-widest text-center min-w-[90px]">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {loading ? (
-                        [1, 2, 3, 4].map(i => <TableRow key={i} className="animate-pulse"><TableCell colSpan={5} className="h-16 bg-stone-50/50" /></TableRow>)
+                        [1, 2, 3, 4].map(i => <TableRow key={i} className="animate-pulse"><TableCell colSpan={7} className="h-16 bg-stone-50/50" /></TableRow>)
                       ) : products.length === 0 ? (
-                        <TableRow><TableCell colSpan={5} className="text-center p-20 text-stone-400 font-bold">No inventory records found.</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={7} className="text-center p-20 text-stone-400 font-bold">No inventory records found.</TableCell></TableRow>
                       ) : products.map((p) => (
                         <TableRow key={p.id} className="border-stone-50 hover:bg-stone-50/30 transition-colors">
-                          <TableCell className="p-6 font-bold text-stone-800">{p.name}</TableCell>
-                          <TableCell className="p-6 text-stone-500 font-medium">{p.vendor.businessName}</TableCell>
-                          <TableCell className="p-6 text-right font-black text-stone-900">&#8377;{Number(p.price).toLocaleString('en-IN')}</TableCell>
-                          <TableCell className="p-6 text-right font-medium">
+                          <TableCell className="p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 rounded-xl overflow-hidden bg-stone-100 flex-shrink-0 border border-stone-200">
+                                {p.imageUrls && p.imageUrls[0] ? (
+                                  <img src={p.imageUrls[0]} alt={p.name} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-stone-300 text-[10px] font-bold">IMG</div>
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-bold text-stone-800 text-sm truncate max-w-[200px]">{p.name}</p>
+                                <p className="text-stone-400 text-xs font-medium truncate max-w-[200px]">{p.brand || '—'}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="p-4">
+                            <Badge variant="outline" className="rounded-lg font-semibold text-[10px] uppercase tracking-wider border-stone-200 text-stone-500 bg-stone-50">{p.category?.name || '—'}</Badge>
+                          </TableCell>
+                          <TableCell className="p-4 text-stone-500 font-medium text-sm">{p.vendor?.businessName || '—'}</TableCell>
+                          <TableCell className="p-4 text-right font-black text-stone-900">&#8377;{Number(p.price).toLocaleString('en-IN')}</TableCell>
+                          <TableCell className="p-4 text-right font-medium">
                             <span className={cn(p.stock < 10 ? "text-red-500 font-bold" : "text-stone-600")}>{p.stock} units</span>
                           </TableCell>
-                          <TableCell className="p-6 text-center">
-                            <Badge className={cn("rounded-lg font-bold px-3 border-none", p.status === 'ACTIVE' ? "bg-emerald-50 text-emerald-600" : "bg-stone-100 text-stone-400")}>{p.status}</Badge>
+                          <TableCell className="p-4 text-center">
+                            <Badge className={cn("rounded-lg font-bold px-3 border-none text-[10px]", p.status === 'ACTIVE' ? "bg-emerald-50 text-emerald-600" : "bg-stone-100 text-stone-400")}>{p.status}</Badge>
                           </TableCell>
-                          <TableCell className="p-6 text-center">
-                            <div className="flex items-center justify-center gap-2">
+                          <TableCell className="p-4 text-center">
+                            <div className="flex items-center justify-center gap-1">
                               <button onClick={(e) => { e.stopPropagation(); handleEditProduct(p); }} className="p-2 text-stone-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors">
                                 <Pencil className="h-4 w-4" />
                               </button>
@@ -540,6 +594,7 @@ const AdminDashboard = () => {
                       ))}
                     </TableBody>
                   </Table>
+                  </div>
                 </Card>
               </div>
             )}
@@ -652,12 +707,12 @@ const AdminDashboard = () => {
                     <h1 className="text-4xl font-black text-stone-900 tracking-tighter uppercase leading-none mb-3">Registered Vendors</h1>
                     <p className="text-stone-400 font-bold uppercase tracking-[0.2em] text-[10px]">Vendor lifecycle and compliance management.</p>
                   </div>
-                  <Button className="rounded-2xl h-14 px-8 shadow-2xl shadow-stone-900/40 hover:bg-black font-black uppercase tracking-widest text-[10px] bg-stone-900 text-white transition-all hover:scale-105 active:scale-95 flex items-center gap-3">
+                  <Button onClick={() => setIsAddVendorOpen(true)} className="rounded-2xl h-14 px-8 shadow-2xl shadow-stone-900/40 hover:bg-black font-black uppercase tracking-widest text-[10px] bg-stone-900 text-white transition-all hover:scale-105 active:scale-95 flex items-center gap-3">
                     <UserPlus className="h-4 w-4" /> Add Direct Vendor
                   </Button>
                 </header>
 
-                <ChartAreaInteractive vendors={vendors} />
+
 
                 <Card className="border-none shadow-[0_8px_30px_rgba(0,0,0,0.04)] rounded-3xl overflow-hidden bg-white">
                   <Table>
@@ -1744,6 +1799,62 @@ const AdminDashboard = () => {
               </footer>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+      {/* Add Direct Vendor Modal */}
+      <Dialog open={isAddVendorOpen} onOpenChange={setIsAddVendorOpen}>
+        <DialogContent className="sm:max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl">
+          <form onSubmit={handleAddVendor} className="flex flex-col max-h-[90vh]">
+            <header className="p-10 bg-stone-900 text-white relative overflow-hidden shrink-0">
+              <div className="absolute top-0 right-0 p-24 bg-gradient-to-br from-emerald-500/20 to-transparent blur-3xl rounded-full -mr-12 -mt-12" />
+              <div className="relative z-10">
+                <h2 className="text-4xl font-black tracking-tighter uppercase leading-none">Vendor Creation</h2>
+                <p className="text-emerald-400 font-medium mt-3">Register a new verified partner authority.</p>
+              </div>
+            </header>
+
+            <ScrollArea className="flex-1 p-10 h-full">
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest">Vendor Name <span className="text-rose-500">*</span></Label>
+                    <Input value={newVendorData.businessName} onChange={e => setNewVendorData({...newVendorData, businessName: e.target.value})} required className="h-12 bg-stone-50 border-stone-100 rounded-xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest">Owner Name <span className="text-rose-500">*</span></Label>
+                    <Input value={newVendorData.ownerName} onChange={e => setNewVendorData({...newVendorData, ownerName: e.target.value})} required className="h-12 bg-stone-50 border-stone-100 rounded-xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest">Contact Number <span className="text-rose-500">*</span></Label>
+                    <Input value={newVendorData.contactNumber} onChange={e => setNewVendorData({...newVendorData, contactNumber: e.target.value})} required className="h-12 bg-stone-50 border-stone-100 rounded-xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest">Email Address</Label>
+                    <Input type="email" value={newVendorData.email} onChange={e => setNewVendorData({...newVendorData, email: e.target.value})} className="h-12 bg-stone-50 border-stone-100 rounded-xl" />
+                  </div>
+                  <div className="col-span-2 space-y-2">
+                    <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest">Business Category <span className="text-rose-500">*</span></Label>
+                    <Input placeholder="e.g. Health & Beauty" value={newVendorData.businessCategory} onChange={e => setNewVendorData({...newVendorData, businessCategory: e.target.value})} required className="h-12 bg-stone-50 border-stone-100 rounded-xl" />
+                  </div>
+                  <div className="col-span-2 space-y-2">
+                    <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest">Store Address <span className="text-rose-500">*</span></Label>
+                    <textarea 
+                      value={newVendorData.storeAddress} 
+                      onChange={e => setNewVendorData({...newVendorData, storeAddress: e.target.value})} 
+                      required 
+                      placeholder="e.g. 123 Main St, City, State, Zip"
+                      className="w-full min-h-[100px] p-4 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all resize-y" 
+                    />
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+
+            <footer className="p-8 bg-stone-50 border-t border-stone-100 flex justify-end gap-4 shrink-0 mt-auto">
+              <Button type="button" onClick={() => setIsAddVendorOpen(false)} variant="ghost" className="rounded-xl px-8 h-12 font-black uppercase tracking-widest text-[10px]">Cancel</Button>
+              <Button type="submit" disabled={loading} className="bg-emerald-600 text-white rounded-xl px-12 h-12 font-black uppercase tracking-widest text-[10px] shadow-xl hover:bg-emerald-700">Issue Authority</Button>
+            </footer>
+          </form>
         </DialogContent>
       </Dialog>
 

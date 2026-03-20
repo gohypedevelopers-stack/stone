@@ -221,21 +221,47 @@ export const createAdminOfflinePurchase = async (req, res) => {
     const vendor = await prisma.vendor.findUnique({ where: { id: vendorId } });
     if (!vendor) return sendError(res, "Vendor not found", 404);
 
-    const purchase = await prisma.offlinePurchase.create({
-      data: {
-        customerId: customerId || null,
-        vendorId,
-        mobile,
-        amount,
-        items: {
-          create: items.map(item => ({
-            name: item.name,
-            quantity: Number(item.quantity),
-            unitPrice: item.unitPrice
-          }))
+    // Auto-link Customer by Mobile
+    let linkedCustomerId = customerId || null;
+    if (!linkedCustomerId && mobile) {
+      const existingCust = await prisma.customer.findUnique({ where: { mobile } });
+      if (existingCust) linkedCustomerId = existingCust.id;
+    }
+
+    // Execute everything in a transaction to ensure rollback if stock update fails
+    const purchase = await prisma.$transaction(async (tx) => {
+      // Create Purchase Record
+      const newPurchase = await tx.offlinePurchase.create({
+        data: {
+          customerId: linkedCustomerId,
+          vendorId,
+          mobile,
+          amount,
+          items: {
+            create: items.map(item => ({
+              name: item.name,
+              quantity: Number(item.quantity),
+              unitPrice: item.unitPrice
+            }))
+          }
+        },
+        include: { items: true }
+      });
+
+      // Decrement Inventory Stock
+      for (const item of items) {
+        if (item.productId) {
+          const currentProduct = await tx.product.findUnique({ where: { id: item.productId } });
+          if (currentProduct) {
+            const newStock = Math.max(0, currentProduct.stock - Number(item.quantity));
+            await tx.product.update({
+              where: { id: item.productId },
+              data: { stock: newStock }
+            });
+          }
         }
-      },
-      include: { items: true }
+      }
+      return newPurchase;
     });
 
     return sendSuccess(res, purchase, "Offline purchase recorded successfully", 201);
@@ -286,4 +312,114 @@ export const getAdminOrderDetail = async (req, res) => {
   } catch (error) {
     return sendError(res, error.message, 500);
   }
+};
+
+export const seedFrontendProducts = async (req, res) => {
+    try {
+        const fs = await import('fs');
+        const path = await import('path');
+        const url = await import('url');
+
+        const __filename = url.fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
+
+        const generateSlug = (text) => {
+            return text.toString().toLowerCase()
+                .replace(/\s+/g, '-')
+                .replace(/[^\w\-]+/g, '')
+                .replace(/\-\-+/g, '-')
+                .replace(/^-+/, '')
+                .replace(/-+$/, '')
+                + '-' + Math.random().toString(36).substring(2, 6);
+        };
+
+        const dataPath = path.resolve(__dirname, '../../../src/productData.js');
+        if (!fs.existsSync(dataPath)) {
+            return res.status(500).json({ error: "Cannot find productData.js at " + dataPath });
+        }
+        const content = fs.readFileSync(dataPath, 'utf8');
+
+        const importRegex = /import\s+([a-zA-Z0-9_]+)\s+from\s+["'](\.\/assets\/[^"']+)["']/g;
+        const imageMap = {};
+        let match;
+        while ((match = importRegex.exec(content)) !== null) {
+            imageMap[match[1]] = match[2]; 
+        }
+
+        const dataStart = content.indexOf('export const CATEGORY_DATA_GENERATED = {');
+        if (dataStart === -1) {
+            return res.status(500).json({ error: "Could not find payload start" });
+        }
+        let dataText = content.substring(dataStart + 'export const CATEGORY_DATA_GENERATED = '.length);
+        
+        const evalScript = `
+            ${Object.keys(imageMap).map(key => `const ${key} = "${imageMap[key]}";`).join('\n')}
+            return ${dataText.replace(/;\s*$/, '')};
+        `;
+        const data = new Function(evalScript)();
+
+        const uploadsDir = path.resolve(__dirname, '../../../public/uploads/products');
+        if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+
+        let vendor = await prisma.vendor.findFirst({ where: { businessName: 'OMW Global' } });
+        if (!vendor) {
+            vendor = await prisma.vendor.create({
+                data: {
+                    businessName: 'OMW Global',
+                    contactNumber: '0000000000',
+                    email: 'global@omw.com',
+                    businessCategory: 'General',
+                    storeAddress: 'OMW Headquarters',
+                    approvalStatus: 'APPROVED'
+                }
+            });
+        }
+
+        let addedCount = 0;
+        for (const [catName, products] of Object.entries(data)) {
+            let category = await prisma.category.findUnique({ where: { name: catName } });
+            if (!category) {
+                category = await prisma.category.create({ 
+                    data: { name: catName, slug: generateSlug(catName) } 
+                });
+            }
+
+            for (const prod of products) {
+                const sourceImagePath = path.resolve(__dirname, '../../../src', prod.image);
+                const filename = path.basename(prod.image);
+                const destImagePath = path.join(uploadsDir, filename);
+
+                if (fs.existsSync(sourceImagePath)) {
+                    fs.copyFileSync(sourceImagePath, destImagePath);
+                }
+
+                const imageUrl = `http://localhost:5000/uploads/products/${encodeURIComponent(filename)}`;
+
+                const existingProd = await prisma.product.findFirst({ where: { name: prod.name } });
+                if (!existingProd) {
+                    await prisma.product.create({
+                        data: {
+                            name: prod.name,
+                            slug: generateSlug(prod.name),
+                            brand: prod.brand || 'OMW Skincare',
+                            description: prod.benefits?.join(', ') || '',
+                            price: parseFloat(prod.price) || 0,
+                            stock: 100,
+                            categoryId: category.id,
+                            vendorId: vendor.id,
+                            imageUrls: [imageUrl],
+                            status: 'ACTIVE'
+                        }
+                    });
+                    addedCount++;
+                }
+            }
+        }
+        res.status(200).json({ success: true, message: `Seeded ${addedCount} products.` });
+    } catch (error) {
+        console.error("Seeding Error:", error);
+        res.status(500).json({ success: false, error: String(error) });
+    }
 };

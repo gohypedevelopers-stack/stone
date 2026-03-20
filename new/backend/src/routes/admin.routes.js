@@ -10,7 +10,8 @@ import {
   getAdminOrderDetail,
   getAdminCustomers,
   getAdminCustomerDetail,
-  approveVendor
+  approveVendor,
+  seedFrontendProducts
 } from "../controllers/admin.controller.js";
 import { createProduct, updateProduct, deleteProduct } from "../controllers/products.controller.js";
 import { getHomepageSections, updateHomepageSection, reorderSections } from "../controllers/homepage.controller.js";
@@ -38,5 +39,6 @@ router.post("/offline-ledgers", createAdminOfflinePurchase);
 router.get("/customers", getAdminCustomers);
 router.get("/customers/:id", getAdminCustomerDetail);
 router.patch("/vendors/:id/approve", approveVendor);
+router.post("/seed-products", seedFrontendProducts);
 
 export default router;
