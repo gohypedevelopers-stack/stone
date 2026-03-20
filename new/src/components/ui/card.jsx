@@ -1,6 +1,7 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { THEME } from "@/theme"
 
 function Card({
   className,
@@ -10,7 +11,7 @@ function Card({
     <div
       data-slot="card"
       className={cn(
-        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
+        `bg-white text-stone-900 flex flex-col gap-6 border-white/10 ring-1 ring-black/5 overflow-hidden ${THEME.borders.radius.xl} ${THEME.shadows.md}`,
         className
       )}
       {...props} />
@@ -39,7 +40,7 @@ function CardTitle({
   return (
     <div
       data-slot="card-title"
-      className={cn("leading-none font-semibold", className)}
+      className={cn(`leading-tight ${THEME.typography.weights.heavy} ${THEME.colors.text.primary} tracking-tight`, className)}
       {...props} />
   );
 }
@@ -51,7 +52,7 @@ function CardDescription({
   return (
     <div
       data-slot="card-description"
-      className={cn("text-muted-foreground text-sm", className)}
+      className={cn(`${THEME.typography.micro.muted}`, className)}
       {...props} />
   );
 }

@@ -1,6 +1,7 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { THEME } from "@/theme"
 
 function Table({
   className,
@@ -23,7 +24,7 @@ function TableHeader({
   return (
     <thead
       data-slot="table-header"
-      className={cn("[&_tr]:border-b", className)}
+      className={cn("[&_tr]:border-b", THEME.colors.background.secondary, className)}
       {...props} />
   );
 }
@@ -60,7 +61,7 @@ function TableRow({
     <tr
       data-slot="table-row"
       className={cn(
-        "hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors",
+        "hover:bg-pink-500/5 data-[state=selected]:bg-stone-100 border-b border-black/5 transition-colors cursor-pointer",
         className
       )}
       {...props} />
@@ -75,7 +76,7 @@ function TableHead({
     <th
       data-slot="table-head"
       className={cn(
-        "text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        `h-12 px-4 shadow-[0_1px_0_rgba(0,0,0,0.05)] text-left align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] ${THEME.typography.micro.muted}`,
         className
       )}
       {...props} />
@@ -90,7 +91,7 @@ function TableCell({
     <td
       data-slot="table-cell"
       className={cn(
-        "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        `p-4 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] ${THEME.typography.weights.medium} ${THEME.colors.text.primary}`,
         className
       )}
       {...props} />

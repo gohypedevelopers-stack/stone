@@ -43,6 +43,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { THEME } from "./theme";
 import {
   Table,
   TableBody,
@@ -302,15 +303,16 @@ const AdminDashboard = () => {
   };
 
   const StatCard = ({ title, value, icon: Icon, colorClass }) => (
-    <Card className="border-none shadow-sm group hover:scale-[1.02] transition-transform">
-      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-        <CardTitle className="text-xs font-black text-stone-400 uppercase tracking-[0.2em]">{title}</CardTitle>
-        <div className={cn("p-2 rounded-xl transition-colors", colorClass)}>
-          <Icon className="h-4 w-4" />
+    <Card className={cn(`border border-black/5 overflow-hidden group ${THEME.animations.transitions} hover:scale-[1.03] ${THEME.borders.radius.lg}`, "bg-white", THEME.shadows.md, "hover:shadow-2xl hover:shadow-pink-500/10")}>
+      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 relative z-10 bg-white/40 backdrop-blur-3xl">
+        <CardTitle className={THEME.typography.micro.muted}>{title}</CardTitle>
+        <div className={cn(`p-2 ${THEME.borders.radius.sm} transition-colors`, colorClass)}>
+          <Icon className="h-5 w-5" />
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="text-3xl font-black text-stone-900 tracking-tighter">{value}</div>
+      <CardContent className="pt-4 pb-6 relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-white to-stone-50/50 -z-10" />
+        <div className={`text-4xl ${THEME.typography.weights.heavy} ${THEME.colors.text.primary} tracking-tighter drop-shadow-sm`}>{value}</div>
       </CardContent>
     </Card>
   );
@@ -323,19 +325,19 @@ const AdminDashboard = () => {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-stone-50">
-        <Sidebar className="border-r border-stone-100 bg-white">
-          <SidebarHeader className="p-8">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-stone-900 text-white font-black text-xl shadow-lg shadow-stone-900/10">O</div>
+      <div className={`flex min-h-screen w-full ${THEME.colors.background.secondary} bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]`}>
+        <Sidebar className={`border-r border-black/10 ${THEME.colors.background.accentDark} text-white ${THEME.shadows.xl}`}>
+          <SidebarHeader className="p-8 pb-6 border-b border-white/5">
+            <div className="flex items-center gap-4">
+              <div className={`flex h-12 w-12 items-center justify-center ${THEME.borders.radius.lg} ${THEME.gradients.brand} text-white font-black text-2xl shadow-lg shadow-pink-500/20`}>O</div>
               <div className="flex flex-col">
-                <span className="font-black text-stone-900 leading-tight text-lg">OMW Admin</span>
-                <span className="text-[10px] text-stone-400 font-bold uppercase tracking-widest">Enterprise Suite</span>
+                <span className={`font-black text-white leading-tight text-xl tracking-tight`}>OMW Admin</span>
+                <span className={`text-[9px] text-pink-400 font-black uppercase tracking-[0.25em] drop-shadow-sm`}>Enterprise OS</span>
               </div>
             </div>
           </SidebarHeader>
 
-          <SidebarContent className="px-3">
+          <SidebarContent className="px-5 py-4">
             <SidebarMenu className="mt-4 gap-2">
               {[
                 { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -347,10 +349,11 @@ const AdminDashboard = () => {
                   <SidebarMenuButton
                     isActive={activeView === item.id}
                     onClick={() => handleViewChange(item.id)}
-                    className="flex items-center gap-3 py-6 rounded-xl transition-all"
+                    className={cn(`flex items-center gap-4 py-7 px-4 ${THEME.borders.radius.lg} transition-all duration-300 group overflow-hidden relative`, activeView === item.id ? `${THEME.gradients.brand} text-white shadow-xl shadow-purple-500/20` : "text-stone-300 hover:bg-white/5 hover:text-white")}
                   >
-                    <item.icon className={cn("h-5 w-5", activeView === item.id ? "text-white" : "text-stone-400")} />
-                    <span className="font-bold">{item.label}</span>
+                    {activeView === item.id && <div className="absolute inset-0 bg-white/10 blur-[2px]" />}
+                    <item.icon className={cn("h-5 w-5 relative z-10 transition-transform duration-300 group-hover:scale-110", activeView === item.id ? "text-white drop-shadow-md" : "text-stone-500 group-hover:text-pink-400")} />
+                    <span className="font-black tracking-wide relative z-10">{item.label}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -358,20 +361,21 @@ const AdminDashboard = () => {
               <Collapsible defaultOpen className="group/collapsible">
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton className="flex items-center gap-3 py-6 rounded-xl transition-all">
-                      <Users className="h-5 w-5 text-stone-400 group-data-[state=open]/collapsible:rotate-90 transition-transform" />
-                      <span className="font-bold flex-1">Vendors</span>
-                      <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                    <SidebarMenuButton className={`flex items-center gap-4 py-7 px-4 ${THEME.borders.radius.lg} transition-all duration-300 text-stone-300 hover:bg-white/5 hover:text-white w-full`}>
+                      <Users className="h-5 w-5 text-stone-500 group-hover:text-pink-400 transition-colors group-data-[state=open]/collapsible:rotate-90 group-data-[state=open]/collapsible:text-pink-400" />
+                      <span className="font-black tracking-wide flex-1 text-left">Vendors</span>
+                      <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90 text-stone-500" />
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <SidebarMenuSub>
+                    <SidebarMenuSub className="pl-6 border-l border-white/10 ml-6 py-2 mt-2 space-y-1 relative">
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
                           isActive={activeView === 'vendors'}
                           onClick={() => handleViewChange('vendors')}
-                          className="font-bold text-xs py-4"
+                          className={cn("font-bold text-xs py-5 px-4 rounded-xl transition-all duration-300", activeView === 'vendors' ? "bg-white/10 text-white shadow-inner" : "text-stone-400 hover:bg-white/5 hover:text-white")}
                         >
+                          <div className={cn("h-1.5 w-1.5 rounded-full mr-2 transition-all", activeView === 'vendors' ? 'bg-pink-500 shadow-[0_0_8px_rgba(236,72,153,0.8)]' : 'bg-transparent')} />
                           Vendor Overview
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
@@ -379,8 +383,9 @@ const AdminDashboard = () => {
                         <SidebarMenuSubButton
                           isActive={activeView === 'vendor-analytics'}
                           onClick={() => handleViewChange('vendor-analytics')}
-                          className="font-bold text-xs py-4"
+                          className={cn("font-bold text-xs py-5 px-4 rounded-xl transition-all duration-300", activeView === 'vendor-analytics' ? "bg-white/10 text-white shadow-inner" : "text-stone-400 hover:bg-white/5 hover:text-white")}
                         >
+                          <div className={cn("h-1.5 w-1.5 rounded-full mr-2 transition-all", activeView === 'vendor-analytics' ? 'bg-pink-500 shadow-[0_0_8px_rgba(236,72,153,0.8)]' : 'bg-transparent')} />
                           Vendor Analytics
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
@@ -396,33 +401,35 @@ const AdminDashboard = () => {
                   <SidebarMenuButton
                     isActive={activeView === item.id}
                     onClick={() => handleViewChange(item.id)}
-                    className="flex items-center gap-3 py-6 rounded-xl transition-all"
+                    className={cn(`flex items-center gap-4 py-7 px-4 ${THEME.borders.radius.lg} transition-all duration-300 group overflow-hidden relative`, activeView === item.id ? `${THEME.gradients.brand} text-white shadow-xl shadow-purple-500/20` : "text-stone-300 hover:bg-white/5 hover:text-white")}
                   >
-                    <item.icon className={cn("h-5 w-5", activeView === item.id ? "text-white" : "text-stone-400")} />
-                    <span className="font-bold">{item.label}</span>
+                    {activeView === item.id && <div className="absolute inset-0 bg-white/10 blur-[2px]" />}
+                    <item.icon className={cn("h-5 w-5 relative z-10 transition-transform duration-300 group-hover:scale-110", activeView === item.id ? "text-white drop-shadow-md" : "text-stone-500 group-hover:text-pink-400")} />
+                    <span className="font-black tracking-wide relative z-10">{item.label}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
           </SidebarContent>
 
-          <SidebarFooter className="p-6 border-t border-stone-50">
-            <div className="flex items-center gap-3 p-3 bg-stone-50 rounded-2xl">
-              <Avatar className="h-9 w-9 ring-2 ring-white">
-                <AvatarFallback className="bg-stone-900 text-white font-bold text-xs">AD</AvatarFallback>
+          <SidebarFooter className="p-6 border-t border-white/5 relative z-10">
+            <div className={`flex items-center gap-4 p-4 bg-white/5 backdrop-blur-xl ${THEME.borders.radius.lg} border border-white/10 shadow-lg`}>
+              <Avatar className="h-10 w-10 outline outline-2 outline-offset-2 outline-pink-500">
+                <AvatarFallback className={`${THEME.colors.background.accentSolid} text-white ${THEME.typography.weights.heavy} text-xs tracking-wider`}>AD</AvatarFallback>
               </Avatar>
-              <div className="flex flex-col flex-1 overflow-hidden">
-                <span className="text-sm font-bold text-stone-800 truncate">Manager</span>
-                <button onClick={logout} className="text-[10px] font-black text-red-500 uppercase flex items-center gap-1 hover:underline">
-                  Logout
-                </button>
+              <div className="flex flex-col flex-1 overflow-hidden pointer-events-none">
+                <span className="text-sm font-black text-white truncate drop-shadow-md">A. Director</span>
+                <span className={THEME.typography.micro.muted}>Master Access</span>
               </div>
+              <button onClick={logout} className="p-2.5 rounded-full hover:bg-rose-500/20 transition-all group pointer-events-auto" title="Logout">
+                <Activity className="h-4 w-4 text-stone-500 group-hover:text-rose-500 transition-colors" />
+              </button>
             </div>
           </SidebarFooter>
         </Sidebar>
 
-        <div className="flex-1 flex flex-col">
-          <header className="h-20 bg-white/50 backdrop-blur-md px-12 flex items-center justify-between sticky top-0 z-10 border-b border-stone-100/50">
+        <div className="flex-1 flex flex-col relative overflow-hidden z-0">
+          <header className={`h-[88px] bg-white/70 backdrop-blur-2xl px-12 flex items-center justify-between sticky top-0 z-50 border-b border-stone-200/50 ${THEME.shadows.sm}`}>
             <div className="flex items-center gap-6">
               <SidebarTrigger className="lg:hidden" />
               <div className="flex items-center gap-2">
