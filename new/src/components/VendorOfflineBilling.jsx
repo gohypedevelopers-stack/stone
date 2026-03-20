@@ -22,9 +22,11 @@ import {
   Trash2, 
   ShoppingCart,
   Store,
-  CheckCircle2
+  CheckCircle2,
+  Printer
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { printThermalReceipt } from "@/utils/printReceipt";
 
 const API_URL = "http://localhost:5000/api";
 
@@ -35,6 +37,7 @@ export function VendorOfflineBilling() {
   const [searchQuery, setSearchQuery] = useState("");
   const [cart, setCart] = useState([]);
   const [customerMobile, setCustomerMobile] = useState("");
+  const [customerName, setCustomerName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successBill, setSuccessBill] = useState(null);
 
@@ -125,6 +128,7 @@ export function VendorOfflineBilling() {
       const payload = {
         vendorId: selectedVendorId,
         mobile: customerMobile,
+        name: customerName || undefined,
         amount: total,
         items: cart.map(item => ({
           productId: item.id,
@@ -146,6 +150,7 @@ export function VendorOfflineBilling() {
         setSuccessBill(data.data);
         setCart([]);
         setCustomerMobile("");
+        setCustomerName("");
       } else {
         alert(data.message || "Failed to process bill.");
       }
@@ -174,6 +179,12 @@ export function VendorOfflineBilling() {
              <span className="text-stone-500">Total Items</span>
              <span className="font-bold">{successBill.items?.reduce((a,b) => a + b.quantity, 0)}</span>
            </div>
+           {(successBill.customerName || successBill.customer?.name) && (
+             <div className="flex justify-between text-sm">
+               <span className="text-stone-500">Customer Name</span>
+               <span className="font-bold">{successBill.customerName || successBill.customer?.name}</span>
+             </div>
+           )}
            <div className="flex justify-between text-sm">
              <span className="text-stone-500">Customer Mobile</span>
              <span className="font-bold">{successBill.mobile}</span>
@@ -184,12 +195,20 @@ export function VendorOfflineBilling() {
            </div>
         </div>
 
-        <Button 
-          onClick={() => setSuccessBill(null)} 
-          className="mt-8 bg-stone-900 text-white rounded-2xl h-12 px-8 font-black uppercase tracking-widest text-xs hover:bg-stone-800"
-        >
-          New Transaction
-        </Button>
+        <div className="flex items-center gap-4 mt-8">
+          <Button 
+            onClick={() => printThermalReceipt(successBill)} 
+            className="bg-indigo-50 text-indigo-950 border border-indigo-200 rounded-2xl h-12 px-6 font-black uppercase tracking-widest text-xs hover:bg-indigo-100"
+          >
+            <span className="flex items-center gap-2"><Printer className="h-4 w-4" /> Print Copy</span>
+          </Button>
+          <Button 
+            onClick={() => setSuccessBill(null)} 
+            className="bg-stone-900 text-white rounded-2xl h-12 px-8 font-black uppercase tracking-widest text-xs hover:bg-stone-800"
+          >
+            New Transaction
+          </Button>
+        </div>
       </div>
     );
   }
@@ -313,14 +332,18 @@ export function VendorOfflineBilling() {
 
         {/* Right Side: Electronic Ledger / Cart */}
         <div className="lg:col-span-4">
-          <Card className="border-none shadow-2xl shadow-stone-900/5 rounded-3xl overflow-hidden bg-white h-[600px] flex flex-col">
-            <CardHeader className="bg-stone-900 text-white pb-6 pt-8 rounded-b-[2rem] relative z-10">
-              <CardTitle className="text-xl font-black flex items-center gap-3">
-                <ShoppingCart className="h-5 w-5 text-emerald-400" /> Active Ledger
+          <Card className="border-none shadow-2xl shadow-indigo-900/5 rounded-3xl overflow-hidden bg-white min-h-[600px] h-[calc(100vh-140px)] max-h-[800px] flex flex-col">
+            <CardHeader className="bg-indigo-950 text-white pb-6 pt-8 rounded-b-[2rem] relative z-10 overflow-hidden shadow-2xl shadow-indigo-950/20">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-[#2a134d] to-[#1a0b2e] z-0"></div>
+              <CardTitle className="text-xl font-black text-white flex items-center gap-3 relative z-10 tracking-widest uppercase text-xs">
+                <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md">
+                  <ShoppingCart className="h-5 w-5 text-purple-300" /> 
+                </div>
+                <span className="text-white drop-shadow-sm">Active Ledger</span>
               </CardTitle>
             </CardHeader>
             
-            <CardContent className="p-0 flex-1 flex flex-col pt-4 overflow-hidden relative bg-stone-50/30">
+            <CardContent className="p-0 flex-1 flex flex-col pt-4 overflow-hidden relative bg-stone-50/50">
               <ScrollArea className="flex-1 px-6">
                 <AnimatePresence>
                   {cart.length === 0 ? (
@@ -367,7 +390,7 @@ export function VendorOfflineBilling() {
               </ScrollArea>
 
               {/* Ledger Footer */}
-              <div className="bg-white p-6 border-t border-stone-100 rounded-t-[2.5rem] shadow-[0_-10px_30px_rgba(0,0,0,0.02)] z-10 space-y-6">
+              <div className="bg-white p-6 border-t border-stone-100 rounded-t-[2.5rem] shadow-[0_-10px_30px_rgba(0,0,0,0.02)] z-10 flex flex-col gap-6 shrink-0">
                 <div className="space-y-3">
                    <div className="flex justify-between text-sm">
                      <span className="font-semibold text-stone-500">Subtotal</span>
@@ -378,31 +401,42 @@ export function VendorOfflineBilling() {
                      <span className="font-bold text-stone-900">&#8377;{tax.toLocaleString('en-IN')}</span>
                    </div>
                    <Separator className="bg-stone-100" />
-                   <div className="flex justify-between items-end pb-2">
-                     <span className="font-black uppercase tracking-widest text-xs text-stone-900">Total Net</span>
-                     <span className="font-black text-2xl text-emerald-600 leading-none">&#8377;{total.toLocaleString('en-IN')}</span>
+                   <div className="flex justify-between items-end pt-1">
+                     <span className="font-black uppercase tracking-widest text-[10px] text-stone-500 pb-1">Total Net</span>
+                     <span className="font-black text-3xl text-indigo-950 tracking-tighter leading-none">&#8377;{total.toLocaleString('en-IN')}</span>
                    </div>
                 </div>
 
-                <div className="space-y-4 pt-2">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-stone-500 ml-1">Customer Mobile <span className="text-rose-500">*</span></Label>
-                    <Input 
-                      placeholder="e.g. 9876543210" 
-                      value={customerMobile}
-                      onChange={e => setCustomerMobile(e.target.value)}
-                      className="h-12 bg-stone-50 border-stone-200 rounded-xl focus-visible:ring-emerald-500 font-bold"
-                    />
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase tracking-widest text-stone-500 ml-1">Customer Name</Label>
+                      <Input 
+                        placeholder="e.g. Aditi..." 
+                        value={customerName}
+                        onChange={e => setCustomerName(e.target.value)}
+                        className="h-12 bg-stone-50 border-stone-200 rounded-xl focus-visible:ring-indigo-950 font-bold px-4"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase tracking-widest text-stone-500 ml-1">Mobile No <span className="text-rose-500">*</span></Label>
+                      <Input 
+                        placeholder="e.g. 987654..." 
+                        value={customerMobile}
+                        onChange={e => setCustomerMobile(e.target.value)}
+                        className="h-12 bg-stone-50 border-stone-200 rounded-xl focus-visible:ring-indigo-950 font-bold px-4"
+                      />
+                    </div>
                   </div>
                   <Button 
-                    className="w-full h-14 rounded-2xl bg-stone-900 hover:bg-stone-800 text-white font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-stone-900/20 disabled:opacity-50 transition-all hover:-translate-y-0.5"
+                    className="w-full h-14 rounded-2xl bg-indigo-950 hover:bg-[#1a0b2e] text-white font-black uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-indigo-950/20 disabled:opacity-50 transition-all hover:-translate-y-0.5 shrink-0"
                     disabled={cart.length === 0 || !customerMobile || isSubmitting}
                     onClick={handleCheckout}
                   >
                     {isSubmitting ? (
                       <span className="flex items-center gap-2"><div className="h-4 w-4 border-2 border-white border-t-transparent animate-spin rounded-full"></div> Processing</span>
                     ) : (
-                      <span className="flex items-center gap-2 text-emerald-400">Complete Transaction <CheckCircle2 className="h-4 w-4 ml-1" /></span>
+                      <span className="flex items-center gap-2 text-purple-300">Complete Transaction <CheckCircle2 className="h-4 w-4 ml-1" /></span>
                     )}
                   </Button>
                 </div>

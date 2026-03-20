@@ -76,7 +76,10 @@ async function main() {
       slug: "centella-repair-serum",
       brand: "Skin Relief",
       description: "Hydrating recovery serum for barrier support.",
-      imageUrls: [],
+      imageUrls: [
+        "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=800",
+        "https://images.unsplash.com/photo-1608283282218-19362ce53d10?auto=format&fit=crop&q=80&w=800"
+      ],
       tags: ["featured", "reward-eligible", "trending"],
       price: "1299.00",
       discountPrice: "999.00",

@@ -215,7 +215,7 @@ export const getAdminOfflinePurchases = async (req, res) => {
 
 export const createAdminOfflinePurchase = async (req, res) => {
   try {
-    const { customerId, vendorId, mobile, amount, items } = req.body;
+    const { customerId, vendorId, mobile, amount, items, name } = req.body;
     
     // Validate vendor
     const vendor = await prisma.vendor.findUnique({ where: { id: vendorId } });
@@ -223,9 +223,14 @@ export const createAdminOfflinePurchase = async (req, res) => {
 
     // Auto-link Customer by Mobile
     let linkedCustomerId = customerId || null;
+    let fallbackCustomerName = name || null;
+
     if (!linkedCustomerId && mobile) {
       const existingCust = await prisma.customer.findUnique({ where: { mobile } });
-      if (existingCust) linkedCustomerId = existingCust.id;
+      if (existingCust) {
+         linkedCustomerId = existingCust.id;
+         if (!fallbackCustomerName) fallbackCustomerName = existingCust.name;
+      }
     }
 
     // Execute everything in a transaction to ensure rollback if stock update fails
@@ -234,6 +239,7 @@ export const createAdminOfflinePurchase = async (req, res) => {
       const newPurchase = await tx.offlinePurchase.create({
         data: {
           customerId: linkedCustomerId,
+          customerName: fallbackCustomerName,
           vendorId,
           mobile,
           amount,

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -33,8 +33,11 @@ import {
   Check,
   Camera,
   Pencil,
-  LayoutTemplate
+  LayoutTemplate,
+  Printer
 } from "lucide-react";
+
+import { printThermalReceipt } from "@/utils/printReceipt";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { HomepageManager } from "@/components/HomepageManager";
@@ -121,9 +124,10 @@ const AdminDashboard = () => {
   const [isManualOrderOpen, setIsManualOrderOpen] = useState(false);
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [newProduct, setNewProduct] = useState({
-    name: '', brand: '', price: '', stock: '', categoryName: '', vendorId: '', description: '',
+    name: '', brand: '', price: '', categoryName: '', description: '',
     tags: '', featured: false, rewardEligible: false, limitedOffer: false,
-    ingredients: '', whyWeLoveIt: '', discountPrice: ''
+    ingredients: '', whyWeLoveIt: '', discountPrice: '', existingImages: [],
+    vendors: [{ vendorId: '', stock: '' }]
   });
   const [productBenefits, setProductBenefits] = useState([{ icon: '✨', text: '' }]);
   const [productFaq, setProductFaq] = useState([{ q: '', a: '' }]);
@@ -131,24 +135,67 @@ const AdminDashboard = () => {
   const [hasMultipleImages, setHasMultipleImages] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [editingProductId, setEditingProductId] = useState(null);
+  const [initialProductState, setInitialProductState] = useState(null);
 
   const { logout } = useAuth();
 
   const handleEditProduct = (p) => {
     setEditingProductId(p.id);
-    setNewProduct({
-      name: p.name, brand: p.brand || '', price: p.price, stock: p.stock,
-      categoryName: p.category?.name || '', vendorId: p.vendorId,
-      description: p.description || '', tags: p.tags?.join(', ') || '',
+    const newProd = {
+      name: p.name, brand: p.brand || '', price: p.price,
+      categoryName: p.category?.name || '', description: p.description || '',
+      tags: p.tags?.join(', ') || '',
       featured: p.featured, rewardEligible: p.rewardEligible,
       limitedOffer: p.limitedOffer, ingredients: p.ingredients || '',
-      whyWeLoveIt: p.whyWeLoveIt || '', discountPrice: p.discountPrice || ''
+      whyWeLoveIt: p.whyWeLoveIt || '', discountPrice: p.discountPrice || '',
+      existingImages: (p.imageUrls || []).filter(img => img && img.trim() !== ''),
+      vendors: p.bundledVendors ? p.bundledVendors.map(bv => ({ vendorId: bv.vendorId || bv.vendor?.id, stock: bv.stock, _existingId: bv.id })) : [{ vendorId: p.vendorId, stock: p.stock, _existingId: p.id }]
+    };
+    setNewProduct(newProd);
+    
+    const ben = (p.benefits && p.benefits.length > 0) ? p.benefits : [{ icon: '✨', text: '' }];
+    const faq = (p.faq && p.faq.length > 0) ? p.faq : [{ q: '', a: '' }];
+    
+    setProductBenefits(ben);
+    setProductFaq(faq);
+    setInitialProductState(JSON.stringify({ prod: newProd, ben, faq }));
+    setImageFiles({ primary: null, additional: [] });
+    setHasMultipleImages(p.imageUrls && p.imageUrls.length > 1);
+    fetch(`${API_URL}/admin/vendors`).then(r => r.json()).then(d => {
+      if (d.success) setVendors(d.data);
     });
-    setProductBenefits((p.benefits && p.benefits.length > 0) ? p.benefits : [{ icon: '✨', text: '' }]);
-    setProductFaq((p.faq && p.faq.length > 0) ? p.faq : [{ q: '', a: '' }]);
+    navigate('/admin/add-product');
+  };
+
+  const handleCreateProductClick = () => {
+    setEditingProductId(null);
+    const newProd = {
+      name: '', brand: '', price: '', categoryName: '', description: '',
+      tags: '', featured: false, rewardEligible: false, limitedOffer: false,
+      ingredients: '', whyWeLoveIt: '', discountPrice: '', existingImages: [],
+      vendors: [{ vendorId: '', stock: '' }]
+    };
+    setNewProduct(newProd);
+    
+    const ben = [{ icon: '✨', text: '' }];
+    const faq = [{ q: '', a: '' }];
+    
+    setProductBenefits(ben);
+    setProductFaq(faq);
+    setInitialProductState(JSON.stringify({ prod: newProd, ben, faq }));
     setImageFiles({ primary: null, additional: [] });
     setHasMultipleImages(false);
+    fetch(`${API_URL}/admin/vendors`).then(r => r.json()).then(d => {
+      if (d.success) setVendors(d.data);
+    });
     navigate('/admin/add-product');
+  };
+
+  const getMediaUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    const baseUrl = API_URL.replace(/\/api$/, '');
+    return `${baseUrl}/${url.replace(/^\//, '')}`;
   };
 
   const handleDeleteProduct = async (id) => {
@@ -213,6 +260,19 @@ const AdminDashboard = () => {
     finally { setLoading(false); }
   };
 
+  const groupedProducts = useMemo(() => {
+    return Object.values((products || []).reduce((acc, p) => {
+      const baseName = p.name ? p.name.trim().toLowerCase() : 'unnamed';
+      if (!acc[baseName]) {
+        acc[baseName] = { ...p, bundledVendors: [{ vendor: p.vendor, vendorId: p.vendorId, stock: p.stock, id: p.id }] };
+      } else {
+        acc[baseName].bundledVendors.push({ vendor: p.vendor, vendorId: p.vendorId, stock: p.stock, id: p.id });
+        acc[baseName].stock += p.stock;
+      }
+      return acc;
+    }, {})).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }, [products]);
+
   const fetchCustomerDetail = async (id) => {
     setDetailLoading(true);
     setIsDetailOpen(true);
@@ -252,52 +312,91 @@ const AdminDashboard = () => {
 
     setLoading(true);
     try {
-      let imageUrls = [];
-      // Step 1: Upload images if any are selected
-      if (imageFiles.primary) {
-        const formData = new FormData();
-        formData.append('images', imageFiles.primary);
-        if (hasMultipleImages) {
-          imageFiles.additional.forEach(file => formData.append('images', file));
-        }
+      let finalImageUrls = [...newProduct.existingImages];
+      let filesToUpload = [];
 
+      if (imageFiles.primary) filesToUpload.push(imageFiles.primary);
+      if (hasMultipleImages && imageFiles.additional.length > 0) {
+        imageFiles.additional.forEach(f => filesToUpload.push(f));
+      }
+
+      if (filesToUpload.length > 0) {
+        const formData = new FormData();
+        filesToUpload.forEach(file => formData.append('images', file));
+        
         const uploadResp = await fetch(`${API_URL}/upload`, { method: 'POST', body: formData });
         const uploadData = await uploadResp.json();
-
         if (!uploadData.success) throw new Error('Image upload failed');
-        imageUrls = uploadData.data;
+
+        let uploadedUrls = uploadData.data;
+
+        if (imageFiles.primary) {
+           if (finalImageUrls.length > 0) finalImageUrls[0] = uploadedUrls[0];
+           else finalImageUrls.unshift(uploadedUrls[0]);
+           uploadedUrls = uploadedUrls.slice(1);
+        }
+
+        if (uploadedUrls.length > 0) {
+           finalImageUrls = [...finalImageUrls, ...uploadedUrls];
+        }
       }
 
       // Step 2: Create or Update product
-      const resp = await fetch(`${API_URL}/admin/products${editingProductId ? `/${editingProductId}` : ''}`, {
-        method: editingProductId ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...newProduct,
-          price: Number(newProduct.price),
-          stock: Number(newProduct.stock),
-          tags: newProduct.tags ? newProduct.tags.split(',').map(t => t.trim()).filter(t => t) : [],
-          discountPrice: newProduct.discountPrice ? Number(newProduct.discountPrice) : undefined,
-          ...(imageUrls.length > 0 && { imageUrls }),
-          ingredients: newProduct.ingredients || null,
-          whyWeLoveIt: newProduct.whyWeLoveIt || null,
-          benefits: productBenefits.filter(b => b.text.trim()).length > 0 ? productBenefits.filter(b => b.text.trim()) : null,
-          faq: productFaq.filter(f => f.q.trim() && f.a.trim()).length > 0 ? productFaq.filter(f => f.q.trim() && f.a.trim()) : null,
-        })
-      });
+      const basePayload = {
+        ...newProduct,
+        price: Number(newProduct.price),
+        tags: newProduct.tags ? newProduct.tags.split(',').map(t => t.trim()).filter(t => t) : [],
+        discountPrice: newProduct.discountPrice ? Number(newProduct.discountPrice) : undefined,
+        imageUrls: finalImageUrls,
+        ingredients: newProduct.ingredients || null,
+        whyWeLoveIt: newProduct.whyWeLoveIt || null,
+        benefits: productBenefits.filter(b => b.text.trim()).length > 0 ? productBenefits.filter(b => b.text.trim()) : null,
+        faq: productFaq.filter(f => f.q.trim() && f.a.trim()).length > 0 ? productFaq.filter(f => f.q.trim() && f.a.trim()) : null,
+      };
 
-      const data = await resp.json();
-      if (data.success) {
-        setNewProduct({ name: '', brand: '', price: '', stock: '', categoryName: '', vendorId: '', description: '', tags: '', featured: false, rewardEligible: false, limitedOffer: false, ingredients: '', whyWeLoveIt: '', discountPrice: '' });
+      if (editingProductId) {
+        let initialSnap = { prod: { vendors: [] } };
+        try { if(initialProductState) initialSnap = JSON.parse(initialProductState); } catch(e){}
+        const originalVendors = initialSnap.prod.vendors;
+        const currentExistingIds = newProduct.vendors.filter(v => v._existingId).map(v => v._existingId);
+        
+        const deletedVendors = originalVendors.filter(v => v._existingId && !currentExistingIds.includes(v._existingId));
+        
+        await Promise.all(deletedVendors.map(v => fetch(`${API_URL}/admin/products/${v._existingId}`, { method: 'DELETE' })));
+
+        await Promise.all(newProduct.vendors.map(async (v) => {
+          const payload = { ...basePayload, vendorId: v.vendorId, stock: Number(v.stock) };
+          if (v._existingId) {
+            const resp = await fetch(`${API_URL}/admin/products/${v._existingId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const data = await resp.json();
+            if (!data.success) throw new Error(data.message || 'Failed to update bundled vendor product');
+          } else {
+            const resp = await fetch(`${API_URL}/admin/products`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const data = await resp.json();
+            if (!data.success) throw new Error(data.message || 'Failed to create new bundled vendor product');
+          }
+        }));
+      } else {
+        await Promise.all(newProduct.vendors.map(async (v) => {
+          const payload = { ...basePayload, vendorId: v.vendorId, stock: Number(v.stock) };
+          const resp = await fetch(`${API_URL}/admin/products`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const data = await resp.json();
+          if (!data.success) throw new Error(data.message || 'Failed to create product for a vendor');
+        }));
+      }
+
+      setNewProduct({ name: '', brand: '', price: '', categoryName: '', description: '', tags: '', featured: false, rewardEligible: false, limitedOffer: false, ingredients: '', whyWeLoveIt: '', discountPrice: '', existingImages: [], vendors: [{ vendorId: '', stock: '' }] });
         setProductBenefits([{ icon: '✨', text: '' }]);
         setProductFaq([{ q: '', a: '' }]);
         setImageFiles({ primary: null, additional: [] });
         setHasMultipleImages(false);
         setEditingProductId(null);
         navigate('/admin/inventory');
-      } else {
-        alert(data.message || 'Failed to add product.');
-      }
+        fetchDataForView('inventory');
     } catch (err) { console.error(err); alert('Something went wrong.'); }
     finally { setLoading(false); }
   };
@@ -560,12 +659,7 @@ const AdminDashboard = () => {
                   <div className="flex items-center gap-4">
 
                     <Button
-                      onClick={() => {
-                        navigate('/admin/add-product');
-                        fetch(`${API_URL}/admin/vendors`).then(r => r.json()).then(d => {
-                          if (d.success) setVendors(d.data);
-                        });
-                      }}
+                      onClick={handleCreateProductClick}
                       className="bg-indigo-950 text-white rounded-2xl h-14 px-10 font-black uppercase tracking-widest text-[10px] flex items-center gap-3 shadow-2xl shadow-indigo-950/40 hover:bg-[#1a0b2e] transition-all hover:scale-105 active:scale-95"
                     >
                       <Plus className="h-4 w-4" />
@@ -591,15 +685,15 @@ const AdminDashboard = () => {
                       <TableBody>
                         {loading ? (
                           [1, 2, 3, 4].map(i => <TableRow key={i} className="animate-pulse"><TableCell colSpan={7} className="h-16 bg-stone-50/50" /></TableRow>)
-                        ) : products.length === 0 ? (
+                        ) : groupedProducts.length === 0 ? (
                           <TableRow><TableCell colSpan={7} className="text-center p-20 text-stone-400 font-bold">No inventory records found.</TableCell></TableRow>
-                        ) : products.map((p) => (
+                        ) : groupedProducts.map((p) => (
                           <TableRow key={p.id} className="border-stone-50 hover:bg-stone-50/30 transition-colors">
                             <TableCell className="p-4">
                               <div className="flex items-center gap-3">
                                 <div className="w-12 h-12 rounded-xl overflow-hidden bg-stone-100 flex-shrink-0 border border-stone-200">
-                                  {p.imageUrls && p.imageUrls[0] ? (
-                                    <img src={p.imageUrls[0]} alt={p.name} className="w-full h-full object-cover" />
+                                  {p.imageUrls && p.imageUrls.filter(u => u && u.trim() !== '').length > 0 ? (
+                                    <img src={getMediaUrl(p.imageUrls.filter(u => u && u.trim() !== '')[0])} alt={p.name} className="w-full h-full object-cover" />
                                   ) : (
                                     <div className="w-full h-full flex items-center justify-center text-stone-300 text-[10px] font-bold">IMG</div>
                                   )}
@@ -613,7 +707,35 @@ const AdminDashboard = () => {
                             <TableCell className="p-4">
                               <Badge variant="outline" className="rounded-lg font-semibold text-[10px] uppercase tracking-wider border-stone-200 text-stone-500 bg-stone-50">{p.category?.name || '—'}</Badge>
                             </TableCell>
-                            <TableCell className="p-4 text-stone-500 font-medium text-sm">{p.vendor?.businessName || '—'}</TableCell>
+                            <TableCell className="p-4">
+                              <div className="flex flex-wrap gap-1.5 max-w-[240px]">
+                                {(() => {
+                                  let vendorsList = Object.values(p.bundledVendors?.reduce((acc, bv) => {
+                                     const vId = bv.vendorId || bv.vendor?.id || 'unknown';
+                                     if (!acc[vId]) acc[vId] = { ...bv };
+                                     else acc[vId].stock += bv.stock;
+                                     return acc;
+                                  }, {}) || {});
+
+                                  if (vendorsList.length === 0) return <Badge variant="outline" className="rounded-lg text-[10px] text-stone-400">None</Badge>;
+                                  
+                                  if (vendorsList.length === 1) {
+                                    const bv = vendorsList[0];
+                                    return (
+                                      <div className="flex items-center gap-1.5 bg-stone-50 hover:bg-stone-100 transition-colors border border-stone-200/80 rounded-lg px-2.5 py-1 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)]">
+                                        <span className="text-[10px] font-black tracking-wide text-indigo-950/80 truncate max-w-[90px]">{bv.vendor?.businessName || 'Unknown'}</span>
+                                      </div>
+                                    );
+                                  }
+
+                                  return (
+                                    <div className="flex items-center gap-1.5 bg-indigo-50/50 hover:bg-indigo-100/50 transition-colors border border-indigo-200/60 rounded-lg px-2.5 py-1">
+                                      <span className="text-[10px] font-black tracking-wide text-indigo-900 truncate max-w-[90px]">{vendorsList.length} Vendors</span>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                            </TableCell>
                             <TableCell className="p-4 text-right font-black text-indigo-950">&#8377;{Number(p.price).toLocaleString('en-IN')}</TableCell>
                             <TableCell className="p-4 text-right font-medium">
                               <span className={cn(p.stock < 10 ? "text-red-500 font-bold" : "text-stone-600")}>{p.stock} units</span>
@@ -626,7 +748,10 @@ const AdminDashboard = () => {
                                 <button onClick={(e) => { e.stopPropagation(); handleEditProduct(p); }} className="p-2 text-stone-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors">
                                   <Pencil className="h-4 w-4" />
                                 </button>
-                                <button onClick={(e) => { e.stopPropagation(); handleDeleteProduct(p.id); }} className="p-2 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors">
+                                <button onClick={(e) => { e.stopPropagation(); 
+                                  // Delete all variants in the bundle
+                                  p.bundledVendors.forEach(bv => handleDeleteProduct(bv.id)); 
+                                }} className="p-2 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors">
                                   <Trash2 className="h-4 w-4" />
                                 </button>
                               </div>
@@ -1023,7 +1148,10 @@ const AdminDashboard = () => {
             )}
 
             {/* Add Product Full Page */}
-            {activeView === 'add-product' && (
+            {activeView === 'add-product' && (() => {
+              const currentSnapshot = JSON.stringify({ prod: newProduct, ben: productBenefits, faq: productFaq });
+              const hasChanges = !initialProductState || currentSnapshot !== initialProductState || imageFiles.primary !== null || imageFiles.additional.length > 0;
+              return (
               <div className="animate-in fade-in">
                 <form onSubmit={handleAddProduct}>
                   <div className="grid grid-cols-12 gap-10">
@@ -1046,19 +1174,52 @@ const AdminDashboard = () => {
                             <Label className={`${THEME.typography.micro.default} ${THEME.colors.text.primary} ml-1`}>Category</Label>
                             <Input required value={newProduct.categoryName} onChange={e => setNewProduct({ ...newProduct, categoryName: e.target.value })} className="rounded-[1.25rem] h-14 border-stone-200 bg-stone-50 font-bold px-6" placeholder="e.g., Skincare" />
                           </div>
-                          <div className="space-y-2">
-                            <Label className={`${THEME.typography.micro.default} ${THEME.colors.text.primary} ml-1`}>Select Vendor</Label>
-                            <div className="relative">
-                              <select required className="w-full h-14 rounded-[1.25rem] border border-stone-200 bg-stone-50 px-6 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-950 appearance-none" value={newProduct.vendorId} onChange={e => setNewProduct({ ...newProduct, vendorId: e.target.value })}>
-                                <option value="">Select a vendor...</option>
-                                {vendors.map(v => <option key={v.id} value={v.id}>{v.businessName}</option>)}
-                              </select>
-                              <ChevronRight className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400 rotate-90 pointer-events-none" />
+                          <div className="col-span-2 space-y-4">
+                            <div className="flex items-center justify-between">
+                               <Label className={`${THEME.typography.micro.default} ${THEME.colors.text.primary} ml-1`}>Vendors & Stock</Label>
+                               <button type="button" onClick={() => setNewProduct({...newProduct, vendors: [...newProduct.vendors, {vendorId: '', stock: ''}]})} className="h-8 px-4 text-[10px] uppercase font-black tracking-wider text-indigo-900 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 rounded-lg transition-all flex items-center gap-1.5"><Plus className="h-3 w-3" /> Add Vendor</button>
                             </div>
-                          </div>
-                          <div className="space-y-2">
-                            <Label className={`${THEME.typography.micro.default} ${THEME.colors.text.primary} ml-1`}>Stock Quantity</Label>
-                            <Input type="number" required value={newProduct.stock} onChange={e => setNewProduct({ ...newProduct, stock: e.target.value })} className="rounded-[1.25rem] h-14 border-stone-200 bg-stone-50 font-bold px-6" placeholder="0" />
+                            <div className="space-y-3">
+                              {newProduct.vendors.map((v, idx) => (
+                                <div key={idx} className="flex items-center gap-3 bg-stone-50 p-2.5 rounded-[1.25rem] border border-stone-200 shadow-sm">
+                                  <div className="relative flex-1">
+                                      <select required className="w-full h-12 rounded-xl bg-transparent px-4 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-950 appearance-none transition-all" value={v.vendorId} onChange={e => {
+                                        const newVs = [...newProduct.vendors];
+                                        newVs[idx] = { ...newVs[idx], vendorId: e.target.value };
+                                        setNewProduct({...newProduct, vendors: newVs});
+                                      }}>
+                                        <option value="" disabled>Select a vendor...</option>
+                                        {vendors.map(vnd => {
+                                          const isSelectedElsewhere = newProduct.vendors.some((otherV, otherIdx) => otherIdx !== idx && otherV.vendorId === vnd.id);
+                                          return (
+                                            <option key={vnd.id} value={vnd.id} disabled={isSelectedElsewhere}>
+                                              {vnd.businessName} {isSelectedElsewhere ? '— Already Selected' : ''}
+                                            </option>
+                                          );
+                                        })}
+                                      </select>
+                                      <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400 rotate-90 pointer-events-none" />
+                                    </div>
+                                    <div className="w-[140px] relative">
+                                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-black text-stone-300 pointer-events-none">QTY</span>
+                                      <Input type="number" required value={v.stock} onChange={e => {
+                                        const newVs = [...newProduct.vendors];
+                                        newVs[idx] = { ...newVs[idx], stock: e.target.value };
+                                        setNewProduct({...newProduct, vendors: newVs});
+                                      }} className="rounded-xl h-12 border-0 bg-white shadow-sm font-black text-indigo-950 pl-12 pr-4" placeholder="0" />
+                                  </div>
+                                  {newProduct.vendors.length > 1 && idx !== 0 && (
+                                    <button type="button" onClick={() => {
+                                      const newVs = [...newProduct.vendors];
+                                      newVs.splice(idx, 1);
+                                      setNewProduct({...newProduct, vendors: newVs});
+                                    }} className="w-12 h-12 flex items-center justify-center text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all">
+                                      <Trash2 className="h-4 w-4" />
+                                    </button>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
                           </div>
                           <div className="space-y-2">
                             <Label className={`${THEME.typography.micro.default} ${THEME.colors.text.primary} ml-1`}>Product Tags</Label>
@@ -1147,7 +1308,14 @@ const AdminDashboard = () => {
                               <>
                                 <img src={URL.createObjectURL(imageFiles.primary)} className="h-full w-full object-cover" />
                                 <div className="absolute inset-0 bg-[#1a0b2e]/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                  <span className="text-white text-[10px] font-black uppercase tracking-widest">Change Image</span>
+                                  <span className="text-white text-[10px] font-black uppercase tracking-widest">Change Pending</span>
+                                </div>
+                              </>
+                            ) : newProduct.existingImages && newProduct.existingImages.length > 0 ? (
+                              <>
+                                <img src={getMediaUrl(newProduct.existingImages[0])} className="h-full w-full object-cover" />
+                                <div className="absolute inset-0 bg-[#1a0b2e]/40 opacity-0 group-hover:opacity-100 flex flex-col gap-2 items-center justify-center transition-opacity">
+                                  <span className="text-white text-[10px] font-black uppercase tracking-widest bg-indigo-950/80 px-3 py-1 rounded-full">Overwrite Image</span>
                                 </div>
                               </>
                             ) : (
@@ -1160,28 +1328,39 @@ const AdminDashboard = () => {
                             <input id="primaryImageFP" type="file" className="hidden" accept="image/*" onChange={e => setImageFiles({ ...imageFiles, primary: e.target.files[0] })} />
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 p-4 bg-stone-50 rounded-2xl border border-stone-100 cursor-pointer" onClick={() => setHasMultipleImages(!hasMultipleImages)}>
-                          <div className={cn("h-5 w-5 rounded-md border-2 flex items-center justify-center transition-all", hasMultipleImages ? "bg-indigo-950 border-indigo-950" : "bg-white border-stone-200")}>
-                            {hasMultipleImages && <Check className="h-3 w-3 text-white" />}
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center gap-3 p-4 bg-stone-50 rounded-2xl border border-stone-100 cursor-pointer" onClick={() => setHasMultipleImages(!hasMultipleImages)}>
+                            <div className={cn("h-5 w-5 rounded-md border-2 flex items-center justify-center transition-all", hasMultipleImages || (newProduct.existingImages && newProduct.existingImages.length > 1) ? "bg-indigo-950 border-indigo-950" : "bg-white border-stone-200")}>
+                              {(hasMultipleImages || (newProduct.existingImages && newProduct.existingImages.length > 1)) && <Check className="h-3 w-3 text-white" />}
+                            </div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-indigo-950">Include Multiple Images</span>
                           </div>
-                          <span className="text-[10px] font-black uppercase tracking-widest text-indigo-950">Include Multiple Images</span>
-                        </div>
-                        {hasMultipleImages && (
-                          <div className="grid grid-cols-3 gap-3 animate-in fade-in">
-                            {imageFiles.additional.map((file, idx) => (
-                              <div key={idx} className="aspect-square rounded-xl overflow-hidden relative group border border-stone-100">
-                                <img src={URL.createObjectURL(file)} className="h-full w-full object-cover" />
-                                <button type="button" onClick={e => { e.stopPropagation(); const f = [...imageFiles.additional]; f.splice(idx, 1); setImageFiles({ ...imageFiles, additional: f }); }} className="absolute inset-0 bg-rose-500/80 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><Trash2 className="h-4 w-4" /></button>
-                              </div>
-                            ))}
-                            {imageFiles.additional.length < 9 && (
-                              <button type="button" onClick={() => document.getElementById('additionalImagesFP').click()} className="aspect-square rounded-xl border-2 border-dashed border-stone-100 bg-stone-50/50 flex items-center justify-center hover:bg-white hover:border-emerald-500/30 transition-all group">
-                                <Plus className="h-5 w-5 text-stone-300 group-hover:text-emerald-500 transition-colors" />
-                              </button>
-                            )}
+                          {(hasMultipleImages || (newProduct.existingImages && newProduct.existingImages.length > 1)) && (
+                            <div className="grid grid-cols-3 gap-3 animate-in fade-in">
+                              {/* Display existing supplementary images */}
+                              {newProduct.existingImages && newProduct.existingImages.slice(1).map((url, idx) => (
+                                <div key={`exist-${idx}`} className="aspect-square rounded-xl overflow-hidden relative group border border-stone-100 hover:border-indigo-400 transition-all">
+                                  <img src={getMediaUrl(url)} className="h-full w-full object-cover" />
+                                  <div className="absolute inset-0 bg-[#1a0b2e]/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                     <span className="text-white text-[8px] font-black uppercase tracking-widest bg-indigo-950/80 px-2 py-1 rounded-sm">Existing</span>
+                                  </div>
+                                </div>
+                              ))}
+                              {imageFiles.additional.map((file, idx) => (
+                                <div key={idx} className="aspect-square rounded-xl overflow-hidden relative group border border-stone-100">
+                                  <img src={URL.createObjectURL(file)} className="h-full w-full object-cover" />
+                                  <button type="button" onClick={e => { e.stopPropagation(); const f = [...imageFiles.additional]; f.splice(idx, 1); setImageFiles({ ...imageFiles, additional: f }); }} className="absolute inset-0 bg-rose-500/80 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><Trash2 className="h-4 w-4" /></button>
+                                </div>
+                              ))}
+                              {imageFiles.additional.length + (newProduct.existingImages ? newProduct.existingImages.slice(1).length : 0) < 9 && (
+                                <button type="button" onClick={() => document.getElementById('additionalImagesFP').click()} className="aspect-square rounded-xl border-2 border-dashed border-stone-100 bg-stone-50/50 flex flex-col items-center justify-center hover:bg-white hover:border-emerald-500/30 transition-all group">
+                                  <Plus className="h-5 w-5 text-stone-300 group-hover:text-emerald-500 transition-colors" />
+                                </button>
+                              )}
                             <input id="additionalImagesFP" type="file" multiple className="hidden" accept="image/*" onChange={e => { const files = Array.from(e.target.files); setImageFiles({ ...imageFiles, additional: [...imageFiles.additional, ...files] }); }} />
                           </div>
                         )}
+                        </div>
                       </div>
 
                       <div className="bg-white rounded-[2rem] border border-stone-100 shadow-sm p-8 space-y-5">
@@ -1219,8 +1398,8 @@ const AdminDashboard = () => {
 
                       <div className="flex gap-3">
                         <Button type="button" onClick={() => navigate('/admin/inventory')} variant="outline" className="flex-1 rounded-xl h-14 font-black uppercase tracking-widest text-[10px] border-stone-200 hover:bg-stone-50">Cancel</Button>
-                        <Button type="submit" disabled={loading} className="flex-1 bg-indigo-950 text-white rounded-xl h-14 font-black uppercase tracking-widest text-[10px] hover:bg-[#1a0b2e] shadow-xl shadow-indigo-950/30 transition-all">
-                          {loading ? 'Saving...' : 'Add Product'}
+                        <Button type="submit" disabled={loading || !hasChanges} className="flex-1 bg-indigo-950 text-white disabled:opacity-50 disabled:bg-stone-400 rounded-xl h-14 font-black uppercase tracking-widest text-[10px] hover:bg-[#1a0b2e] shadow-xl shadow-indigo-950/30 transition-all">
+                          {loading ? 'Saving...' : editingProductId ? 'Save Changes' : 'Add Product'}
                         </Button>
                       </div>
 
@@ -1228,7 +1407,8 @@ const AdminDashboard = () => {
                   </div>
                 </form>
               </div>
-            )}
+              );
+            })()}
 
           </main>
         </div>
@@ -1835,8 +2015,7 @@ const AdminDashboard = () => {
               </ScrollArea>
 
               <footer className="p-8 bg-white border-t border-stone-100 flex justify-center gap-4 shrink-0 mt-auto">
-                <Button onClick={() => setIsOrderOpen(false)} variant="outline" className="rounded-2xl px-12 h-14 font-black uppercase tracking-widest text-[10px] border-stone-200 hover:bg-stone-50 transition-all">Abort Audit</Button>
-                <Button onClick={() => setIsOrderOpen(false)} className="bg-indigo-950 text-white rounded-2xl px-16 h-14 font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-indigo-950/40 hover:bg-[#1a0b2e] hover:scale-105 active:scale-95 transition-all">Synchronize Session</Button>
+                <Button onClick={() => printThermalReceipt(selectedOrder)} variant="outline" className="rounded-2xl px-8 h-14 font-black uppercase tracking-widest text-[10px] border-indigo-200 text-indigo-950 hover:bg-indigo-50 transition-all gap-2"><Printer className="h-4 w-4" /> Print Audit</Button>
               </footer>
             </div>
           )}
