@@ -327,31 +327,56 @@ const AdminDashboard = () => {
     navigate(view === 'overview' ? '/admin' : `/admin/${view}`);
   };
 
-  const StatCard = ({ title, value, icon: Icon, colorClass }) => (
-    <Card className={cn(`border border-black/5 overflow-hidden group ${THEME.animations.transitions} hover:scale-[1.03] ${THEME.borders.radius.lg}`, "bg-white", THEME.shadows.md, "hover:shadow-2xl hover:shadow-pink-500/10")}>
-      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 relative z-10 bg-white/40 backdrop-blur-3xl">
-        <CardTitle className={THEME.typography.micro.muted}>{title}</CardTitle>
-        <div className={cn(`p-2 ${THEME.borders.radius.sm} transition-colors`, colorClass)}>
-          <Icon className="h-5 w-5" />
-        </div>
-      </CardHeader>
-      <CardContent className="pt-4 pb-6 relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-white via-white to-stone-50/50 -z-10" />
-        <div className={`text-4xl ${THEME.typography.weights.heavy} ${THEME.colors.text.primary} tracking-tighter drop-shadow-sm`}>{value}</div>
-      </CardContent>
-    </Card>
-  );
+  const StatCard = ({ title, value, icon: Icon, colorClass, description }) => {
+    const bgColor = colorClass.split(' ').find(c => c.startsWith('bg-'));
+    const textColor = colorClass.split(' ').find(c => c.startsWith('text-'));
+
+    return (
+      <Card className={cn(
+        `relative overflow-hidden group border-0 ${THEME.animations.transitions} hover:-translate-y-1 duration-500 rounded-[1.25rem] bg-white cursor-pointer flex flex-col justify-between`,
+        "shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_10px_30px_rgb(0,0,0,0.06)] min-h-[145px]"
+      )}>
+        {/* Soft glowing ambient orb in the top right corner */}
+        <div className={cn(
+          "absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl opacity-30 group-hover:opacity-60 group-hover:scale-125 transition-all duration-700 ease-out",
+          bgColor
+        )} />
+
+        {/* Subtle glass effect borders */}
+        <div className="absolute inset-0 ring-1 ring-inset ring-indigo-900/[0.04] rounded-[1.25rem] pointer-events-none" />
+
+        <CardHeader className="flex flex-row items-center gap-3 pb-0 pt-6 px-6 relative z-20">
+          <div className={cn(`p-2.5 rounded-xl w-fit ${THEME.animations.transitions} group-hover:scale-105 shadow-sm border border-white/50`, colorClass)}>
+            <Icon className="h-5 w-5" strokeWidth={2.5} />
+          </div>
+          <CardTitle className="text-stone-600 font-bold text-sm tracking-wide">
+            {title}
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="px-6 pb-6 pt-4 relative z-20 flex flex-col justify-end h-full mt-2">
+          <div className={cn(
+            "text-4xl leading-none font-['Playfair_Display'] font-black tracking-tighter drop-shadow-sm transition-all duration-500 transform group-hover:translate-x-0.5"
+          )}>
+            <span className={cn(textColor || "text-indigo-950")}>
+              {value}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   if (loading && activeView === 'overview') return (
     <div className="flex h-screen w-full items-center justify-center bg-stone-50">
-      <div className="h-10 w-10 animate-spin rounded-full border-4 border-stone-200 border-t-stone-900" />
+      <div className="h-10 w-10 animate-spin rounded-full border-4 border-stone-200 border-t-indigo-950" />
     </div>
   );
 
   return (
     <SidebarProvider>
       <div className={`flex min-h-screen w-full ${THEME.colors.background.secondary} bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]`}>
-        <Sidebar className={`border-r border-black/10 ${THEME.colors.background.accentDark} text-white ${THEME.shadows.xl}`}>
+        <Sidebar className={`border-r border-indigo-900/10 ${THEME.colors.background.accentDark} text-white ${THEME.shadows.xl}`}>
           <SidebarHeader className="p-8 pb-6 border-b border-white/5">
             <div className="flex items-center gap-4">
               <div className={`flex h-12 w-12 items-center justify-center ${THEME.borders.radius.lg} ${THEME.gradients.brand} text-white font-black text-2xl shadow-lg shadow-pink-500/20`}>O</div>
@@ -480,19 +505,19 @@ const AdminDashboard = () => {
             {activeView === 'overview' && (
               <div className="space-y-12 animate-in fade-in slide-in-from-bottom-5">
                 <header>
-                  <h1 className="text-4xl font-black text-stone-900 tracking-tighter">Enterprise Overview</h1>
-                  <p className="text-stone-400 font-medium mt-1">Holistic view of marketplace performance and scale.</p>
+                  <h1 className={`${THEME.typography.headings.h1} bg-clip-text text-transparent ${THEME.gradients.brand} pb-1`}>Enterprise Overview</h1>
+                  <p className={`${THEME.colors.text.secondary} ${THEME.typography.weights.medium} mt-1`}>Holistic view of marketplace performance and scale.</p>
                 </header>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <StatCard title="Customers" value={stats?.totalUsers || 0} icon={Users} colorClass="bg-blue-50 text-blue-600" />
-                  <StatCard title="Vendors" value={stats?.totalVendors || 0} icon={Users} colorClass="bg-emerald-50 text-emerald-600" />
-                  <StatCard title="Inventory" value={stats?.totalProducts || 0} icon={Package} colorClass="bg-purple-50 text-purple-600" />
-                  <StatCard title="Rev (Orders)" value={stats?.totalOrders || 0} icon={ShoppingCart} colorClass="bg-pink-50 text-pink-600" />
+                  <StatCard title="Customers" value={stats?.totalUsers || 0} icon={Users} colorClass="bg-blue-50 text-blue-600" description="Total registered buyers on platform" />
+                  <StatCard title="Vendors" value={stats?.totalVendors || 0} icon={Users} colorClass="bg-emerald-50 text-emerald-600" description="Active enterprise partner nodes" />
+                  <StatCard title="Inventory" value={stats?.totalProducts || 0} icon={Package} colorClass="bg-purple-50 text-purple-600" description="Live catalog items across network" />
+                  <StatCard title="Orders" value={stats?.totalOrders || 0} icon={ShoppingCart} colorClass="bg-pink-50 text-pink-600" description="Completed gross transaction count" />
                 </div>
 
                 {stats?.pendingVendorApprovals > 0 && (
-                  <Card className="bg-stone-900 text-white border-none p-8 rounded-[2rem] flex items-center justify-between shadow-2xl shadow-stone-900/20">
+                  <Card className="bg-indigo-950 text-white border-none p-8 rounded-[2rem] flex items-center justify-between shadow-2xl shadow-indigo-950/20">
                     <div className="flex items-center gap-6">
                       <div className="h-14 w-14 rounded-2xl bg-white/10 flex items-center justify-center text-white">
                         <AlertCircle className="h-7 w-7" />
@@ -504,7 +529,7 @@ const AdminDashboard = () => {
                     </div>
                     <Button
                       onClick={() => handleViewChange('vendors')}
-                      className="bg-white text-stone-900 font-black px-8 h-12 rounded-2xl hover:bg-stone-100"
+                      className="bg-white text-indigo-950 font-black px-8 h-12 rounded-2xl hover:bg-stone-100"
                     >
                       Process Now
                     </Button>
@@ -520,8 +545,8 @@ const AdminDashboard = () => {
               <div className="space-y-8 animate-in fade-in">
                 <header className="flex items-center justify-between gap-6 mb-12">
                   <div className="flex flex-col">
-                    <h1 className="text-4xl font-black text-stone-900 tracking-tighter uppercase leading-none mb-3">Product Inventory</h1>
-                    <p className="text-stone-400 font-bold uppercase tracking-[0.2em] text-[10px]">Catalog management across all enterprise partners.</p>
+                    <h1 className={`${THEME.typography.headings.h1} uppercase leading-none mb-3 bg-clip-text text-transparent ${THEME.gradients.brand} pb-1`}>Product Inventory</h1>
+                    <p className={`${THEME.typography.micro.muted}`}>Catalog management across all enterprise partners.</p>
                   </div>
                   <div className="flex items-center gap-4">
 
@@ -532,7 +557,7 @@ const AdminDashboard = () => {
                           if (d.success) setVendors(d.data);
                         });
                       }}
-                      className="bg-stone-900 text-white rounded-2xl h-14 px-10 font-black uppercase tracking-widest text-[10px] flex items-center gap-3 shadow-2xl shadow-stone-900/40 hover:bg-black transition-all hover:scale-105 active:scale-95"
+                      className="bg-indigo-950 text-white rounded-2xl h-14 px-10 font-black uppercase tracking-widest text-[10px] flex items-center gap-3 shadow-2xl shadow-indigo-950/40 hover:bg-[#1a0b2e] transition-all hover:scale-105 active:scale-95"
                     >
                       <Plus className="h-4 w-4" />
                       Add Product
@@ -542,65 +567,65 @@ const AdminDashboard = () => {
 
                 <Card className="border-none shadow-sm rounded-3xl overflow-hidden">
                   <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader className="bg-stone-50">
-                      <TableRow className="border-stone-100 py-4 hover:bg-transparent">
-                        <TableHead className="font-bold text-stone-900 p-4 text-[10px] uppercase tracking-widest min-w-[280px]">Product</TableHead>
-                        <TableHead className="font-bold text-stone-900 p-4 text-[10px] uppercase tracking-widest min-w-[120px]">Category</TableHead>
-                        <TableHead className="font-bold text-stone-900 p-4 text-[10px] uppercase tracking-widest min-w-[120px]">Vendor</TableHead>
-                        <TableHead className="font-bold text-stone-900 p-4 text-[10px] uppercase tracking-widest text-right min-w-[100px]">Price</TableHead>
-                        <TableHead className="font-bold text-stone-900 p-4 text-[10px] uppercase tracking-widest text-right min-w-[100px]">Stock</TableHead>
-                        <TableHead className="font-bold text-stone-900 p-4 text-[10px] uppercase tracking-widest text-center min-w-[90px]">Status</TableHead>
-                        <TableHead className="font-bold text-stone-900 p-4 text-[10px] uppercase tracking-widest text-center min-w-[90px]">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {loading ? (
-                        [1, 2, 3, 4].map(i => <TableRow key={i} className="animate-pulse"><TableCell colSpan={7} className="h-16 bg-stone-50/50" /></TableRow>)
-                      ) : products.length === 0 ? (
-                        <TableRow><TableCell colSpan={7} className="text-center p-20 text-stone-400 font-bold">No inventory records found.</TableCell></TableRow>
-                      ) : products.map((p) => (
-                        <TableRow key={p.id} className="border-stone-50 hover:bg-stone-50/30 transition-colors">
-                          <TableCell className="p-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 rounded-xl overflow-hidden bg-stone-100 flex-shrink-0 border border-stone-200">
-                                {p.imageUrls && p.imageUrls[0] ? (
-                                  <img src={p.imageUrls[0]} alt={p.name} className="w-full h-full object-cover" />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-stone-300 text-[10px] font-bold">IMG</div>
-                                )}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="font-bold text-stone-800 text-sm truncate max-w-[200px]">{p.name}</p>
-                                <p className="text-stone-400 text-xs font-medium truncate max-w-[200px]">{p.brand || '—'}</p>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell className="p-4">
-                            <Badge variant="outline" className="rounded-lg font-semibold text-[10px] uppercase tracking-wider border-stone-200 text-stone-500 bg-stone-50">{p.category?.name || '—'}</Badge>
-                          </TableCell>
-                          <TableCell className="p-4 text-stone-500 font-medium text-sm">{p.vendor?.businessName || '—'}</TableCell>
-                          <TableCell className="p-4 text-right font-black text-stone-900">&#8377;{Number(p.price).toLocaleString('en-IN')}</TableCell>
-                          <TableCell className="p-4 text-right font-medium">
-                            <span className={cn(p.stock < 10 ? "text-red-500 font-bold" : "text-stone-600")}>{p.stock} units</span>
-                          </TableCell>
-                          <TableCell className="p-4 text-center">
-                            <Badge className={cn("rounded-lg font-bold px-3 border-none text-[10px]", p.status === 'ACTIVE' ? "bg-emerald-50 text-emerald-600" : "bg-stone-100 text-stone-400")}>{p.status}</Badge>
-                          </TableCell>
-                          <TableCell className="p-4 text-center">
-                            <div className="flex items-center justify-center gap-1">
-                              <button onClick={(e) => { e.stopPropagation(); handleEditProduct(p); }} className="p-2 text-stone-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors">
-                                <Pencil className="h-4 w-4" />
-                              </button>
-                              <button onClick={(e) => { e.stopPropagation(); handleDeleteProduct(p.id); }} className="p-2 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors">
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </TableCell>
+                    <Table>
+                      <TableHeader className="bg-stone-50">
+                        <TableRow className="border-stone-100 py-4 hover:bg-transparent">
+                          <TableHead className="p-4 min-w-[280px]">Product</TableHead>
+                          <TableHead className="p-4 min-w-[120px]">Category</TableHead>
+                          <TableHead className="p-4 min-w-[120px]">Vendor</TableHead>
+                          <TableHead className="p-4 text-right min-w-[100px]">Price</TableHead>
+                          <TableHead className="p-4 text-right min-w-[100px]">Stock</TableHead>
+                          <TableHead className="p-4 text-center min-w-[90px]">Status</TableHead>
+                          <TableHead className="p-4 text-center min-w-[90px]">Actions</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {loading ? (
+                          [1, 2, 3, 4].map(i => <TableRow key={i} className="animate-pulse"><TableCell colSpan={7} className="h-16 bg-stone-50/50" /></TableRow>)
+                        ) : products.length === 0 ? (
+                          <TableRow><TableCell colSpan={7} className="text-center p-20 text-stone-400 font-bold">No inventory records found.</TableCell></TableRow>
+                        ) : products.map((p) => (
+                          <TableRow key={p.id} className="border-stone-50 hover:bg-stone-50/30 transition-colors">
+                            <TableCell className="p-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-xl overflow-hidden bg-stone-100 flex-shrink-0 border border-stone-200">
+                                  {p.imageUrls && p.imageUrls[0] ? (
+                                    <img src={p.imageUrls[0]} alt={p.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-stone-300 text-[10px] font-bold">IMG</div>
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-bold text-indigo-900 text-sm truncate max-w-[200px]">{p.name}</p>
+                                  <p className="text-stone-400 text-xs font-medium truncate max-w-[200px]">{p.brand || '—'}</p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="p-4">
+                              <Badge variant="outline" className="rounded-lg font-semibold text-[10px] uppercase tracking-wider border-stone-200 text-stone-500 bg-stone-50">{p.category?.name || '—'}</Badge>
+                            </TableCell>
+                            <TableCell className="p-4 text-stone-500 font-medium text-sm">{p.vendor?.businessName || '—'}</TableCell>
+                            <TableCell className="p-4 text-right font-black text-indigo-950">&#8377;{Number(p.price).toLocaleString('en-IN')}</TableCell>
+                            <TableCell className="p-4 text-right font-medium">
+                              <span className={cn(p.stock < 10 ? "text-red-500 font-bold" : "text-stone-600")}>{p.stock} units</span>
+                            </TableCell>
+                            <TableCell className="p-4 text-center">
+                              <Badge className={cn("rounded-lg font-bold px-3 border-none text-[10px]", p.status === 'ACTIVE' ? "bg-emerald-50 text-emerald-600" : "bg-stone-100 text-stone-400")}>{p.status}</Badge>
+                            </TableCell>
+                            <TableCell className="p-4 text-center">
+                              <div className="flex items-center justify-center gap-1">
+                                <button onClick={(e) => { e.stopPropagation(); handleEditProduct(p); }} className="p-2 text-stone-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors">
+                                  <Pencil className="h-4 w-4" />
+                                </button>
+                                <button onClick={(e) => { e.stopPropagation(); handleDeleteProduct(p.id); }} className="p-2 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors">
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
                 </Card>
               </div>
@@ -609,15 +634,15 @@ const AdminDashboard = () => {
             {activeView === 'orders' && (
               <div className="space-y-8 animate-in fade-in">
                 <header>
-                  <h1 className="text-4xl font-black text-stone-900 tracking-tighter">Order Transmissions</h1>
-                  <p className="text-stone-400 font-medium mt-1">Monitoring real-time transaction flow and manual records.</p>
+                  <h1 className={`${THEME.typography.headings.h1} bg-clip-text text-transparent ${THEME.gradients.brand} pb-1`}>Order Transmissions</h1>
+                  <p className={`${THEME.colors.text.secondary} ${THEME.typography.weights.medium} mt-1`}>Monitoring real-time transaction flow and manual records.</p>
                 </header>
 
                 <Tabs defaultValue="online" className="space-y-8">
                   <div className="flex items-center justify-between">
                     <TabsList className="bg-stone-50 p-1.5 rounded-[1.25rem] border border-stone-100 gap-2 h-auto">
-                      <TabsTrigger value="online" className="rounded-xl px-12 h-10 data-[state=active]:bg-stone-900 data-[state=active]:text-white font-black text-[10px] uppercase tracking-widest transition-all">Online</TabsTrigger>
-                      <TabsTrigger value="offline" className="rounded-xl px-12 h-10 data-[state=active]:bg-stone-900 data-[state=active]:text-white font-black text-[10px] uppercase tracking-widest transition-all">Offline</TabsTrigger>
+                      <TabsTrigger value="online" className="rounded-xl px-12 h-10 data-[state=active]:bg-indigo-950 data-[state=active]:text-white font-black text-[10px] uppercase tracking-widest transition-all">Online</TabsTrigger>
+                      <TabsTrigger value="offline" className="rounded-xl px-12 h-10 data-[state=active]:bg-indigo-950 data-[state=active]:text-white font-black text-[10px] uppercase tracking-widest transition-all">Offline</TabsTrigger>
                     </TabsList>
                   </div>
 
@@ -626,11 +651,11 @@ const AdminDashboard = () => {
                       <Table>
                         <TableHeader className="bg-stone-50">
                           <TableRow className="border-stone-100/50 py-4 hover:bg-transparent">
-                            <TableHead className="font-bold text-stone-900 p-6">Transaction Ref</TableHead>
-                            <TableHead className="font-bold text-stone-900 p-6">Customer Terminal</TableHead>
-                            <TableHead className="font-bold text-stone-900 p-6">Merchant Origin</TableHead>
-                            <TableHead className="font-bold text-stone-900 p-6 text-right">Settlement</TableHead>
-                            <TableHead className="font-bold text-stone-900 p-6 text-center">Status</TableHead>
+                            <TableHead className="p-6">Transaction Ref</TableHead>
+                            <TableHead className="p-6">Customer Terminal</TableHead>
+                            <TableHead className="p-6">Merchant Origin</TableHead>
+                            <TableHead className="p-6 text-right">Settlement</TableHead>
+                            <TableHead className="p-6 text-center">Status</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -645,11 +670,11 @@ const AdminDashboard = () => {
                               className="border-stone-50 hover:bg-stone-100/50 transition-all duration-300 cursor-pointer group"
                             >
                               <TableCell className="p-6">
-                                <span className="text-sm font-black text-stone-900 tracking-tighter uppercase group-hover:text-amber-600 transition-colors">{o.orderNumber}</span>
+                                <span className="text-sm font-black text-indigo-950 tracking-tighter uppercase group-hover:text-amber-600 transition-colors">{o.orderNumber}</span>
                               </TableCell>
-                              <TableCell className="p-6 font-bold text-stone-800">{o.customerName}</TableCell>
+                              <TableCell className="p-6 font-bold text-indigo-900">{o.customerName}</TableCell>
                               <TableCell className="p-6 font-medium text-stone-500">{o.vendorName}</TableCell>
-                              <TableCell className="p-6 text-right font-black text-stone-900 text-lg">&#8377;{parseFloat(o.totalAmount).toLocaleString()}</TableCell>
+                              <TableCell className="p-6 text-right font-black text-indigo-950 text-lg">&#8377;{parseFloat(o.totalAmount).toLocaleString()}</TableCell>
                               <TableCell className="p-6 text-center">
                                 <Badge variant="outline" className={cn(
                                   "text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-lg border-stone-200",
@@ -670,11 +695,11 @@ const AdminDashboard = () => {
                       <Table>
                         <TableHeader className="bg-stone-50">
                           <TableRow className="border-stone-100/50 py-4 hover:bg-transparent">
-                            <TableHead className="font-bold text-stone-900 p-6 text-[10px] uppercase tracking-widest">Entry Ref</TableHead>
-                            <TableHead className="font-bold text-stone-900 p-6 text-[10px] uppercase tracking-widest">Merchant Authority</TableHead>
-                            <TableHead className="font-bold text-stone-900 p-6 text-[10px] uppercase tracking-widest">Customer ID</TableHead>
-                            <TableHead className="font-bold text-stone-900 p-6 text-[10px] uppercase tracking-widest text-right">Value</TableHead>
-                            <TableHead className="font-bold text-stone-900 p-6 text-[10px] uppercase tracking-widest text-center">Registry Status</TableHead>
+                            <TableHead className="p-6">Entry Ref</TableHead>
+                            <TableHead className="p-6">Merchant Authority</TableHead>
+                            <TableHead className="p-6">Customer ID</TableHead>
+                            <TableHead className="p-6 text-right">Value</TableHead>
+                            <TableHead className="p-6 text-center">Registry Status</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -689,11 +714,11 @@ const AdminDashboard = () => {
                               className="border-stone-50 hover:bg-stone-100/50 transition-all duration-300 cursor-pointer group"
                             >
                               <TableCell className="p-6">
-                                <Badge className="bg-stone-900 group-hover:bg-amber-600 text-stone-100 text-[8px] font-black uppercase tracking-widest rounded px-2 transition-colors">{o.orderNumber}</Badge>
+                                <Badge className="bg-indigo-950 group-hover:bg-amber-600 text-stone-100 text-[8px] font-black uppercase tracking-widest rounded px-2 transition-colors">{o.orderNumber}</Badge>
                               </TableCell>
-                              <TableCell className="p-6 font-black text-stone-900">{o.vendorName}</TableCell>
+                              <TableCell className="p-6 font-black text-indigo-950">{o.vendorName}</TableCell>
                               <TableCell className="p-6 font-bold text-stone-500">{o.customerName}</TableCell>
-                              <TableCell className="p-6 text-right font-black text-stone-900 text-lg">&#8377;{parseFloat(o.totalAmount).toLocaleString()}</TableCell>
+                              <TableCell className="p-6 text-right font-black text-indigo-950 text-lg">&#8377;{parseFloat(o.totalAmount).toLocaleString()}</TableCell>
                               <TableCell className="p-6 text-center">
                                 <Badge className="bg-emerald-50 text-emerald-600 border-none text-[9px] font-black uppercase tracking-widest">ARCHIVED</Badge>
                               </TableCell>
@@ -711,10 +736,10 @@ const AdminDashboard = () => {
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5">
                 <header className="flex items-center justify-between gap-6 mb-12">
                   <div className="flex flex-col">
-                    <h1 className="text-4xl font-black text-stone-900 tracking-tighter uppercase leading-none mb-3">Registered Vendors</h1>
-                    <p className="text-stone-400 font-bold uppercase tracking-[0.2em] text-[10px]">Vendor lifecycle and compliance management.</p>
+                    <h1 className={`${THEME.typography.headings.h1} uppercase leading-none mb-3 bg-clip-text text-transparent ${THEME.gradients.brand} pb-1`}>Registered Vendors</h1>
+                    <p className={`${THEME.typography.micro.muted}`}>Vendor lifecycle and compliance management.</p>
                   </div>
-                  <Button onClick={() => setIsAddVendorOpen(true)} className="rounded-2xl h-14 px-8 shadow-2xl shadow-stone-900/40 hover:bg-black font-black uppercase tracking-widest text-[10px] bg-stone-900 text-white transition-all hover:scale-105 active:scale-95 flex items-center gap-3">
+                  <Button onClick={() => setIsAddVendorOpen(true)} className="rounded-2xl h-14 px-8 shadow-2xl shadow-indigo-950/40 hover:bg-[#1a0b2e] font-black uppercase tracking-widest text-[10px] bg-indigo-950 text-white transition-all hover:scale-105 active:scale-95 flex items-center gap-3">
                     <UserPlus className="h-4 w-4" /> Add Direct Vendor
                   </Button>
                 </header>
@@ -725,11 +750,11 @@ const AdminDashboard = () => {
                   <Table>
                     <TableHeader className="bg-stone-50">
                       <TableRow className="border-stone-100 py-4 hover:bg-transparent">
-                        <TableHead className="font-bold text-stone-900 p-6">Vendor Identity</TableHead>
-                        <TableHead className="font-bold text-stone-900 p-6">Market Sector</TableHead>
-                        <TableHead className="font-bold text-stone-900 p-6">Contact Authority</TableHead>
-                        <TableHead className="font-bold text-stone-900 p-6 text-center">Compliance Status</TableHead>
-                        <TableHead className="font-bold text-stone-900 p-6 text-right">Actions</TableHead>
+                        <TableHead className="p-6">Vendor Identity</TableHead>
+                        <TableHead className="p-6">Market Sector</TableHead>
+                        <TableHead className="p-6">Contact Authority</TableHead>
+                        <TableHead className="p-6 text-center">Compliance Status</TableHead>
+                        <TableHead className="p-6 text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -739,7 +764,7 @@ const AdminDashboard = () => {
                         <TableRow><TableCell colSpan={5} className="text-center p-20 text-stone-400 font-bold">No vendors found.</TableCell></TableRow>
                       ) : vendors.map((v) => (
                         <TableRow key={v.id} className="border-stone-50 hover:bg-stone-50/30">
-                          <TableCell className="p-6 font-bold text-stone-800">{v.businessName}</TableCell>
+                          <TableCell className="p-6 font-bold text-indigo-900">{v.businessName}</TableCell>
                           <TableCell className="p-6 font-medium text-stone-500 italic">{v.businessCategory}</TableCell>
                           <TableCell className="p-6 text-stone-500 font-medium">
                             <div className="flex flex-col">
@@ -804,8 +829,8 @@ const AdminDashboard = () => {
             {activeView === 'vendor-analytics' && (
               <div className="space-y-12 animate-in fade-in">
                 <header>
-                  <h1 className="text-4xl font-black text-stone-900 tracking-tighter">Vendor Analytics</h1>
-                  <p className="text-stone-400 font-medium mt-1">Cross-sector sales performance and revenue intelligence.</p>
+                  <h1 className={`${THEME.typography.headings.h1} bg-clip-text text-transparent ${THEME.gradients.brand} pb-1`}>Vendor Analytics</h1>
+                  <p className={`${THEME.colors.text.secondary} ${THEME.typography.weights.medium} mt-1`}>Cross-sector sales performance and revenue intelligence.</p>
                 </header>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -817,7 +842,7 @@ const AdminDashboard = () => {
                       <Badge className="bg-emerald-50 text-emerald-600 border-none font-black text-[10px]">+14.2%</Badge>
                     </div>
                     <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.3em] mb-2">Total Sale Units</p>
-                    <h2 className="text-5xl font-black text-stone-900 tracking-tighter leading-none">8.4K</h2>
+                    <h2 className={`text-5xl font-['Playfair_Display'] ${THEME.typography.weights.heavy} bg-clip-text text-transparent ${THEME.gradients.brand} tracking-tighter leading-none`}>8.4K</h2>
                     <p className="text-xs font-medium text-stone-400 mt-4 leading-relaxed tracking-tight">Consolidated volume across all verified partner nodes.</p>
                   </div>
 
@@ -829,11 +854,11 @@ const AdminDashboard = () => {
                       <Badge className="bg-emerald-50 text-emerald-600 border-none font-black text-[10px]">+8.7%</Badge>
                     </div>
                     <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.3em] mb-2">Gross Revenue</p>
-                    <h2 className="text-5xl font-black text-stone-900 tracking-tighter leading-none">&#8377;52.8L</h2>
+                    <h2 className={`text-5xl font-['Playfair_Display'] ${THEME.typography.weights.heavy} bg-clip-text text-transparent ${THEME.gradients.brand} tracking-tighter leading-none`}>&#8377;52.8L</h2>
                     <p className="text-xs font-medium text-stone-400 mt-4 leading-relaxed tracking-tight">Total market value processed through secure enterprise channels.</p>
                   </div>
 
-                  <div className="p-10 bg-stone-900 rounded-[2.5rem] shadow-2xl shadow-stone-900/20 text-white relative overflow-hidden group">
+                  <div className="p-10 bg-indigo-950 rounded-[2.5rem] shadow-2xl shadow-indigo-950/20 text-white relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-12 opacity-5 blur-2xl bg-emerald-500 rounded-full -mr-8 -mt-8" />
                     <div className="relative z-10">
                       <div className="flex items-center justify-between mb-6">
@@ -852,12 +877,12 @@ const AdminDashboard = () => {
                 <div className="grid grid-cols-12 gap-8">
                   <Card className="col-span-8 p-12 rounded-[3rem] border-none shadow-sm bg-white overflow-hidden relative">
                     <div className="flex items-center justify-between mb-12">
-                      <h3 className="text-[10px] font-black text-stone-900 uppercase tracking-[0.4em] flex items-center gap-4">
-                        <span className="h-px w-8 bg-stone-900" />
+                      <h3 className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.4em] flex items-center gap-4">
+                        <span className="h-px w-8 bg-indigo-950" />
                         Revenue Distribution
                       </h3>
                       <div className="flex gap-2">
-                        <div className="h-2 w-2 rounded-full bg-stone-900" />
+                        <div className="h-2 w-2 rounded-full bg-indigo-950" />
                         <div className="h-2 w-2 rounded-full bg-emerald-500" />
                       </div>
                     </div>
@@ -869,7 +894,7 @@ const AdminDashboard = () => {
                             style={{ height: `${h}%` }}
                           />
                           <div
-                            className="absolute bottom-0 left-2 right-2 bg-stone-900 rounded-t-lg transition-all duration-1000 delay-100 ease-out group-hover:bg-emerald-500"
+                            className="absolute bottom-0 left-2 right-2 bg-indigo-950 rounded-t-lg transition-all duration-1000 delay-100 ease-out group-hover:bg-emerald-500"
                             style={{ height: `${h * 0.7}%` }}
                           />
                         </div>
@@ -886,7 +911,7 @@ const AdminDashboard = () => {
                     <div className="absolute bottom-0 right-0 p-16 opacity-[0.02] -mr-8 -mb-8">
                       <Activity className="h-40 w-40" />
                     </div>
-                    <h3 className="text-[10px] font-black text-stone-900 uppercase tracking-[0.4em] mb-10">Sector performance</h3>
+                    <h3 className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.4em] mb-10">Sector performance</h3>
                     <div className="space-y-8">
                       {[
                         { label: 'E-Commerce', val: '&#8377;22.4L', p: 85 },
@@ -896,11 +921,11 @@ const AdminDashboard = () => {
                       ].map(s => (
                         <div key={s.label} className="space-y-3">
                           <div className="flex justify-between items-end">
-                            <span className="text-[11px] font-bold text-stone-900 tracking-tight">{s.label}</span>
-                            <span className="text-[11px] font-black text-stone-900 tracking-tighter">{s.val}</span>
+                            <span className="text-[11px] font-bold text-indigo-950 tracking-tight">{s.label}</span>
+                            <span className="text-[11px] font-black text-indigo-950 tracking-tighter">{s.val}</span>
                           </div>
                           <div className="h-1.5 w-full bg-white rounded-full overflow-hidden">
-                            <div className="h-full bg-stone-900 rounded-full group-hover:bg-emerald-500 transition-all duration-700" style={{ width: `${s.p}%` }} />
+                            <div className="h-full bg-indigo-950 rounded-full group-hover:bg-emerald-500 transition-all duration-700" style={{ width: `${s.p}%` }} />
                           </div>
                         </div>
                       ))}
@@ -913,19 +938,19 @@ const AdminDashboard = () => {
             {activeView === 'customers' && (
               <div className="space-y-8 animate-in fade-in">
                 <header>
-                  <h1 className="text-4xl font-black text-stone-900 tracking-tighter">Registered Customers</h1>
-                  <p className="text-stone-400 font-medium mt-1">User base demographics and loyalty insights.</p>
+                  <h1 className={`${THEME.typography.headings.h1} bg-clip-text text-transparent ${THEME.gradients.brand} pb-1`}>Registered Customers</h1>
+                  <p className={`${THEME.colors.text.secondary} ${THEME.typography.weights.medium} mt-1`}>User base demographics and loyalty insights.</p>
                 </header>
 
                 <Card className="border-none shadow-sm rounded-3xl overflow-hidden">
                   <Table>
                     <TableHeader className="bg-stone-50">
                       <TableRow className="border-stone-100 py-4 hover:bg-transparent">
-                        <TableHead className="font-bold text-stone-900 p-6">User Profile</TableHead>
-                        <TableHead className="font-bold text-stone-900 p-6">Contact Access</TableHead>
-                        <TableHead className="font-bold text-stone-900 p-6 text-right">Reward Balance</TableHead>
-                        <TableHead className="font-bold text-stone-900 p-6 text-right">Acquisition Date</TableHead>
-                        <TableHead className="font-bold text-stone-900 p-6 text-right">Actions</TableHead>
+                        <TableHead className="p-6">User Profile</TableHead>
+                        <TableHead className="p-6">Contact Access</TableHead>
+                        <TableHead className="p-6 text-right">Reward Balance</TableHead>
+                        <TableHead className="p-6 text-right">Acquisition Date</TableHead>
+                        <TableHead className="p-6 text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -941,8 +966,8 @@ const AdminDashboard = () => {
                                 <AvatarFallback className="bg-stone-100 text-stone-600 font-bold">{c.name.charAt(0)}</AvatarFallback>
                               </Avatar>
                               <div className="flex flex-col">
-                                <span className="font-bold text-stone-800">{c.name}</span>
-                                <span className="text-[10px] text-stone-400 font-black uppercase tracking-widest">{c.id.slice(-8)}</span>
+                                <span className={`${THEME.typography.weights.medium} ${THEME.colors.text.primary}`}>{c.name}</span>
+                                <span className={THEME.typography.micro.muted}>{c.id.slice(-8)}</span>
                               </div>
                             </div>
                           </TableCell>
@@ -959,7 +984,7 @@ const AdminDashboard = () => {
                             </div>
                           </TableCell>
                           <TableCell className="p-6 text-right">
-                            <Badge variant="outline" className="rounded-lg font-black text-stone-700 bg-stone-50 border-stone-100">
+                            <Badge variant="outline" className="rounded-lg font-black text-purple-900 bg-stone-50 border-stone-100">
                               {c.rewardPoints} points
                             </Badge>
                           </TableCell>
@@ -998,24 +1023,24 @@ const AdminDashboard = () => {
                     <div className="col-span-8 space-y-8">
 
                       <div className="bg-white rounded-[2rem] border border-stone-100 shadow-sm p-8 space-y-6">
-                        <h2 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.4em] border-b border-stone-100 pb-4">Product Details</h2>
+                        <h2 className={`${THEME.typography.micro.muted} border-b border-stone-100 pb-4`}>Product Details</h2>
                         <div className="grid grid-cols-2 gap-6">
                           <div className="col-span-2 space-y-2">
-                            <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest ml-1">Product Name</Label>
+                            <Label className={`${THEME.typography.micro.default} ${THEME.colors.text.primary} ml-1`}>Product Name</Label>
                             <Input required value={newProduct.name} onChange={e => setNewProduct({ ...newProduct, name: e.target.value })} className="rounded-[1.25rem] h-14 border-stone-200 bg-stone-50 font-bold px-6" placeholder="e.g., Hydra Barrier Serum" />
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest ml-1">Brand</Label>
+                            <Label className={`${THEME.typography.micro.default} ${THEME.colors.text.primary} ml-1`}>Brand</Label>
                             <Input required value={newProduct.brand} onChange={e => setNewProduct({ ...newProduct, brand: e.target.value })} className="rounded-[1.25rem] h-14 border-stone-200 bg-stone-50 font-bold px-6" placeholder="e.g., LUMIÈRE SEOUL" />
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest ml-1">Category</Label>
+                            <Label className={`${THEME.typography.micro.default} ${THEME.colors.text.primary} ml-1`}>Category</Label>
                             <Input required value={newProduct.categoryName} onChange={e => setNewProduct({ ...newProduct, categoryName: e.target.value })} className="rounded-[1.25rem] h-14 border-stone-200 bg-stone-50 font-bold px-6" placeholder="e.g., Skincare" />
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest ml-1">Select Vendor</Label>
+                            <Label className={`${THEME.typography.micro.default} ${THEME.colors.text.primary} ml-1`}>Select Vendor</Label>
                             <div className="relative">
-                              <select required className="w-full h-14 rounded-[1.25rem] border border-stone-200 bg-stone-50 px-6 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-stone-900 appearance-none" value={newProduct.vendorId} onChange={e => setNewProduct({ ...newProduct, vendorId: e.target.value })}>
+                              <select required className="w-full h-14 rounded-[1.25rem] border border-stone-200 bg-stone-50 px-6 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-950 appearance-none" value={newProduct.vendorId} onChange={e => setNewProduct({ ...newProduct, vendorId: e.target.value })}>
                                 <option value="">Select a vendor...</option>
                                 {vendors.map(v => <option key={v.id} value={v.id}>{v.businessName}</option>)}
                               </select>
@@ -1023,37 +1048,37 @@ const AdminDashboard = () => {
                             </div>
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest ml-1">Stock Quantity</Label>
+                            <Label className={`${THEME.typography.micro.default} ${THEME.colors.text.primary} ml-1`}>Stock Quantity</Label>
                             <Input type="number" required value={newProduct.stock} onChange={e => setNewProduct({ ...newProduct, stock: e.target.value })} className="rounded-[1.25rem] h-14 border-stone-200 bg-stone-50 font-bold px-6" placeholder="0" />
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest ml-1">Product Tags</Label>
+                            <Label className={`${THEME.typography.micro.default} ${THEME.colors.text.primary} ml-1`}>Product Tags</Label>
                             <Input value={newProduct.tags} onChange={e => setNewProduct({ ...newProduct, tags: e.target.value })} className="rounded-[1.25rem] h-14 border-stone-200 bg-stone-50 font-bold px-6" placeholder="Hydrating, Korea, Glow" />
                           </div>
                           <div className="col-span-2 space-y-2">
-                            <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest ml-1">Product Description</Label>
-                            <textarea required value={newProduct.description} onChange={e => setNewProduct({ ...newProduct, description: e.target.value })} className="flex min-h-[120px] w-full rounded-[1.5rem] border border-stone-200 bg-stone-50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 transition-all" placeholder="Enter product details..." />
+                            <Label className={`${THEME.typography.micro.default} ${THEME.colors.text.primary} ml-1`}>Product Description</Label>
+                            <textarea required value={newProduct.description} onChange={e => setNewProduct({ ...newProduct, description: e.target.value })} className="flex min-h-[120px] w-full rounded-[1.5rem] border border-stone-200 bg-stone-50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-950 transition-all" placeholder="Enter product details..." />
                           </div>
                         </div>
                       </div>
 
                       <div className="bg-white rounded-[2rem] border border-stone-100 shadow-sm p-8 space-y-6">
-                        <h2 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.4em] border-b border-stone-100 pb-4">Product Content</h2>
+                        <h2 className={`${THEME.typography.micro.muted} border-b border-stone-100 pb-4`}>Product Content</h2>
                         <div className="grid grid-cols-2 gap-6">
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest ml-1">Ingredients</Label>
-                            <textarea value={newProduct.ingredients} onChange={e => setNewProduct({ ...newProduct, ingredients: e.target.value })} className="flex min-h-[120px] w-full rounded-[1.5rem] border border-stone-200 bg-stone-50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 transition-all" placeholder="Water, Glycerin, Niacinamide (5%)..." />
+                            <Label className={`${THEME.typography.micro.default} ${THEME.colors.text.primary} ml-1`}>Ingredients</Label>
+                            <textarea value={newProduct.ingredients} onChange={e => setNewProduct({ ...newProduct, ingredients: e.target.value })} className="flex min-h-[120px] w-full rounded-[1.5rem] border border-stone-200 bg-stone-50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-950 transition-all" placeholder="Water, Glycerin, Niacinamide (5%)..." />
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest ml-1">Why We Love It</Label>
-                            <textarea value={newProduct.whyWeLoveIt} onChange={e => setNewProduct({ ...newProduct, whyWeLoveIt: e.target.value })} className="flex min-h-[120px] w-full rounded-[1.5rem] border border-stone-200 bg-stone-50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 transition-all" placeholder="e.g., Instantly plumps skin by +45%..." />
+                            <Label className={`${THEME.typography.micro.default} ${THEME.colors.text.primary} ml-1`}>Why We Love It</Label>
+                            <textarea value={newProduct.whyWeLoveIt} onChange={e => setNewProduct({ ...newProduct, whyWeLoveIt: e.target.value })} className="flex min-h-[120px] w-full rounded-[1.5rem] border border-stone-200 bg-stone-50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-950 transition-all" placeholder="e.g., Instantly plumps skin by +45%..." />
                           </div>
                         </div>
                       </div>
 
                       <div className="bg-white rounded-[2rem] border border-stone-100 shadow-sm p-8 space-y-6">
                         <div className="flex items-center justify-between border-b border-stone-100 pb-4">
-                          <h2 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.4em]">Key Benefits</h2>
+                          <h2 className={THEME.typography.micro.muted}>Key Benefits</h2>
                           <button type="button" onClick={() => setProductBenefits([...productBenefits, { icon: '✨', text: '' }])} className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-emerald-600 hover:text-emerald-700">
                             <Plus className="h-3 w-3" /> Add Benefit
                           </button>
@@ -1064,7 +1089,7 @@ const AdminDashboard = () => {
                               <select
                                 value={benefit.icon}
                                 onChange={e => { const u = [...productBenefits]; u[idx].icon = e.target.value; setProductBenefits(u); }}
-                                className="appearance-none rounded-[1rem] h-12 border border-stone-200 bg-stone-50 font-bold w-16 text-center text-lg cursor-pointer hover:border-stone-300 transition-colors focus:outline-none focus:ring-2 focus:ring-stone-900"
+                                className="appearance-none rounded-[1rem] h-12 border border-stone-200 bg-stone-50 font-bold w-16 text-center text-lg cursor-pointer hover:border-stone-300 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-950"
                               >
                                 {['✨', '💧', '🌿', '🛡️', '☀️', '🌸', '⚡', '🧪', '💖', '🥇', '🍓', '🥑'].map(emoji => (
                                   <option key={emoji} value={emoji}>{emoji}</option>
@@ -1081,7 +1106,7 @@ const AdminDashboard = () => {
 
                       <div className="bg-white rounded-[2rem] border border-stone-100 shadow-sm p-8 space-y-6">
                         <div className="flex items-center justify-between border-b border-stone-100 pb-4">
-                          <h2 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.4em]">FAQ</h2>
+                          <h2 className={THEME.typography.micro.muted}>FAQ</h2>
                           <button type="button" onClick={() => setProductFaq([...productFaq, { q: '', a: '' }])} className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-emerald-600 hover:text-emerald-700">
                             <Plus className="h-3 w-3" /> Add Question
                           </button>
@@ -1090,7 +1115,7 @@ const AdminDashboard = () => {
                           {productFaq.map((faqItem, idx) => (
                             <div key={idx} className="p-5 rounded-2xl border border-stone-100 bg-stone-50/50 space-y-3 relative group">
                               <Input value={faqItem.q} onChange={e => { const u = [...productFaq]; u[idx].q = e.target.value; setProductFaq(u); }} className="rounded-[1rem] h-12 border-stone-200 bg-white font-bold px-5" placeholder="e.g., Is it suitable for sensitive skin?" />
-                              <textarea value={faqItem.a} onChange={e => { const u = [...productFaq]; u[idx].a = e.target.value; setProductFaq(u); }} className="flex min-h-[72px] w-full rounded-[1rem] border border-stone-200 bg-white px-5 py-3 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 transition-all" placeholder="Answer..." />
+                              <textarea value={faqItem.a} onChange={e => { const u = [...productFaq]; u[idx].a = e.target.value; setProductFaq(u); }} className="flex min-h-[72px] w-full rounded-[1rem] border border-stone-200 bg-white px-5 py-3 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-950 transition-all" placeholder="Answer..." />
                               {productFaq.length > 1 && (
                                 <button type="button" onClick={() => setProductFaq(productFaq.filter((_, i) => i !== idx))} className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center rounded-xl text-stone-300 hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"><Trash2 className="h-3.5 w-3.5" /></button>
                               )}
@@ -1105,14 +1130,14 @@ const AdminDashboard = () => {
                     <div className="col-span-4 space-y-8">
 
                       <div className="bg-white rounded-[2rem] border border-stone-100 shadow-sm p-8 space-y-5">
-                        <h2 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.4em] border-b border-stone-100 pb-4">Product Media</h2>
+                        <h2 className={`${THEME.typography.micro.muted} border-b border-stone-100 pb-4`}>Product Media</h2>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest ml-1">Primary Image <span className="text-rose-500">*</span></Label>
+                          <Label className={`${THEME.typography.micro.default} ${THEME.colors.text.primary} ml-1`}>Primary Image <span className="text-rose-500">*</span></Label>
                           <div onClick={() => document.getElementById('primaryImageFP').click()} className="relative h-52 rounded-[1.5rem] border-2 border-dashed border-stone-100 bg-stone-50/50 flex flex-col items-center justify-center cursor-pointer group hover:bg-white hover:border-emerald-500/30 transition-all overflow-hidden">
                             {imageFiles.primary ? (
                               <>
                                 <img src={URL.createObjectURL(imageFiles.primary)} className="h-full w-full object-cover" />
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                <div className="absolute inset-0 bg-[#1a0b2e]/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                                   <span className="text-white text-[10px] font-black uppercase tracking-widest">Change Image</span>
                                 </div>
                               </>
@@ -1127,10 +1152,10 @@ const AdminDashboard = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-3 p-4 bg-stone-50 rounded-2xl border border-stone-100 cursor-pointer" onClick={() => setHasMultipleImages(!hasMultipleImages)}>
-                          <div className={cn("h-5 w-5 rounded-md border-2 flex items-center justify-center transition-all", hasMultipleImages ? "bg-stone-900 border-stone-900" : "bg-white border-stone-200")}>
+                          <div className={cn("h-5 w-5 rounded-md border-2 flex items-center justify-center transition-all", hasMultipleImages ? "bg-indigo-950 border-indigo-950" : "bg-white border-stone-200")}>
                             {hasMultipleImages && <Check className="h-3 w-3 text-white" />}
                           </div>
-                          <span className="text-[10px] font-black uppercase tracking-widest text-stone-900">Include Multiple Images</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-indigo-950">Include Multiple Images</span>
                         </div>
                         {hasMultipleImages && (
                           <div className="grid grid-cols-3 gap-3 animate-in fade-in">
@@ -1151,26 +1176,26 @@ const AdminDashboard = () => {
                       </div>
 
                       <div className="bg-white rounded-[2rem] border border-stone-100 shadow-sm p-8 space-y-5">
-                        <h2 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.4em] border-b border-stone-100 pb-4">Pricing</h2>
+                        <h2 className={`${THEME.typography.micro.muted} border-b border-stone-100 pb-4`}>Pricing</h2>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest ml-1">Base Price (&#8377;)</Label>
+                          <Label className={`${THEME.typography.micro.default} ${THEME.colors.text.primary} ml-1`}>Base Price (&#8377;)</Label>
                           <Input type="number" required value={newProduct.price} onChange={e => setNewProduct({ ...newProduct, price: e.target.value })} className="rounded-[1.25rem] h-14 border-stone-200 bg-stone-50 font-bold px-6" placeholder="0.00" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest ml-1">Discount Price (&#8377;)</Label>
+                          <Label className={`${THEME.typography.micro.default} ${THEME.colors.text.primary} ml-1`}>Discount Price (&#8377;)</Label>
                           <Input type="number" value={newProduct.discountPrice || ''} onChange={e => setNewProduct({ ...newProduct, discountPrice: e.target.value })} className="rounded-[1.25rem] h-14 border-stone-200 bg-stone-50 font-bold px-6" placeholder="Optional" />
                         </div>
                       </div>
 
                       <div className="bg-white rounded-[2rem] border border-stone-100 shadow-sm p-8 space-y-5">
-                        <h2 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.4em] border-b border-stone-100 pb-4">Visibility Settings</h2>
+                        <h2 className={`${THEME.typography.micro.muted} border-b border-stone-100 pb-4`}>Visibility Settings</h2>
                         <div className="space-y-3">
                           {[
                             { id: 'featured', label: 'Feature on Homepage', sub: 'High-visibility placement.' },
                             { id: 'rewardEligible', label: 'Enable Reward Points', sub: 'Incentivize via loyalty.' },
                             { id: 'limitedOffer', label: 'Set as Limited Offer', sub: 'Urgency-driven placement.' }
                           ].map(flag => (
-                            <div key={flag.id} onClick={() => setNewProduct({ ...newProduct, [flag.id]: !newProduct[flag.id] })} className={cn("p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between", newProduct[flag.id] ? "bg-stone-900 border-stone-900 text-white" : "bg-stone-50 border-stone-100 text-stone-900 hover:border-stone-300")}>
+                            <div key={flag.id} onClick={() => setNewProduct({ ...newProduct, [flag.id]: !newProduct[flag.id] })} className={cn("p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between", newProduct[flag.id] ? "bg-indigo-950 border-indigo-950 text-white" : "bg-stone-50 border-stone-100 text-indigo-950 hover:border-stone-300")}>
                               <div>
                                 <p className="text-[10px] font-black uppercase tracking-widest leading-none">{flag.label}</p>
                                 <p className="text-[8px] font-bold mt-1.5 uppercase tracking-tighter text-stone-400">{flag.sub}</p>
@@ -1185,7 +1210,7 @@ const AdminDashboard = () => {
 
                       <div className="flex gap-3">
                         <Button type="button" onClick={() => navigate('/admin/inventory')} variant="outline" className="flex-1 rounded-xl h-14 font-black uppercase tracking-widest text-[10px] border-stone-200 hover:bg-stone-50">Cancel</Button>
-                        <Button type="submit" disabled={loading} className="flex-1 bg-stone-900 text-white rounded-xl h-14 font-black uppercase tracking-widest text-[10px] hover:bg-black shadow-xl shadow-stone-900/30 transition-all">
+                        <Button type="submit" disabled={loading} className="flex-1 bg-indigo-950 text-white rounded-xl h-14 font-black uppercase tracking-widest text-[10px] hover:bg-[#1a0b2e] shadow-xl shadow-indigo-950/30 transition-all">
                           {loading ? 'Saving...' : 'Add Product'}
                         </Button>
                       </div>
@@ -1202,7 +1227,7 @@ const AdminDashboard = () => {
 
       {/* Premium Wide Customer Dossier */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="sm:max-w-[1400px] w-[95vw] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-stone-50/50 backdrop-blur-xl ring-1 ring-black/5">
+        <DialogContent className={`sm:max-w-[1400px] w-[95vw] p-0 overflow-hidden border-none ${THEME.shadows.xl} ${THEME.colors.background.secondary}/50 backdrop-blur-xl ring-1 ring-indigo-900/5 ${THEME.borders.radius.xl}`}>
           <div className="sr-only">
             <DialogTitle>Customer Profile: {selectedUser?.name}</DialogTitle>
             <DialogDescription>Detailed customer profile information including rewards, orders, and addresses.</DialogDescription>
@@ -1210,9 +1235,9 @@ const AdminDashboard = () => {
           {detailLoading ? (
             <div className="h-[600px] flex items-center justify-center bg-white/80 backdrop-blur-md">
               <div className="flex flex-col items-center gap-6">
-                <div className="h-12 w-12 animate-spin rounded-full border-[3px] border-stone-100 border-t-stone-900 shadow-xl" />
+                <div className="h-12 w-12 animate-spin rounded-full border-[3px] border-stone-100 border-t-indigo-950 shadow-xl" />
                 <div className="space-y-1 text-center">
-                  <p className="text-[10px] font-black text-stone-900 uppercase tracking-[0.3em]">Accessing Intel</p>
+                  <p className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.3em]">Accessing Intel</p>
                   <p className="text-[8px] font-bold text-stone-400 uppercase tracking-widest">Decrypting User Node...</p>
                 </div>
               </div>
@@ -1220,14 +1245,14 @@ const AdminDashboard = () => {
           ) : selectedUser && (
             <div className="flex flex-col h-full max-h-[90vh]">
               {/* Premium Glass-Noir Header */}
-              <header className="p-10 bg-gradient-to-r from-stone-900 via-stone-800 to-stone-900 text-white flex items-center justify-between shrink-0 relative overflow-hidden ring-1 ring-white/10">
+              <header className={`p-10 ${THEME.colors.background.accentSolid} text-white flex items-center justify-between shrink-0 relative overflow-hidden ring-1 ring-white/10`}>
                 <div className="absolute top-0 right-0 p-16 opacity-10 blur-3xl bg-emerald-500 rounded-full -mr-16 -mt-16" />
                 <div className="relative z-10 flex items-center gap-8">
                   <div className="relative group">
                     <Avatar className="h-20 w-20 ring-4 ring-white/10 shadow-2xl transition-transform duration-500 group-hover:scale-105">
-                      <AvatarFallback className="bg-gradient-to-br from-stone-800 to-black text-white font-black text-2xl">{selectedUser.name.charAt(0)}</AvatarFallback>
+                      <AvatarFallback className="bg-gradient-to-br from-indigo-900 to-[#0b0314] text-white font-black text-2xl">{selectedUser.name.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <div className="absolute -bottom-1 -right-1 h-6 w-6 bg-emerald-500 rounded-full border-4 border-stone-800 flex items-center justify-center">
+                    <div className="absolute -bottom-1 -right-1 h-6 w-6 bg-emerald-500 rounded-full border-4 border-indigo-900 flex items-center justify-center">
                       <div className="h-1.5 w-1.5 bg-white rounded-full animate-pulse" />
                     </div>
                   </div>
@@ -1238,17 +1263,17 @@ const AdminDashboard = () => {
                     </div>
                     <div className="flex items-center gap-4 text-stone-400">
                       <span className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                        <span className="h-1.5 w-1.5 rounded-full bg-stone-700" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-purple-900" />
                         Protocol: {selectedUser.id}
                       </span>
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 underline underline-offset-4 decoration-stone-700">
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 underline underline-offset-4 decoration-purple-900">
                         Access: Global-Admin
                       </span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 relative z-10">
-                  <Button variant="outline" className="h-11 rounded-xl border-stone-700 text-white hover:bg-white hover:text-black bg-transparent text-[10px] font-black uppercase tracking-[0.2em] px-8 transition-all duration-300">Export Dossier</Button>
+                  <Button variant="outline" className="h-11 rounded-xl border-purple-900 text-white hover:bg-white hover:text-indigo-950 bg-transparent text-[10px] font-black uppercase tracking-[0.2em] px-8 transition-all duration-300">Export Dossier</Button>
                   <Button onClick={() => setIsDetailOpen(false)} variant="ghost" className="h-11 w-11 text-stone-400 hover:text-white rounded-xl bg-white/5 border border-white/5 hover:border-white/20 transition-all">
                     <X className="h-5 w-5" />
                   </Button>
@@ -1264,24 +1289,24 @@ const AdminDashboard = () => {
                         <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Transaction Credits</p>
                         <CreditCard className="h-5 w-5 text-stone-300 group-hover:text-emerald-500 transition-colors" />
                       </div>
-                      <p className="text-5xl font-black text-stone-900 tracking-tighter leading-none">{selectedUser.rewardPoints.toLocaleString()}</p>
+                      <p className={`text-5xl font-['Playfair_Display'] ${THEME.typography.weights.heavy} bg-clip-text text-transparent ${THEME.gradients.brand} tracking-tighter leading-none`}>{selectedUser.rewardPoints.toLocaleString()}</p>
                       <p className="text-[11px] font-bold text-emerald-600 mt-4 uppercase tracking-wide">Ready for Settlement</p>
                       <div className="absolute bottom-0 right-0 h-1.5 w-0 bg-emerald-500 group-hover:w-full transition-all duration-700" />
                     </div>
-                    <div className="p-8 bg-white rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-stone-900/10 transition-all duration-500">
+                    <div className="p-8 bg-white rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-indigo-950/10 transition-all duration-500">
                       <div className="flex items-center justify-between mb-4">
                         <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Activity Events</p>
-                        <ShoppingCart className="h-5 w-5 text-stone-300 group-hover:text-stone-900 transition-colors" />
+                        <ShoppingCart className="h-5 w-5 text-stone-300 group-hover:text-indigo-950 transition-colors" />
                       </div>
-                      <p className="text-5xl font-black text-stone-900 tracking-tighter leading-none">{selectedUser.orders?.length || 0}</p>
+                      <p className={`text-5xl font-['Playfair_Display'] ${THEME.typography.weights.heavy} bg-clip-text text-transparent ${THEME.gradients.brand} tracking-tighter leading-none`}>{selectedUser.orders?.length || 0}</p>
                       <p className="text-[11px] font-bold text-stone-400 mt-4 uppercase tracking-wide">Confirmed Shipments</p>
                     </div>
-                    <div className="p-8 bg-white rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-stone-900/10 transition-all duration-500">
+                    <div className="p-8 bg-white rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-indigo-950/10 transition-all duration-500">
                       <div className="flex items-center justify-between mb-4">
                         <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Node Creation</p>
-                        <Calendar className="h-5 w-5 text-stone-300 group-hover:text-stone-900 transition-colors" />
+                        <Calendar className="h-5 w-5 text-stone-300 group-hover:text-indigo-950 transition-colors" />
                       </div>
-                      <p className="text-3xl font-black text-stone-900 tracking-tighter leading-none mt-2">
+                      <p className="text-3xl font-black text-indigo-950 tracking-tighter leading-none mt-2">
                         {new Date(selectedUser.createdAt).toLocaleDateString(undefined, { month: 'short', day: '2-digit', year: 'numeric' }).toUpperCase()}
                       </p>
                       <p className="text-[11px] font-bold text-stone-400 mt-4 uppercase tracking-wide">Active Since Epoch</p>
@@ -1293,8 +1318,8 @@ const AdminDashboard = () => {
                     {/* Left Intelligence Sidebar */}
                     <div className="col-span-4 space-y-12 border-r border-stone-100 pr-12">
                       <section>
-                        <h3 className="text-[10px] font-black text-stone-900 uppercase tracking-[0.4em] mb-8 flex items-center gap-4">
-                          <span className="h-px w-8 bg-stone-900" />
+                        <h3 className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.4em] mb-8 flex items-center gap-4">
+                          <span className="h-px w-8 bg-indigo-950" />
                           Identity Access
                         </h3>
                         <div className="space-y-4">
@@ -1302,22 +1327,22 @@ const AdminDashboard = () => {
                             <div className="h-11 w-11 rounded-xl bg-white flex items-center justify-center shadow-sm text-stone-400 group-hover:text-emerald-500 transition-colors"><Mail className="h-5 w-5" /></div>
                             <div className="overflow-hidden space-y-0.5">
                               <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest leading-none">Primary Endpoint</p>
-                              <p className="text-sm font-bold text-stone-900 truncate leading-tight">{selectedUser.email || 'N/A'}</p>
+                              <p className="text-sm font-bold text-indigo-950 truncate leading-tight">{selectedUser.email || 'N/A'}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-5 p-5 rounded-2xl bg-stone-50 border border-stone-100/50 group hover:bg-white hover:shadow-lg hover:border-emerald-500/10 transition-all duration-300">
                             <div className="h-11 w-11 rounded-xl bg-white flex items-center justify-center shadow-sm text-stone-400 group-hover:text-emerald-500 transition-colors"><Phone className="h-5 w-5" /></div>
                             <div className="space-y-0.5">
                               <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest leading-none">Mobile Terminal</p>
-                              <p className="text-sm font-bold text-stone-900 leading-tight">{selectedUser.mobile}</p>
+                              <p className="text-sm font-bold text-indigo-950 leading-tight">{selectedUser.mobile}</p>
                             </div>
                           </div>
                         </div>
                       </section>
 
                       <section>
-                        <h3 className="text-[10px] font-black text-stone-900 uppercase tracking-[0.4em] mb-8 flex items-center gap-4">
-                          <span className="h-px w-8 bg-stone-900" />
+                        <h3 className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.4em] mb-8 flex items-center gap-4">
+                          <span className="h-px w-8 bg-indigo-950" />
                           Logistics Ledger
                         </h3>
                         <div className="space-y-4">
@@ -1327,7 +1352,7 @@ const AdminDashboard = () => {
                                 <Badge variant="secondary" className="text-[8px] font-black uppercase tracking-[0.15em] bg-stone-100 text-stone-500 border-none px-2 py-0.5">{addr.label || 'Home'}</Badge>
                                 <MapPin className="h-4 w-4 text-stone-200 group-hover:text-emerald-500 transition-colors" />
                               </div>
-                              <p className="text-sm font-black text-stone-900 leading-tight italic">"{addr.line1}"</p>
+                              <p className="text-sm font-black text-indigo-950 leading-tight italic">"{addr.line1}"</p>
                               <p className="text-[11px] font-medium text-stone-400 mt-2 flex items-center gap-2">
                                 <span className="h-1 w-1 rounded-full bg-stone-200" />
                                 {addr.city.toUpperCase()}, {addr.state.toUpperCase()}
@@ -1341,8 +1366,8 @@ const AdminDashboard = () => {
                     {/* Right Transmission Table */}
                     <div className="col-span-8">
                       <header className="flex items-center justify-between mb-8 pb-4 border-b border-stone-100">
-                        <h3 className="text-[10px] font-black text-stone-900 uppercase tracking-[0.4em] flex items-center gap-4">
-                          <span className="h-px w-8 bg-stone-900" />
+                        <h3 className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.4em] flex items-center gap-4">
+                          <span className="h-px w-8 bg-indigo-950" />
                           Transmission Registry
                         </h3>
                         <span className="text-[9px] font-black text-emerald-600 px-4 py-1.5 bg-emerald-50 rounded-full flex items-center gap-2 border border-emerald-100">
@@ -1355,10 +1380,10 @@ const AdminDashboard = () => {
                         <Table>
                           <TableHeader className="bg-stone-50/50">
                             <TableRow className="border-stone-100 hover:bg-transparent h-14">
-                              <TableHead className="text-[10px] font-black uppercase tracking-widest text-stone-900 px-8">Order ID</TableHead>
-                              <TableHead className="text-[10px] font-black uppercase tracking-widest text-stone-900 px-8">Timestamp</TableHead>
-                              <TableHead className="text-[10px] font-black uppercase tracking-widest text-stone-900 px-8">Resolution</TableHead>
-                              <TableHead className="text-[10px] font-black uppercase tracking-widest text-stone-900 px-8 text-right">Credit Value</TableHead>
+                              <TableHead className="px-8">Order ID</TableHead>
+                              <TableHead className="px-8">Timestamp</TableHead>
+                              <TableHead className="px-8">Resolution</TableHead>
+                              <TableHead className="px-8 text-right">Credit Value</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -1367,7 +1392,7 @@ const AdminDashboard = () => {
                                 <TableRow key={order.orderNumber} className="border-stone-50 h-[4.5rem] hover:bg-stone-50/20 transition-all group">
                                   <TableCell className="px-8">
                                     <div className="flex flex-col">
-                                      <span className="text-sm font-black text-stone-900 tracking-tighter group-hover:text-emerald-600 transition-colors">#{order.orderNumber}</span>
+                                      <span className="text-sm font-black text-indigo-950 tracking-tighter group-hover:text-emerald-600 transition-colors">#{order.orderNumber}</span>
                                       <span className="text-[8px] font-bold text-stone-300 uppercase tracking-widest">Master-Chain-UID</span>
                                     </div>
                                   </TableCell>
@@ -1379,13 +1404,13 @@ const AdminDashboard = () => {
                                       "rounded-lg font-black text-[9px] uppercase tracking-widest px-3 py-1 border-none shadow-sm transition-all",
                                       order.status === 'DELIVERED'
                                         ? "bg-emerald-500 text-white shadow-emerald-500/20"
-                                        : "bg-stone-900 text-white shadow-stone-900/20"
+                                        : "bg-indigo-950 text-white shadow-indigo-950/20"
                                     )}>
                                       {order.status}
                                     </Badge>
                                   </TableCell>
                                   <TableCell className="px-8 text-right">
-                                    <span className="text-lg font-black text-stone-900 tracking-tighter">&#8377;{parseFloat(order.totalAmount).toLocaleString()}</span>
+                                    <span className="text-lg font-black text-indigo-950 tracking-tighter">&#8377;{parseFloat(order.totalAmount).toLocaleString()}</span>
                                   </TableCell>
                                 </TableRow>
                               ))
@@ -1404,7 +1429,7 @@ const AdminDashboard = () => {
                 <div className="flex gap-3">
                   <Badge variant="outline" className="bg-white border-stone-200 text-stone-400 font-black text-[8px] rounded-lg px-3 py-1 uppercase tracking-widest">End-to-End Encrypted Dossier</Badge>
                 </div>
-                <Button onClick={() => setIsDetailOpen(false)} className="bg-stone-900 hover:bg-black font-black uppercase tracking-[0.2em] text-[10px] rounded-xl px-12 h-12 shadow-2xl shadow-stone-900/40">Close Session</Button>
+                <Button onClick={() => setIsDetailOpen(false)} className="bg-indigo-950 hover:bg-[#1a0b2e] font-black uppercase tracking-[0.2em] text-[10px] rounded-xl px-12 h-12 shadow-2xl shadow-indigo-950/40">Close Session</Button>
               </footer>
             </div>
           )}
@@ -1413,7 +1438,7 @@ const AdminDashboard = () => {
 
       {/* Premium Wide Vendor Dossier */}
       <Dialog open={isVendorDetailOpen} onOpenChange={setIsVendorDetailOpen}>
-        <DialogContent className="sm:max-w-[1400px] w-[95vw] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-stone-50/50 backdrop-blur-xl ring-1 ring-black/5">
+        <DialogContent className={`sm:max-w-[1400px] w-[95vw] p-0 overflow-hidden border-none ${THEME.shadows.xl} ${THEME.colors.background.secondary}/50 backdrop-blur-xl ring-1 ring-indigo-900/5 ${THEME.borders.radius.xl}`}>
           <div className="sr-only">
             <DialogTitle>Vendor Dossier: {selectedVendor?.businessName}</DialogTitle>
             <DialogDescription>Performance analytics, inventory status, and order registry for registered partners.</DialogDescription>
@@ -1421,9 +1446,9 @@ const AdminDashboard = () => {
           {detailLoading ? (
             <div className="h-[600px] flex items-center justify-center bg-white/80 backdrop-blur-md">
               <div className="flex flex-col items-center gap-6">
-                <div className="h-12 w-12 animate-spin rounded-full border-[3px] border-stone-100 border-t-stone-900 shadow-xl" />
+                <div className="h-12 w-12 animate-spin rounded-full border-[3px] border-stone-100 border-t-indigo-950 shadow-xl" />
                 <div className="space-y-1 text-center">
-                  <p className="text-[10px] font-black text-stone-900 uppercase tracking-[0.3em]">Syncing Partner Node</p>
+                  <p className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.3em]">Syncing Partner Node</p>
                   <p className="text-[8px] font-bold text-stone-400 uppercase tracking-widest">Accessing Ledger...</p>
                 </div>
               </div>
@@ -1431,15 +1456,15 @@ const AdminDashboard = () => {
           ) : selectedVendor && (
             <div className="flex flex-col h-full max-h-[90vh]">
               {/* Premium Glass-Noir Header */}
-              <header className="p-10 bg-gradient-to-r from-stone-900 via-stone-800 to-stone-900 text-white flex items-center justify-between shrink-0 relative overflow-hidden ring-1 ring-white/10">
+              <header className={`p-10 ${THEME.colors.background.accentSolid} text-white flex items-center justify-between shrink-0 relative overflow-hidden ring-1 ring-white/10`}>
                 <div className="absolute top-0 right-0 p-16 opacity-10 blur-3xl bg-blue-500 rounded-full -mr-16 -mt-16" />
                 <div className="relative z-10 flex items-center gap-8">
                   <div className="relative group">
                     <Avatar className="h-20 w-20 ring-4 ring-white/10 shadow-2xl transition-transform duration-500 group-hover:scale-105">
-                      <AvatarFallback className="bg-gradient-to-br from-stone-800 to-black text-white font-black text-2xl">{selectedVendor.businessName.charAt(0)}</AvatarFallback>
+                      <AvatarFallback className="bg-gradient-to-br from-indigo-900 to-[#0b0314] text-white font-black text-2xl">{selectedVendor.businessName.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className={cn(
-                      "absolute -bottom-1 -right-1 h-6 w-6 rounded-full border-4 border-stone-800 flex items-center justify-center",
+                      "absolute -bottom-1 -right-1 h-6 w-6 rounded-full border-4 border-indigo-900 flex items-center justify-center",
                       selectedVendor.approvalStatus === 'APPROVED' ? "bg-emerald-500" : "bg-amber-500"
                     )}>
                       <div className="h-1.5 w-1.5 bg-white rounded-full animate-pulse" />
@@ -1452,17 +1477,17 @@ const AdminDashboard = () => {
                     </div>
                     <div className="flex items-center gap-4 text-stone-400">
                       <span className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                        <span className="h-1.5 w-1.5 rounded-full bg-stone-700" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-purple-900" />
                         Protocol: VND-{selectedVendor.id.slice(0, 8).toUpperCase()}
                       </span>
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 underline underline-offset-4 decoration-stone-700">
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 underline underline-offset-4 decoration-purple-900">
                         Authority: {selectedVendor.contactNumber}
                       </span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 relative z-10">
-                  <Button variant="outline" className="h-11 rounded-xl border-stone-700 text-white hover:bg-white hover:text-black bg-transparent text-[10px] font-black uppercase tracking-[0.2em] px-8 transition-all duration-300">Audit Partner</Button>
+                  <Button variant="outline" className="h-11 rounded-xl border-purple-900 text-white hover:bg-white hover:text-indigo-950 bg-transparent text-[10px] font-black uppercase tracking-[0.2em] px-8 transition-all duration-300">Audit Partner</Button>
                   <Button onClick={() => setIsVendorDetailOpen(false)} variant="ghost" className="h-11 w-11 text-stone-400 hover:text-white rounded-xl bg-white/5 border border-white/5 hover:border-white/20 transition-all">
                     <X className="h-5 w-5" />
                   </Button>
@@ -1477,7 +1502,7 @@ const AdminDashboard = () => {
                         <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Gross Revenue</p>
                         <DollarSign className="h-5 w-5 text-stone-300 group-hover:text-emerald-500 transition-colors" />
                       </div>
-                      <p className="text-5xl font-black text-stone-900 tracking-tighter leading-none">&#8377;{selectedVendor.totalRevenue?.toLocaleString()}</p>
+                      <p className={`text-5xl font-['Playfair_Display'] ${THEME.typography.weights.heavy} bg-clip-text text-transparent ${THEME.gradients.brand} tracking-tighter leading-none`}>&#8377;{selectedVendor.totalRevenue?.toLocaleString()}</p>
                       <p className="text-[11px] font-bold text-emerald-600 mt-4 uppercase tracking-wide">Market Sales Yield</p>
                       <div className="absolute bottom-0 right-0 h-1.5 w-0 bg-emerald-500 group-hover:w-full transition-all duration-700" />
                     </div>
@@ -1486,10 +1511,10 @@ const AdminDashboard = () => {
                         <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Inventory Nodes</p>
                         <Package className="h-5 w-5 text-stone-300 group-hover:text-blue-600 transition-colors" />
                       </div>
-                      <p className="text-5xl font-black text-stone-900 tracking-tighter leading-none">{selectedVendor.products?.length || 0}</p>
+                      <p className={`text-5xl font-['Playfair_Display'] ${THEME.typography.weights.heavy} bg-clip-text text-transparent ${THEME.gradients.brand} tracking-tighter leading-none`}>{selectedVendor.products?.length || 0}</p>
                       <p className="text-[11px] font-bold text-stone-400 mt-4 uppercase tracking-wide">Live Catalog Items</p>
                     </div>
-                    <div className="p-8 bg-stone-900 rounded-[2.5rem] shadow-2xl shadow-stone-900/20 text-white relative overflow-hidden group">
+                    <div className="p-8 bg-indigo-950 rounded-[2.5rem] shadow-2xl shadow-indigo-950/20 text-white relative overflow-hidden group">
                       <div className="flex items-center justify-between mb-4">
                         <p className="text-[10px] font-black text-stone-500 uppercase tracking-[0.2em]">Sales Events</p>
                         <ShoppingCart className="h-5 w-5 text-stone-600 group-hover:text-emerald-400 transition-colors" />
@@ -1502,8 +1527,8 @@ const AdminDashboard = () => {
                   <div className="grid grid-cols-12 gap-12 pt-4">
                     <div className="col-span-4 space-y-12 border-r border-stone-100 pr-12">
                       <section>
-                        <h3 className="text-[10px] font-black text-stone-900 uppercase tracking-[0.4em] mb-8 flex items-center gap-4">
-                          <span className="h-px w-8 bg-stone-900" />
+                        <h3 className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.4em] mb-8 flex items-center gap-4">
+                          <span className="h-px w-8 bg-indigo-950" />
                           Merchant Intelligence
                         </h3>
                         <div className="space-y-4">
@@ -1511,22 +1536,22 @@ const AdminDashboard = () => {
                             <div className="h-11 w-11 rounded-xl bg-white flex items-center justify-center shadow-sm text-stone-400 group-hover:text-blue-500 transition-colors"><Mail className="h-5 w-5" /></div>
                             <div className="overflow-hidden space-y-0.5">
                               <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest leading-none">Administrative Contact</p>
-                              <p className="text-sm font-bold text-stone-900 truncate leading-tight">{selectedVendor.email || 'No Email'}</p>
+                              <p className="text-sm font-bold text-indigo-950 truncate leading-tight">{selectedVendor.email || 'No Email'}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-5 p-5 rounded-2xl bg-stone-50 border border-stone-100/50 group hover:bg-white hover:shadow-lg transition-all duration-300">
                             <div className="h-11 w-11 rounded-xl bg-white flex items-center justify-center shadow-sm text-stone-400 group-hover:text-emerald-500 transition-colors"><Phone className="h-5 w-5" /></div>
                             <div className="space-y-0.5">
                               <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest leading-none">Emergency Terminal</p>
-                              <p className="text-sm font-bold text-stone-900 leading-tight">{selectedVendor.contactNumber}</p>
+                              <p className="text-sm font-bold text-indigo-950 leading-tight">{selectedVendor.contactNumber}</p>
                             </div>
                           </div>
                         </div>
                       </section>
 
                       <section>
-                        <h3 className="text-[10px] font-black text-stone-900 uppercase tracking-[0.4em] mb-8 flex items-center gap-4">
-                          <span className="h-px w-8 bg-stone-900" />
+                        <h3 className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.4em] mb-8 flex items-center gap-4">
+                          <span className="h-px w-8 bg-indigo-950" />
                           Live Inventory
                         </h3>
                         <div className="space-y-4">
@@ -1536,7 +1561,7 @@ const AdminDashboard = () => {
                                 <AvatarFallback className="bg-stone-50 text-[10px] font-black">{p.name.charAt(0)}</AvatarFallback>
                               </Avatar>
                               <div className="flex-1 overflow-hidden">
-                                <p className="text-[11px] font-bold text-stone-900 truncate tracking-tight">{p.name}</p>
+                                <p className="text-[11px] font-bold text-indigo-950 truncate tracking-tight">{p.name}</p>
                                 <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">&#8377;{parseFloat(p.price).toLocaleString()}</p>
                               </div>
                             </div>
@@ -1547,8 +1572,8 @@ const AdminDashboard = () => {
 
                     <div className="col-span-8">
                       <header className="flex items-center justify-between mb-8 pb-4 border-b border-stone-100">
-                        <h3 className="text-[10px] font-black text-stone-900 uppercase tracking-[0.4em] flex items-center gap-4">
-                          <span className="h-px w-8 bg-stone-900" />
+                        <h3 className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.4em] flex items-center gap-4">
+                          <span className="h-px w-8 bg-indigo-950" />
                           Sales Transmission Registry
                         </h3>
                         <span className="text-[9px] font-black text-emerald-600 px-4 py-1.5 bg-emerald-50 rounded-full flex items-center gap-2 border border-emerald-100">
@@ -1560,18 +1585,18 @@ const AdminDashboard = () => {
                       <Table>
                         <TableHeader>
                           <TableRow className="border-stone-50 hover:bg-transparent">
-                            <TableHead className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Order ID</TableHead>
-                            <TableHead className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Customer</TableHead>
-                            <TableHead className="text-[10px] font-black text-stone-400 uppercase tracking-widest text-right">Value</TableHead>
-                            <TableHead className="text-[10px] font-black text-stone-400 uppercase tracking-widest text-center">Protocol Status</TableHead>
+                            <TableHead >Order ID</TableHead>
+                            <TableHead >Customer</TableHead>
+                            <TableHead className="text-right">Value</TableHead>
+                            <TableHead className="text-center">Protocol Status</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {selectedVendor.orders?.length > 0 ? selectedVendor.orders.map((order) => (
                             <TableRow key={order.orderNumber} className="border-stone-50/50 hover:bg-stone-50/50 transition-colors">
-                              <TableCell className="font-bold text-xs text-stone-900">{order.orderNumber}</TableCell>
+                              <TableCell className="font-bold text-xs text-indigo-950">{order.orderNumber}</TableCell>
                               <TableCell className="text-xs text-stone-500 font-medium">{order.customer.name}</TableCell>
-                              <TableCell className="text-right font-black text-xs text-stone-900">&#8377;{parseFloat(order.totalAmount).toLocaleString()}</TableCell>
+                              <TableCell className="text-right font-black text-xs text-indigo-950">&#8377;{parseFloat(order.totalAmount).toLocaleString()}</TableCell>
                               <TableCell className="text-center">
                                 <Badge variant="secondary" className="bg-stone-100 text-[8px] font-black uppercase tracking-tighter px-2 border-none">{order.status}</Badge>
                               </TableCell>
@@ -1599,7 +1624,7 @@ const AdminDashboard = () => {
                 </div>
                 <div className="flex gap-4">
                   <Button onClick={() => setIsVendorDetailOpen(false)} variant="outline" className="font-black uppercase tracking-[0.2em] text-[10px] rounded-xl px-8 h-12 border-stone-200">De-Authorize</Button>
-                  <Button onClick={() => setIsVendorDetailOpen(false)} className="bg-stone-900 hover:bg-black font-black uppercase tracking-[0.2em] text-[10px] rounded-xl px-12 h-12 shadow-2xl shadow-stone-900/40">Secure Session</Button>
+                  <Button onClick={() => setIsVendorDetailOpen(false)} className="bg-indigo-950 hover:bg-[#1a0b2e] font-black uppercase tracking-[0.2em] text-[10px] rounded-xl px-12 h-12 shadow-2xl shadow-indigo-950/40">Secure Session</Button>
                 </div>
               </footer>
             </div>
@@ -1612,7 +1637,7 @@ const AdminDashboard = () => {
         <DialogContent className="sm:max-w-2xl rounded-[2.5rem] p-10 border-none shadow-2xl bg-white relative overflow-hidden">
           <div className="absolute top-0 right-0 p-12 opacity-[0.03] blur-2xl bg-emerald-500 rounded-full -mr-8 -mt-8" />
           <DialogHeader className="mb-8">
-            <DialogTitle className="text-3xl font-black text-stone-900 tracking-tighter uppercase">Record Manual Transmission</DialogTitle>
+            <DialogTitle className="text-3xl font-black text-indigo-950 tracking-tighter uppercase">Record Manual Transmission</DialogTitle>
             <DialogDescription className="text-stone-400 font-medium">Capture over-the-counter sales data for partner synchronization.</DialogDescription>
           </DialogHeader>
 
@@ -1643,14 +1668,14 @@ const AdminDashboard = () => {
           }} className="space-y-8">
             <div className="grid grid-cols-2 gap-8">
               <div className="space-y-3">
-                <Label className="text-[10px] font-black text-stone-900 uppercase tracking-[0.2em]">Partner Merchant</Label>
-                <select name="vendorId" required className="w-full h-12 bg-stone-50 border-stone-100 rounded-xl px-4 text-sm font-bold focus:ring-2 focus:ring-stone-900 transition-all outline-none">
+                <Label className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.2em]">Partner Merchant</Label>
+                <select name="vendorId" required className="w-full h-12 bg-stone-50 border-stone-100 rounded-xl px-4 text-sm font-bold focus:ring-2 focus:ring-indigo-950 transition-all outline-none">
                   <option value="">Select Vendor...</option>
                   {vendors.map(v => <option key={v.id} value={v.id}>{v.businessName}</option>)}
                 </select>
               </div>
               <div className="space-y-3">
-                <Label className="text-[10px] font-black text-stone-900 uppercase tracking-[0.2em]">Customer Terminal (Mobile)</Label>
+                <Label className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.2em]">Customer Terminal (Mobile)</Label>
                 <Input name="mobile" placeholder="+91 XXXXX XXXXX" required className="h-12 bg-stone-50 border-stone-100 rounded-xl px-4 text-sm font-bold shadow-none" />
               </div>
             </div>
@@ -1676,11 +1701,11 @@ const AdminDashboard = () => {
             <div className="flex items-center justify-between pt-4 border-t border-stone-100">
               <div className="space-y-1">
                 <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest leading-none">Gross Archive Value</p>
-                <Input name="amount" placeholder="Total" required className="h-12 w-48 bg-transparent border-none text-3xl font-black text-stone-900 p-0 shadow-none focus-visible:ring-0" />
+                <Input name="amount" placeholder="Total" required className="h-12 w-48 bg-transparent border-none text-3xl font-black text-indigo-950 p-0 shadow-none focus-visible:ring-0" />
               </div>
               <div className="flex gap-3">
                 <Button type="button" onClick={() => setIsManualOrderOpen(false)} variant="ghost" className="h-12 rounded-xl px-8 text-[10px] font-black uppercase tracking-widest">Abort</Button>
-                <Button type="submit" className="h-12 bg-stone-900 hover:bg-black text-white rounded-xl px-12 text-[10px] font-black uppercase tracking-widest shadow-2xl shadow-stone-900/20">Commit Sync</Button>
+                <Button type="submit" className="h-12 bg-indigo-950 hover:bg-[#1a0b2e] text-white rounded-xl px-12 text-[10px] font-black uppercase tracking-widest shadow-2xl shadow-indigo-950/20">Commit Sync</Button>
               </div>
             </div>
           </form>
@@ -1689,14 +1714,14 @@ const AdminDashboard = () => {
 
       {/* Order Insight Dossier */}
       <Dialog open={isOrderOpen} onOpenChange={setIsOrderOpen}>
-        <DialogContent className="sm:max-w-3xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-stone-50/50 backdrop-blur-xl ring-1 ring-black/5">
+        <DialogContent className="sm:max-w-3xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-stone-50/50 backdrop-blur-xl ring-1 ring-indigo-900/5">
           {detailLoading ? (
             <div className="h-[600px] flex items-center justify-center">
-              <div className="h-10 w-10 animate-spin rounded-full border-4 border-stone-200 border-t-stone-900" />
+              <div className="h-10 w-10 animate-spin rounded-full border-4 border-stone-200 border-t-indigo-950" />
             </div>
           ) : selectedOrder && (
             <div className="flex flex-col max-h-[90vh]">
-              <header className="p-10 bg-stone-900 text-white relative overflow-hidden shrink-0">
+              <header className="p-10 bg-indigo-950 text-white relative overflow-hidden shrink-0">
                 <div className="absolute top-0 right-0 p-24 bg-gradient-to-br from-amber-500/20 to-transparent blur-3xl rounded-full -mr-12 -mt-12" />
                 <div className="flex justify-between items-start relative z-10">
                   <div>
@@ -1716,11 +1741,11 @@ const AdminDashboard = () => {
                     <div>
                       <h3 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.3em] mb-4">Merchant Authority</h3>
                       <div className="p-6 bg-white rounded-3xl border border-stone-100 flex items-center gap-4 group hover:border-stone-300 transition-colors">
-                        <div className="h-14 w-14 rounded-2xl bg-stone-50 flex items-center justify-center text-stone-900 font-black text-2xl">
+                        <div className="h-14 w-14 rounded-2xl bg-stone-50 flex items-center justify-center text-indigo-950 font-black text-2xl">
                           {selectedOrder.vendor?.businessName?.charAt(0) || selectedOrder.vendorName?.charAt(0) || 'M'}
                         </div>
                         <div>
-                          <p className="font-black text-stone-900 text-lg leading-tight">{selectedOrder.vendor?.businessName || selectedOrder.vendorName}</p>
+                          <p className="font-black text-indigo-950 text-lg leading-tight">{selectedOrder.vendor?.businessName || selectedOrder.vendorName}</p>
                           <p className="text-[10px] text-stone-400 font-black uppercase tracking-widest mt-1">Verified Partner</p>
                         </div>
                       </div>
@@ -1729,7 +1754,7 @@ const AdminDashboard = () => {
                     <div>
                       <h3 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.3em] mb-4">Customer Segment</h3>
                       <div className="p-6 bg-white rounded-3xl border border-stone-100">
-                        <p className="font-black text-stone-900 text-xl tracking-tighter">{selectedOrder.customer?.name || selectedOrder.customerName || 'Direct Terminal walk-in'}</p>
+                        <p className="font-black text-indigo-950 text-xl tracking-tighter">{selectedOrder.customer?.name || selectedOrder.customerName || 'Direct Terminal walk-in'}</p>
                         <p className="text-sm text-stone-500 font-bold mt-1">{selectedOrder.customer?.mobile || selectedOrder.mobile}</p>
                         {selectedOrder.shippingAddress && (
                           <div className="mt-6 pt-6 border-t border-stone-50">
@@ -1751,11 +1776,11 @@ const AdminDashboard = () => {
                         {selectedOrder.items?.map((item, idx) => (
                           <div key={idx} className="flex justify-between items-center p-5 bg-white rounded-2xl border border-stone-100 hover:scale-[1.02] transition-transform cursor-default">
                             <div className="flex flex-col">
-                              <span className="text-sm font-black text-stone-900">{item.name}</span>
+                              <span className="text-sm font-black text-indigo-950">{item.name}</span>
                               <span className="text-[10px] text-stone-400 font-black uppercase tracking-widest mt-0.5">Quantity: {item.quantity} units</span>
                             </div>
                             <div className="text-right">
-                              <span className="font-black text-stone-900 block">&#8377;{parseFloat(item.unitPrice || (item.lineTotal / item.quantity) || 0).toLocaleString()}</span>
+                              <span className="font-black text-indigo-950 block">&#8377;{parseFloat(item.unitPrice || (item.lineTotal / item.quantity) || 0).toLocaleString()}</span>
                               <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Market Rate</span>
                             </div>
                           </div>
@@ -1785,8 +1810,8 @@ const AdminDashboard = () => {
 
                       <div className="pt-4 flex justify-between items-end border-t border-stone-50">
                         <div className="flex flex-col">
-                          <span className="text-[10px] font-black text-stone-900 uppercase tracking-widest mb-1">Total Settlement</span>
-                          <span className="text-4xl font-black text-stone-900 tracking-tighter">&#8377;{parseFloat(selectedOrder.totalAmount).toLocaleString()}</span>
+                          <span className="text-[10px] font-black text-indigo-950 uppercase tracking-widest mb-1">Total Settlement</span>
+                          <span className="text-4xl font-black text-indigo-950 tracking-tighter">&#8377;{parseFloat(selectedOrder.totalAmount).toLocaleString()}</span>
                         </div>
                         <div className="flex flex-col items-end">
                           <Badge className="bg-stone-50 text-stone-400 font-black text-[9px] border-stone-100 rounded-xl py-2 px-6 shadow-none uppercase tracking-[0.2em] mb-2">Verified Transmission</Badge>
@@ -1802,7 +1827,7 @@ const AdminDashboard = () => {
 
               <footer className="p-8 bg-white border-t border-stone-100 flex justify-center gap-4 shrink-0 mt-auto">
                 <Button onClick={() => setIsOrderOpen(false)} variant="outline" className="rounded-2xl px-12 h-14 font-black uppercase tracking-widest text-[10px] border-stone-200 hover:bg-stone-50 transition-all">Abort Audit</Button>
-                <Button onClick={() => setIsOrderOpen(false)} className="bg-stone-900 text-white rounded-2xl px-16 h-14 font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-stone-900/40 hover:bg-black hover:scale-105 active:scale-95 transition-all">Synchronize Session</Button>
+                <Button onClick={() => setIsOrderOpen(false)} className="bg-indigo-950 text-white rounded-2xl px-16 h-14 font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-indigo-950/40 hover:bg-[#1a0b2e] hover:scale-105 active:scale-95 transition-all">Synchronize Session</Button>
               </footer>
             </div>
           )}
@@ -1812,7 +1837,7 @@ const AdminDashboard = () => {
       <Dialog open={isAddVendorOpen} onOpenChange={setIsAddVendorOpen}>
         <DialogContent className="sm:max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl">
           <form onSubmit={handleAddVendor} className="flex flex-col max-h-[90vh]">
-            <header className="p-10 bg-stone-900 text-white relative overflow-hidden shrink-0">
+            <header className="p-10 bg-indigo-950 text-white relative overflow-hidden shrink-0">
               <div className="absolute top-0 right-0 p-24 bg-gradient-to-br from-emerald-500/20 to-transparent blur-3xl rounded-full -mr-12 -mt-12" />
               <div className="relative z-10">
                 <h2 className="text-4xl font-black tracking-tighter uppercase leading-none">Vendor Creation</h2>
@@ -1824,33 +1849,33 @@ const AdminDashboard = () => {
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest">Vendor Name <span className="text-rose-500">*</span></Label>
-                    <Input value={newVendorData.businessName} onChange={e => setNewVendorData({...newVendorData, businessName: e.target.value})} required className="h-12 bg-stone-50 border-stone-100 rounded-xl" />
+                    <Label className="text-[10px] font-black text-indigo-950 uppercase tracking-widest">Vendor Name <span className="text-rose-500">*</span></Label>
+                    <Input value={newVendorData.businessName} onChange={e => setNewVendorData({ ...newVendorData, businessName: e.target.value })} required className="h-12 bg-stone-50 border-stone-100 rounded-xl" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest">Owner Name <span className="text-rose-500">*</span></Label>
-                    <Input value={newVendorData.ownerName} onChange={e => setNewVendorData({...newVendorData, ownerName: e.target.value})} required className="h-12 bg-stone-50 border-stone-100 rounded-xl" />
+                    <Label className="text-[10px] font-black text-indigo-950 uppercase tracking-widest">Owner Name <span className="text-rose-500">*</span></Label>
+                    <Input value={newVendorData.ownerName} onChange={e => setNewVendorData({ ...newVendorData, ownerName: e.target.value })} required className="h-12 bg-stone-50 border-stone-100 rounded-xl" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest">Contact Number <span className="text-rose-500">*</span></Label>
-                    <Input value={newVendorData.contactNumber} onChange={e => setNewVendorData({...newVendorData, contactNumber: e.target.value})} required className="h-12 bg-stone-50 border-stone-100 rounded-xl" />
+                    <Label className="text-[10px] font-black text-indigo-950 uppercase tracking-widest">Contact Number <span className="text-rose-500">*</span></Label>
+                    <Input value={newVendorData.contactNumber} onChange={e => setNewVendorData({ ...newVendorData, contactNumber: e.target.value })} required className="h-12 bg-stone-50 border-stone-100 rounded-xl" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest">Email Address</Label>
-                    <Input type="email" value={newVendorData.email} onChange={e => setNewVendorData({...newVendorData, email: e.target.value})} className="h-12 bg-stone-50 border-stone-100 rounded-xl" />
+                    <Label className="text-[10px] font-black text-indigo-950 uppercase tracking-widest">Email Address</Label>
+                    <Input type="email" value={newVendorData.email} onChange={e => setNewVendorData({ ...newVendorData, email: e.target.value })} className="h-12 bg-stone-50 border-stone-100 rounded-xl" />
                   </div>
                   <div className="col-span-2 space-y-2">
-                    <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest">Business Category <span className="text-rose-500">*</span></Label>
-                    <Input placeholder="e.g. Health & Beauty" value={newVendorData.businessCategory} onChange={e => setNewVendorData({...newVendorData, businessCategory: e.target.value})} required className="h-12 bg-stone-50 border-stone-100 rounded-xl" />
+                    <Label className="text-[10px] font-black text-indigo-950 uppercase tracking-widest">Business Category <span className="text-rose-500">*</span></Label>
+                    <Input placeholder="e.g. Health & Beauty" value={newVendorData.businessCategory} onChange={e => setNewVendorData({ ...newVendorData, businessCategory: e.target.value })} required className="h-12 bg-stone-50 border-stone-100 rounded-xl" />
                   </div>
                   <div className="col-span-2 space-y-2">
-                    <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest">Store Address <span className="text-rose-500">*</span></Label>
-                    <textarea 
-                      value={newVendorData.storeAddress} 
-                      onChange={e => setNewVendorData({...newVendorData, storeAddress: e.target.value})} 
-                      required 
+                    <Label className="text-[10px] font-black text-indigo-950 uppercase tracking-widest">Store Address <span className="text-rose-500">*</span></Label>
+                    <textarea
+                      value={newVendorData.storeAddress}
+                      onChange={e => setNewVendorData({ ...newVendorData, storeAddress: e.target.value })}
+                      required
                       placeholder="e.g. 123 Main St, City, State, Zip"
-                      className="w-full min-h-[100px] p-4 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all resize-y" 
+                      className="w-full min-h-[100px] p-4 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all resize-y"
                     />
                   </div>
                 </div>

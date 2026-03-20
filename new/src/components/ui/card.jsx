@@ -11,7 +11,7 @@ function Card({
     <div
       data-slot="card"
       className={cn(
-        `bg-white text-stone-900 flex flex-col gap-6 border-white/10 ring-1 ring-black/5 overflow-hidden ${THEME.borders.radius.xl} ${THEME.shadows.md}`,
+        `${THEME.colors.background.primary} flex flex-col gap-6 ${THEME.borders.stroke.default} overflow-hidden ${THEME.borders.radius.xl} ${THEME.shadows.md}`,
         className
       )}
       {...props} />

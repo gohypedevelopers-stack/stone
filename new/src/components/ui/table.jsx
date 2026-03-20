@@ -61,7 +61,7 @@ function TableRow({
     <tr
       data-slot="table-row"
       className={cn(
-        "hover:bg-pink-500/5 data-[state=selected]:bg-stone-100 border-b border-black/5 transition-colors cursor-pointer",
+        `hover:bg-pink-500/5 data-[state=selected]:${THEME.colors.background.secondary} border-b border-black/5 ${THEME.animations.transitions} cursor-pointer`,
         className
       )}
       {...props} />

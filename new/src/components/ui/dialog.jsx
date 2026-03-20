@@ -38,7 +38,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        `data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-md`,
+        `data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-md ${THEME.animations.transitions}`,
         className
       )}
       {...props} />
@@ -57,7 +57,7 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          `data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 border border-black/5 p-6 shadow-2xl duration-500 outline-none sm:max-w-xl bg-white/95 backdrop-blur-2xl ${THEME.borders.radius.xl} ring-1 ring-stone-900/5`,
+          `data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 p-6 outline-none sm:max-w-xl ${THEME.colors.background.primary}/95 backdrop-blur-2xl ${THEME.borders.radius.xl} ${THEME.borders.stroke.default} ${THEME.shadows.xl} ${THEME.animations.transitions}`,
           className
         )}
         {...props}>
@@ -115,7 +115,7 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("text-lg leading-none font-semibold", className)}
+      className={cn(`${THEME.typography.headings.h3} ${THEME.colors.text.primary} leading-none`, className)}
       {...props} />
   );
 }
@@ -127,7 +127,7 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn("text-muted-foreground text-sm", className)}
+      className={cn(`${THEME.colors.text.secondary} ${THEME.typography.weights.medium} text-sm`, className)}
       {...props} />
   );
 }

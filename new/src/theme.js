@@ -12,10 +12,10 @@ export const THEME = {
     background: {
       primary: "bg-white",
       secondary: "bg-stone-50",
-      accentDark: "bg-[#151515]",
-      accentSolid: "bg-stone-900"
+      accentDark: "bg-gradient-to-b from-[#1a0b2e] to-[#0b0314]",
+      accentSolid: "bg-gradient-to-br from-[#251042] via-[#1a0b2e] to-[#0b0314]"
     },
-    
+
     // Core Text
     text: {
       primary: "text-stone-900",
@@ -23,7 +23,7 @@ export const THEME = {
       muted: "text-stone-300",
       inverse: "text-white"
     },
-    
+
     // State Colors
     status: {
       success: "emerald-500",
@@ -32,7 +32,7 @@ export const THEME = {
       warning: "orange-500",
       brandHighlight: "pink-600"
     },
-    
+
     // Specific Hex Codes (Found manually in project files)
     raw: {
       brandPurple: "#9a6bff",
@@ -58,11 +58,11 @@ export const THEME = {
 
     // Standardized Headline Formats
     headings: {
-      h1: "text-4xl md:text-5xl font-black tracking-tighter leading-none", // Page Titles
-      h2: "text-2xl md:text-[32px] font-extrabold tracking-wide",          // Section Headers
-      h3: "text-lg md:text-xl font-bold tracking-tight",                   // Card Titles
+      h1: "text-4xl md:text-5xl font-black font-['Playfair_Display'] tracking-tighter leading-none", // Page Titles
+      h2: "text-2xl md:text-[32px] font-extrabold font-['Playfair_Display'] tracking-wide",          // Section Headers
+      h3: "text-lg md:text-xl font-bold font-['Playfair_Display'] tracking-tight",                   // Card Titles
     },
-    
+
     // Standardized Micro-coy (Those super tiny capitalized subtitles)
     micro: {
       default: "text-[10px] font-black uppercase tracking-widest leading-none",
@@ -79,7 +79,7 @@ export const THEME = {
       xl: "rounded-[26px]",       // Hero Banner
       pill: "rounded-full"        // Pills, tags, icons
     },
-    
+
     // Standard Line strokes
     stroke: {
       default: "border border-stone-100",
