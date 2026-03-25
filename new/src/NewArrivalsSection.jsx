@@ -3,14 +3,15 @@ import ImageReveal from "./components/image-tiles";
 import imgNew1 from "./assets/newprod/new1.jpg";
 import imgNew2 from "./assets/newprod/new2.jpg";
 import imgNew3 from "./assets/newprod/new3.jpg";
+import React from "react";
 
-export default function NewArrivalsSection({ onNavigate }) {
+export default React.memo(function NewArrivalsSection({ onNavigate }) {
   return (
     <section className="relative px-1 py-2 md:py-20 max-w-[1440px] mx-auto">
-      <div className="bg-white/40 backdrop-blur-xl rounded-[32px] border border-white/60 p-8 md:p-16 flex flex-col md:flex-row items-center justify-between gap-12 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-500">
+      <div className="bg-[#f0f9ff]/80 rounded-[32px] border border-stone-200 p-8 md:p-16 flex flex-col md:flex-row items-center justify-between gap-12 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-500">
         {/* Text Content */}
         <div className="max-w-xl relative z-10 text-center md:text-left">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 border border-pink-100 shadow-sm mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-pink-100 shadow-sm mb-6">
             <span className="text-xs font-bold uppercase tracking-widest text-[#151515]">
               Just Dropped
             </span>
@@ -50,4 +51,4 @@ export default function NewArrivalsSection({ onNavigate }) {
       </div>
     </section>
   );
-}
+});

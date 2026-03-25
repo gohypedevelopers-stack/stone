@@ -12,79 +12,131 @@ export const printThermalReceipt = (bill) => {
         <style>
           @page { margin: 0; }
           body { 
-            font-family: 'Courier New', monospace; 
-            padding: 20px; 
-            max-width: 320px; 
+            font-family: 'Courier New', Courier, monospace; 
+            padding: 15px; 
+            max-width: 300px; 
             margin: 0 auto; 
             color: #000; 
             font-size: 13px;
+            line-height: 1.2;
           }
           .center { text-align: center; }
-          table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
-          th, td { border-bottom: 1px dashed #000; padding: 8px 0; text-align: left; }
-          th { border-top: 1px dashed #000; border-bottom: 1px dashed #000; font-weight: bold; }
           .right { text-align: right; }
-          .total-row { 
-            font-weight: bold; 
-            font-size: 16px; 
-            margin-top: 20px; 
-            border-top: 1px dashed #000; 
-            padding-top: 15px; 
-            text-align: right;
-          }
-          .divider { border-bottom: 1px dashed #000; margin: 15px 0; border-top: 0; }
-          .merchant-name { font-size: 18px; font-weight: bold; margin-bottom: 8px; }
+          .bold { font-weight: bold; }
+          .uppercase { text-transform: uppercase; }
+          
+          .header-main { font-size: 18px; font-weight: 900; margin-bottom: 4px; }
+          .header-sub { font-size: 10px; font-weight: bold; letter-spacing: 2px; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 8px; }
+          
+          .info-grid { margin-bottom: 15px; font-size: 11px; }
+          .info-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
+          
+          .divider-solid { border-bottom: 2px solid #000; margin: 10px 0; }
+          .divider-dashed { border-bottom: 1px dashed #000; margin: 10px 0; }
+          .divider-double { border-bottom: 4px double #000; margin: 10px 0; }
+          
+          table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+          th { border-bottom: 1px solid #000; border-top: 1px solid #000; padding: 8px 0; font-size: 10px; text-transform: uppercase; }
+          td { padding: 10px 0; font-size: 11px; vertical-align: top; border-bottom: 1px dashed #eee; }
+          
+          .total-section { margin-top: 10px; }
+          .total-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 11px; }
+          .total-final { font-size: 18px; font-weight: 900; margin-top: 12px; padding-top: 12px; border-top: 2px solid #000; }
+          
+          .footer { margin-top: 40px; font-size: 10px; letter-spacing: 0.5px; }
         </style>
       </head>
       <body>
         <div class="center">
-          <div class="merchant-name">${bill.vendor?.businessName || bill.items?.[0]?.product?.vendor?.businessName || 'STONE RETAIL'}</div>
-          <div>${isOffline ? 'Terminal Offline Transaction' : 'Online E-Commerce Order'}</div>
-          <div style="font-size: 11px; margin-top: 15px;">Ref: ${isOffline ? 'OFF-' : 'ORD-'}${refString}</div>
-          <div style="font-size: 11px;">Date: ${dateString}</div>
-          <div class="divider"></div>
-          ${custName ? `<div style="font-size: 12px; font-weight: bold;">Customer: ${custName}</div>` : ''}
-          ${custMobile ? `<div style="font-size: 12px;">Mobile: ${custMobile}</div>` : ''}
-          <div class="divider"></div>
+          <div class="header-main uppercase">${bill.vendor?.businessName || bill.items?.[0]?.product?.vendor?.businessName || 'STONE RETAIL'}</div>
+          <div class="header-sub uppercase">Audit Sync Dossier</div>
+          
+          <div class="info-grid">
+            <div class="info-row">
+              <span>REF ID:</span>
+              <span class="bold">${isOffline ? 'OFF-' : 'ORD-'}${refString}</span>
+            </div>
+            <div class="info-row">
+              <span>DATE:</span>
+              <span>${dateString}</span>
+            </div>
+            <div class="info-row">
+              <span>TYPE:</span>
+              <span class="uppercase">${isOffline ? 'Offline' : 'Online'}</span>
+            </div>
+          </div>
+
+          <div class="divider-dashed"></div>
+
+          ${custName ? `
+            <div class="info-grid" style="margin-top: 10px;">
+              <div class="info-row">
+                <span>CUSTOMER:</span>
+                <span class="bold">${custName}</span>
+              </div>
+              ${custMobile ? `
+                <div class="info-row">
+                  <span>MOBILE:</span>
+                  <span>${custMobile}</span>
+                </div>
+              ` : ''}
+            </div>
+          ` : ''}
         </div>
+
         <table>
           <thead>
             <tr>
-              <th>Item</th>
-              <th class="right">Qty</th>
-              <th class="right">Amt</th>
+              <th align="left">ITEM DESCRIPTION</th>
+              <th align="right" style="width: 40px; padding-right: 15px;">QTY</th>
+              <th align="right" style="width: 70px;">VALUE</th>
             </tr>
           </thead>
           <tbody>
             ${(bill.items || []).map(item => `
               <tr>
-                <td>${item.name || item.product?.name || 'Product'}</td>
-                <td class="right">${item.quantity}</td>
-                <td class="right">${Number(item.unitPrice || item.price || item.lineTotal/item.quantity || 0).toLocaleString('en-IN')}</td>
+                <td>${(item.name || item.product?.name || 'Product').toUpperCase()}</td>
+                <td align="right" style="padding-right: 15px;">${item.quantity}</td>
+                <td align="right">${Number(item.unitPrice || item.price || item.lineTotal/item.quantity || 0).toLocaleString('en-IN')}</td>
               </tr>
             `).join('')}
           </tbody>
         </table>
         
-        ${Number(bill.discountAmount) > 0 ? `
-           <div style="text-align: right; font-size: 11px; margin-top: 10px;">
-             Discount: - Rs. ${Number(bill.discountAmount).toLocaleString('en-IN')}
-           </div>
-        ` : ''}
+        <div class="total-section">
+          <div class="total-row">
+            <span>GROSS ARCHIVE VALUE:</span>
+            <span>${Number(bill.subtotal || bill.amount || bill.totalAmount || 0).toLocaleString('en-IN')}</span>
+          </div>
+          
+          ${Number(bill.discountAmount) > 0 ? `
+            <div class="total-row">
+              <span>SYSTEM DISCOUNT:</span>
+              <span>- ${Number(bill.discountAmount).toLocaleString('en-IN')}</span>
+            </div>
+          ` : ''}
 
-        ${Number(bill.rewardPointsUsed) > 0 ? `
-           <div style="text-align: right; font-size: 11px; margin-top: 5px;">
-             Credits Applied: - Rs. ${Number(bill.rewardPointsUsed).toLocaleString('en-IN')}
-           </div>
-        ` : ''}
+          ${Number(bill.rewardPointsUsed) > 0 ? `
+            <div class="total-row">
+              <span>LOYALTY CREDITS:</span>
+              <span>- ${Number(bill.rewardPointsUsed).toLocaleString('en-IN')}</span>
+            </div>
+          ` : ''}
 
-        <div class="total-row">
-          TOTAL: Rs. ${Number(bill.amount || bill.totalAmount || 0).toLocaleString('en-IN')}
+          <div class="total-final">
+            <div class="total-row">
+              <span class="bold">TOTAL SETTLEMENT:</span>
+              <span class="bold">Rs. ${Number(bill.amount || bill.totalAmount || 0).toLocaleString('en-IN')}</span>
+            </div>
+          </div>
         </div>
 
-        <div class="center" style="margin-top: 40px; font-size: 11px; font-style: italic;">
-          * Original Itemized Copy *<br/>
-          Thank you for choosing us!
+        <div class="center footer">
+          <div class="divider-dashed"></div>
+          <div class="bold italic">* ORIGINAL ITEMISED COPY *</div>
+          <div style="margin-top: 5px;">AUTH SYNC VERIFICATION OK</div>
+          <div style="margin-top: 15px; font-size: 11px;">THANK YOU FOR CHOOSING US!</div>
+          <div class="divider-double"></div>
         </div>
       </body>
     </html>

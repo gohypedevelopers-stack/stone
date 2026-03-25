@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { useAuth } from "../context/AuthContext";
 
-const AuthModal = ({ isOpen, onClose }) => {
+const AuthModal = memo(({ isOpen, onClose }) => {
   const { login, register } = useAuth();
   const [isRegistering, setIsRegistering] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -52,12 +52,12 @@ const AuthModal = ({ isOpen, onClose }) => {
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/40"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-[420px] bg-white rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+      <div className="relative w-full max-w-[420px] bg-white rounded-3xl shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200 transform-gpu will-change-[transform,opacity]">
         <div className="p-8">
           <div className="flex justify-between items-start mb-6">
             <div>
@@ -173,6 +173,6 @@ const AuthModal = ({ isOpen, onClose }) => {
       </div>
     </div>
   );
-};
+});
 
 export default AuthModal;

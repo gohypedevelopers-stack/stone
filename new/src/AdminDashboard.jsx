@@ -6,6 +6,11 @@ import {
   Package,
   ShoppingCart,
   Users,
+  Star,
+  Sparkles,
+  Trophy,
+  Coins,
+  Clock,
   CheckCircle2,
   Calendar,
   AlertCircle,
@@ -34,8 +39,12 @@ import {
   Camera,
   Pencil,
   LayoutTemplate,
-  Printer
+  Printer,
+  Bell,
+  Search,
+  Settings
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { printThermalReceipt } from "@/utils/printReceipt";
 
@@ -45,6 +54,7 @@ import { VendorOfflineBilling } from "@/components/VendorOfflineBilling";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { THEME } from "./theme";
@@ -125,7 +135,8 @@ const AdminDashboard = () => {
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [newProduct, setNewProduct] = useState({
     name: '', brand: '', price: '', categoryName: '', description: '',
-    tags: '', featured: false, rewardEligible: false, limitedOffer: false,
+    tags: '', featured: false, newArrival: false, bestSeller: false, trending: false,
+    rewardEligible: false, limitedOffer: false,
     ingredients: '', whyWeLoveIt: '', discountPrice: '', existingImages: [],
     vendors: [{ vendorId: '', stock: '' }]
   });
@@ -136,6 +147,8 @@ const AdminDashboard = () => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [editingProductId, setEditingProductId] = useState(null);
   const [initialProductState, setInitialProductState] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [isAddingNewCategory, setIsAddingNewCategory] = useState(false);
 
   const { logout } = useAuth();
 
@@ -145,7 +158,9 @@ const AdminDashboard = () => {
       name: p.name, brand: p.brand || '', price: p.price,
       categoryName: p.category?.name || '', description: p.description || '',
       tags: p.tags?.join(', ') || '',
-      featured: p.featured, rewardEligible: p.rewardEligible,
+      featured: p.featured, newArrival: p.newArrival || false, 
+      bestSeller: p.bestSeller || false, trending: p.trending || false,
+      rewardEligible: p.rewardEligible,
       limitedOffer: p.limitedOffer, ingredients: p.ingredients || '',
       whyWeLoveIt: p.whyWeLoveIt || '', discountPrice: p.discountPrice || '',
       existingImages: (p.imageUrls || []).filter(img => img && img.trim() !== ''),
@@ -161,6 +176,7 @@ const AdminDashboard = () => {
     setInitialProductState(JSON.stringify({ prod: newProd, ben, faq }));
     setImageFiles({ primary: null, additional: [] });
     setHasMultipleImages(p.imageUrls && p.imageUrls.length > 1);
+    setIsAddingNewCategory(false);
     fetch(`${API_URL}/admin/vendors`).then(r => r.json()).then(d => {
       if (d.success) setVendors(d.data);
     });
@@ -171,7 +187,8 @@ const AdminDashboard = () => {
     setEditingProductId(null);
     const newProd = {
       name: '', brand: '', price: '', categoryName: '', description: '',
-      tags: '', featured: false, rewardEligible: false, limitedOffer: false,
+      tags: '', featured: false, newArrival: false, bestSeller: false, trending: false,
+      rewardEligible: false, limitedOffer: false,
       ingredients: '', whyWeLoveIt: '', discountPrice: '', existingImages: [],
       vendors: [{ vendorId: '', stock: '' }]
     };
@@ -185,6 +202,7 @@ const AdminDashboard = () => {
     setInitialProductState(JSON.stringify({ prod: newProd, ben, faq }));
     setImageFiles({ primary: null, additional: [] });
     setHasMultipleImages(false);
+    setIsAddingNewCategory(false);
     fetch(`${API_URL}/admin/vendors`).then(r => r.json()).then(d => {
       if (d.success) setVendors(d.data);
     });
@@ -206,11 +224,11 @@ const AdminDashboard = () => {
       if (data.success) {
         fetchDataForView('inventory');
       } else {
-        alert(data.message || 'Failed to delete product.');
+        toast.error(data.message || 'Failed to delete product.');
       }
     } catch (err) {
       console.error(err);
-      alert('Error deleting product');
+      toast.error('Error deleting product');
     }
   };
 
@@ -229,6 +247,24 @@ const AdminDashboard = () => {
       }
     } else {
       fetchStats();
+    }
+  }, [activeView]);
+
+  const fetchCategories = async () => {
+    try {
+      const resp = await fetch(`${API_URL}/admin/categories`);
+      const data = await resp.json();
+      if (data.success) {
+        setCategories(data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (activeView === 'inventory' || activeView === 'add-product') {
+      fetchCategories();
     }
   }, [activeView]);
 
@@ -308,7 +344,7 @@ const AdminDashboard = () => {
 
   const handleAddProduct = async (e) => {
     e.preventDefault();
-    if (!editingProductId && !imageFiles.primary) return alert('A primary product image is required.');
+    if (!editingProductId && !imageFiles.primary) return toast.error('A primary product image is required.');
 
     setLoading(true);
     try {
@@ -402,15 +438,19 @@ const AdminDashboard = () => {
         }
       }
 
-      setNewProduct({ name: '', brand: '', price: '', categoryName: '', description: '', tags: '', featured: false, rewardEligible: false, limitedOffer: false, ingredients: '', whyWeLoveIt: '', discountPrice: '', existingImages: [], vendors: [{ vendorId: '', stock: '' }] });
-        setProductBenefits([{ icon: '✨', text: '' }]);
-        setProductFaq([{ q: '', a: '' }]);
-        setImageFiles({ primary: null, additional: [] });
-        setHasMultipleImages(false);
-        setEditingProductId(null);
-        navigate('/admin/inventory');
-        fetchDataForView('inventory');
-    } catch (err) { console.error(err); alert('Something went wrong.'); }
+      // setNewProduct({ name: '', brand: '', price: '', categoryName: '', description: '', tags: '', featured: false, newArrival: false, bestSeller: false, trending: false, rewardEligible: false, limitedOffer: false, ingredients: '', whyWeLoveIt: '', discountPrice: '', existingImages: [], vendors: [{ vendorId: '', stock: '' }] });
+      // setProductBenefits([{ icon: '✨', text: '' }]);
+      // setProductFaq([{ q: '', a: '' }]);
+      // setImageFiles({ primary: null, additional: [] });
+      // setHasMultipleImages(false);
+      // setEditingProductId(null);
+      // navigate('/admin/inventory');
+      // fetchDataForView('inventory');
+      toast.success('Product saved successfully!');
+    } catch (err) { 
+      console.error(err); 
+      toast.error(err.message || 'Something went wrong.'); 
+    }
     finally { setLoading(false); }
   };
 
@@ -429,9 +469,9 @@ const AdminDashboard = () => {
         setNewVendorData({ businessName: '', ownerName: '', contactNumber: '', email: '', businessCategory: '', storeAddress: '' });
         fetchDataForView('vendors');
       } else {
-        alert(data.message || 'Failed to add vendor.');
+        toast.error(data.message || 'Failed to add vendor.');
       }
-    } catch (err) { console.error(err); alert('Something went wrong.'); }
+    } catch (err) { console.error(err); toast.error('Something went wrong.'); }
     finally { setLoading(false); }
   };
 
@@ -441,46 +481,33 @@ const AdminDashboard = () => {
 
   const StatCard = ({ title, value, icon: Icon, colorClass, description }) => {
     const bgColor = colorClass.split(' ').find(c => c.startsWith('bg-'));
-    const textColor = colorClass.split(' ').find(c => c.startsWith('text-'));
 
     return (
       <Card className={cn(
-        "relative overflow-hidden group border-0 transition-all duration-500 ease-out hover:-translate-y-1.5 rounded-[1.5rem] bg-white cursor-pointer flex flex-col",
-        "shadow-[0_4px_24px_rgb(0,0,0,0.04)] hover:shadow-[0_16px_40px_rgb(0,0,0,0.08)] min-h-[155px]"
+        "relative overflow-hidden group border border-stone-100 transition-all duration-300 ease-out hover:-translate-y-1 rounded-2xl bg-white cursor-pointer flex flex-col",
+        "shadow-sm hover:shadow-md"
       )}>
         {/* Soft glowing ambient orb in the top right corner */}
         <div className={cn(
-          "absolute -top-10 -right-10 w-36 h-36 rounded-full blur-3xl opacity-20 group-hover:opacity-50 group-hover:scale-150 transition-all duration-700 ease-out",
+          "absolute -top-10 -right-10 w-32 h-32 rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-all duration-500 ease-out",
           bgColor
         )} />
 
-        {/* Decorative sparkline at bottom */}
-        <div className="absolute bottom-0 left-0 right-0 h-[3px] overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-          <div className={cn("h-full w-full")} style={{background: `linear-gradient(90deg, transparent, ${textColor?.includes('blue') ? '#3b82f6' : textColor?.includes('emerald') ? '#10b981' : textColor?.includes('purple') ? '#8b5cf6' : '#ec4899'}, transparent)`}} />
-        </div>
-
-        {/* Subtle glass effect borders */}
-        <div className="absolute inset-0 ring-1 ring-inset ring-indigo-900/[0.04] rounded-[1.5rem] pointer-events-none" />
-
-        <CardHeader className="flex flex-row items-center gap-3.5 pb-0 pt-6 px-6 relative z-20">
-          <div className={cn("p-2.5 rounded-xl w-fit transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-sm border border-white/60", colorClass)}>
-            <Icon className="h-5 w-5" strokeWidth={2.2} />
-          </div>
-          <CardTitle className="font-['Inter'] text-stone-500 font-semibold text-[13px] tracking-wide leading-tight">
+        <CardHeader className="flex flex-row items-center justify-between pb-2 pt-5 px-5 relative z-20">
+          <CardTitle className="font-['Inter'] text-stone-500 font-semibold text-xs uppercase tracking-wider leading-tight">
             {title}
           </CardTitle>
+          <div className={cn("p-2.5 rounded-xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 border border-stone-50/50", colorClass)}>
+            <Icon className="h-4 w-4" strokeWidth={2.5} />
+          </div>
         </CardHeader>
 
-        <CardContent className="px-6 pb-5 pt-3 relative z-20 flex flex-col justify-end flex-1">
-          <div className={cn(
-            "text-[38px] leading-none font-['DM_Sans'] font-bold tracking-tight transition-all duration-500 transform group-hover:translate-x-0.5"
-          )}>
-            <span className="text-indigo-950">
-              {value}
-            </span>
+        <CardContent className="px-5 pb-5 pt-0 relative z-20">
+          <div className="text-[32px] leading-none font-black tracking-tight text-indigo-950 transition-all duration-500">
+            {value}
           </div>
           {description && (
-            <p className="font-['Inter'] text-[11px] text-stone-400 font-medium leading-snug max-w-[180px] mt-1.5">
+            <p className="font-['Inter'] text-[11px] text-stone-400 font-medium leading-tight mt-1.5 truncate">
               {description}
             </p>
           )}
@@ -608,14 +635,44 @@ const AdminDashboard = () => {
           </SidebarFooter>
         </Sidebar>
 
-        <div className="flex-1 flex flex-col relative overflow-hidden z-0">
-          <header className={`h-[88px] bg-white/70 backdrop-blur-2xl px-12 flex items-center justify-between sticky top-0 z-50 border-b border-stone-200/50 ${THEME.shadows.sm}`}>
-            <div className="flex items-center gap-6">
-              <SidebarTrigger className="lg:hidden" />
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Global Status: Active</span>
+        <div className="flex-1 flex flex-col relative overflow-hidden z-0 bg-stone-50">
+          <header className="h-[80px] bg-white/80 backdrop-blur-xl px-8 flex items-center justify-between sticky top-0 z-50 border-b border-stone-200/60 shadow-sm">
+            
+            {/* Left: Status & Sidebar Trigger */}
+            <div className="flex items-center gap-5">
+              <SidebarTrigger className="lg:hidden text-stone-500 hover:text-stone-900 transition-colors" />
+              <div className="hidden md:block">
+                <div className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-0.5">Today's Date</div>
+                <div className="text-sm font-bold text-stone-800">
+                  {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                </div>
               </div>
+            </div>
+
+            {/* Middle: Search Bar (Hidden on mobile) */}
+            <div className="hidden md:flex flex-1 max-w-md mx-6 relative group">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400 group-focus-within:text-indigo-600 transition-colors" />
+              <Input 
+                 placeholder="Search orders, products, or vendors..." 
+                 className="w-full bg-stone-100/50 border-stone-200 focus-visible:ring-indigo-600 focus-visible:bg-white pl-10 h-10 rounded-xl transition-all shadow-none placeholder:text-stone-400 font-medium" 
+              />
+            </div>
+
+            {/* Right: Actions & Notifications */}
+            <div className="flex items-center gap-3">
+              <Button size="icon" variant="ghost" className="h-[42px] w-[42px] rounded-xl text-stone-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors relative">
+                <Bell className="h-[20px] w-[20px]" />
+                <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-rose-500 border-2 border-white"></span>
+              </Button>
+              <Button size="icon" variant="ghost" className="h-[42px] w-[42px] rounded-xl text-stone-500 hover:text-indigo-600 hover:bg-stone-100 transition-colors">
+                <Settings className="h-[20px] w-[20px]" />
+              </Button>
+              
+              <div className="h-6 w-px bg-stone-200 mx-1 hidden sm:block"></div>
+              
+              <Button className="hidden sm:flex bg-indigo-950 text-white hover:bg-indigo-900 rounded-xl px-5 h-10 text-xs font-bold shadow-md shadow-indigo-950/10">
+                Generate Report
+              </Button>
             </div>
 
           </header>
@@ -796,36 +853,44 @@ const AdminDashboard = () => {
                   <TabsContent value="online" className="animate-in slide-in-from-bottom-2 duration-500">
                     <Card className="border-none shadow-sm rounded-3xl overflow-hidden">
                       <Table>
-                        <TableHeader className="bg-stone-50">
-                          <TableRow className="border-stone-100/50 py-4 hover:bg-transparent">
-                            <TableHead className="p-6">Transaction Ref</TableHead>
-                            <TableHead className="p-6">Customer Terminal</TableHead>
-                            <TableHead className="p-6">Merchant Origin</TableHead>
-                            <TableHead className="p-6 text-right">Settlement</TableHead>
-                            <TableHead className="p-6 text-center">Status</TableHead>
+                        <TableHeader className="bg-stone-50/50">
+                          <TableRow className="border-stone-100 hover:bg-transparent h-16">
+                            <TableHead className="px-8 text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Transaction Ref</TableHead>
+                            <TableHead className="px-8 text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Customer Terminal</TableHead>
+                            <TableHead className="px-8 text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Merchant Origin</TableHead>
+                            <TableHead className="px-8 text-right text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Settlement</TableHead>
+                            <TableHead className="px-8 text-center text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Status</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {loading ? (
-                            [1, 2, 3].map(i => <TableRow key={i} className="animate-pulse"><TableCell colSpan={5} className="h-20 bg-stone-50/50" /></TableRow>)
+                            [1, 2, 3].map(i => <TableRow key={i} className="animate-pulse"><TableCell colSpan={5} className="h-24 bg-stone-50/20" /></TableRow>)
                           ) : orders.filter(o => o.type === 'Online').length === 0 ? (
-                            <TableRow><TableCell colSpan={5} className="text-center p-20 text-stone-400 font-bold italic">No active digital transmissions found.</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={5} className="text-center p-24 text-stone-400 font-bold italic">No active digital transmissions found.</TableCell></TableRow>
                           ) : orders.filter(o => o.type === 'Online').map((o) => (
                             <TableRow
                               key={o.id}
                               onClick={() => fetchOrderDetail(o.id, 'Online')}
-                              className="border-stone-50 hover:bg-stone-100/50 transition-all duration-300 cursor-pointer group"
+                              className="border-stone-50 hover:bg-stone-50 transition-all duration-300 cursor-pointer group h-20"
                             >
-                              <TableCell className="p-6">
+                              <TableCell className="px-8">
                                 <span className="text-sm font-black text-indigo-950 tracking-tighter uppercase group-hover:text-amber-600 transition-colors">{o.orderNumber}</span>
                               </TableCell>
-                              <TableCell className="p-6 font-bold text-indigo-900">{o.customerName}</TableCell>
-                              <TableCell className="p-6 font-medium text-stone-500">{o.vendorName}</TableCell>
-                              <TableCell className="p-6 text-right font-black text-indigo-950 text-lg">&#8377;{parseFloat(o.totalAmount).toLocaleString()}</TableCell>
-                              <TableCell className="p-6 text-center">
+                              <TableCell className="px-8">
+                                <span className="font-['Playfair_Display'] font-extrabold text-indigo-900 text-base">{o.customerName}</span>
+                              </TableCell>
+                              <TableCell className="px-8">
+                                <span className="font-medium text-stone-500 text-xs uppercase tracking-wider">{o.vendorName}</span>
+                              </TableCell>
+                              <TableCell className="px-8 text-right">
+                                <span className="font-mono font-bold text-indigo-950 text-base">&#8377;{parseFloat(o.totalAmount).toLocaleString()}</span>
+                              </TableCell>
+                              <TableCell className="px-8 text-center">
                                 <Badge variant="outline" className={cn(
-                                  "text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-lg border-stone-200",
-                                  o.status === 'DELIVERED' || o.status === 'COMPLETED' ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+                                  "text-[9px] font-black uppercase tracking-[0.15em] px-4 py-1.5 rounded-full border-none shadow-sm",
+                                  o.status === 'DELIVERED' || o.status === 'COMPLETED' 
+                                    ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-500/20" 
+                                    : "bg-amber-50 text-amber-600 ring-1 ring-amber-500/20"
                                 )}>
                                   {o.status}
                                 </Badge>
@@ -838,36 +903,57 @@ const AdminDashboard = () => {
                   </TabsContent>
 
                   <TabsContent value="offline" className="animate-in slide-in-from-bottom-2 duration-500">
-                    <Card className="border-none shadow-sm rounded-3xl overflow-hidden">
+                    <Card className="border-none shadow-[0_8px_30px_rgba(0,0,0,0.02)] rounded-[2.5rem] overflow-hidden bg-white">
                       <Table>
-                        <TableHeader className="bg-stone-50">
-                          <TableRow className="border-stone-100/50 py-4 hover:bg-transparent">
-                            <TableHead className="p-6">Entry Ref</TableHead>
-                            <TableHead className="p-6">Merchant Authority</TableHead>
-                            <TableHead className="p-6">Customer ID</TableHead>
-                            <TableHead className="p-6 text-right">Value</TableHead>
-                            <TableHead className="p-6 text-center">Registry Status</TableHead>
+                        <TableHeader className="bg-stone-50/50">
+                          <TableRow className="border-stone-100 hover:bg-transparent h-16">
+                            <TableHead className="px-8 text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Entry Ref</TableHead>
+                            <TableHead className="px-8 text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Merchant Authority</TableHead>
+                            <TableHead className="px-8 text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Customer ID</TableHead>
+                            <TableHead className="px-8 text-right text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Value</TableHead>
+                            <TableHead className="px-8 text-center text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Registry Status</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {loading ? (
                             [1, 2, 3].map(i => <TableRow key={i} className="animate-pulse"><TableCell colSpan={5} className="h-20 bg-stone-50/50" /></TableRow>)
                           ) : orders.filter(o => o.type === 'Offline').length === 0 ? (
-                            <TableRow><TableCell colSpan={5} className="text-center p-24 text-stone-400 font-bold italic opacity-40">No manual records found in this cycle.</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={5} className="text-center p-32 text-stone-300 text-[11px] font-black uppercase tracking-[0.4em]">No manual records found in this cycle.</TableCell></TableRow>
                           ) : orders.filter(o => o.type === 'Offline').map((o) => (
                             <TableRow
                               key={o.id}
                               onClick={() => fetchOrderDetail(o.id, 'Offline')}
-                              className="border-stone-50 hover:bg-stone-100/50 transition-all duration-300 cursor-pointer group"
+                              className="border-stone-50/50 h-[5.5rem] hover:bg-indigo-50/20 transition-all duration-300 cursor-pointer group"
                             >
-                              <TableCell className="p-6">
-                                <Badge className="bg-indigo-950 group-hover:bg-amber-600 text-stone-100 text-[8px] font-black uppercase tracking-widest rounded px-2 transition-colors">{o.orderNumber}</Badge>
+                              <TableCell className="px-8">
+                                <div className="flex flex-col">
+                                  <Badge className="w-fit bg-slate-100 group-hover:bg-indigo-600 text-slate-600 group-hover:text-white text-[9px] font-mono font-black uppercase tracking-widest rounded px-2.5 py-1.5 transition-all shadow-sm border border-slate-200 group-hover:border-indigo-600">{o.orderNumber}</Badge>
+                                  <span className="text-[8px] font-mono font-black text-slate-300 uppercase tracking-widest mt-2 ml-0.5">REF_PROTO_ID</span>
+                                </div>
                               </TableCell>
-                              <TableCell className="p-6 font-black text-indigo-950">{o.vendorName}</TableCell>
-                              <TableCell className="p-6 font-bold text-stone-500">{o.customerName}</TableCell>
-                              <TableCell className="p-6 text-right font-black text-indigo-950 text-lg">&#8377;{parseFloat(o.totalAmount).toLocaleString()}</TableCell>
-                              <TableCell className="p-6 text-center">
-                                <Badge className="bg-emerald-50 text-emerald-600 border-none text-[9px] font-black uppercase tracking-widest">ARCHIVED</Badge>
+                              <TableCell className="px-8">
+                                <div className="flex flex-col">
+                                  <span className="text-base font-['Playfair_Display'] font-black text-indigo-950 tracking-tight group-hover:text-amber-600 transition-colors">{o.vendorName}</span>
+                                  <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest leading-none mt-1">Authorized Node</span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="px-8 font-sans">
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-bold text-stone-600 tracking-tight">{o.customerName}</span>
+                                  <span className="text-[10px] font-medium text-stone-300">Registry Index</span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="px-8 text-right">
+                                <div className="flex flex-col items-end">
+                                  <span className="text-2xl font-mono font-black text-indigo-950 tracking-tighter group-hover:scale-105 transition-transform origin-right">&#8377;{parseFloat(o.totalAmount).toLocaleString()}</span>
+                                  <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest leading-none mt-1.5">Gross Settlement</span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="px-8 text-center">
+                                <Badge className="bg-slate-50 text-slate-500 border border-slate-200 text-[9px] font-black uppercase tracking-[0.3em] px-4 py-2 rounded-xl shadow-sm group-hover:bg-emerald-50 group-hover:text-emerald-700 group-hover:border-emerald-200 transition-all">
+                                  <div className="h-1.5 w-1.5 bg-slate-300 group-hover:bg-emerald-500 rounded-full mr-2.5 transition-colors" />
+                                  ARCHIVED
+                                </Badge>
                               </TableCell>
                             </TableRow>
                           ))}
@@ -1184,8 +1270,41 @@ const AdminDashboard = () => {
                             <Input required value={newProduct.brand} onChange={e => setNewProduct({ ...newProduct, brand: e.target.value })} className="rounded-[1.25rem] h-14 border-stone-200 bg-stone-50 font-bold px-6" placeholder="e.g., LUMIÈRE SEOUL" />
                           </div>
                           <div className="space-y-2">
-                            <Label className={`${THEME.typography.micro.default} ${THEME.colors.text.primary} ml-1`}>Category</Label>
-                            <Input required value={newProduct.categoryName} onChange={e => setNewProduct({ ...newProduct, categoryName: e.target.value })} className="rounded-[1.25rem] h-14 border-stone-200 bg-stone-50 font-bold px-6" placeholder="e.g., Skincare" />
+                            <div className="flex items-center justify-between">
+                              <Label className={`${THEME.typography.micro.default} ${THEME.colors.text.primary} ml-1`}>Category</Label>
+                              <button
+                                type="button"
+                                onClick={() => setIsAddingNewCategory(!isAddingNewCategory)}
+                                className="text-[10px] font-black uppercase tracking-wider text-indigo-600 hover:text-indigo-800 transition-colors"
+                              >
+                                {isAddingNewCategory ? "Select Existing" : "+ Add New"}
+                              </button>
+                            </div>
+                            {isAddingNewCategory ? (
+                              <Input
+                                required
+                                value={newProduct.categoryName}
+                                onChange={e => setNewProduct({ ...newProduct, categoryName: e.target.value })}
+                                className="rounded-[1.25rem] h-14 border-stone-200 bg-stone-50 font-bold px-6"
+                                placeholder="Enter new category name..."
+                                autoFocus
+                              />
+                            ) : (
+                              <div className="relative">
+                                <select
+                                  required
+                                  value={newProduct.categoryName}
+                                  onChange={e => setNewProduct({ ...newProduct, categoryName: e.target.value })}
+                                  className="w-full rounded-[1.25rem] h-14 border border-stone-200 bg-stone-50 font-bold px-6 appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-950 transition-all text-sm"
+                                >
+                                  <option value="" disabled>Select Category</option>
+                                  {categories.map(cat => (
+                                    <option key={cat.id} value={cat.name}>{cat.name}</option>
+                                  ))}
+                                </select>
+                                <ChevronRight className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400 rotate-90 pointer-events-none" />
+                              </div>
+                            )}
                           </div>
                           <div className="col-span-2 space-y-4">
                             <div className="flex items-center justify-between">
@@ -1388,24 +1507,67 @@ const AdminDashboard = () => {
                         </div>
                       </div>
 
-                      <div className="bg-white rounded-[2rem] border border-stone-100 shadow-sm p-8 space-y-5">
-                        <h2 className={`${THEME.typography.micro.muted} border-b border-stone-100 pb-4`}>Visibility Settings</h2>
-                        <div className="space-y-3">
+                      <div className="bg-white rounded-[2rem] border border-stone-100 shadow-sm p-8 space-y-6">
+                        <div className="flex items-center justify-between border-b border-stone-100 pb-4">
+                          <h2 className={THEME.typography.micro.muted}>Visibility Settings</h2>
+                          <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest px-2 py-0 border-stone-100 text-stone-400">Storefront Protocols</Badge>
+                        </div>
+                        <div className="grid grid-cols-1 gap-4">
                           {[
-                            { id: 'featured', label: 'Feature on Homepage', sub: 'High-visibility placement.' },
-                            { id: 'rewardEligible', label: 'Enable Reward Points', sub: 'Incentivize via loyalty.' },
-                            { id: 'limitedOffer', label: 'Set as Limited Offer', sub: 'Urgency-driven placement.' }
-                          ].map(flag => (
-                            <div key={flag.id} onClick={() => setNewProduct({ ...newProduct, [flag.id]: !newProduct[flag.id] })} className={cn("p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between", newProduct[flag.id] ? "bg-indigo-950 border-indigo-950 text-white" : "bg-stone-50 border-stone-100 text-indigo-950 hover:border-stone-300")}>
-                              <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest leading-none">{flag.label}</p>
-                                <p className="text-[8px] font-bold mt-1.5 uppercase tracking-tighter text-stone-400">{flag.sub}</p>
+                            { id: 'featured', label: 'Feature on Homepage', sub: 'High-visibility placement.', icon: Star, color: 'text-amber-500', bg: 'bg-amber-50' },
+                            { id: 'newArrival', label: 'Mark as New Arrival', sub: 'Show in New Arrivals section.', icon: Sparkles, color: 'text-blue-500', bg: 'bg-blue-50' },
+                            { id: 'bestSeller', label: 'Mark as Best Seller', sub: 'Top selling item tag.', icon: Trophy, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+                            { id: 'trending', label: 'Mark as Trending', sub: 'Currently popular item.', icon: TrendingUp, color: 'text-rose-500', bg: 'bg-rose-50' },
+                            { id: 'rewardEligible', label: 'Enable Reward Points', sub: 'Incentivize via loyalty.', icon: Coins, color: 'text-purple-500', bg: 'bg-purple-50' },
+                            { id: 'limitedOffer', label: 'Set as Limited Offer', sub: 'Urgency-driven placement.', icon: Clock, color: 'text-orange-500', bg: 'bg-orange-50' }
+                          ].map(flag => {
+                            const Icon = flag.icon;
+                            const isActive = newProduct[flag.id];
+                            return (
+                              <div 
+                                key={flag.id} 
+                                onClick={() => setNewProduct({ ...newProduct, [flag.id]: !newProduct[flag.id] })} 
+                                className={cn(
+                                  "group relative p-4 rounded-[1.25rem] border transition-all duration-300 cursor-pointer overflow-hidden flex items-center justify-between",
+                                  isActive 
+                                    ? "bg-indigo-950 border-indigo-900 shadow-md" 
+                                    : "bg-white border-stone-100 hover:border-stone-200"
+                                )}
+                              >
+                                {isActive && (
+                                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+                                )}
+                                <div className="flex items-center gap-4 relative z-10">
+                                  <div className={cn(
+                                    "h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-500 group-hover:scale-105",
+                                    isActive ? "bg-white/10 text-white" : cn(flag.bg, flag.color)
+                                  )}>
+                                    <Icon className="h-5 w-5" />
+                                  </div>
+                                  <div>
+                                    <p className={cn(
+                                      "text-[9px] font-bold uppercase tracking-widest leading-none transition-colors",
+                                      isActive ? "text-white" : "text-stone-900"
+                                    )}>{flag.label}</p>
+                                    <p className={cn(
+                                      "text-[8px] font-medium mt-1.5 uppercase tracking-tight transition-colors",
+                                      isActive ? "text-indigo-300" : "text-stone-400"
+                                    )}>{flag.sub}</p>
+                                  </div>
+                                </div>
+                                <div className="relative z-10" onClick={(e) => e.stopPropagation()}>
+                                  <Switch 
+                                    checked={isActive} 
+                                    onCheckedChange={(val) => setNewProduct({ ...newProduct, [flag.id]: val })}
+                                    className={cn(
+                                      "scale-75 data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-stone-200 border-none transition-all duration-500",
+                                      isActive && "ring-2 ring-emerald-500/20"
+                                    )}
+                                  />
+                                </div>
                               </div>
-                              <div className={cn("h-5 w-5 rounded-full flex items-center justify-center transition-all", newProduct[flag.id] ? "bg-emerald-500" : "bg-stone-200")}>
-                                {newProduct[flag.id] && <CheckCircle2 className="h-3 w-3 text-white" />}
-                              </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
 
@@ -1923,45 +2085,45 @@ const AdminDashboard = () => {
             </div>
           ) : selectedOrder && (
             <div className="flex flex-col max-h-[90vh]">
-              <header className="p-10 bg-indigo-950 text-white relative overflow-hidden shrink-0">
-                <div className="absolute top-0 right-0 p-24 bg-gradient-to-br from-amber-500/20 to-transparent blur-3xl rounded-full -mr-12 -mt-12" />
-                <div className="flex justify-between items-start relative z-10">
+              <header className="p-8 bg-indigo-950 text-white relative overflow-hidden shrink-0">
+                <div className="absolute top-0 right-0 p-32 bg-gradient-to-br from-indigo-500/20 to-transparent blur-3xl rounded-full -mr-16 -mt-16" />
+                <div className="flex justify-between items-start relative z-10 pr-12">
                   <div>
-                    <Badge className="bg-white/10 text-white border-none text-[8px] font-black uppercase tracking-widest mb-4">Transmission Protocol ID</Badge>
-                    <h2 className="text-4xl font-black tracking-tighter uppercase leading-none">{selectedOrder.orderNumber}</h2>
-                    <p className="text-stone-400 font-medium mt-3">{selectedOrder.type || 'Online'} Commerce Channel • Processed {new Date(selectedOrder.createdAt).toLocaleDateString()}</p>
+                    <Badge className="bg-white/10 text-white border-none text-[8px] font-semibold uppercase tracking-[0.2em] mb-3">Transmission Protocol ID</Badge>
+                    <h2 className="text-2xl font-['Playfair_Display'] font-bold tracking-tight uppercase leading-none">{selectedOrder.orderNumber}</h2>
+                    <p className="text-indigo-200/50 font-medium mt-2.5 text-xs">{selectedOrder.type || 'Online'} Commerce Channel • Processed {new Date(selectedOrder.createdAt).toLocaleDateString()}</p>
                   </div>
-                  <Badge className="bg-emerald-500 text-white font-black text-[10px] px-6 py-2 rounded-xl border-none uppercase tracking-widest leading-loose shadow-2xl shadow-emerald-500/20">
+                  <Badge className="bg-emerald-500/10 text-emerald-400 font-bold text-[9px] px-4 py-1.5 rounded-lg border border-emerald-500/20 uppercase tracking-widest shadow-lg shadow-emerald-950/20">
                     {selectedOrder.status}
                   </Badge>
                 </div>
               </header>
 
-              <ScrollArea className="flex-1 p-10 h-full">
-                <div className="grid grid-cols-2 gap-10">
-                  <section className="space-y-8">
+              <ScrollArea className="flex-1 p-8 h-full">
+                <div className="grid grid-cols-2 gap-8">
+                  <section className="space-y-6">
                     <div>
-                      <h3 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.3em] mb-4">Merchant Authority</h3>
-                      <div className="p-6 bg-white rounded-3xl border border-stone-100 flex items-center gap-4 group hover:border-stone-300 transition-colors">
-                        <div className="h-14 w-14 rounded-2xl bg-stone-50 flex items-center justify-center text-indigo-950 font-black text-2xl">
+                      <h3 className="text-[9px] font-bold text-stone-400 uppercase tracking-[0.3em] mb-3">Merchant Authority</h3>
+                      <div className="p-5 bg-white rounded-2xl border border-stone-100 flex items-center gap-4 group hover:border-indigo-200 transition-all shadow-sm">
+                        <div className="h-12 w-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-['Playfair_Display'] font-bold text-xl border border-indigo-100">
                           {selectedOrder.vendor?.businessName?.charAt(0) || selectedOrder.vendorName?.charAt(0) || 'M'}
                         </div>
                         <div>
-                          <p className="font-black text-indigo-950 text-lg leading-tight">{selectedOrder.vendor?.businessName || selectedOrder.vendorName}</p>
-                          <p className="text-[10px] text-stone-400 font-black uppercase tracking-widest mt-1">Verified Partner</p>
+                          <p className="font-['Playfair_Display'] font-bold text-indigo-950 text-lg leading-tight">{selectedOrder.vendor?.businessName || selectedOrder.vendorName}</p>
+                          <p className="text-[9px] text-stone-400 font-semibold uppercase tracking-widest mt-0.5">Verified Partner Node</p>
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <h3 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.3em] mb-4">Customer Segment</h3>
-                      <div className="p-6 bg-white rounded-3xl border border-stone-100">
-                        <p className="font-black text-indigo-950 text-xl tracking-tighter">{selectedOrder.customer?.name || selectedOrder.customerName || 'Direct Terminal walk-in'}</p>
-                        <p className="text-sm text-stone-500 font-bold mt-1">{selectedOrder.customer?.mobile || selectedOrder.mobile}</p>
+                      <h3 className="text-[9px] font-bold text-stone-400 uppercase tracking-[0.3em] mb-3">Customer Segment</h3>
+                      <div className="p-5 bg-white rounded-2xl border border-stone-100 shadow-sm">
+                        <p className="font-['Inter'] font-bold text-indigo-950 text-lg tracking-tight">{selectedOrder.customer?.name || selectedOrder.customerName || 'Direct Terminal walk-in'}</p>
+                        <p className="text-xs text-stone-500 font-medium mt-1">{selectedOrder.customer?.mobile || selectedOrder.mobile}</p>
                         {selectedOrder.shippingAddress && (
-                          <div className="mt-6 pt-6 border-t border-stone-50">
-                            <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest mb-2">Terminal Destination</p>
-                            <p className="text-xs text-stone-600 leading-relaxed font-bold">
+                          <div className="mt-5 pt-5 border-t border-stone-50">
+                            <p className="text-[8px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">Terminal Destination</p>
+                            <p className="text-[11px] text-stone-600 leading-relaxed font-medium">
                               {selectedOrder.shippingAddress.line1}, {selectedOrder.shippingAddress.city}<br />
                               {selectedOrder.shippingAddress.state} - {selectedOrder.shippingAddress.postalCode}
                             </p>
@@ -1971,54 +2133,54 @@ const AdminDashboard = () => {
                     </div>
                   </section>
 
-                  <section className="space-y-8">
+                  <section className="space-y-6">
                     <div>
-                      <h3 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.3em] mb-4">Itemized Sync Registry</h3>
-                      <div className="space-y-3">
+                      <h3 className="text-[9px] font-bold text-stone-400 uppercase tracking-[0.3em] mb-3">Itemized Sync Registry</h3>
+                      <div className="space-y-2">
                         {selectedOrder.items?.map((item, idx) => (
-                          <div key={idx} className="flex justify-between items-center p-5 bg-white rounded-2xl border border-stone-100 hover:scale-[1.02] transition-transform cursor-default">
+                          <div key={idx} className="flex justify-between items-center p-4 bg-white rounded-xl border border-stone-100 hover:border-indigo-100 transition-all shadow-sm">
                             <div className="flex flex-col">
-                              <span className="text-sm font-black text-indigo-950">{item.name}</span>
-                              <span className="text-[10px] text-stone-400 font-black uppercase tracking-widest mt-0.5">Quantity: {item.quantity} units</span>
+                              <span className="text-xs font-semibold text-indigo-950">{item.name}</span>
+                              <span className="text-[9px] text-stone-400 font-medium uppercase tracking-widest mt-0.5">Quantity: {item.quantity} units</span>
                             </div>
                             <div className="text-right">
-                              <span className="font-black text-indigo-950 block">&#8377;{parseFloat(item.unitPrice || (item.lineTotal / item.quantity) || 0).toLocaleString()}</span>
-                              <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Market Rate</span>
+                              <span className="font-mono font-bold text-indigo-950 block text-sm">&#8377;{parseFloat(item.unitPrice || (item.lineTotal / item.quantity) || 0).toLocaleString()}</span>
+                              <span className="text-[7px] font-bold text-emerald-500 uppercase tracking-widest mt-0.5 block">Market Rate</span>
                             </div>
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    <div className="pt-8 mt-4 border-t-2 border-dashed border-stone-100 space-y-4">
-                      <div className="flex justify-between items-center text-stone-400 font-bold text-[10px] uppercase tracking-widest px-1">
+                    <div className="pt-6 mt-2 border-t border-dashed border-stone-100 space-y-3">
+                      <div className="flex justify-between items-center text-stone-400 font-semibold text-[9px] uppercase tracking-widest px-1">
                         <span>Gross Subtotal</span>
-                        <span className="text-stone-600">&#8377;{parseFloat(selectedOrder.subtotal || selectedOrder.totalAmount).toLocaleString()}</span>
+                        <span className="text-stone-600 font-mono">&#8377;{parseFloat(selectedOrder.subtotal || selectedOrder.totalAmount).toLocaleString()}</span>
                       </div>
 
                       {parseFloat(selectedOrder.discountAmount) > 0 && (
-                        <div className="flex justify-between items-center text-amber-600 font-bold text-[10px] uppercase tracking-widest px-1">
+                        <div className="flex justify-between items-center text-amber-600 font-semibold text-[9px] uppercase tracking-widest px-1">
                           <span>System Discount</span>
-                          <span>- &#8377;{parseFloat(selectedOrder.discountAmount).toLocaleString()}</span>
+                          <span className="font-mono">- &#8377;{parseFloat(selectedOrder.discountAmount).toLocaleString()}</span>
                         </div>
                       )}
 
                       {selectedOrder.rewardPointsUsed > 0 && (
-                        <div className="flex justify-between items-center text-blue-600 font-bold text-[10px] uppercase tracking-widest px-1">
+                        <div className="flex justify-between items-center text-blue-600 font-semibold text-[9px] uppercase tracking-widest px-1">
                           <span>Loyalty Credits Applied</span>
-                          <span>- &#8377;{selectedOrder.rewardPointsUsed.toLocaleString()}</span>
+                          <span className="font-mono">- &#8377;{selectedOrder.rewardPointsUsed.toLocaleString()}</span>
                         </div>
                       )}
 
-                      <div className="pt-4 flex justify-between items-end border-t border-stone-50">
+                      <div className="pt-5 flex justify-between items-end border-t border-stone-100">
                         <div className="flex flex-col">
-                          <span className="text-[10px] font-black text-indigo-950 uppercase tracking-widest mb-1">Total Settlement</span>
-                          <span className="text-4xl font-black text-indigo-950 tracking-tighter">&#8377;{parseFloat(selectedOrder.totalAmount).toLocaleString()}</span>
+                          <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">Total Settlement</span>
+                          <span className="text-2xl font-mono font-bold text-indigo-950 tracking-tighter leading-none">&#8377;{parseFloat(selectedOrder.totalAmount).toLocaleString()}</span>
                         </div>
                         <div className="flex flex-col items-end">
-                          <Badge className="bg-stone-50 text-stone-400 font-black text-[9px] border-stone-100 rounded-xl py-2 px-6 shadow-none uppercase tracking-[0.2em] mb-2">Verified Transmission</Badge>
+                          <Badge className="bg-emerald-50 text-emerald-600 font-bold text-[8px] border-emerald-100 rounded-lg py-1.5 px-4 shadow-none uppercase tracking-[0.2em] mb-1.5">Verified Sync</Badge>
                           {selectedOrder.rewardPointsEarned > 0 && (
-                            <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">+ {selectedOrder.rewardPointsEarned} Credits Accrued</span>
+                            <span className="text-[7px] font-bold text-emerald-500 uppercase tracking-widest">+ {selectedOrder.rewardPointsEarned} Credits Accrued</span>
                           )}
                         </div>
                       </div>
@@ -2027,8 +2189,8 @@ const AdminDashboard = () => {
                 </div>
               </ScrollArea>
 
-              <footer className="p-8 bg-white border-t border-stone-100 flex justify-center gap-4 shrink-0 mt-auto">
-                <Button onClick={() => printThermalReceipt(selectedOrder)} variant="outline" className="rounded-2xl px-8 h-14 font-black uppercase tracking-widest text-[10px] border-indigo-200 text-indigo-950 hover:bg-indigo-50 transition-all gap-2"><Printer className="h-4 w-4" /> Print Audit</Button>
+              <footer className="p-6 bg-white border-t border-stone-100 flex justify-center gap-4 shrink-0 mt-auto">
+                <Button onClick={() => printThermalReceipt(selectedOrder)} variant="outline" className="rounded-xl px-8 h-12 font-bold uppercase tracking-[0.2em] text-[10px] border-stone-200 text-indigo-950 hover:bg-indigo-50 transition-all gap-2.5 shadow-sm hover:border-indigo-200 transition-all active:scale-95"><Printer className="h-4 w-4" /> Print Audit Dossier</Button>
               </footer>
             </div>
           )}

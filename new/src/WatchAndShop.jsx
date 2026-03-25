@@ -10,7 +10,7 @@ import vidD from "./assets/reels/D.mp4";
 import vidE from "./assets/reels/E.mp4";
 import vidF from "./assets/reels/F.mp4";
 
-export default function WatchAndShop({ onNavigate }) {
+export default React.memo(function WatchAndShop({ onNavigate }) {
     const scrollRef = useRef(null);
     const products = getAllProducts().slice(0, 6); // Use first 6 products for demo
 
@@ -93,6 +93,7 @@ export default function WatchAndShop({ onNavigate }) {
                                 muted
                                 loop
                                 playsInline
+                                preload="metadata"
                                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                             />
 
@@ -132,4 +133,4 @@ export default function WatchAndShop({ onNavigate }) {
             </div>
         </section>
     );
-}
+});

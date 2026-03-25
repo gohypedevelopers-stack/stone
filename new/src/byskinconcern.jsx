@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import darkspotImg from "./assets/skinconcern/darkspot.jpg";
 import hydrationImg from "./assets/skinconcern/hydration.jpg";
 import poresImg from "./assets/skinconcern/skin pores.jpg";
@@ -124,7 +124,7 @@ const ICONS = {
   ),
 };
 
-export default function BySkinConcern({ onSelectConcern }) {
+export default React.memo(function BySkinConcern({ onSelectConcern }) {
   const [selected, setSelected] = useState("");
 
   function applyFilter(key) {
@@ -185,4 +185,4 @@ export default function BySkinConcern({ onSelectConcern }) {
       </div>
     </section>
   );
-}
+});

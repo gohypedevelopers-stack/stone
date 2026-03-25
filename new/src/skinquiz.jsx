@@ -1,7 +1,8 @@
+import React from "react";
 import { Droplet, ShieldCheck, Sun } from "lucide-react";
 import DisplayCards from "./components/ui/display-cards.jsx";
 
-export default function SkinQuiz() {
+export default React.memo(function SkinQuiz() {
   const supportPhone = "+91 90000 00000";
   const routineCards = [
     {
@@ -65,4 +66,4 @@ export default function SkinQuiz() {
       </div>
     </section>
   );
-}
+});

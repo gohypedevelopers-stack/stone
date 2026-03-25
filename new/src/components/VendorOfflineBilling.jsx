@@ -26,6 +26,7 @@ import {
   Printer
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import { printThermalReceipt } from "@/utils/printReceipt";
 
 const API_URL = "http://localhost:5000/api";
@@ -152,11 +153,11 @@ export function VendorOfflineBilling() {
         setCustomerMobile("");
         setCustomerName("");
       } else {
-        alert(data.message || "Failed to process bill.");
+        toast.error(data.message || "Failed to process bill.");
       }
     } catch (err) {
       console.error(err);
-      alert("Error processing offline bill.");
+      toast.error("Error processing offline bill.");
     } finally {
       setIsSubmitting(false);
     }
@@ -165,16 +166,16 @@ export function VendorOfflineBilling() {
   if (successBill) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] animate-in zoom-in duration-500">
-        <div className="h-24 w-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6">
-          <CheckCircle2 className="h-12 w-12" />
+        <div className="h-20 w-20 bg-stone-100 text-stone-900 rounded-full flex items-center justify-center mb-6">
+          <CheckCircle2 className="h-10 w-10" />
         </div>
-        <h2 className="text-3xl font-black text-stone-900 tracking-tighter mb-2">Offline Bill Processed Successfully</h2>
+        <h2 className="text-2xl font-bold text-stone-900 tracking-tight mb-2">Offline Bill Processed Successfully</h2>
         <p className="text-stone-500 font-medium mb-8">
           Bill Reference: <span className="font-bold text-stone-900 ml-1">OFF-{successBill.id.slice(0,8).toUpperCase()}</span>
         </p>
         
-        <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-stone-100 max-w-md w-full text-center space-y-4">
-           <h3 className="font-bold text-lg uppercase tracking-widest text-stone-800 border-b border-stone-100 pb-4 mb-4">Receipt Summary</h3>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200 max-w-md w-full text-center space-y-4">
+           <h3 className="font-bold text-md uppercase tracking-wide text-stone-800 border-b border-stone-100 pb-4 mb-4">Receipt Summary</h3>
            <div className="flex justify-between text-sm">
              <span className="text-stone-500">Total Items</span>
              <span className="font-bold">{successBill.items?.reduce((a,b) => a + b.quantity, 0)}</span>
@@ -190,21 +191,21 @@ export function VendorOfflineBilling() {
              <span className="font-bold">{successBill.mobile}</span>
            </div>
            <div className="flex justify-between text-lg pt-4 border-t border-stone-100 mt-4">
-             <span className="font-black text-stone-900">Total Charged</span>
-             <span className="font-black text-emerald-600">&#8377;{Number(successBill.amount).toLocaleString('en-IN')}</span>
+             <span className="font-bold text-stone-900">Total Charged</span>
+             <span className="font-bold text-stone-900">&#8377;{Number(successBill.amount).toLocaleString('en-IN')}</span>
            </div>
         </div>
 
         <div className="flex items-center gap-4 mt-8">
           <Button 
             onClick={() => printThermalReceipt(successBill)} 
-            className="bg-indigo-50 text-indigo-950 border border-indigo-200 rounded-2xl h-12 px-6 font-black uppercase tracking-widest text-xs hover:bg-indigo-100"
+            className="bg-white text-stone-900 border border-stone-200 rounded-lg h-10 px-6 font-medium text-sm hover:bg-stone-50"
           >
             <span className="flex items-center gap-2"><Printer className="h-4 w-4" /> Print Copy</span>
           </Button>
           <Button 
             onClick={() => setSuccessBill(null)} 
-            className="bg-stone-900 text-white rounded-2xl h-12 px-8 font-black uppercase tracking-widest text-xs hover:bg-stone-800"
+            className="bg-stone-900 text-white rounded-lg h-10 px-8 font-medium text-sm hover:bg-stone-800"
           >
             New Transaction
           </Button>
@@ -217,62 +218,60 @@ export function VendorOfflineBilling() {
     <div className="space-y-8 max-w-7xl mx-auto pb-12 animate-in fade-in duration-500">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 pt-4">
         <div>
-          <h1 className="text-4xl font-black text-stone-900 tracking-tighter flex items-center gap-3">
-             <CreditCard className="h-10 w-10 text-emerald-500" /> POS / Offline Billing
+          <h1 className="text-3xl font-bold text-stone-900 tracking-tight flex items-center gap-3">
+             <CreditCard className="h-8 w-8 text-stone-700" /> POS / Offline Billing
           </h1>
-          <p className="text-stone-400 font-medium mt-2">Process secure in-store purchases and offline transactions for merchant partners.</p>
+          <p className="text-stone-500 font-medium mt-2">Process secure in-store purchases and offline transactions for merchant partners.</p>
         </div>
       </header>
 
       {/* Vendor Details Section */}
-      <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
-        <CardContent className="p-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <Label className="text-xs font-bold uppercase tracking-widest text-stone-500">Select Operating Merchant / Vendor</Label>
-              <Select value={selectedVendorId} onValueChange={setSelectedVendorId}>
-                <SelectTrigger className="h-14 rounded-2xl border-stone-200 bg-stone-50/50 font-bold text-lg focus:ring-emerald-500">
-                  <SelectValue placeholder="Search or select a vendor..." />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl">
-                  {vendors.map(v => (
-                    <SelectItem key={v.id} value={v.id} className="cursor-pointer font-medium py-3">
-                      {v.businessName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+      <div className="bg-stone-100/60 p-2 rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-2 border border-stone-200/60 shadow-inner">
+        {/* Vendor Selector */}
+        <div className="bg-white rounded-xl border border-stone-200 p-5 shadow-sm flex flex-col justify-center">
+          <Label className="text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-2 block">Operating Vendor</Label>
+          <Select value={selectedVendorId} onValueChange={setSelectedVendorId}>
+            <SelectTrigger className="h-11 rounded-lg border-stone-200 bg-stone-50 focus:ring-stone-900 font-semibold text-stone-800 focus:bg-white transition-colors">
+              <SelectValue placeholder="Search or select a vendor..." />
+            </SelectTrigger>
+            <SelectContent className="rounded-lg border-stone-200">
+              {vendors.map(v => (
+                <SelectItem key={v.id} value={v.id} className="cursor-pointer font-medium py-2 focus:bg-stone-50">
+                  {v.businessName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-            <div className="space-y-4">
-              <Label className="text-xs font-bold uppercase tracking-widest text-stone-500">Merchant Terminal Location</Label>
-              <div className="h-14 rounded-2xl border border-stone-200 bg-stone-50 px-4 flex items-center justify-between">
-                {selectedVendor ? (
-                  <>
-                    <div className="flex items-center gap-3 overflow-hidden pr-4">
-                      <MapPin className="h-5 w-5 text-emerald-500 flex-shrink-0" />
-                      <span className="font-semibold text-stone-700 truncate">{selectedVendor.storeAddress || 'No physical address logged.'}</span>
-                    </div>
-                  </>
-                ) : (
-                  <span className="text-stone-400 font-medium italic">Awaiting merchant selection...</span>
-                )}
-              </div>
-            </div>
+        {/* Location Display */}
+        <div className="bg-white rounded-xl border border-stone-200 p-5 shadow-sm flex flex-col justify-center">
+          <Label className="text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-2 block">Terminal Location</Label>
+          <div className="flex-1 rounded-lg border border-stone-100 bg-stone-50 px-4 flex items-center gap-3 w-full h-11">
+            {selectedVendor ? (
+              <>
+                <div className="bg-white shadow-sm border border-stone-200 p-1.5 rounded flex items-center justify-center shrink-0">
+                  <MapPin className="h-3.5 w-3.5 text-stone-600" />
+                </div>
+                <span className="font-semibold text-sm text-stone-800 truncate">{selectedVendor.storeAddress || 'No physical address logged.'}</span>
+              </>
+            ) : (
+              <span className="text-stone-400 font-medium italic text-sm">Awaiting merchant selection...</span>
+            )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* POS Interface */}
       <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 ${!selectedVendorId && 'opacity-50 pointer-events-none grayscale'}`}>
         
         {/* Left Side: Product Selector */}
         <div className="lg:col-span-8 space-y-6">
-          <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white h-[600px] flex flex-col">
+          <Card className="border border-stone-200 shadow-sm rounded-xl overflow-hidden bg-white h-[600px] flex flex-col">
             <CardHeader className="bg-stone-50 border-b border-stone-100 flex flex-row items-center justify-between pb-4">
               <div>
-                <CardTitle className="text-xl font-black text-stone-900 tracking-tight flex items-center gap-2">
-                  <Store className="h-5 w-5 text-stone-400" /> Terminal Catalog
+                <CardTitle className="text-lg font-bold text-stone-900 tracking-tight flex items-center gap-2">
+                  <Store className="h-5 w-5 text-stone-500" /> Terminal Catalog
                 </CardTitle>
               </div>
               <div className="relative w-72">
@@ -281,7 +280,7 @@ export function VendorOfflineBilling() {
                   placeholder="Search products..." 
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-10 h-10 rounded-xl bg-white border-none shadow-sm"
+                  className="pl-10 h-10 rounded-lg bg-white border border-stone-200 shadow-sm"
                 />
               </div>
             </CardHeader>
@@ -289,7 +288,7 @@ export function VendorOfflineBilling() {
               <ScrollArea className="h-full">
                 <div className="p-6 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
                   {vendorProducts.length === 0 ? (
-                    <div className="col-span-full py-20 text-center text-stone-400 font-medium italic">
+                    <div className="col-span-full py-20 text-center text-stone-400 font-medium italic text-sm">
                       No products found for this terminal.
                     </div>
                   ) : vendorProducts.map(p => (
@@ -299,14 +298,14 @@ export function VendorOfflineBilling() {
                       animate={{ opacity: 1, scale: 1 }}
                       key={p.id}
                       onClick={() => addToCart(p)}
-                      className={`group cursor-pointer bg-stone-50 border border-stone-100 rounded-2xl p-4 transition-all flex flex-col relative ${p.stock <= 0 ? 'opacity-50 grayscale hover:border-rose-500' : 'hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/10'}`}
+                      className={`group cursor-pointer bg-stone-50 border border-stone-200 rounded-xl p-4 transition-all flex flex-col relative ${p.stock <= 0 ? 'opacity-50 grayscale hover:border-rose-300' : 'hover:border-stone-400 hover:shadow-md'}`}
                     >
                       {p.stock <= 0 && (
-                        <div className="absolute top-2 right-2 bg-rose-500 text-white text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-md z-10 shadow-sm">
+                        <div className="absolute top-2 right-2 bg-rose-500 text-white text-[10px] font-bold uppercase px-2 py-1 rounded-md z-10 shadow-sm">
                           Out of Stock
                         </div>
                       )}
-                      <div className="aspect-square bg-white rounded-xl mb-3 overflow-hidden border border-stone-100 relative">
+                      <div className="aspect-square bg-white rounded-lg mb-3 overflow-hidden border border-stone-100 relative">
                         {p.imageUrls && p.imageUrls[0] ? (
                           <img src={p.imageUrls[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                         ) : (
@@ -314,13 +313,13 @@ export function VendorOfflineBilling() {
                              <Store className="h-8 w-8" />
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-emerald-500/0 group-hover:bg-emerald-500/10 flex items-center justify-center transition-colors">
-                          <Plus className="opacity-0 group-hover:opacity-100 h-8 w-8 text-emerald-600 bg-white rounded-full p-2 shadow-sm transition-all scale-75 group-hover:scale-100" />
+                        <div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/5 flex items-center justify-center transition-colors">
+                          <Plus className="opacity-0 group-hover:opacity-100 h-8 w-8 text-stone-900 bg-white rounded-full p-2 shadow-sm transition-all scale-75 group-hover:scale-100" />
                         </div>
                       </div>
                       <div className="flex flex-col flex-1">
-                        <h4 className="font-bold text-sm text-stone-800 line-clamp-2 leading-tight">{p.name}</h4>
-                        <span className="font-black text-emerald-600 mt-auto pt-2 block text-lg">&#8377;{Number(p.discountPrice || p.price).toLocaleString('en-IN')}</span>
+                        <h4 className="font-semibold text-sm text-stone-800 line-clamp-2 leading-tight">{p.name}</h4>
+                        <span className="font-bold text-stone-900 mt-auto pt-2 block text-base">&#8377;{Number(p.discountPrice || p.price).toLocaleString('en-IN')}</span>
                       </div>
                     </motion.div>
                   ))}
@@ -332,26 +331,25 @@ export function VendorOfflineBilling() {
 
         {/* Right Side: Electronic Ledger / Cart */}
         <div className="lg:col-span-4">
-          <Card className="border-none shadow-2xl shadow-indigo-900/5 rounded-3xl overflow-hidden bg-white min-h-[600px] h-[calc(100vh-140px)] max-h-[800px] flex flex-col">
-            <CardHeader className="bg-indigo-950 text-white pb-6 pt-8 rounded-b-[2rem] relative z-10 overflow-hidden shadow-2xl shadow-indigo-950/20">
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-[#2a134d] to-[#1a0b2e] z-0"></div>
-              <CardTitle className="text-xl font-black text-white flex items-center gap-3 relative z-10 tracking-widest uppercase text-xs">
-                <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md">
-                  <ShoppingCart className="h-5 w-5 text-purple-300" /> 
+          <Card className="border border-stone-200 shadow-sm rounded-xl overflow-hidden bg-white min-h-[600px] h-[calc(100vh-140px)] max-h-[800px] flex flex-col">
+            <CardHeader className="bg-stone-50 border-b border-stone-200 pb-4 pt-4 z-10">
+              <CardTitle className="text-lg font-bold text-stone-900 flex items-center gap-2">
+                <div className="h-8 w-8 flex items-center justify-center rounded-lg bg-stone-200">
+                  <ShoppingCart className="h-4 w-4 text-stone-700" /> 
                 </div>
-                <span className="text-white drop-shadow-sm">Active Ledger</span>
+                <span>Active Ledger</span>
               </CardTitle>
             </CardHeader>
             
-            <CardContent className="p-0 flex-1 flex flex-col pt-4 overflow-hidden relative bg-stone-50/50">
-              <ScrollArea className="flex-1 px-6">
+            <CardContent className="p-0 flex-1 flex flex-col overflow-hidden relative bg-stone-50/50">
+              <ScrollArea className="flex-1 px-5">
                 <AnimatePresence>
                   {cart.length === 0 ? (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-20 text-center text-stone-400 font-medium">
                       Register is currently empty.
                     </motion.div>
                   ) : (
-                    <div className="space-y-4 py-2 pb-6">
+                    <div className="space-y-3 py-4 pb-6">
                       {cart.map((item, idx) => (
                         <motion.div
                           layout
@@ -359,28 +357,40 @@ export function VendorOfflineBilling() {
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, scale: 0.95 }}
                           key={item.id}
-                          className="flex items-center justify-between gap-4 bg-white p-3 rounded-2xl border border-stone-100 shadow-sm"
+                          className="flex flex-col gap-3 bg-white p-3.5 rounded-xl border border-stone-200 shadow-sm"
                         >
-                          <div className="flex-1 overflow-hidden">
-                            <h5 className="font-bold text-sm text-stone-900 truncate">{item.name}</h5>
-                            <span className="font-bold text-stone-500 text-xs">&#8377;{Number(item.unitPrice).toLocaleString()}</span>
-                          </div>
-                          
-                          <div className="flex items-center gap-2 bg-stone-50 rounded-xl p-1 border border-stone-100">
-                            <Button size="icon" variant="ghost" className="h-6 w-6 rounded-lg text-stone-500 hover:text-stone-900" onClick={() => updateQuantity(item.id, -1)}>
-                              <Minus className="h-3 w-3" />
-                            </Button>
-                            <span className="font-bold text-xs w-4 text-center">{item.quantity}</span>
-                            <Button size="icon" variant="ghost" className="h-6 w-6 rounded-lg text-stone-500 hover:text-stone-900" onClick={() => updateQuantity(item.id, 1)}>
-                              <Plus className="h-3 w-3" />
-                            </Button>
-                          </div>
-                          
-                          <div className="text-right flex items-center gap-2 min-w-[70px] justify-end">
-                            <span className="font-black text-stone-900 text-sm">&#8377;{(Number(item.unitPrice) * item.quantity).toLocaleString()}</span>
-                            <button onClick={() => removeFromCart(item.id)} className="text-stone-300 hover:text-rose-500 transition-colors p-1">
-                              <Trash2 className="h-3.5 w-3.5" />
+                          <div className="flex items-start gap-3">
+                            {item.imageUrls && item.imageUrls[0] ? (
+                              <div className="h-12 w-12 rounded-lg border border-stone-100 overflow-hidden shrink-0 bg-stone-50">
+                                <img src={item.imageUrls[0]} alt={item.name} className="h-full w-full object-cover" />
+                              </div>
+                            ) : (
+                              <div className="h-12 w-12 rounded-lg border border-stone-100 flex items-center justify-center shrink-0 bg-stone-50 text-stone-300">
+                                <Store className="h-5 w-5" />
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <h5 className="font-semibold text-sm text-stone-900 leading-snug line-clamp-2 pr-1">{item.name}</h5>
+                              <span className="font-medium text-stone-500 text-[11px] mt-0.5 block">&#8377;{Number(item.unitPrice).toLocaleString()} / unit</span>
+                            </div>
+                            <button onClick={() => removeFromCart(item.id)} className="text-stone-300 hover:text-rose-500 transition-colors p-1 shrink-0 -mt-0.5 -mr-1">
+                              <Trash2 className="h-4 w-4" />
                             </button>
+                          </div>
+                          
+                          <div className="flex items-center justify-between pt-2 mt-1 border-t border-stone-100">
+                            <div className="flex items-center gap-1 bg-stone-50 rounded-lg p-1 border border-stone-200">
+                              <Button size="icon" variant="ghost" className="h-6 w-6 rounded-md text-stone-600 hover:text-stone-900 bg-white shadow-sm border border-stone-100" onClick={() => updateQuantity(item.id, -1)}>
+                                <Minus className="h-3 w-3" />
+                              </Button>
+                              <span className="font-semibold text-xs w-6 text-center text-stone-800">{item.quantity}</span>
+                              <Button size="icon" variant="ghost" className="h-6 w-6 rounded-md text-stone-600 hover:text-stone-900 bg-white shadow-sm border border-stone-100" onClick={() => updateQuantity(item.id, 1)}>
+                                <Plus className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            <div className="text-right">
+                              <span className="font-bold text-stone-900 text-sm">&#8377;{(Number(item.unitPrice) * item.quantity).toLocaleString()}</span>
+                            </div>
                           </div>
                         </motion.div>
                       ))}
@@ -390,7 +400,7 @@ export function VendorOfflineBilling() {
               </ScrollArea>
 
               {/* Ledger Footer */}
-              <div className="bg-white p-6 border-t border-stone-100 rounded-t-[2.5rem] shadow-[0_-10px_30px_rgba(0,0,0,0.02)] z-10 flex flex-col gap-6 shrink-0">
+              <div className="bg-white p-6 border-t border-stone-200 z-10 flex flex-col gap-5 shrink-0 mt-auto">
                 <div className="space-y-3">
                    <div className="flex justify-between text-sm">
                      <span className="font-semibold text-stone-500">Subtotal</span>
@@ -400,43 +410,43 @@ export function VendorOfflineBilling() {
                      <span className="font-semibold text-stone-500">Tax</span>
                      <span className="font-bold text-stone-900">&#8377;{tax.toLocaleString('en-IN')}</span>
                    </div>
-                   <Separator className="bg-stone-100" />
+                   <Separator className="bg-stone-200" />
                    <div className="flex justify-between items-end pt-1">
-                     <span className="font-black uppercase tracking-widest text-[10px] text-stone-500 pb-1">Total Net</span>
-                     <span className="font-black text-3xl text-indigo-950 tracking-tighter leading-none">&#8377;{total.toLocaleString('en-IN')}</span>
+                     <span className="font-semibold uppercase tracking-wide text-xs text-stone-500 pb-1">Total Net</span>
+                     <span className="font-bold text-2xl text-stone-900 leading-none">&#8377;{total.toLocaleString('en-IN')}</span>
                    </div>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label className="text-[9px] font-black uppercase tracking-widest text-stone-500 ml-1">Customer Name</Label>
+                  <div className="space-y-3">
+                    <div className="space-y-1.5 flex-1">
+                      <Label className="text-xs font-semibold text-stone-600">Customer Name</Label>
                       <Input 
                         placeholder="e.g. Aditi..." 
                         value={customerName}
                         onChange={e => setCustomerName(e.target.value)}
-                        className="h-12 bg-stone-50 border-stone-200 rounded-xl focus-visible:ring-indigo-950 font-bold px-4"
+                        className="h-10 border-stone-200 rounded-lg focus-visible:ring-stone-900 px-3"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-[9px] font-black uppercase tracking-widest text-stone-500 ml-1">Mobile No <span className="text-rose-500">*</span></Label>
+                    <div className="space-y-1.5 flex-1">
+                      <Label className="text-xs font-semibold text-stone-600">Mobile No <span className="text-rose-500">*</span></Label>
                       <Input 
                         placeholder="e.g. 987654..." 
                         value={customerMobile}
                         onChange={e => setCustomerMobile(e.target.value)}
-                        className="h-12 bg-stone-50 border-stone-200 rounded-xl focus-visible:ring-indigo-950 font-bold px-4"
+                        className="h-10 border-stone-200 rounded-lg focus-visible:ring-stone-900 px-3"
                       />
                     </div>
                   </div>
                   <Button 
-                    className="w-full h-14 rounded-2xl bg-indigo-950 hover:bg-[#1a0b2e] text-white font-black uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-indigo-950/20 disabled:opacity-50 transition-all hover:-translate-y-0.5 shrink-0"
+                    className="w-full h-12 rounded-lg bg-stone-900 hover:bg-stone-800 text-white font-semibold shadow-none disabled:opacity-50 transition-colors shrink-0 mt-2"
                     disabled={cart.length === 0 || !customerMobile || isSubmitting}
                     onClick={handleCheckout}
                   >
                     {isSubmitting ? (
                       <span className="flex items-center gap-2"><div className="h-4 w-4 border-2 border-white border-t-transparent animate-spin rounded-full"></div> Processing</span>
                     ) : (
-                      <span className="flex items-center gap-2 text-purple-300">Complete Transaction <CheckCircle2 className="h-4 w-4 ml-1" /></span>
+                      <span className="flex items-center gap-2 text-white">Complete Transaction <CheckCircle2 className="h-4 w-4 ml-1" /></span>
                     )}
                   </Button>
                 </div>

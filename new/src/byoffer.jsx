@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { SparklesText } from "./components/ui/sparkles-text";
 
 const OFFERS = [
@@ -61,7 +61,7 @@ const FEATURED = {
   link: "mega-sale",
 };
 
-export default function ByOffer({ onNavigate, onSelectOffer }) {
+export default React.memo(function ByOffer({ onNavigate, onSelectOffer }) {
   function handleOfferClick(link) {
     if (onSelectOffer) {
       onSelectOffer(link);
@@ -120,4 +120,4 @@ export default function ByOffer({ onNavigate, onSelectOffer }) {
       </div>
     </section>
   );
-}
+});

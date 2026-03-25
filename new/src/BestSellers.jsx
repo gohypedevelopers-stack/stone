@@ -10,21 +10,22 @@ import {
 export default function BestSellers({ addToCart, wishlist = [], toggleWishlist }) {
     const { products: allProducts } = useProducts();
     const navigate = useNavigate();
-    const [activeFilter, setActiveFilter] = useState("Skincare");
+    const [activeFilter, setActiveFilter] = useState("All");
     const [sortOption, setSortOption] = useState("Most Popular");
     const [quickViewProduct, setQuickViewProduct] = useState(null);
 
     // Filters
-    const FILTERS = ["Skincare", "Makeup", "Haircare", "Fragrance", "Tools", "New Best Sellers"];
+    const FILTERS = ["All", "Skincare", "Makeup", "Haircare", "Fragrance", "Tools", "Trending"];
 
     // Filter Logic
     const filteredProducts = useMemo(() => {
-        let products = allProducts;
-
-        // Category Filter
+        // 1. Initial filter for the page purpose: Show Best Sellers
+        let products = allProducts.filter(p => p.bestSeller || p.featured || p.tag === "Best Seller");
+ 
+        // 2. Apply Category/Status Filter
         if (activeFilter !== "All") {
-            if (activeFilter === "New Best Sellers") {
-                products = products.filter(p => p.tag === "New" || p.tag === "Best Seller");
+            if (activeFilter === "Trending") {
+                products = products.filter(p => p.trending || p.tag === "Trending");
             } else {
                 products = products.filter(p => p.category === activeFilter);
             }
@@ -34,7 +35,7 @@ export default function BestSellers({ addToCart, wishlist = [], toggleWishlist }
         return [...products].sort((a, b) => {
             switch (sortOption) {
                 case "Best Rated": return b.rating - a.rating;
-                case "New Arrivals": return a.tag === "New" ? -1 : 1;
+                case "New Arrivals": return (a.newArrival || a.tag === "New") ? -1 : 1;
                 case "Price Low to High": return a.price - b.price;
                 case "Price High to Low": return b.price - a.price;
                 default: return 0; // Most Popular

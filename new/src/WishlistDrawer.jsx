@@ -1,8 +1,8 @@
-import React from "react";
+import React, { memo } from "react";
 import { X, ShoppingCart, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-export default function WishlistDrawer({ open, onClose, wishlist, onToggleWishlist, onAddToCart }) {
+const WishlistDrawer = memo(function WishlistDrawer({ open, onClose, wishlist, onToggleWishlist, onAddToCart }) {
     const navigate = useNavigate();
 
     const formatINR = (amount) => {
@@ -22,7 +22,7 @@ export default function WishlistDrawer({ open, onClose, wishlist, onToggleWishli
             {/* Backdrop */}
             {open && (
                 <div
-                    className="fixed inset-0 bg-black/40 z-[60] backdrop-blur-sm transition-opacity"
+                    className="fixed inset-0 bg-black/40 z-[60] transition-opacity"
                     onClick={onClose}
                 />
             )}
@@ -110,4 +110,6 @@ export default function WishlistDrawer({ open, onClose, wishlist, onToggleWishli
             </aside>
         </>
     );
-}
+});
+
+export default WishlistDrawer;

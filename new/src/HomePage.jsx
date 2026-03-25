@@ -1,10 +1,11 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback, memo } from "react";
 import HeroSlider from "./Hero.jsx";
 import OfferTimer from "./OfferTimer.jsx";
 import UpcomingDrops from "./UpcomingDrops.jsx";
 import WatchAndShop from "./WatchAndShop.jsx";
+import BestSellersMarquee from "./BestSellersMarquee.jsx";
 
-import ByCategory from "./bycategory.jsx";
+import ByCategory, { CATEGORY_IMAGES, categorySphere } from "./bycategory.jsx";
 import ShopByBrand from "./shopbybrand.jsx";
 import BySkinConcern from "./byskinconcern.jsx";
 import ByOffer from "./byoffer.jsx";
@@ -34,7 +35,7 @@ const STATIC_FALLBACK_ORDER = [
   "skin-quiz", "request-product"
 ];
 
-export default function HomePage({
+const HomePage = memo(function HomePage({
   addToCart,
   query,
   onNavigate,
@@ -44,8 +45,8 @@ export default function HomePage({
   onSelectOffer,
   wishlist,
   toggleWishlist,
+  dynamicCategories,
 }) {
-  const [sections, setSections] = useState([]);
   const [serverData, setServerData] = useState(null);
   const [loading, setLoading] = useState(true);
   const { products: PRODUCTS } = useProducts();
@@ -56,111 +57,65 @@ export default function HomePage({
       .then(d => {
         if (d.success && d.data) {
           setServerData(d.data);
-          if (d.data.sections && d.data.sections.length > 0) {
-            setSections(d.data.sections.filter(s => s.isActive).sort((a,b) => a.sortOrder - b.sortOrder));
-          } else {
-            setSections(STATIC_FALLBACK_ORDER.map(id => ({ componentId: id, isActive: true, settings: {} })));
-          }
-        } else {
-          setSections(STATIC_FALLBACK_ORDER.map(id => ({ componentId: id, isActive: true, settings: {} })));
         }
       })
       .catch(() => {
         console.warn("Using static layout fallback");
-        setSections(STATIC_FALLBACK_ORDER.map(id => ({ componentId: id, isActive: true, settings: {} })));
+        // Fallback to empty data on API error
+        setServerData({ sections: [] });
       })
       .finally(() => setLoading(false));
   }, []);
 
   const filteredProducts = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return PRODUCTS;
-    return PRODUCTS.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) || p.tag.toLowerCase().includes(q),
-    );
+    if (!query) return PRODUCTS;
+    return PRODUCTS.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()));
   }, [query, PRODUCTS]);
 
-  // Renderer mapping engine
-  const renderSection = (section, idx) => {
+  const sections = useMemo(() => {
+    if (serverData && serverData.sections && serverData.sections.length > 0) {
+      return serverData.sections.filter(s => s.isActive).sort((a,b) => a.sortOrder - b.sortOrder);
+    }
+    // If serverData is null (still loading) or no active sections, use fallback
+    return STATIC_FALLBACK_ORDER.map(id => ({ componentId: id, isActive: true, settings: {} }));
+  }, [serverData]);
+
+
+  const renderSection = useCallback((section) => {
     const { componentId, settings } = section;
-    const key = `${componentId}-${idx}`;
-    const limitItems = (arr, max) => arr.slice(0, max || 8);
+    const key = `${componentId}-${section.sortOrder || 0}`; // Use sortOrder for key if available, otherwise 0
 
     switch (componentId) {
       case "hero-slider":
-        // Overrides the Hero logic if there are configured slides in DB
-        return (
-          <div key={key}>
-             {/* Note: Hero.jsx might still handle its own fetch, prioritizing standard design for now */}
-            <HeroSlider customSlides={settings?.slides?.length > 0 ? settings.slides : null} />
-          </div>
-        );
+        return <HeroSlider key={key} onNavigate={onNavigate} customSlides={settings?.slides?.length > 0 ? settings.slides : null} />;
 
       case "offer-timer":
         return <OfferTimer key={key} offers={settings?.offers} />;
 
       case "upcoming-drops":
-        return <UpcomingDrops key={key} onNavigate={onNavigate} wishlist={wishlist} toggleWishlist={toggleWishlist} deadline={settings?.deadline} title={settings?.promoText} products={settings?.products} />;
+        const onlineDropProducts = (settings?.products || []).filter(p => p.showOnline !== false);
+        return <UpcomingDrops key={key} onNavigate={onNavigate} wishlist={wishlist} toggleWishlist={toggleWishlist} deadline={settings?.deadline} title={section.title || settings?.promoText} products={onlineDropProducts} />;
 
       case "shop-by-category":
-        return <ByCategory key={key} onNavigate={onNavigate} onSelectCategory={onSelectCategory} bgColor={settings?.bgColor} title={section.title} maxItems={settings?.maxItems} />;
+        return <ByCategory key={key} onNavigate={onNavigate} onSelectCategory={onSelectCategory} bgColor={settings?.bgColor} title={section.title} categories={dynamicCategories.length > 0 ? dynamicCategories.map(c => ({ label: c.name, image: CATEGORY_IMAGES[c.name] || categorySphere })) : settings?.categories} maxItems={settings?.maxItems} />;
 
       case "best-sellers":
         return (
-          <section key={key} id={`shop-${key}`} className="py-[28px] overflow-hidden" style={{ backgroundColor: settings?.bgColor || 'transparent' }}>
-            <div className="w-full px-0 sm:px-[10px]">
-              <div className="flex items-end justify-between gap-[16px] mb-[11px]">
-                <div className="px-4">
-                  <h2 className="m-0 text-[32px] font-extrabold tracking-wide uppercase">
-                    {section.title || "BEST "}
-                    {!section.title && (
-                      <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent">
-                        SELLERS
-                      </span>
-                    )}
-                  </h2>
-                  {settings?.subheading && <p className="text-stone-500 font-bold mt-1 tracking-widest uppercase text-xs">{settings.subheading}</p>}
-                </div>
-              </div>
-
-              <div className="relative py-[12px] group/marquee">
-                <div className="animate-smooth-marquee pause-on-hover flex gap-[14px] w-max">
-                  {[
-                    ...limitItems(filteredProducts, settings?.maxItems || 12),
-                    ...limitItems(filteredProducts, settings?.maxItems || 12),
-                    ...limitItems(filteredProducts, settings?.maxItems || 12),
-                  ].map((p, pIdx) => (
-                    <div
-                      key={`${p.id}-${pIdx}`}
-                      className="w-[280px] md:w-[320px] flex-shrink-0"
-                    >
-                      <ProductCard
-                        product={{ ...p, category: p.tag, inStock: true }}
-                        onAddToCart={() => addToCart(p.id)}
-                        onClick={() => onNavigate(`product/${p.id}`)}
-                        wishlist={wishlist}
-                        toggleWishlist={toggleWishlist}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-12 text-center">
-                <button
-                  onClick={() => onNavigate("best-sellers")}
-                  className="px-8 py-3 rounded-full bg-[#151515] text-white font-black text-sm uppercase tracking-widest hover:bg-pink-600 hover:scale-105 transition-all shadow-lg active:scale-95"
-                >
-                  View All Products
-                </button>
-              </div>
-            </div>
-          </section>
+          <BestSellersMarquee
+            key={key}
+            sectionKey={key}
+            section={section}
+            settings={settings}
+            products={PRODUCTS}
+            addToCart={addToCart}
+            onNavigate={onNavigate}
+            wishlist={wishlist}
+            toggleWishlist={toggleWishlist}
+          />
         );
 
       case "shop-by-brand":
-        return <ShopByBrand key={key} onSelectBrand={onSelectBrand} title={section.title} maxItems={settings?.maxItems} bgColor={settings?.bgColor} />;
+        return <ShopByBrand key={key} onSelectBrand={onSelectBrand} selectedBrands={settings?.brands} title={section.title} maxItems={settings?.maxItems} bgColor={settings?.bgColor} />;
 
       case "by-skin-concern":
         return <BySkinConcern key={key} onSelectConcern={onSelectConcern} title={section.title} bgColor={settings?.bgColor} />;
@@ -189,13 +144,41 @@ export default function HomePage({
       default:
         return null; // Unknown custom block
     }
-  };
+  }, [onNavigate, addToCart, wishlist, toggleWishlist, PRODUCTS, onSelectCategory, onSelectBrand, onSelectConcern, onSelectOffer]);
 
   if (loading) return null; // Avoid flicker
 
   return (
     <main>
-      {sections.map((section, idx) => renderSection(section, idx))}
+      {query ? (
+        <section className="py-20 px-6 max-w-[1240px] mx-auto">
+          <div className="flex items-center justify-between mb-12">
+            <div>
+              <h2 className="text-3xl font-black text-gray-900 mb-2">Search Results</h2>
+              <p className="text-gray-500">Showing results for "{query}"</p>
+            </div>
+            <div className="bg-gray-100 px-4 py-2 rounded-full text-sm font-bold text-gray-600">
+              {filteredProducts.length} PRODUCTS FOUND
+            </div>
+          </div>
+
+          {filteredProducts.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {filteredProducts.map((p) => (
+                <ProductCard key={p.id} product={p} onNavigate={onNavigate} addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20">
+              <p className="text-xl text-gray-400 font-medium">No products found matching your search.</p>
+            </div>
+          )}
+        </section>
+      ) : (
+        sections.map((section) => renderSection(section))
+      )}
     </main>
   );
-}
+});
+
+export default HomePage;

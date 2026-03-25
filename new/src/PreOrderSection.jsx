@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom"; // Add this import
 import {
     CheckCircle, ShieldCheck, RefreshCcw, Bell, Heart, X, Info,
@@ -7,7 +7,7 @@ import {
 
 import { PREORDER_PRODUCTS } from "./data/products";
 
-export default function PreOrderSection({ wishlist = [], toggleWishlist }) {
+export default React.memo(function PreOrderSection({ wishlist = [], toggleWishlist }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const scrollRef = useRef(null);
     const navigate = useNavigate(); // Add this hook
@@ -56,7 +56,7 @@ export default function PreOrderSection({ wishlist = [], toggleWishlist }) {
                     {/* Desktop Navigation Arrows */}
                     <button
                         onClick={() => scroll("left")}
-                        className="hidden md:flex absolute -left-4 top-1/3 -translate-y-1/2 z-20 w-12 h-12 bg-white/80 backdrop-blur text-[#1a1a1a] rounded-full items-center justify-center shadow-lg hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100 disabled:opacity-30"
+                        className="hidden md:flex absolute -left-4 top-1/3 -translate-y-1/2 z-20 w-12 h-12 bg-white text-[#1a1a1a] rounded-full items-center justify-center shadow-lg hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100 disabled:opacity-30"
                     >
                         <ChevronLeft size={24} />
                     </button>
@@ -77,7 +77,7 @@ export default function PreOrderSection({ wishlist = [], toggleWishlist }) {
                             <div
                                 key={product.id}
                                 onClick={() => navigate(`/preorder/${product.id}`)} // Navigate on click
-                                className="cursor-pointer min-w-[45%] md:min-w-[30%] lg:min-w-[20%] snap-start group relative bg-white/30 backdrop-blur-md border border-white/50 rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(209,64,142,0.08)] hover:-translate-y-1 transition-all duration-500 flex flex-col"
+                                className="cursor-pointer min-w-[45%] md:min-w-[30%] lg:min-w-[20%] snap-start group relative bg-white border border-stone-100 rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(209,64,142,0.08)] hover:-translate-y-1 transition-all duration-500 flex flex-col"
                             >
 
                                 {/* Image Area */}
@@ -93,7 +93,7 @@ export default function PreOrderSection({ wishlist = [], toggleWishlist }) {
                                             e.stopPropagation();
                                             toggleWishlist && toggleWishlist(product);
                                         }}
-                                        className={`absolute top-2 right-2 w-8 h-8 rounded-full bg-white/70 backdrop-blur flex items-center justify-center text-[#111] hover:bg-[#d1408e] hover:text-white transition-colors z-10 shadow-sm ${wishlist.some(i => i.id === product.id) ? '!bg-red-50 !text-red-500' : ''}`}
+                                        className={`absolute top-2 right-2 w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#111] hover:bg-[#d1408e] hover:text-white transition-colors z-10 shadow-sm ${wishlist.some(i => i.id === product.id) ? '!bg-red-50 !text-red-500' : ''}`}
                                     >
                                         <Heart size={14} fill={wishlist.some(i => i.id === product.id) ? 'currentColor' : 'none'} />
                                     </button>
@@ -105,7 +105,7 @@ export default function PreOrderSection({ wishlist = [], toggleWishlist }) {
                                     />
 
                                     {/* Unlock Timer Overlay */}
-                                    <div className="absolute bottom-0 left-0 w-full bg-white/90 backdrop-blur py-2 px-3 border-t border-white/50 flex items-center justify-between gap-2">
+                                    <div className="absolute bottom-0 left-0 w-full bg-white py-2 px-3 border-t border-stone-100 flex items-center justify-between gap-2">
                                         <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#d1408e] uppercase tracking-wider">
                                             <Clock size={12} />
                                             <span>Unlocks</span>
@@ -178,7 +178,7 @@ export default function PreOrderSection({ wishlist = [], toggleWishlist }) {
 
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="text-[#d1408e] text-[13px] font-bold flex items-center gap-1.5 hover:underline bg-white/50 px-4 py-2 rounded-full border border-white/60 shadow-sm"
+                        className="text-[#d1408e] text-[13px] font-bold flex items-center gap-1.5 hover:underline bg-white px-4 py-2 rounded-full border border-stone-100 shadow-sm"
                     >
                         <Info size={14} />
                         How Pre-Order Works
@@ -189,7 +189,7 @@ export default function PreOrderSection({ wishlist = [], toggleWishlist }) {
 
             {/* How it Works Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm animate-in fade-in duration-200">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 animate-in fade-in duration-200">
                     <div className="bg-white rounded-[24px] max-w-[420px] w-full p-8 relative shadow-2xl animate-in zoom-in-95 duration-200">
                         <button
                             onClick={() => setIsModalOpen(false)}
@@ -229,4 +229,4 @@ export default function PreOrderSection({ wishlist = [], toggleWishlist }) {
             )}
         </section>
     );
-}
+});

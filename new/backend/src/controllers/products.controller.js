@@ -11,7 +11,7 @@ const coerceBoolean = (value) => parseBoolean(value) ?? Boolean(value);
 
 export const listProducts = async (req, res) => {
   try {
-    const { category, brand, featured, limitedOffer, search } = req.query;
+    const { category, brand, featured, limitedOffer, newArrival, bestSeller, trending, search } = req.query;
 
     let products = await prisma.product.findMany({
       include: {
@@ -39,6 +39,18 @@ export const listProducts = async (req, res) => {
 
     if (parseBoolean(featured) === true) {
       products = products.filter((product) => product.featured);
+    }
+
+    if (parseBoolean(newArrival) === true) {
+      products = products.filter((product) => product.newArrival);
+    }
+
+    if (parseBoolean(bestSeller) === true) {
+      products = products.filter((product) => product.bestSeller);
+    }
+
+    if (parseBoolean(trending) === true) {
+      products = products.filter((product) => product.trending);
     }
 
     if (parseBoolean(limitedOffer) === true) {
@@ -84,6 +96,9 @@ export const createProduct = async (req, res) => {
       whyWeLoveIt,
       benefits,
       faq,
+      newArrival,
+      bestSeller,
+      trending,
     } = req.body;
 
     if (!vendorId || !name || price === undefined) {
@@ -149,6 +164,9 @@ export const createProduct = async (req, res) => {
           : false,
         rewardEligible: coerceBoolean(rewardEligible),
         limitedOffer: coerceBoolean(limitedOffer),
+        newArrival: coerceBoolean(newArrival),
+        bestSeller: coerceBoolean(bestSeller),
+        trending: coerceBoolean(trending),
         ingredients: ingredients || null,
         whyWeLoveIt: whyWeLoveIt || null,
         benefits: benefits || null,
@@ -216,7 +234,10 @@ export const updateProduct = async (req, res) => {
       ingredients,
       benefits,
       whyWeLoveIt,
-      faq
+      faq,
+      newArrival,
+      bestSeller,
+      trending,
     } = req.body;
     
     let resolvedCategoryId = categoryId || undefined;
@@ -243,6 +264,9 @@ export const updateProduct = async (req, res) => {
       featured: featured !== undefined ? Boolean(featured) : undefined,
       rewardEligible: rewardEligible !== undefined ? Boolean(rewardEligible) : undefined,
       limitedOffer: limitedOffer !== undefined ? Boolean(limitedOffer) : undefined,
+      newArrival: newArrival !== undefined ? Boolean(newArrival) : undefined,
+      bestSeller: bestSeller !== undefined ? Boolean(bestSeller) : undefined,
+      trending: trending !== undefined ? Boolean(trending) : undefined,
       imageUrls: Array.isArray(imageUrls) ? imageUrls : undefined,
       tags: Array.isArray(tags) ? tags : undefined,
       ingredients,

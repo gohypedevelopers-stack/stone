@@ -429,3 +429,15 @@ export const seedFrontendProducts = async (req, res) => {
         res.status(500).json({ success: false, error: String(error) });
     }
 };
+
+export const getAdminCategories = async (req, res) => {
+  try {
+    const categories = await prisma.category.findMany({
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true, slug: true }
+    });
+    return sendSuccess(res, categories, "Categories fetched");
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};

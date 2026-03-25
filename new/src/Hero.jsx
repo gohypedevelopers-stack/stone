@@ -1,3 +1,4 @@
+import React from "react";
 import slide1 from "./assets/1.png";
 import slide2 from "./assets/2.png";
 import slide3 from "./assets/3.png";
@@ -8,7 +9,7 @@ const DEFAULT_SLIDES = [
   { imageUrl: slide3, title: "", subtitle: "", link: "" },
 ];
 
-export default function HeroSlider({ customSlides }) {
+const HeroSlider = React.memo(({ customSlides }) => {
   const validCustomSlides = customSlides ? customSlides.filter(s => s.imageUrl && s.imageUrl.trim() !== "") : [];
   const slides = validCustomSlides.length > 0 ? validCustomSlides : DEFAULT_SLIDES;
   const slideCount = slides.length;
@@ -93,4 +94,6 @@ export default function HeroSlider({ customSlides }) {
       `}} />
     </section>
   );
-}
+});
+
+export default HeroSlider;

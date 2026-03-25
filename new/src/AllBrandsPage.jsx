@@ -1,17 +1,42 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { BRANDS } from "./shopbybrand.jsx";
 import { ChevronRight, ArrowLeft, Search } from "lucide-react";
 
+const API_URL = "http://localhost:5000/api";
+
 export default function AllBrandsPage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [customBrands, setCustomBrands] = useState([]);
+
+  // Fetch saved brand settings from homepage API to include custom brands
+  useEffect(() => {
+    fetch(`${API_URL}/homepage`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && d.data?.sections) {
+          const brandSection = d.data.sections.find(s => s.componentId === "shop-by-brand");
+          if (brandSection?.settings?.brands) {
+            // Find custom brands that aren't in default BRANDS list
+            const savedBrands = brandSection.settings.brands
+              .map(b => typeof b === 'string' ? { name: b, logo: '' } : b)
+              .filter(b => !BRANDS.some(d => d.name === b.name));
+            setCustomBrands(savedBrands);
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Combine default + custom brands
+  const allBrands = useMemo(() => [...BRANDS, ...customBrands], [customBrands]);
 
   const filteredBrands = useMemo(() => {
-    return BRANDS.filter(brand => 
+    return allBrands.filter(brand => 
       brand.name.toLowerCase().includes(searchQuery.toLowerCase())
     ).sort((a, b) => a.name.localeCompare(b.name));
-  }, [searchQuery]);
+  }, [searchQuery, allBrands]);
 
   // Sort brands and group by alphabet
   const groups = filteredBrands.reduce((acc, brand) => {
@@ -103,11 +128,15 @@ export default function AllBrandsPage() {
                       className="group bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-pink-200 transition-all duration-300 cursor-pointer flex flex-col items-center text-center gap-4"
                     >
                       <div className="h-20 w-full flex items-center justify-center p-2">
-                        <img 
-                          src={brand.logo} 
-                          alt={brand.name} 
-                          className="max-h-full max-w-full object-contain transition-all duration-500"
-                        />
+                        {brand.logo ? (
+                          <img 
+                            src={brand.logo} 
+                            alt={brand.name} 
+                            className="max-h-full max-w-full object-contain transition-all duration-500"
+                          />
+                        ) : (
+                          <span className="text-3xl font-black text-zinc-300">{brand.name[0]}</span>
+                        )}
                       </div>
                       <div>
                         <h3 className="text-sm font-black uppercase tracking-wider text-[#151515] group-hover:text-pink-600 transition-colors">

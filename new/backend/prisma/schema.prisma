@@ -122,6 +122,9 @@ model Product {
   stock          Int           @default(0)
   status         ProductStatus @default(ACTIVE)
   featured       Boolean       @default(false)
+  newArrival     Boolean       @default(false)
+  bestSeller     Boolean       @default(false)
+  trending       Boolean       @default(false)
   discounted     Boolean       @default(false)
   rewardEligible Boolean       @default(false)
   limitedOffer   Boolean       @default(false)
@@ -129,6 +132,7 @@ model Product {
   whyWeLoveIt    String?
   benefits       Json?
   faq            Json?
+  showOnline     Boolean       @default(true)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   vendor         Vendor        @relation(fields: [vendorId], references: [id], onDelete: Cascade)

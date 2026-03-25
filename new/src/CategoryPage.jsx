@@ -28,6 +28,42 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
     const [sortOption, setSortOption] = useState("Most Popular");
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 15;
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    const API_URL = "http://localhost:5000/api";
+
+    useEffect(() => {
+        setLoading(true);
+        fetch(`${API_URL}/products?category=${category}`)
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    const mapped = d.data.map(p => ({
+                        id: p.id,
+                        name: p.name,
+                        brand: p.brand || "OMW Skin",
+                        price: p.price,
+                        rating: 4.5 + (Math.random() * 0.5), // Mock rating if not in DB
+                        reviews: Math.floor(Math.random() * 200) + 10,
+                        image: p.imageUrls?.[0] || "https://images.unsplash.com/photo-1631730359585-38a4935cbec4?auto=format&fit=crop&w=800&q=80",
+                        tag: p.tags?.[0] || null,
+                        benefits: p.benefits ? p.benefits.split(',').map(b => b.trim()) : ["Premium", "Natural"]
+                    }));
+                    
+                    // Filter out duplicates by ID or Name+Brand to be safe
+                    const uniqueMapped = mapped.filter((p, index, self) =>
+                        index === self.findIndex((t) => 
+                            t.id === p.id || (t.name === p.name && t.brand === p.brand)
+                        )
+                    );
+                    
+                    setProducts(uniqueMapped);
+                }
+            })
+            .catch(err => console.error("Error fetching category products:", err))
+            .finally(() => setLoading(false));
+    }, [category]);
 
     const ALL_CATEGORIES = [
         "B.b cream", "Blender", "Blush", "Brush", "Cleanser", "cleansing oil", "compact powders",
@@ -345,9 +381,9 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
         }
     ];
 
-    // -- MOCK DATA Generator Based on Category --
-    // In a real app, this would fetch from an API based on the 'category' prop
     const MOCK_PRODUCTS = useMemo(() => {
+        if (products.length > 0) return products;
+        
         if (category === "Foundation") {
             // Use the full 24-product foundation list directly
             return FOUNDATION_DATA;
@@ -376,7 +412,7 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
             tag: i === 0 ? "Best Seller" : i === 2 ? "Trending" : null,
             benefits: ["Hydrating", "Glow", "Soothing", "Brightening"].slice(0, 2)
         }));
-    }, [category]);
+    }, [category, products]);
 
     // Top Picks
     const TOP_PICKS = category === "Foundation"
@@ -419,11 +455,10 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
             ? BB_CREAM_TOP_PICKS
             : MOCK_PRODUCTS.slice(0, 3);
 
-    // Show all products in grid for Foundation, or if we have generated data (assuming generated data is the full set)
-    // Otherwise obey the slice(3) rule for random mock data
-    const GRID_PRODUCTS = category === "Foundation" || CATEGORY_DATA_GENERATED[category]
-        ? MOCK_PRODUCTS
-        : MOCK_PRODUCTS.slice(3);
+    // Avoid duplication: if we show TOP_PICKS, GRID_PRODUCTS should start AFTER them
+    const GRID_PRODUCTS = MOCK_PRODUCTS.length > 3 
+        ? MOCK_PRODUCTS.slice(3) 
+        : MOCK_PRODUCTS;
 
     // Pagination Logic
     const indexOfLastProduct = currentPage * itemsPerPage;
@@ -560,7 +595,8 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
             <div className="max-w-[1440px] mx-auto px-6 py-12">
 
                 {/* 3. TOP PICKS SECTION */}
-                <section className="mb-20">
+                {MOCK_PRODUCTS.length > 3 && (
+                    <section className="mb-20">
                     <div className="flex items-center gap-2 mb-8">
                         <Sparkles className="text-yellow-400 fill-yellow-400" size={20} />
                         <h2 className="text-2xl font-[900] tracking-tight uppercase">Top Picks in {category}</h2>
@@ -606,10 +642,17 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
                         ))}
                     </div>
                 </section>
+                )}
 
                 {/* 4. MAIN GRID */}
                 <section>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
+                    {loading ? (
+                        <div className="flex flex-col items-center justify-center py-20 gap-4">
+                            <div className="w-12 h-12 border-4 border-black/10 border-t-black rounded-full animate-spin" />
+                            <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Fetching Collection...</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
                         {currentProducts.map(p => (
                             <div key={p.id} className="group flex flex-col cursor-pointer" onClick={() => navigate(`/product/${p.id}`, { state: { product: p } })}>
                                 <div className="relative aspect-[4/5] rounded-[24px] overflow-hidden bg-gray-100 mb-4 shadow-sm group-hover:shadow-lg transition-all">
@@ -658,7 +701,15 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
                                 </div>
                             </div>
                         ))}
+                        {currentProducts.length === 0 && !loading && (
+                            <div className="col-span-full py-32 text-center">
+                                <Search className="mx-auto text-gray-200 mb-6" size={60} />
+                                <h3 className="text-2xl font-bold mb-2">No items found</h3>
+                                <p className="text-gray-500 max-w-sm mx-auto">We couldn't find any products in the {category} category right now. Check back soon!</p>
+                            </div>
+                        )}
                     </div>
+                )}
 
 
 

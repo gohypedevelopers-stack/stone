@@ -1,3 +1,4 @@
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { InfiniteSlider } from "./components/ui/infinite-slider.jsx";
 
@@ -75,8 +76,14 @@ export const BRANDS = [
   { name: "Minimalist", logo: minimalist },
 ];
 
-export default function ShopByBrand({ onSelectBrand }) {
+export default React.memo(function ShopByBrand({ onSelectBrand, isAdmin, selectedBrands }) {
   const navigate = useNavigate();
+
+  // Resolve admin brands: use selectedBrands if provided, else default BRANDS
+  const adminBrands = (selectedBrands && selectedBrands.length > 0)
+    ? selectedBrands.map(b => typeof b === 'string' ? (BRANDS.find(x => x.name === b) || { name: b, logo: '' }) : b)
+    : BRANDS;
+
   return (
     <section className="pt-[50px] pb-[60px] rounded-[24px] bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.7),transparent_55%),radial-gradient(circle_at_80%_30%,rgba(255,255,255,0.6),transparent_55%),linear-gradient(180deg,rgba(235,215,255,0.55),rgba(255,225,243,0.45))]">
       <div className="w-full px-0 sm:px-[10px]">
@@ -86,37 +93,72 @@ export default function ShopByBrand({ onSelectBrand }) {
         </div>
 
         <div className="mt-4 flex flex-col gap-[50px]">
-          <InfiniteSlider gap={40} duration={40}>
-            {BRANDS.slice(0, 17).map((brand, idx) => (
-              <div
-                key={`r1-${brand.name}-${idx}`}
-                onClick={() => onSelectBrand && onSelectBrand(brand.name)}
-                className="group w-[270px] h-[140px] p-2 flex items-center justify-center rounded-[10px] bg-white/65 border border-white/80 shadow-[0_10px_22px_rgba(0,0,0,0.08)] snap-center transition-transform duration-300 ease-out overflow-hidden hover:scale-105 hover:shadow-[0_14px_28px_rgba(0,0,0,0.12)] hover:border-white hover:bg-white hover:z-10 shrink-0 cursor-pointer"
-              >
-                <img
-                  src={brand.logo}
-                  alt={brand.name}
-                  className="max-w-full max-h-full object-contain transition-all duration-300 ease-out"
-                />
-              </div>
-            ))}
-          </InfiniteSlider>
+          {isAdmin ? (
+            <div className="flex flex-col gap-3 px-4 w-full">
+              {adminBrands.map((brand, idx) => (
+                <div
+                  key={`admin-${brand.name}-${idx}`}
+                  onClick={() => onSelectBrand && onSelectBrand(brand.name)}
+                  className="group w-full h-[70px] px-5 py-3 flex items-center gap-4 rounded-[14px] bg-white border border-stone-200 shadow-sm transition-all duration-300 ease-out overflow-hidden hover:shadow-md hover:border-indigo-100 cursor-pointer"
+                >
+                  <div className="h-[50px] w-[80px] flex items-center justify-center shrink-0">
+                    {brand.logo ? (
+                      <img
+                        src={brand.logo}
+                        alt={brand.name}
+                        className="max-w-full max-h-full object-contain"
+                      />
+                    ) : (
+                      <div className="h-full w-full bg-zinc-100 rounded-lg flex items-center justify-center text-zinc-300 text-[10px] font-bold uppercase">No Logo</div>
+                    )}
+                  </div>
+                  <span className="text-[12px] font-bold text-stone-700 tracking-wide">{brand.name}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              <InfiniteSlider gap={40} duration={40}>
+                {adminBrands.slice(0, Math.ceil(adminBrands.length / 2)).map((brand, idx) => (
+                  <div
+                    key={`r1-${brand.name}-${idx}`}
+                    onClick={() => onSelectBrand && onSelectBrand(brand.name)}
+                    className="group w-[270px] h-[140px] p-2 flex items-center justify-center rounded-[10px] bg-white/65 border border-white/80 shadow-[0_10px_22px_rgba(0,0,0,0.08)] snap-center transition-transform duration-300 ease-out overflow-hidden hover:scale-105 hover:shadow-[0_14px_28px_rgba(0,0,0,0.12)] hover:border-white hover:bg-white hover:z-10 shrink-0 cursor-pointer"
+                  >
+                    {brand.logo ? (
+                      <img
+                        src={brand.logo}
+                        alt={brand.name}
+                        className="max-w-full max-h-full object-contain transition-all duration-300 ease-out"
+                      />
+                    ) : (
+                      <span className="text-sm font-bold text-zinc-400">{brand.name}</span>
+                    )}
+                  </div>
+                ))}
+              </InfiniteSlider>
 
-          <InfiniteSlider gap={40} duration={45} reverse>
-            {BRANDS.slice(17).map((brand, idx) => (
-              <div
-                key={`r2-${brand.name}-${idx}`}
-                onClick={() => onSelectBrand && onSelectBrand(brand.name)}
-                className="group w-[270px] h-[140px] p-2 flex items-center justify-center rounded-[10px] bg-white/65 border border-white/80 shadow-[0_10px_22px_rgba(0,0,0,0.08)] snap-center transition-transform duration-300 ease-out overflow-hidden hover:scale-105 hover:shadow-[0_14px_28px_rgba(0,0,0,0.12)] hover:border-white hover:bg-white hover:z-10 shrink-0 cursor-pointer"
-              >
-                <img
-                  src={brand.logo}
-                  alt={brand.name}
-                  className="max-w-full max-h-full object-contain transition-all duration-300 ease-out"
-                />
-              </div>
-            ))}
-          </InfiniteSlider>
+              <InfiniteSlider gap={40} duration={45} reverse>
+                {adminBrands.slice(Math.ceil(adminBrands.length / 2)).map((brand, idx) => (
+                  <div
+                    key={`r2-${brand.name}-${idx}`}
+                    onClick={() => onSelectBrand && onSelectBrand(brand.name)}
+                    className="group w-[270px] h-[140px] p-2 flex items-center justify-center rounded-[10px] bg-white/65 border border-white/80 shadow-[0_10px_22px_rgba(0,0,0,0.08)] snap-center transition-transform duration-300 ease-out overflow-hidden hover:scale-105 hover:shadow-[0_14px_28px_rgba(0,0,0,0.12)] hover:border-white hover:bg-white hover:z-10 shrink-0 cursor-pointer"
+                  >
+                    {brand.logo ? (
+                      <img
+                        src={brand.logo}
+                        alt={brand.name}
+                        className="max-w-full max-h-full object-contain transition-all duration-300 ease-out"
+                      />
+                    ) : (
+                      <span className="text-sm font-bold text-zinc-400">{brand.name}</span>
+                    )}
+                  </div>
+                ))}
+              </InfiniteSlider>
+            </>
+          )}
         </div>
 
         <div className="mt-12 text-center">
@@ -130,4 +172,4 @@ export default function ShopByBrand({ onSelectBrand }) {
       </div>
     </section>
   );
-}
+});

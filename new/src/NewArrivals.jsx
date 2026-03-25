@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProducts } from "./context/ProductContext";
+import { toast } from "sonner";
 import ProductCard from "./components/card.jsx";
 import { Clock, Filter, Sparkles, CheckCircle, Mail, ChevronRight, Heart } from "lucide-react";
 import ImageReveal from "./components/image-tiles";
@@ -11,11 +12,21 @@ import imgNew3 from "./assets/newprod/new3.jpg";
 export default function NewArrivals({ addToCart, wishlist = [], toggleWishlist }) {
     const { products: allProducts } = useProducts();
     const navigate = useNavigate();
-    const [activeFilter, setActiveFilter] = useState("Latest");
-    const [timeLeft, setTimeLeft] = useState({ h: 12, m: 45, s: 30 });
-
     // Filter products
-    const newArrivals = allProducts.filter(p => p.tag === "New" || p.rating >= 4.5);
+    const filteredProducts = useMemo(() => {
+        // 1. Initial filter for the page purpose
+        let products = allProducts.filter(p => p.newArrival || p.tag === "New");
+
+        // 2. Apply active filter
+        if (activeFilter === "Price Low") {
+            return [...products].sort((a, b) => a.price - b.price);
+        } else if (activeFilter !== "Latest") {
+            // Category filters (Skincare, Makeup, Sets)
+            return products.filter(p => p.category === activeFilter);
+        }
+        return products;
+    }, [allProducts, activeFilter]);
+
     const saleProducts = allProducts.filter(p => p.price < 900); // Simulate sale items
 
     // Countdown timer logic
@@ -88,7 +99,7 @@ export default function NewArrivals({ addToCart, wishlist = [], toggleWishlist }
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
                         <Filter size={16} />
-                        <span>{newArrivals.length} Products Found</span>
+                        <span>{filteredProducts.length} Products Found</span>
                     </div>
                 </div>
             </div>
@@ -96,7 +107,7 @@ export default function NewArrivals({ addToCart, wishlist = [], toggleWishlist }
             {/* 3. Product Grid */}
             <section className="px-6 max-w-[1440px] mx-auto mb-20">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
-                    {newArrivals.map(p => (
+                    {filteredProducts.map(p => (
                         <ProductCard
                             key={p.id}
                             product={p}
@@ -202,7 +213,7 @@ export default function NewArrivals({ addToCart, wishlist = [], toggleWishlist }
                             Help us curate the perfect shelf for you.
                         </p>
 
-                        <form className="flex flex-col gap-4 max-w-md mx-auto" onSubmit={(e) => { e.preventDefault(); alert("Thanks for your request! We'll look into it."); }}>
+                        <form className="flex flex-col gap-4 max-w-md mx-auto" onSubmit={(e) => { e.preventDefault(); toast.success("Thanks for your request! We'll look into it."); }}>
 
                             <div className="group relative">
                                 <input

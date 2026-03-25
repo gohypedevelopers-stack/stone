@@ -67,6 +67,8 @@ a {
   top: 0;
   background: #fff;
   z-index: 100;
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .headerRow {
@@ -613,6 +615,8 @@ a {
 /* Sections */
 .section {
   padding: 28px 0;
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 500px;
 }
 
 .sectionHead {
@@ -788,14 +792,23 @@ a {
 
 .marquee {
   position: relative;
-  overflow-x: auto;
+  overflow: hidden;
   padding: 6px 0;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
 }
 
-.marquee::-webkit-scrollbar {
-  display: none;
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-33.33%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 40s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
 }
 
 .marqueeTrack {

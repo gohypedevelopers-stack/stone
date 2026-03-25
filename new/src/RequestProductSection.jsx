@@ -1,4 +1,6 @@
-export default function RequestProductSection() {
+import React from "react";
+
+export default React.memo(function RequestProductSection() {
     return (
         <section className="w-full py-16 px-4 bg-gradient-to-b from-white via-[#fdf2f8] to-[#fce7f3]/30">
             <div className="max-w-[600px] mx-auto text-center">
@@ -48,4 +50,4 @@ export default function RequestProductSection() {
             </div>
         </section>
     );
-}
+});

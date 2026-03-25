@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import logo from "./assets/logo.png";
 import searchIcon from "./assets/search.png";
 import locationIcon from "./assets/location.png";
@@ -11,6 +11,7 @@ import cartIcon from "./assets/shopping-cart.png";
 
 import AddressModal from "./components/AddressModal";
 import AnnouncementBar from "./components/AnnouncementBar";
+import { CATEGORY_IMAGES, categorySphere } from "./bycategory";
 
 
 function SearchPlaceholder({ searchTerms }) {
@@ -35,10 +36,24 @@ function SearchPlaceholder({ searchTerms }) {
 
 import { useAuth } from "./context/AuthContext";
 
-export default function Navbar({ categories, query, onQueryChange, cartCount, onToggleCart, onNavigate, wishlistCount, onToggleWishlist, onOpenAuth }) {
+const Navbar = memo(function Navbar({ categories, query, onQueryChange, cartCount, onToggleCart, onNavigate, wishlistCount, onToggleWishlist, onOpenAuth }) {
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const { user, logout } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [localQuery, setLocalQuery] = useState(query);
+
+  useEffect(() => {
+    setLocalQuery(query);
+  }, [query]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localQuery !== query) {
+        onQueryChange({ target: { value: localQuery } });
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [localQuery, onQueryChange, query]);
 
   const searchTerms = [
     "B.b cream", "Blender", "Blush", "Brush", "Cleanser", "cleansing oil", "compact powders",
@@ -53,7 +68,7 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
     <>
       <AnnouncementBar />
       <header className="header">
-        <div className="w-full flex items-center justify-between py-2 px-6 border-b border-stone-100">
+        <div className="w-full flex items-center justify-between py-2 px-8 border-b border-stone-100">
           {/* Left Block: Logo */}
           <div className="flex-1">
             <a className="flex items-center gap-3 leading-none w-fit" href="#" onClick={(e) => { e.preventDefault(); onNavigate('home'); }}>
@@ -66,17 +81,17 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
           </div>
 
           {/* Center Block: Search Bar */}
-          <div className="flex-[4] flex justify-center px-2">
+          <div className="flex-1 max-w-xl flex justify-center px-4">
             <div className="w-full flex items-center gap-3 px-5 py-2.5 rounded-full border border-stone-200 bg-stone-50/50 hover:bg-white hover:border-stone-300 hover:shadow-sm transition-all relative">
               <span className="w-5 h-5 grid place-items-center opacity-70" aria-hidden="true">
                 <img className="w-full h-full object-contain" src={searchIcon} alt="" />
               </span>
               <div className="relative w-full">
-                {!query && <SearchPlaceholder searchTerms={searchTerms} />}
+                {!localQuery && <SearchPlaceholder searchTerms={searchTerms} />}
                 <input
                   className="border-none outline-none w-full text-sm bg-transparent text-stone-800 placeholder-transparent relative z-10"
-                  value={query}
-                  onChange={onQueryChange}
+                  value={localQuery}
+                  onChange={(e) => setLocalQuery(e.target.value)}
                   placeholder=""
                   aria-label="Search products"
                 />
@@ -85,14 +100,14 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
           </div>
 
           {/* Right Block: Actions */}
-          <div className="flex-1 flex items-center justify-end gap-5">
+          <div className="flex items-center justify-end gap-6">
             <a href="#" className="text-sm font-black text-stone-800 hover:text-pink-500 transition-colors" onClick={(e) => { e.preventDefault(); onNavigate('shop'); }}>
               Shop
             </a>
 
-            <div className="flex items-center gap-2">
-              <button className="p-2 relative group" onClick={onToggleWishlist} aria-label="Wishlist">
-                <img className="w-6 h-6 object-contain group-hover:scale-110 transition-transform" src={favIcon} alt="" />
+            <div className="flex items-center gap-4">
+              <button className="p-1 relative group" onClick={onToggleWishlist} aria-label="Wishlist">
+                <img className="w-7 h-7 object-contain group-hover:scale-110 transition-transform" src={favIcon} alt="" />
                 {wishlistCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold border-2 border-white">
                     {wishlistCount}
@@ -102,11 +117,11 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
               
               <div className="relative">
                 <button 
-                  className="p-2 group flex items-center gap-2" 
+                  className="p-1 group flex items-center gap-2" 
                   aria-label="Account"
                   onClick={() => user ? setShowProfileMenu(!showProfileMenu) : onOpenAuth()}
                 >
-                  <img className="w-6 h-6 object-contain group-hover:scale-110 transition-transform" src={accountIcon} alt="" />
+                  <img className="w-7 h-7 object-contain group-hover:scale-110 transition-transform" src={accountIcon} alt="" />
                   {user && (
                     <span className="text-xs font-bold text-stone-700 max-w-[80px] truncate">
                       {user.name.split(' ')[0]}
@@ -144,7 +159,7 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
                 )}
               </div>
 
-              <button className="p-2 relative group" onClick={onToggleCart} aria-label="Cart">
+              <button className="p-1 relative group" onClick={onToggleCart} aria-label="Cart">
                 <img className="w-7 h-7 object-contain group-hover:scale-110 transition-transform" src={cartIcon} alt="" />
                 {cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-stone-900 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold border-2 border-white">
@@ -154,13 +169,13 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
               </button>
             </div>
 
-            <div className="flex items-center gap-3 pl-2 border-l border-stone-100">
+            <div className="flex items-center gap-4 pl-4 border-l border-stone-100">
               <button
                 className="hover:scale-110 transition-transform"
                 onClick={(e) => { e.preventDefault(); setIsAddressModalOpen(true); }}
                 title="Change Location"
               >
-                <img className="w-7 h-7 object-contain" src={locationIcon} alt="Location" />
+                <img className="w-8 h-8 object-contain" src={locationIcon} alt="Location" />
               </button>
               <img className="w-10 h-10 object-contain animate-pulse" src={discountIcon} alt="Offers" />
             </div>
@@ -197,7 +212,7 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
                     href="#"
                   >
                     <div className="w-[60px] h-[60px] rounded-full overflow-hidden border border-gray-200 ">
-                      <img src={c.image} alt={c.title} className="w-full h-full object-cover rounded-full" />
+                      <img src={c.image || CATEGORY_IMAGES[c.title] || categorySphere} alt={c.title} className="w-full h-full object-cover rounded-full" />
                     </div>
                     <div className="flex items-center gap-[4px]">
                       {c.title}
@@ -244,4 +259,6 @@ export default function Navbar({ categories, query, onQueryChange, cartCount, on
       <AddressModal isOpen={isAddressModalOpen} onClose={() => setIsAddressModalOpen(false)} />
     </>
   );
-}
+});
+
+export default Navbar;

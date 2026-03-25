@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
-export default function OfferTimer({ offers = [] }) {
+export default React.memo(function OfferTimer({ offers = [] }) {
     const [timeLeft, setTimeLeft] = useState({
         days: 0,
         hours: 1,
@@ -80,7 +80,7 @@ export default function OfferTimer({ offers = [] }) {
             </div>
         </section>
     );
-}
+});
 
 function TimerUnit({ value, label }) {
     return (

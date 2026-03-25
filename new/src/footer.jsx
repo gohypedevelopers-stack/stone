@@ -1,7 +1,8 @@
+import React, { memo } from "react";
 import logo from "./assets/logo.png";
 import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa";
 
-export default function Footer({ supportPhone }) {
+const Footer = memo(function Footer({ supportPhone }) {
   return (
     <footer className="border-t border-line-custom pt-[28px] pb-[18px] px-[10px]">
       <div className="w-full grid grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr] gap-[14px]">
@@ -57,4 +58,6 @@ export default function Footer({ supportPhone }) {
       </div>
     </footer>
   );
-}
+});
+
+export default Footer;

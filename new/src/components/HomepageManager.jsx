@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
+import { DEFAULT_CATEGORY_DATA } from "../bycategory.jsx";
 import { 
   ArrowUp, 
   ArrowDown, 
@@ -53,7 +54,7 @@ import OfferTimer from "../OfferTimer.jsx";
 import UpcomingDrops from "../UpcomingDrops.jsx";
 import WatchAndShop from "../WatchAndShop.jsx";
 import ByCategory from "../bycategory.jsx";
-import ShopByBrand from "../shopbybrand.jsx";
+import ShopByBrand, { BRANDS } from "../shopbybrand.jsx";
 import BySkinConcern from "../byskinconcern.jsx";
 import ByOffer from "../byoffer.jsx";
 import SkinQuiz from "../skinquiz.jsx";
@@ -115,7 +116,11 @@ export function HomepageManager() {
       const res = await fetch(`${API_URL}/admin/products`);
       const data = await res.json();
       if (data.success) {
-        setAllProducts(data.data || []);
+        const deduped = (data.data || []).reduce((acc, curr) => {
+          if (!acc.some(p => p.name === curr.name)) acc.push(curr);
+          return acc;
+        }, []);
+        setAllProducts(deduped);
       }
     } catch (e) {
       console.error(e);
@@ -226,6 +231,9 @@ export function HomepageManager() {
       initialSettings.videoUrl = "https://youtube.com/watch?v=123";
       initialSettings.productsCsv = "";
     }
+    if (section.componentId === 'shop-by-category' && (!initialSettings.categories || initialSettings.categories.length === 0)) {
+      initialSettings.categories = [...DEFAULT_CATEGORY_DATA];
+    }
 
     setDraftSettings(initialSettings);
     setSettingsOpen(true);
@@ -332,22 +340,76 @@ export function HomepageManager() {
         <div className="pointer-events-none w-full">
           {componentId === "hero-slider" && <HeroSlider customSlides={draftSettings?.slides?.length > 0 ? draftSettings.slides : null} />}
           {componentId === "offer-timer" && <div className="p-4 w-full"><OfferTimer offers={draftSettings?.offers} /></div>}
-          {componentId === "upcoming-drops" && <UpcomingDrops onNavigate={noop} wishlist={mockWishlist} toggleWishlist={noop} deadline={draftSettings?.deadline} title={draftSettings?.promoText} products={draftSettings?.products} />}
-          {componentId === "shop-by-category" && <ByCategory onNavigate={noop} onSelectCategory={noop} bgColor={draftSettings?.bgColor} title={draftTitle} maxItems={draftSettings?.maxItems || 8} />}
+          {componentId === "upcoming-drops" && <UpcomingDrops onNavigate={noop} wishlist={mockWishlist} toggleWishlist={noop} deadline={draftSettings?.deadline} title={draftTitle !== "" ? draftTitle : draftSettings?.promoText} products={draftSettings?.products} />}
+          {componentId === "shop-by-category" && <ByCategory onNavigate={noop} onSelectCategory={noop} isAdmin={true} bgColor={draftSettings?.bgColor} title={draftTitle} categories={draftSettings?.categories} maxItems={draftSettings?.maxItems || 8} />}
 
           {componentId === "best-sellers" && (
-            <div className="py-12 px-6 text-center border-y border-zinc-100" style={{ backgroundColor: draftSettings?.bgColor || 'transparent' }}>
-              <h2 className="text-3xl font-black uppercase tracking-widest">{draftTitle || "Best Sellers"}</h2>
-              {draftSettings?.subheading && <p className="text-zinc-500 font-bold mt-2 tracking-widest uppercase text-xs">{draftSettings.subheading}</p>}
-              <div className="mt-8 flex gap-4 justify-center overflow-hidden opacity-50">
-                <div className="h-64 w-48 bg-zinc-100 rounded-xl"></div>
-                <div className="h-64 w-48 bg-zinc-100 rounded-xl"></div>
-                <div className="h-64 w-48 bg-zinc-100 rounded-xl"></div>
+            <div className="py-[28px] overflow-hidden" style={{ backgroundColor: draftSettings?.bgColor || 'transparent' }}>
+              <div className="px-[10px] mb-[11px] text-left">
+                <h2 className="m-0 text-[32px] font-extrabold tracking-wide uppercase">
+                  {draftTitle || "BEST "}
+                  {!draftTitle && (
+                    <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent">
+                      SELLERS
+                    </span>
+                  )}
+                </h2>
+                {draftSettings?.subheading && <p className="text-stone-500 font-bold mt-1 tracking-widest uppercase text-xs">{draftSettings.subheading}</p>}
+              </div>
+
+              <div className="relative pt-[12px] pb-[30px] w-full px-[10px]">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-[14px]">
+                  {(() => {
+                    const normalize = (n) => n?.toLowerCase().replace(/[^a-z0-9]/g, '').trim() || "";
+                    const deduplicate = (list) => {
+                      const map = new Map();
+                      list.forEach(p => {
+                        const key = normalize(p.name);
+                        // If we already have this product, we only replace it if the new one is 'showOnline'
+                        if (!map.has(key) || (p.showOnline && !map.get(key).showOnline)) {
+                          map.set(key, p);
+                        }
+                      });
+                      return Object.values(map.values()); // Wait, Object.values of map.values() is wrong
+                    };
+                    // Let's use a cleaner helper internally
+                    const uniqueDict = {};
+                    const source = draftSettings?.products?.length > 0 
+                      ? draftSettings.products.map(p => allProducts.find(x => x.id === p.id) || p) 
+                      : allProducts.filter(p => !p.isHidden); 
+
+                    source.forEach(p => {
+                      const normKey = normalize(p.name);
+                      if (!uniqueDict[normKey] || (p.showOnline && !uniqueDict[normKey].showOnline)) {
+                        uniqueDict[normKey] = p;
+                      }
+                    });
+                    
+                    return Object.values(uniqueDict).slice(0, draftSettings?.maxItems || 8);
+                  })().map((p, pIdx) => (
+                    <div key={`${p.id}-${pIdx}`} className="w-full">
+                      <ProductCard
+                        product={{ 
+                          ...p, 
+                          image: p.imageUrls?.[0] || 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=800&q=80',
+                          category: p.category?.name || p.tag || "Skincare",
+                          tag: p.category?.name || p.tag || "New",
+                          rating: p.rating || 4.5,
+                          inStock: true 
+                        }}
+                        onAddToCart={noop}
+                        onClick={noop}
+                        wishlist={mockWishlist}
+                        toggleWishlist={noop}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
-          {componentId === "shop-by-brand" && <ShopByBrand onSelectBrand={noop} title={draftTitle} maxItems={draftSettings?.maxItems || 8} bgColor={draftSettings?.bgColor} />}
+          {componentId === "shop-by-brand" && <ShopByBrand isAdmin={true} selectedBrands={draftSettings?.brands} onSelectBrand={noop} title={draftTitle} maxItems={draftSettings?.maxItems || 8} bgColor={draftSettings?.bgColor} />}
           {componentId === "by-skin-concern" && <BySkinConcern onSelectConcern={noop} title={draftTitle} bgColor={draftSettings?.bgColor} />}
           {componentId === "new-arrivals" && <NewArrivalsSection onNavigate={noop} title={draftTitle} maxItems={draftSettings?.maxItems || 8} bgColor={draftSettings?.bgColor} />}
           {componentId === "watch-and-shop" && <WatchAndShop onNavigate={noop} videoUrl={draftSettings?.videoUrl} includedProducts={draftSettings?.productsCsv} title={draftTitle} />}
@@ -365,7 +427,7 @@ export function HomepageManager() {
     if (!activeConfig) return null;
     const cid = activeConfig.componentId;
 
-    const CommonHeaderInput = () => (
+    const renderCommonHeaderInput = () => (
       <div className="space-y-3 mb-8 pb-8 border-b border-zinc-100">
         <Label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Main Section Title</Label>
         <Input value={draftTitle} onChange={e => setDraftTitle(e.target.value)} className="h-12 rounded-xl bg-zinc-50/50 focus-visible:ring-emerald-500 shadow-inner font-bold text-lg" placeholder="e.g. Best Sellers" />
@@ -377,7 +439,7 @@ export function HomepageManager() {
       const slides = draftSettings.slides || [];
       return (
         <div className="space-y-6">
-          <CommonHeaderInput />
+          {renderCommonHeaderInput()}
           <div className="flex justify-between items-center bg-indigo-950/5 p-5 rounded-2xl border border-zinc-200/50">
             <div>
               <h3 className="text-sm font-bold text-indigo-950">Manage Slides</h3>
@@ -533,7 +595,7 @@ export function HomepageManager() {
       const offers = draftSettings.offers || [];
       return (
         <div className="space-y-8">
-          <CommonHeaderInput />
+          {renderCommonHeaderInput()}
           
           <div className="space-y-5">
             <div className="flex items-center justify-between px-1">
@@ -630,9 +692,17 @@ export function HomepageManager() {
       const filteredPickerProducts = allProducts.filter(p => 
         p.name.toLowerCase().includes(pickerSearch.toLowerCase()) ||
         p.category?.toLowerCase().includes(pickerSearch.toLowerCase())
-      ).slice(0, 10);
+      ).slice(0, 100);
 
       const addFromCatalog = (product) => {
+        const normalize = (n) => n?.toLowerCase().replace(/[^a-z0-9]/g, '').trim() || "";
+        const prodNorm = normalize(product.name);
+        
+        if (dropProducts.some(p => p.id === product.id || normalize(p.name) === prodNorm)) {
+          setShowPicker(false);
+          setPickerSearch("");
+          return;
+        }
         const newP = {
           id: product.id,
           name: product.name,
@@ -647,7 +717,7 @@ export function HomepageManager() {
 
       return (
         <div className="space-y-8">
-          <CommonHeaderInput />
+          {renderCommonHeaderInput()}
 
           <div className="space-y-6">
             <div className="flex items-center justify-between px-1">
@@ -765,18 +835,25 @@ export function HomepageManager() {
                           placeholder="e.g. Feb 10, 10:00 AM"
                         />
                       </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">Launch Qty</Label>
-                        <Input 
-                          type="number"
-                          value={p.qty} 
-                          onChange={e => {
+                      <div className="space-y-1.5 flex flex-col justify-end">
+                        <Label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">Visibility</Label>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={`h-10 rounded-xl gap-2 font-bold text-[10px] uppercase tracking-widest transition-all ${
+                            p.showOnline !== false 
+                              ? 'border-emerald-100 text-emerald-600 hover:bg-emerald-50 bg-emerald-50/30' 
+                              : 'border-zinc-200 text-zinc-400 hover:bg-zinc-100'
+                          }`}
+                          onClick={() => {
                             const newP = [...dropProducts];
-                            newP[pIdx].qty = Number(e.target.value);
+                            newP[pIdx].showOnline = p.showOnline === false ? true : false;
                             setDraftSettings({ ...draftSettings, products: newP });
                           }}
-                          className="h-10 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm"
-                        />
+                        >
+                          {p.showOnline !== false ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                          {p.showOnline !== false ? 'Online' : 'Offline'}
+                        </Button>
                       </div>
                     </div>
 
@@ -841,7 +918,7 @@ export function HomepageManager() {
     if (cid === 'watch-and-shop') {
       return (
         <div className="space-y-6">
-          <CommonHeaderInput />
+          {renderCommonHeaderInput()}
           <div className="p-4 bg-indigo-50/50 text-indigo-600 rounded-2xl border border-indigo-100 flex gap-3 text-sm">
             <div className="mt-0.5"><LayoutTemplate className="h-4 w-4" /></div>
             <p>Embed a video and list the products featured inside it to create an interactive shoppable experience.</p>
@@ -858,10 +935,541 @@ export function HomepageManager() {
       );
     }
 
-    // Default generic configurator for Category, Brand, Best Sellers, etc.
+    if (cid === 'shop-by-category') {
+      const cats = draftSettings.categories || [];
+      return (
+        <div className="space-y-8">
+          {renderCommonHeaderInput()}
+
+          <div className="space-y-6">
+            <div className="flex items-center justify-between px-1">
+              <div>
+                <Label className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-950">Category Blocks</Label>
+                <p className="text-[10px] text-zinc-400 font-medium mt-1">Click categories to select/deselect. Add custom ones below.</p>
+              </div>
+              <Button 
+                onClick={() => {
+                  setDraftSettings({ ...draftSettings, categories: [...cats, { label: "New Category", image: "" }] });
+                }}
+                variant="outline" 
+                size="sm" 
+                className="h-8 rounded-lg border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold text-[9px] uppercase tracking-widest gap-2"
+              >
+                <Plus className="h-3 w-3" /> Custom
+              </Button>
+            </div>
+
+            {/* Visual selectable category grid */}
+            <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+              {DEFAULT_CATEGORY_DATA.map((cat, idx) => {
+                const isSelected = cats.some(c => c.label === cat.label);
+                return (
+                  <button
+                    key={`pick-cat-${cat.label}-${idx}`}
+                    onClick={() => {
+                      if (isSelected) {
+                        setDraftSettings({ ...draftSettings, categories: cats.filter(c => c.label !== cat.label) });
+                      } else {
+                        setDraftSettings({ ...draftSettings, categories: [...cats, { label: cat.label, image: cat.image }] });
+                      }
+                    }}
+                    className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                      isSelected 
+                        ? 'border-emerald-500 bg-emerald-50/50 shadow-md ring-1 ring-emerald-500/20' 
+                        : 'border-zinc-100 bg-white hover:border-zinc-300 hover:bg-zinc-50'
+                    }`}
+                  >
+                    <div className="h-9 w-9 rounded-lg bg-zinc-50 border border-zinc-100 overflow-hidden shrink-0 flex items-center justify-center">
+                      <img src={cat.image} alt={cat.label} className="w-full h-full object-cover" />
+                    </div>
+                    <span className={`text-[10px] font-bold truncate flex-1 uppercase tracking-tight ${isSelected ? 'text-emerald-700' : 'text-zinc-600'}`}>{cat.label}</span>
+                    {isSelected && <Check className="h-4 w-4 text-emerald-500 shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Selected categories count and clear all */}
+            {cats.length > 0 && (
+              <div className="flex items-center justify-between px-2 py-2 bg-emerald-50/50 rounded-xl border border-emerald-100">
+                <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">{cats.length === 1 ? '1 category' : `${cats.length} categories`} selected</span>
+                <Button 
+                  onClick={() => setDraftSettings({ ...draftSettings, categories: [] })}
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-7 text-[9px] font-bold text-red-500 hover:text-red-600 hover:bg-red-50 uppercase tracking-widest"
+                >
+                  Clear All
+                </Button>
+              </div>
+            )}
+
+            {/* Reordering and Editing List */}
+            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+              {cats.length === 0 ? (
+                <div className="py-12 px-6 border-2 border-dashed border-zinc-100 rounded-[2rem] text-center bg-zinc-50/50">
+                   <LayoutGrid className="h-10 w-10 text-zinc-200 mx-auto mb-4" />
+                   <p className="text-[11px] font-black text-zinc-400 uppercase tracking-widest mb-4">No categories selected</p>
+                   <Button
+                     onClick={() => setDraftSettings({ ...draftSettings, categories: [...DEFAULT_CATEGORY_DATA] })}
+                     variant="outline"
+                     className="bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50 font-bold text-[10px] uppercase tracking-widest"
+                   >
+                     Load All Defaults
+                   </Button>
+                </div>
+              ) : cats.map((cat, idx) => (
+                <div key={idx} className="bg-zinc-50 border border-zinc-200 rounded-2xl overflow-hidden shadow-sm transition-all hover:shadow-md">
+                  <div className="p-4 bg-zinc-100/50 border-b border-zinc-200/50 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                       <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Category #{idx + 1}</span>
+                       <div className="flex bg-white rounded-md border border-zinc-200 overflow-hidden ml-2 shadow-sm">
+                        <button className="h-6 w-7 flex items-center justify-center hover:bg-zinc-50 text-zinc-400 hover:text-indigo-600 transition-colors" disabled={idx === 0} onClick={() => {
+                           const n = [...cats]; [n[idx], n[idx-1]] = [n[idx-1], n[idx]]; 
+                           setDraftSettings({...draftSettings, categories: n});
+                        }}>
+                          <ArrowUp className="h-3 w-3" />
+                        </button>
+                        <button className="h-6 w-7 flex items-center justify-center hover:bg-zinc-50 text-zinc-400 hover:text-indigo-600 transition-colors" disabled={idx === cats.length - 1} onClick={() => {
+                           const n = [...cats]; [n[idx], n[idx+1]] = [n[idx+1], n[idx]]; 
+                           setDraftSettings({...draftSettings, categories: n});
+                        }}>
+                          <ArrowDown className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      className="h-7 w-7 text-zinc-400 hover:text-red-500 rounded-lg transition-colors"
+                      onClick={() => {
+                        const nC = [...cats]; nC.splice(idx, 1);
+                        setDraftSettings({ ...draftSettings, categories: nC });
+                      }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                  <div className="p-5 space-y-4 text-left">
+                    <div className="space-y-1.5">
+                      <Label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">Category Label</Label>
+                      <Input 
+                        value={cat.label} 
+                        onChange={e => {
+                          const nC = [...cats]; nC[idx].label = e.target.value;
+                          setDraftSettings({ ...draftSettings, categories: nC });
+                        }}
+                        className="h-10 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm transition-all focus:bg-white"
+                        placeholder="e.g. Skincare"
+                      />
+                    </div>
+                    
+                    <div className="space-y-1.5">
+                      <Label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">Category Image</Label>
+                      <div className="flex gap-3">
+                        <div className="relative group/img h-11 w-11 rounded-xl bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 shadow-inner flex items-center justify-center">
+                          {cat.image ? (
+                            <img src={cat.image} className="h-full w-full object-cover" />
+                          ) : (
+                            <ImageIcon className="h-5 w-5 text-zinc-300" />
+                          )}
+                        </div>
+                        <div className="flex-1 flex gap-2">
+                          <Input 
+                            value={cat.image} 
+                            onChange={e => {
+                              const nC = [...cats]; nC[idx].image = e.target.value;
+                              setDraftSettings({ ...draftSettings, categories: nC });
+                            }}
+                            className="h-11 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[12px] font-medium shadow-sm flex-1"
+                            placeholder="Paste image URL here..."
+                          />
+                          <label className="cursor-pointer">
+                            <div className="h-11 px-4 flex items-center justify-center gap-2 rounded-xl bg-zinc-100 text-zinc-600 border border-zinc-200 hover:bg-zinc-200 transition-all font-bold text-[10px] uppercase tracking-widest">
+                              <Upload className="h-3.5 w-3.5" />
+                              <span>Upload</span>
+                            </div>
+                            <input 
+                              type="file" 
+                              className="hidden" 
+                              accept="image/*" 
+                              onChange={async (e) => {
+                                const file = e.target.files[0];
+                                if (!file) return;
+                                const formData = new FormData();
+                                formData.append("images", file);
+                                const res = await fetch(`${API_URL}/upload`, { method: "POST", body: formData });
+                                const data = await res.json();
+                                if (data.success) {
+                                  let newUrl = data.data[0];
+                                  if (newUrl.startsWith("/app/")) {
+                                    newUrl = `http://localhost:5000/uploads/${newUrl.split('/').pop()}`;
+                                  }
+                                  const nC = [...cats]; nC[idx].image = newUrl;
+                                  setDraftSettings({ ...draftSettings, categories: nC });
+                                }
+                              }} 
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (cid === 'best-sellers') {
+      const selectedProducts = draftSettings.products || [];
+
+      const filteredPickerProducts = allProducts.filter(p => 
+        p.name.toLowerCase().includes(pickerSearch.toLowerCase()) ||
+        p.category?.toLowerCase().includes(pickerSearch.toLowerCase())
+      ).slice(0, 100);
+
+      const addFromCatalog = (product) => {
+        const normalize = (n) => n?.toLowerCase().replace(/[^a-z0-9]/g, '').trim() || "";
+        const prodNorm = normalize(product.name);
+        
+        if (selectedProducts.some(p => p.id === product.id || normalize(p.name) === prodNorm)) {
+          setShowPicker(false);
+          setPickerSearch("");
+          return;
+        }
+        const newP = {
+          id: product.id,
+          name: product.name,
+          imageUrl: product.image || product.imageUrls?.[0] || "",
+        };
+        setDraftSettings({ ...draftSettings, products: [...selectedProducts, newP] });
+        setShowPicker(false);
+        setPickerSearch("");
+      };
+
+      const moveProduct = (idx, dir) => {
+        const newP = [...selectedProducts];
+        if (idx + dir < 0 || idx + dir >= newP.length) return;
+        const temp = newP[idx];
+        newP[idx] = newP[idx + dir];
+        newP[idx + dir] = temp;
+        setDraftSettings({ ...draftSettings, products: newP });
+      };
+
+      return (
+        <div className="space-y-8">
+          {renderCommonHeaderInput()}
+
+          <div className="space-y-2">
+            <Label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Section Subheading / Description</Label>
+            <Input value={draftSettings.subheading || ''} onChange={e => setDraftSettings({ ...draftSettings, subheading: e.target.value })} className="h-12 rounded-xl bg-zinc-50/50 focus-visible:ring-emerald-500 shadow-inner font-medium text-zinc-600" placeholder="Optional brief description or subtitle" />
+          </div>
+
+          <div className="space-y-6">
+            <div className="flex items-center justify-between px-1">
+              <div>
+                <Label className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-950">Featured Products</Label>
+                <p className="text-[10px] text-zinc-400 font-medium mt-1">If empty, we automatically show the latest store inventory.</p>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => setShowPicker(!showPicker)}
+                  variant="outline" 
+                  size="sm" 
+                  className={`h-8 rounded-lg border-emerald-100 text-emerald-600 hover:bg-emerald-50 font-bold text-[9px] uppercase tracking-widest gap-2 ${showPicker ? 'bg-emerald-50 ring-2 ring-emerald-500/20' : ''}`}
+                >
+                  <LayoutGrid className="h-3 w-3" /> {showPicker ? 'Close Picker' : 'Pick from Store'}
+                </Button>
+              </div>
+            </div>
+
+            {showPicker && (
+              <div className="bg-emerald-50/50 border border-emerald-100 rounded-[2rem] p-6 animate-in slide-in-from-top-2 duration-300">
+                <div className="relative mb-4">
+                  <Input 
+                    placeholder="Search your store catalog..." 
+                    value={pickerSearch}
+                    onChange={e => setPickerSearch(e.target.value)}
+                    className="h-11 rounded-2xl bg-white border-emerald-200 focus-visible:ring-emerald-500 pl-10 shadow-sm"
+                  />
+                  <LayoutGrid className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-400" />
+                </div>
+                <div className="grid grid-cols-1 gap-2 max-h-[240px] overflow-y-auto pr-2 custom-scrollbar">
+                  {filteredPickerProducts.length > 0 ? (
+                    filteredPickerProducts.map(product => (
+                      <button 
+                        key={product.id}
+                        onClick={() => addFromCatalog(product)}
+                        className="flex items-center gap-3 p-2 rounded-xl bg-white border border-emerald-100/50 hover:border-emerald-500 hover:bg-emerald-50 transition-all text-left"
+                      >
+                        <div className="h-10 w-10 rounded-lg bg-zinc-100 overflow-hidden shrink-0 border border-emerald-50">
+                          <img src={product.image || product.imageUrls?.[0]} className="h-full w-full object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12px] font-bold text-emerald-950 truncate">{product.name}</p>
+                          <p className="text-[10px] text-emerald-600 font-medium uppercase tracking-tight">Stock: {product.inventoryCount || 0}</p>
+                        </div>
+                        <Plus className="h-3.5 w-3.5 text-emerald-400" />
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-8 text-center text-emerald-400 text-[11px] font-bold uppercase tracking-widest">No products found</div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+              {selectedProducts.length > 0 ? selectedProducts.map((p, pIdx) => (
+                <div key={`${p.id}-${pIdx}`} className="bg-zinc-50 border border-zinc-200 rounded-2xl p-4 transition-all hover:bg-white hover:shadow-md hover:border-indigo-100">
+                  <div className="flex items-center gap-4">
+                    <div className="flex flex-col gap-1">
+                      <button className="h-6 w-6 flex items-center justify-center rounded-md hover:bg-zinc-200 text-zinc-400 hover:text-indigo-600 transition-colors" disabled={pIdx === 0} onClick={() => moveProduct(pIdx, -1)}>
+                        <ArrowUp className="h-3 w-3" />
+                      </button>
+                      <button className="h-6 w-6 flex items-center justify-center rounded-md hover:bg-zinc-200 text-zinc-400 hover:text-indigo-600 transition-colors" disabled={pIdx === selectedProducts.length - 1} onClick={() => moveProduct(pIdx, 1)}>
+                        <ArrowDown className="h-3 w-3" />
+                      </button>
+                    </div>
+                    
+                    <div className="h-[4.5rem] w-[4.5rem] rounded-xl bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 shadow-inner">
+                      <img src={p.imageUrl} className="h-full w-full object-cover" />
+                    </div>
+                    
+                    <div className="flex-1 space-y-2">
+                       <Input 
+                        value={p.name} 
+                        onChange={e => {
+                          const newP = [...selectedProducts];
+                          newP[pIdx].name = e.target.value;
+                          setDraftSettings({ ...draftSettings, products: newP });
+                        }}
+                        className="h-10 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm transition-all focus:bg-white"
+                        placeholder="Product Name"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1 pr-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={`h-9 w-9 rounded-xl transition-all ${
+                          p.showOnline !== false 
+                            ? 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50' 
+                            : 'text-zinc-300 hover:text-zinc-500 hover:bg-zinc-100'
+                        }`}
+                        onClick={() => {
+                          const newP = [...selectedProducts];
+                          newP[pIdx].showOnline = p.showOnline === false ? true : false;
+                          setDraftSettings({ ...draftSettings, products: newP });
+                        }}
+                        title={p.showOnline !== false ? "Visible Online" : "In-Store Only"}
+                      >
+                        {p.showOnline !== false ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                      </Button>
+                    </div>
+
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      className="h-10 w-10 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-xl"
+                      onClick={() => {
+                        const newP = [...selectedProducts];
+                        newP.splice(pIdx, 1);
+                        setDraftSettings({ ...draftSettings, products: newP });
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )) : (
+                <div className="py-12 px-6 border-2 border-dashed border-zinc-100 rounded-[2rem] text-center bg-zinc-50/50">
+                   <LayoutGrid className="h-10 w-10 text-zinc-200 mx-auto mb-4" />
+                   <p className="text-[11px] font-black text-zinc-400 uppercase tracking-widest">Automatic Mode</p>
+                   <p className="text-[10px] text-zinc-400 mt-2 font-medium">Currently automatically fetching all available products.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="h-px bg-zinc-100 w-full" />
+
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 block ml-1">Max Products Shown</Label>
+              <Input type="number" min="1" max="24" value={draftSettings.maxItems || 12} onChange={e => setDraftSettings({ ...draftSettings, maxItems: Number(e.target.value) })} className="h-11 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 shadow-sm" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 block ml-1">Custom Background</Label>
+              <Input value={draftSettings.bgColor || ''} onChange={e => setDraftSettings({ ...draftSettings, bgColor: e.target.value })} className="h-11 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 shadow-sm" placeholder="#FFFFFF or transparent" />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (cid === 'shop-by-brand') {
+      // Brands stored as objects: [{name, logo}, ...] for full edit control
+      const selectedBrands = (draftSettings.brands || []).map(b => 
+        typeof b === 'string' ? (BRANDS.find(x => x.name === b) || { name: b, logo: '' }) : b
+      );
+
+      const updateBrand = (idx, field, value) => {
+        const newB = [...selectedBrands];
+        newB[idx] = { ...newB[idx], [field]: value };
+        setDraftSettings({ ...draftSettings, brands: newB });
+      };
+
+      const moveBrand = (idx, dir) => {
+        const newB = [...selectedBrands];
+        if (idx + dir < 0 || idx + dir >= newB.length) return;
+        const temp = newB[idx];
+        newB[idx] = newB[idx + dir];
+        newB[idx + dir] = temp;
+        setDraftSettings({ ...draftSettings, brands: newB });
+      };
+
+      const handleBrandLogoUpload = async (e, bIdx) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append("images", file);
+        const res = await fetch(`${API_URL}/upload`, { method: "POST", body: formData });
+        const data = await res.json();
+        if (data.success) {
+          let newUrl = data.data[0];
+          if (newUrl.startsWith("/app/")) {
+            newUrl = `http://localhost:5000/uploads/${newUrl.split('/').pop()}`;
+          }
+          updateBrand(bIdx, 'logo', newUrl);
+        }
+      };
+
+      return (
+        <div className="space-y-8">
+          {renderCommonHeaderInput()}
+
+          <div className="space-y-2">
+            <Label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Section Subheading / Description</Label>
+            <Input value={draftSettings.subheading || ''} onChange={e => setDraftSettings({ ...draftSettings, subheading: e.target.value })} className="h-12 rounded-xl bg-zinc-50/50 focus-visible:ring-emerald-500 shadow-inner font-medium text-zinc-600" placeholder="Optional brief description or subtitle" />
+          </div>
+
+          <div className="space-y-6">
+            <div className="flex items-center justify-between px-1">
+              <div>
+                <Label className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-950">Featured Brands</Label>
+                <p className="text-[10px] text-zinc-400 font-medium mt-1">Click brands to select/deselect. Add custom brands too.</p>
+              </div>
+              <Button 
+                onClick={() => {
+                  setDraftSettings({ ...draftSettings, brands: [...selectedBrands, { name: "New Brand", logo: "" }] });
+                }}
+                variant="outline" 
+                size="sm" 
+                className="h-8 rounded-lg border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold text-[9px] uppercase tracking-widest gap-2"
+              >
+                <Plus className="h-3 w-3" /> Custom
+              </Button>
+            </div>
+
+            {/* Visual selectable brand grid */}
+            <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+              {BRANDS.map((brand, idx) => {
+                const isSelected = selectedBrands.some(b => b.name === brand.name);
+                return (
+                  <button
+                    key={`pick-${brand.name}-${idx}`}
+                    onClick={() => {
+                      if (isSelected) {
+                        setDraftSettings({ ...draftSettings, brands: selectedBrands.filter(b => b.name !== brand.name) });
+                      } else {
+                        setDraftSettings({ ...draftSettings, brands: [...selectedBrands, { name: brand.name, logo: brand.logo }] });
+                      }
+                    }}
+                    className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                      isSelected 
+                        ? 'border-emerald-500 bg-emerald-50/50 shadow-md ring-1 ring-emerald-500/20' 
+                        : 'border-zinc-100 bg-white hover:border-zinc-300 hover:bg-zinc-50'
+                    }`}
+                  >
+                    <div className="h-9 w-12 rounded-lg bg-white border border-zinc-100 overflow-hidden shrink-0 flex items-center justify-center p-1">
+                      <img src={brand.logo} alt={brand.name} className="max-w-full max-h-full object-contain" />
+                    </div>
+                    <span className={`text-[10px] font-bold truncate flex-1 ${isSelected ? 'text-emerald-700' : 'text-zinc-600'}`}>{brand.name}</span>
+                    {isSelected && <Check className="h-4 w-4 text-emerald-500 shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Selected brands count */}
+            {selectedBrands.length > 0 && (
+              <div className="flex items-center justify-between px-2 py-2 bg-emerald-50/50 rounded-xl border border-emerald-100">
+                <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">{selectedBrands.length} brand{selectedBrands.length !== 1 ? 's' : ''} selected</span>
+                <Button 
+                  onClick={() => setDraftSettings({ ...draftSettings, brands: [] })}
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-7 text-[9px] font-bold text-red-500 hover:text-red-600 hover:bg-red-50 uppercase tracking-widest"
+                >
+                  Clear All
+                </Button>
+              </div>
+            )}
+
+            {/* Custom brands editing section (only show custom ones that aren't from default BRANDS) */}
+            {selectedBrands.filter(b => !BRANDS.some(d => d.name === b.name)).length > 0 && (
+              <div className="space-y-3">
+                <Label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">Custom Brands</Label>
+                {selectedBrands.map((brand, bIdx) => {
+                  if (BRANDS.some(d => d.name === brand.name)) return null;
+                  return (
+                    <div key={`custom-${bIdx}`} className="bg-zinc-50 border border-zinc-200 rounded-2xl p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Custom Brand</span>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-zinc-400 hover:text-red-500 rounded-lg" onClick={() => {
+                          const newB = [...selectedBrands]; newB.splice(bIdx, 1);
+                          setDraftSettings({ ...draftSettings, brands: newB });
+                        }}><Trash2 className="h-3.5 w-3.5" /></Button>
+                      </div>
+                      <Input value={brand.name} onChange={e => updateBrand(bIdx, 'name', e.target.value)} className="h-10 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm" placeholder="Brand Name" />
+                      <div className="flex gap-3">
+                        <div className="h-11 w-16 rounded-xl bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 flex items-center justify-center">
+                          {brand.logo ? <img src={brand.logo} className="max-w-full max-h-full object-contain p-1" /> : <ImageIcon className="h-5 w-5 text-zinc-300" />}
+                        </div>
+                        <Input value={brand.logo || ''} onChange={e => updateBrand(bIdx, 'logo', e.target.value)} className="h-11 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[12px] font-medium shadow-sm flex-1" placeholder="Paste logo URL..." />
+                        <label className="cursor-pointer">
+                          <div className="h-11 px-4 flex items-center justify-center gap-2 rounded-xl bg-zinc-100 text-zinc-600 border border-zinc-200 hover:bg-zinc-200 transition-all font-bold text-[10px] uppercase tracking-widest">
+                            <Upload className="h-3.5 w-3.5" /><span>Upload</span>
+                          </div>
+                          <input type="file" className="hidden" accept="image/*" onChange={(e) => handleBrandLogoUpload(e, bIdx)} />
+                        </label>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="h-px bg-zinc-100 w-full" />
+
+          <div className="space-y-2">
+             <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 block ml-1">Custom Background</Label>
+             <Input value={draftSettings.bgColor || ''} onChange={e => setDraftSettings({ ...draftSettings, bgColor: e.target.value })} className="h-11 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 shadow-sm" placeholder="#FFFFFF or transparent" />
+          </div>
+        </div>
+      );
+    }
+
+    // Default generic configurator for Category, Brand, etc.
     return (
       <div className="space-y-6">
-        <CommonHeaderInput />
+        {renderCommonHeaderInput()}
         <div className="space-y-2">
           <Label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Section Subheading / Description</Label>
           <Input value={draftSettings.subheading || ''} onChange={e => setDraftSettings({ ...draftSettings, subheading: e.target.value })} className="h-12 rounded-xl bg-zinc-50/50 focus-visible:ring-emerald-500 shadow-inner font-medium text-zinc-600" placeholder="Optional brief description or subtitle" />

@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import imgTirtir from "./assets/category/Sunspray/TIRTIR-Mask-Fit-Make-Up-Fixer.jpeg";
 import imgElf from "./assets/category/Primer/Elf-primer.webp";
 
-export default function LimitedOfferBanner() {
+export default React.memo(function LimitedOfferBanner() {
     const [timeLeft, setTimeLeft] = useState({
         hours: 12,
         minutes: 45,
@@ -85,4 +85,4 @@ export default function LimitedOfferBanner() {
             </div>
         </section>
     );
-}
+});
