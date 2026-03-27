@@ -51,6 +51,7 @@ import { printThermalReceipt } from "@/utils/printReceipt";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { HomepageManager } from "@/components/HomepageManager";
 import { VendorOfflineBilling } from "@/components/VendorOfflineBilling";
+import { PointsSettings } from "@/components/PointsSettings";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -604,6 +605,7 @@ const AdminDashboard = () => {
 
               {[
                 { id: 'customers', label: 'Customers', icon: UserPlus },
+                { id: 'points', label: 'Points', icon: Coins },
               ].map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
@@ -680,6 +682,7 @@ const AdminDashboard = () => {
           <main className="p-12 w-full">
             {activeView === 'homepage-builder' && <HomepageManager />}
             {activeView === 'offline-billing' && <VendorOfflineBilling />}
+            {activeView === 'points' && <PointsSettings />}
             {activeView === 'overview' && (
               <div className="space-y-12 animate-in fade-in slide-in-from-bottom-5">
                 <header>
@@ -859,14 +862,15 @@ const AdminDashboard = () => {
                             <TableHead className="px-8 text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Customer Terminal</TableHead>
                             <TableHead className="px-8 text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Merchant Origin</TableHead>
                             <TableHead className="px-8 text-right text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Settlement</TableHead>
+                            <TableHead className="px-8 text-center text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Points Earned</TableHead>
                             <TableHead className="px-8 text-center text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Status</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {loading ? (
-                            [1, 2, 3].map(i => <TableRow key={i} className="animate-pulse"><TableCell colSpan={5} className="h-24 bg-stone-50/20" /></TableRow>)
+                            [1, 2, 3].map(i => <TableRow key={i} className="animate-pulse"><TableCell colSpan={6} className="h-24 bg-stone-50/20" /></TableRow>)
                           ) : orders.filter(o => o.type === 'Online').length === 0 ? (
-                            <TableRow><TableCell colSpan={5} className="text-center p-24 text-stone-400 font-bold italic">No active digital transmissions found.</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={6} className="text-center p-24 text-stone-400 font-bold italic">No active digital transmissions found.</TableCell></TableRow>
                           ) : orders.filter(o => o.type === 'Online').map((o) => (
                             <TableRow
                               key={o.id}
@@ -884,6 +888,12 @@ const AdminDashboard = () => {
                               </TableCell>
                               <TableCell className="px-8 text-right">
                                 <span className="font-mono font-bold text-indigo-950 text-base">&#8377;{parseFloat(o.totalAmount).toLocaleString()}</span>
+                              </TableCell>
+                              <TableCell className="px-8 text-center">
+                                <div className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 rounded-full px-3.5 py-1.5 ring-1 ring-amber-500/20">
+                                  <Coins className="h-3.5 w-3.5" />
+                                  <span className="text-xs font-black">{o.rewardPointsEarned || 0}</span>
+                                </div>
                               </TableCell>
                               <TableCell className="px-8 text-center">
                                 <Badge variant="outline" className={cn(
@@ -911,14 +921,15 @@ const AdminDashboard = () => {
                             <TableHead className="px-8 text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Merchant Authority</TableHead>
                             <TableHead className="px-8 text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Customer ID</TableHead>
                             <TableHead className="px-8 text-right text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Value</TableHead>
+                            <TableHead className="px-8 text-center text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Points Earned</TableHead>
                             <TableHead className="px-8 text-center text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Registry Status</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {loading ? (
-                            [1, 2, 3].map(i => <TableRow key={i} className="animate-pulse"><TableCell colSpan={5} className="h-20 bg-stone-50/50" /></TableRow>)
+                            [1, 2, 3].map(i => <TableRow key={i} className="animate-pulse"><TableCell colSpan={6} className="h-20 bg-stone-50/50" /></TableRow>)
                           ) : orders.filter(o => o.type === 'Offline').length === 0 ? (
-                            <TableRow><TableCell colSpan={5} className="text-center p-32 text-stone-300 text-[11px] font-black uppercase tracking-[0.4em]">No manual records found in this cycle.</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={6} className="text-center p-32 text-stone-300 text-[11px] font-black uppercase tracking-[0.4em]">No manual records found in this cycle.</TableCell></TableRow>
                           ) : orders.filter(o => o.type === 'Offline').map((o) => (
                             <TableRow
                               key={o.id}
@@ -947,6 +958,12 @@ const AdminDashboard = () => {
                                 <div className="flex flex-col items-end">
                                   <span className="text-2xl font-mono font-black text-indigo-950 tracking-tighter group-hover:scale-105 transition-transform origin-right">&#8377;{parseFloat(o.totalAmount).toLocaleString()}</span>
                                   <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest leading-none mt-1.5">Gross Settlement</span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="px-8 text-center">
+                                <div className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 rounded-full px-3.5 py-1.5 ring-1 ring-amber-500/20 shadow-sm border border-amber-100 group-hover:scale-110 transition-transform">
+                                  <Coins className="h-3.5 w-3.5" />
+                                  <span className="text-xs font-black">{o.rewardPointsEarned || 0}</span>
                                 </div>
                               </TableCell>
                               <TableCell className="px-8 text-center">

@@ -110,6 +110,9 @@ export const getProfile = async (req, res) => {
           },
           orderBy: { purchaseDate: "desc" },
         },
+        rewardTransactions: {
+          orderBy: { createdAt: "desc" },
+        },
       },
     };
 

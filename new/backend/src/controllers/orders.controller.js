@@ -5,6 +5,7 @@ import {
   serializePrisma,
 } from "../utils/data.js";
 import { sendError, sendSuccess } from "../utils/http.js";
+import { calculateRewardPoints } from "./settings.controller.js";
 
 const formatOrder = (order) =>
   serializePrisma({
@@ -118,7 +119,7 @@ export const createOrder = async (req, res) => {
       subtotal - normalizedDiscountAmount - normalizedRewardPointsUsed,
       0,
     );
-    const rewardPointsEarned = Math.floor(totalAmount / 100);
+    const rewardPointsEarned = await calculateRewardPoints(totalAmount);
 
     const order = await prisma.$transaction(async (tx) => {
       const createdOrder = await tx.order.create({
@@ -192,6 +193,7 @@ export const createOrder = async (req, res) => {
             customerId,
             type: "REDEEMED",
             source: "checkout",
+            sourceId: createdOrder.id,
             points: normalizedRewardPointsUsed,
           },
         });
@@ -203,6 +205,7 @@ export const createOrder = async (req, res) => {
             customerId,
             type: "EARNED",
             source: "online-purchase",
+            sourceId: createdOrder.id,
             points: rewardPointsEarned,
           },
         });

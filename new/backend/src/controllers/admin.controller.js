@@ -1,5 +1,6 @@
 import prisma from "../lib/prisma.js";
 import { sendError, sendSuccess } from "../utils/http.js";
+import { calculateRewardPoints } from "./settings.controller.js";
 
 export const getAdminDashboard = async (req, res) => {
   try {
@@ -82,6 +83,7 @@ export const getAdminOrders = async (req, res) => {
         customerName: o.customer.name,
         vendorName: o.vendor.businessName,
         totalAmount: o.totalAmount,
+        rewardPointsEarned: o.rewardPointsEarned || 0,
         status: o.status,
         createdAt: o.createdAt,
         type: 'Online'
@@ -92,6 +94,7 @@ export const getAdminOrders = async (req, res) => {
         customerName: p.customer?.name || p.mobile,
         vendorName: p.vendor.businessName,
         totalAmount: p.amount,
+        rewardPointsEarned: p.rewardPointsEarned || 0,
         status: 'COMPLETED',
         createdAt: p.purchaseDate,
         type: 'Offline'
@@ -235,6 +238,9 @@ export const createAdminOfflinePurchase = async (req, res) => {
 
     // Execute everything in a transaction to ensure rollback if stock update fails
     const purchase = await prisma.$transaction(async (tx) => {
+      // Calculate reward points
+      const rewardPointsEarned = await calculateRewardPoints(Number(amount));
+
       // Create Purchase Record
       const newPurchase = await tx.offlinePurchase.create({
         data: {
@@ -243,6 +249,7 @@ export const createAdminOfflinePurchase = async (req, res) => {
           vendorId,
           mobile,
           amount,
+          rewardPointsEarned,
           items: {
             create: items.map(item => ({
               name: item.name,
@@ -267,6 +274,25 @@ export const createAdminOfflinePurchase = async (req, res) => {
           }
         }
       }
+
+      // Award reward points if customer is linked
+      if (linkedCustomerId && rewardPointsEarned > 0) {
+        await tx.customer.update({
+          where: { id: linkedCustomerId },
+          data: { rewardPoints: { increment: rewardPointsEarned } },
+        });
+        await tx.rewardTransaction.create({
+          data: {
+            customerId: linkedCustomerId,
+            type: "EARNED",
+            source: "offline-purchase",
+            sourceId: newPurchase.id,
+            points: rewardPointsEarned,
+            note: `Offline purchase at ${vendor.businessName}`,
+          },
+        });
+      }
+
       return newPurchase;
     });
 

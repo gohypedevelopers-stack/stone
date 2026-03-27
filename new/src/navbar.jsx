@@ -136,7 +136,7 @@ const Navbar = memo(function Navbar({ categories, query, onQueryChange, cartCoun
                       <p className="text-sm font-bold text-stone-800 truncate">{user.name}</p>
                     </div>
                     <button onClick={() => { onNavigate('account'); setShowProfileMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 transition-colors font-medium">My Orders</button>
-                    <button onClick={() => { onNavigate('account'); setShowProfileMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 transition-colors font-medium">Rewards</button>
+                    <button onClick={() => { onNavigate('rewards'); setShowProfileMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 transition-colors font-medium">Rewards</button>
                     <button 
                       className="w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 transition-colors font-bold mt-2 pt-2 border-t border-stone-50"
                       onClick={() => {
