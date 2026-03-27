@@ -232,66 +232,71 @@ export default function CartPage({
                     <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 md:gap-10">
                         {/* Left column: Items list */}
                         <div className="flex flex-col gap-6 min-w-0">
-                            {/* Free Shipping */}
-                            <div className="bg-linear-to-r from-pink-50/60 to-purple-50/60 border border-pink-100/60 rounded-[24px] p-5 shadow-sm relative overflow-hidden">
-                                <div className="flex items-start justify-between gap-4 mb-3">
-                                    <div className="flex items-start gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center">
-                                            <Sparkles size={18} className="text-pink-500" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-black text-stone-900">
+                            {/* 1. Free Shipping Progress (Updated Style) */}
+                            <div className="bg-[#fff1f7] border border-pink-100 rounded-[28px] p-6 shadow-sm relative overflow-hidden">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-pink-500">
+                                        <Sparkles size={20} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between mb-0.5">
+                                            <p className="text-[15px] font-black text-stone-900">
                                                 {shipProgress.remaining === 0
                                                     ? "Free shipping unlocked!"
                                                     : `Add ${formatINR(shipProgress.remaining)} for free shipping`}
                                             </p>
-                                            <p className="text-[11px] text-stone-500 font-semibold">
-                                                Free shipping above {formatINR(FREE_SHIP_THRESHOLD)}
-                                            </p>
+                                            <span className="text-[11px] font-bold text-pink-600 bg-white px-2 py-0.5 rounded-full border border-pink-50">
+                                                {shipProgress.pct}%
+                                            </span>
                                         </div>
+                                        <p className="text-[11px] text-stone-500 font-semibold uppercase tracking-wider">
+                                            Free shipping above {formatINR(FREE_SHIP_THRESHOLD)}
+                                        </p>
                                     </div>
-
-                                    {shipProgress.remaining > 0 && (
-                                        <button
-                                            onClick={() => navigate("/shop")}
-                                            className="text-xs font-black text-pink-600 hover:text-pink-700 flex items-center gap-1"
-                                        >
-                                            Add more <ArrowRight size={14} />
-                                        </button>
-                                    )}
                                 </div>
-
-                                <div className="h-1.5 w-full bg-white rounded-full overflow-hidden">
+                                <div className="h-[4px] w-full bg-white rounded-full overflow-hidden">
                                     <div
-                                        className="h-full bg-linear-to-r from-pink-400 to-purple-400 rounded-full transition-all duration-700 ease-out"
+                                        className="h-full bg-linear-to-r from-pink-400 via-purple-400 to-indigo-500 rounded-full transition-all duration-1000 ease-out"
                                         style={{ width: `${shipProgress.pct}%` }}
                                     />
                                 </div>
                             </div>
 
+                            {/* 2. Pincode / Shipping Destination */}
+                            <div className="bg-white rounded-[24px] p-4 border border-stone-100 flex items-center justify-between shadow-sm">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-pink-50 flex items-center justify-center text-pink-600">
+                                        <Truck size={20} />
+                                    </div>
+                                    <div>
+                                        <p className="text-[13px] font-black text-stone-900">Delivery to 273164</p>
+                                        <p className="text-[11px] text-stone-500 font-bold uppercase tracking-wide">Nautanwa</p>
+                                    </div>
+                                </div>
+                                <button className="text-pink-600 text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl hover:bg-pink-50 transition-colors border border-pink-100">
+                                    Change
+                                </button>
+                            </div>
+
                             {/* Select All */}
-                            <div className="flex items-center justify-between px-1">
+                            <div className="flex items-center justify-between px-1 mt-4">
                                 <button onClick={toggleSelectAll} className="flex items-center gap-2 group">
                                     <div
                                         className={`w-5 h-5 rounded-[8px] border-2 flex items-center justify-center transition-all ${selectedIds.size === cartItems.length
-                                            ? "bg-stone-900 border-stone-900"
+                                            ? "bg-[#151515] border-[#151515]"
                                             : "bg-transparent border-stone-300 group-hover:border-stone-400"
                                             }`}
                                     >
                                         {selectedIds.size === cartItems.length && <Check size={12} className="text-white" />}
                                     </div>
-                                    <span className="text-sm font-black text-stone-900">Select all</span>
+                                    <span className="text-sm font-black text-stone-900 uppercase tracking-tighter">Select all ({cartItems.length})</span>
                                 </button>
-                                <span className="text-xs font-semibold text-stone-500">{selectedItems.length} selected</span>
+                                <span className="text-xs font-bold text-stone-400">{selectedItems.length} selected</span>
                             </div>
 
                             {/* Ships Soon Items */}
                             {standardItems.length > 0 && (
                                 <section className="flex flex-col gap-4">
-                                    <div className="flex items-center gap-2 px-1">
-                                        <Truck size={14} className="text-stone-500" />
-                                        <h3 className="text-xs font-black text-stone-500 uppercase tracking-widest">Ships soon</h3>
-                                    </div>
                                     <div className="flex flex-col gap-4">
                                         {standardItems.map((item) => (
                                             <CartItem
@@ -304,6 +309,39 @@ export default function CartPage({
                                                 onWishlist={() => moveToWishlist(item)}
                                                 onItemClick={() => handleItemClick(item)}
                                             />
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
+
+                            {/* 3. Gifts Selection Section (New) */}
+                            {effectiveSubtotal > 1500 && (
+                                <section className="mt-4">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="text-lg font-black text-stone-900">Gifts <span className="text-pink-600 font-bold">(2/2 selected)</span></h3>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-[#151515] bg-stone-100 px-3 py-1 rounded-full">Reward Unlocked</span>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {[
+                                            { id: 'g1', name: 'Free Charlotte Tilbury Glow Toner', desc: '5ml', date: 'Delivery by Mon, 30 Mar', img: 'https://images.unsplash.com/photo-1594465919760-441fe5908ab0?auto=format&fit=crop&w=100&q=80' },
+                                            { id: 'g2', name: 'Free Pillow Talk Push Up Lashes', desc: '1.5ml', date: 'Delivery by Mon, 30 Mar', img: 'https://images.unsplash.com/photo-1512496011931-a2c388278ab0?auto=format&fit=crop&w=100&q=80' }
+                                        ].map(gift => (
+                                            <div key={gift.id} className="bg-white/40 border border-pink-50 rounded-[24px] p-4 flex gap-4 items-center group relative overflow-hidden">
+                                                <div className="w-16 h-16 rounded-xl overflow-hidden bg-stone-50 border border-stone-100 flex-shrink-0">
+                                                    <img src={gift.img} className="w-full h-full object-cover" alt="" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h4 className="text-[13px] font-black text-stone-900 leading-tight">{gift.name}</h4>
+                                                    <p className="text-[11px] text-stone-500 font-bold mb-1">{gift.desc}</p>
+                                                    <div className="flex items-center gap-1.5 text-[10px] text-stone-400 font-bold uppercase tracking-wide">
+                                                        <Truck size={12} className="text-pink-400" /> {gift.date}
+                                                    </div>
+                                                </div>
+                                                <div className="absolute top-0 right-0 w-32 h-32 bg-pink-100/5 rounded-bl-[100px] -z-0 pointer-events-none" />
+                                                <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center text-pink-600">
+                                                    <Check size={14} />
+                                                </div>
+                                            </div>
                                         ))}
                                     </div>
                                 </section>
@@ -658,8 +696,8 @@ function EmptyState({ recommendations = [], onAdd }) {
                         <h3 className="text-xl md:text-2xl font-black text-stone-900">You Might Also Like</h3>
                         <p className="text-[11px] text-stone-400 font-bold uppercase tracking-widest mt-1">Special picks curated just for you</p>
                     </div>
-                    <Link 
-                        to="/shop" 
+                    <Link
+                        to="/shop"
                         className="w-10 h-10 rounded-full border border-stone-100 flex items-center justify-center text-stone-400 hover:text-stone-900 hover:border-stone-900 transition-all"
                     >
                         <Plus size={20} />

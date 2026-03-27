@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from "react";
 import {
     Star, Heart, Minus, Plus, ShoppingBag, ShieldCheck,
-    Truck, CornerUpLeft, CreditCard, ChevronDown, ChevronUp, Share2, ArrowRight
+    Truck, CornerUpLeft, CreditCard, ChevronDown, ChevronUp, Share2, ArrowRight,
+    Gift, Tag, Sparkles, Clock, CheckCircle, Banknote, MapPin, X
 } from "lucide-react";
 import { getAllProducts } from "./data/products";
+import { useProducts } from "./context/ProductContext";
+import { useParams, useLocation } from "react-router-dom";
+import { CATEGORY_DATA_GENERATED } from "./productData.js";
+import { PREORDER_PRODUCTS } from "./data/products";
 
 // --- Mock Data for PDP Specifics ---
 const MOCK_PDP_DATA = {
@@ -93,11 +98,283 @@ const ProductCardMini = ({ product, onAddToCart }) => (
     </div>
 );
 
+// --- Rewards Components (Redesigned with 3-Section Layout) ---
 
-import { useProducts } from "./context/ProductContext";
-import { useParams, useLocation } from "react-router-dom";
-import { CATEGORY_DATA_GENERATED } from "./productData.js";
-import { PREORDER_PRODUCTS } from "./data/products";
+const SectionHeader = ({ title, timer }) => (
+    <div className="flex items-center justify-between mb-8">
+        <h2 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em]">{title}</h2>
+        {timer && (
+            <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ends In</span>
+                <div className="bg-[#E11D48] text-white font-black text-xs px-3 py-1.5 rounded-md tracking-widest">
+                    {timer}
+                </div>
+            </div>
+        )}
+    </div>
+);
+
+const ExclusiveOfferCard = ({ icon: Icon, title, description, linkText }) => (
+    <div className="bg-white rounded-[24px] border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.02)] p-8 flex flex-col items-start gap-5 transition-all hover:shadow-md group">
+        <div className="w-12 h-12 bg-pink-50 rounded-xl flex items-center justify-center text-pink-600 transition-transform group-hover:scale-110">
+            <Icon size={24} />
+        </div>
+        <div className="space-y-2">
+            <h3 className="font-black text-lg text-gray-900 leading-tight uppercase tracking-tight">{title}</h3>
+            <p className="text-sm font-medium text-gray-400 leading-relaxed">{description}</p>
+        </div>
+        <button className="text-pink-600 font-black text-xs uppercase tracking-widest border-b-2 border-transparent hover:border-pink-600 transition-all pt-2">
+            {linkText}
+        </button>
+    </div>
+);
+
+const LimitedGiftCard = ({ image, brand, name, unclaimed, total }) => {
+    const progress = ((total - unclaimed) / total) * 100;
+    return (
+        <div className="bg-white rounded-[28px] border border-gray-100 p-4 flex gap-6 items-center flex-1">
+            <div className="w-32 h-32 rounded-[20px] overflow-hidden bg-gray-50 flex-shrink-0">
+                <img src={image} alt={name} className="w-full h-full object-cover" />
+            </div>
+            <div className="flex-1 space-y-3">
+                <div className="space-y-1">
+                    <p className="text-[10px] font-black text-pink-600 uppercase tracking-widest">Complimentary</p>
+                    <h3 className="font-black text-base text-gray-900 leading-tight">{name}</h3>
+                    <p className="text-xs font-medium text-gray-400">{brand}</p>
+                </div>
+                <div className="space-y-2">
+                    <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-pink-500 rounded-full" style={{ width: `${progress}%` }} />
+                    </div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{Math.round(progress)}% Claimed</p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const TrustFactor = ({ icon: Icon, text }) => (
+    <div className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-5 py-3 shadow-sm flex-1">
+        <div className="p-2 bg-pink-50 rounded-lg text-pink-600">
+            <Icon size={16} />
+        </div>
+        <span className="text-[11px] font-black text-gray-900 uppercase tracking-wider">{text}</span>
+    </div>
+);
+
+const MegaDealBanner = ({ price, discount, onOpenDetails }) => (
+    <div className="bg-gradient-to-br from-[#fff5f9] to-white border border-pink-100 rounded-2xl p-4 mb-6 transition-all hover:shadow-md group relative overflow-hidden">
+        {/* Subtle Background Pattern */}
+        <div className="absolute top-0 right-0 p-1 opacity-5">
+            <Sparkles size={40} />
+        </div>
+        
+        <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2.5">
+                <div className="bg-gradient-to-r from-pink-600 to-rose-500 text-white text-[9px] font-[900] px-2 py-0.5 rounded shadow-sm italic tracking-tighter uppercase transform -skew-x-12 border border-pink-400/20">
+                    MEGA DEAL
+                </div>
+                <div className="flex items-baseline gap-1">
+                    <span className="text-[11px] font-bold text-gray-600">Get at</span>
+                    <span className="text-xl font-[900] text-gray-900 tracking-tight">₹{price}</span>
+                </div>
+            </div>
+            <div className="bg-[#00b852] text-white text-[10px] font-black px-3 py-1 rounded-full shadow-sm flex items-center gap-1 border border-[#00a349]/20">
+                Extra ₹{discount} Off
+            </div>
+        </div>
+        
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-pink-50/50">
+            <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 tracking-tight uppercase">
+                <span>With Coupon</span>
+                <span className="text-pink-300">•</span>
+                <Banknote size={12} className="text-pink-400" />
+                <span>Bank Offer</span>
+            </div>
+            <button 
+                onClick={onOpenDetails}
+                className="text-pink-600 font-[900] text-[10px] uppercase tracking-widest flex items-center gap-1 group-hover:gap-1.5 transition-all"
+            >
+                Details <ArrowRight size={10} className="transform group-hover:translate-x-0.5 transition-transform" />
+            </button>
+        </div>
+    </div>
+);
+
+const DealDetailsModal = ({ isOpen, onClose, price, discount }) => {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+            <div className="relative bg-white w-full max-w-md rounded-[32px] overflow-hidden shadow-2xl transform transition-all animate-in fade-in slide-in-from-bottom-10 duration-300">
+                {/* Header Section */}
+                <div className="p-6 pb-0 flex flex-col items-center">
+                    <button onClick={onClose} className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full transition-colors">
+                        <X size={20} className="text-gray-400" />
+                    </button>
+                    
+                    <div className="bg-pink-600 text-white text-[10px] font-black px-3 py-1 rounded shadow-sm italic mb-4">MEGA DEAL</div>
+                    
+                    <div className="flex items-center gap-3 mb-2">
+                        <span className="text-2xl font-[900] text-gray-900">Get at ₹{price}</span>
+                        <div className="bg-[#00b852] text-white text-[10px] font-black px-3 py-1 rounded-full">
+                            Extra ₹{discount} Off
+                        </div>
+                    </div>
+                    <p className="text-xs font-bold text-gray-400 mb-8 uppercase tracking-widest">Combine coupons & offers for max discount</p>
+                </div>
+
+                {/* Offer List */}
+                <div className="px-6 pb-10 space-y-4">
+                    {/* Coupon Card */}
+                    <div className="p-5 rounded-2xl border border-gray-100 bg-gray-50/30 flex flex-col gap-3">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <h5 className="text-sm font-[900] text-gray-900 mb-1">Coupon <span className="text-pink-600">MISSEDYOU</span></h5>
+                                <p className="text-[11px] font-bold text-gray-400">On orders above ₹699</p>
+                            </div>
+                            <span className="text-sm font-[900] text-[#00b852]">₹{Math.round(discount * 0.4)} off</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-[#00b852]">
+                            <CheckCircle size={14} fill="currentColor" className="text-white bg-[#00b852] rounded-full border border-[#00b852]" />
+                            Coupon Unlocked! Apply Coupon in bag
+                        </div>
+                        <button className="text-[10px] font-black text-pink-600 uppercase tracking-widest flex items-center gap-1">Details <ChevronDown size={12} /></button>
+                    </div>
+
+                    {/* Bank Card */}
+                    <div className="p-5 rounded-2xl border border-gray-100 bg-gray-50/30 flex flex-col gap-3">
+                        <div className="flex justify-between items-start">
+                            <div className="flex gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                                    <Banknote size={16} className="text-blue-600" />
+                                </div>
+                                <div>
+                                    <h5 className="text-sm font-[900] text-gray-900 mb-1">Flipkart SBI CC</h5>
+                                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Min. spend ₹100 • T&C</p>
+                                </div>
+                            </div>
+                            <span className="text-sm font-[900] text-[#00b852]">₹{Math.round(discount * 0.6)} off</span>
+                        </div>
+                        <button className="text-[10px] font-black text-pink-600 uppercase tracking-widest flex items-center gap-1">Details <ChevronDown size={12} /></button>
+                    </div>
+
+                    <button 
+                        onClick={onClose}
+                        className="w-full bg-[#151515] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black transition-colors"
+                    >
+                        Got it!
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const DeliverySection = () => {
+    const [activeTab, setActiveTab] = useState("delivery");
+
+    return (
+        <div className="bg-white rounded-[32px] border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.02)] overflow-hidden mb-12">
+            {/* Tabs */}
+            <div className="flex border-b border-gray-100">
+                <button 
+                    onClick={() => setActiveTab("delivery")}
+                    className={`flex-1 py-4 text-sm font-black transition-all ${activeTab === "delivery" ? "text-pink-600 border-b-2 border-pink-500 bg-pink-50/30" : "text-gray-400 hover:text-gray-600"}`}
+                >
+                    Delivery details
+                </button>
+                <button 
+                    onClick={() => setActiveTab("store")}
+                    className={`flex-1 py-4 text-sm font-bold transition-all flex items-center justify-center gap-2 ${activeTab === "store" ? "text-pink-600 border-b-2 border-pink-500 bg-pink-50/30" : "text-gray-400 hover:text-gray-600"}`}
+                >
+                    <span className={`w-5 h-5 rounded-full text-[10px] flex items-center justify-center ${activeTab === "store" ? "bg-pink-600 text-white" : "bg-gray-200 text-white"}`}>2</span>
+                    Buy in Store
+                </button>
+            </div>
+
+            {/* Content Container */}
+            <div className="p-5">
+                {activeTab === "delivery" ? (
+                    <>
+                        <div className="flex items-center justify-between mb-5 gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="p-2 bg-green-50 rounded-full">
+                                    <CheckCircle size={20} className="text-green-600" />
+                                </div>
+                                <div className="text-left">
+                                    <h4 className="text-sm font-black text-gray-900 tracking-tight leading-none mb-1">Delivery by Sat, 28 Mar</h4>
+                                    <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">201306 (Noida)</p>
+                                </div>
+                            </div>
+                            <button className="text-pink-600 font-black text-[10px] uppercase tracking-widest border border-pink-100 rounded-lg px-4 py-1.5 hover:bg-pink-50 transition-all shrink-0">
+                                Change
+                            </button>
+                        </div>
+                        <p className="text-[9px] font-medium text-gray-400 mb-5 ml-[44px]">Delivery date may change with number of items in bag</p>
+
+                        {/* Icons Footer */}
+                        <div className="pt-4 border-t border-gray-50 flex items-center gap-8">
+                            <div className="flex items-center gap-2">
+                                <div className="w-7 h-7 bg-gray-50 rounded-lg flex items-center justify-center border border-gray-100">
+                                    <Truck size={12} className="text-gray-500" />
+                                </div>
+                                <span className="text-[9px] font-black uppercase tracking-tight text-gray-400 leading-tight">Free delivery above ₹299</span>
+                            </div>
+                            <div className="h-4 w-px bg-gray-100" />
+                            <div className="flex items-center gap-2">
+                                <div className="w-7 h-7 bg-gray-50 rounded-lg flex items-center justify-center border border-gray-100">
+                                    <Banknote size={12} className="text-gray-500" />
+                                </div>
+                                <span className="text-[9px] font-black uppercase tracking-tight text-gray-400">COD available</span>
+                            </div>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <div className="flex items-center justify-between mb-5 gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="p-2 bg-pink-50 rounded-full">
+                                    <MapPin size={20} className="text-pink-600" />
+                                </div>
+                                <div className="text-left">
+                                    <h4 className="text-sm font-black text-gray-900 tracking-tight leading-none mb-1">2 Nearby Stores Available</h4>
+                                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">DLF Mall of India (1.2 km)</p>
+                                </div>
+                            </div>
+                            <button className="bg-pink-600 text-white font-black text-[10px] uppercase tracking-widest rounded-lg px-4 py-1.5 hover:bg-pink-700 shadow-sm transition-all shrink-0">
+                                Select Store
+                            </button>
+                        </div>
+                        <p className="text-[9px] font-medium text-gray-400 mb-5 ml-[44px]">Pick up in as little as 2 hours after your order.</p>
+
+                        {/* Store Icons Footer */}
+                        <div className="pt-4 border-t border-gray-50 flex items-center gap-8">
+                            <div className="flex items-center gap-2">
+                                <div className="w-7 h-7 bg-gray-50 rounded-lg flex items-center justify-center border border-gray-100">
+                                    <Clock size={12} className="text-gray-500" />
+                                </div>
+                                <span className="text-[9px] font-black uppercase tracking-tight text-gray-400 leading-tight">Ready in 2 Hours</span>
+                            </div>
+                            <div className="h-4 w-px bg-gray-100" />
+                            <div className="flex items-center gap-2">
+                                <div className="w-7 h-7 bg-gray-50 rounded-lg flex items-center justify-center border border-gray-100">
+                                    <ShoppingBag size={12} className="text-gray-500" />
+                                </div>
+                                <span className="text-[9px] font-black uppercase tracking-tight text-gray-400">Reserve Online</span>
+                            </div>
+                        </div>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+};
+
+
+
+
+
 
 export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist }) {
     const { id } = useParams();
@@ -105,13 +382,16 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
     const location = useLocation();
     const decodedId = decodeURIComponent(id);
 
-    // 1. Try to get product from navigation state (most reliable for mock/generated items)
+    // 1. Hook definitions at the top
+    const [mainImage, setMainImage] = useState(MOCK_PDP_DATA.images[0]);
+    const [selectedShade, setSelectedShade] = useState(MOCK_PDP_DATA.shades[0]);
+    const [qty, setQty] = useState(1);
+    const [activeTab, setActiveTab] = useState("description"); // For Desktop Tabs
+    const [openAccordions, setOpenAccordions] = useState({ description: true }); // For Mobile Accordions
+    const [showDealModal, setShowDealModal] = useState(false);
+
+    // Try to get product
     const stateProduct = location.state?.product;
-
-    // 2. Fallback to lookup in the unified products list from context
-    const productData = stateProduct || products.find(p => String(p.id) === String(decodedId));
-
-    // 3. Keep existing fallback to static lists if not found in main context (for safety)
     const findInStatic = () => {
         if (PREORDER_PRODUCTS) {
             const found = PREORDER_PRODUCTS.find(p => String(p.id) === String(decodedId));
@@ -129,8 +409,11 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
         return null;
     };
 
-    const product = productData || findInStatic() || products[0];
+    const product = stateProduct || products.find(p => String(p.id) === String(decodedId)) || findInStatic() || products[0];
 
+    const isWishlisted = product ? wishlist.some(item => item.id === product.id) : false;
+
+    // Calculate full product data
     let listImages = MOCK_PDP_DATA.images;
     if (product?.imageUrls && Array.isArray(product.imageUrls) && product.imageUrls.length > 0) {
         listImages = product.imageUrls;
@@ -156,31 +439,11 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
         if (fullProduct.shades && fullProduct.shades.length > 0) {
             setSelectedShade(fullProduct.shades[0]);
         }
-        // Force scroll to top when product changes
         window.scrollTo(0, 0);
     }, [decodedId, product]);
 
-    if (!product) return <div className="p-20 text-center">Loading...</div>;
+    if (!product) return <div className="p-20 text-center text-gray-500 font-bold">Product not found.</div>;
 
-    // Ensure images array exists (fallback handled in fullProduct)
-    const images = fullProduct.images;
-    // If only one image and it's from the simple object structure, might need to mock a gallery
-    const displayImages = images;
-
-    const stockStatus = "In Stock"; // Mock
-    const rating = product.rating || 4.8;
-    const reviewCount = product.reviews || 120;
-
-
-
-    const [mainImage, setMainImage] = useState(fullProduct.images[0]);
-    const [selectedShade, setSelectedShade] = useState(fullProduct.shades[0]);
-    const [qty, setQty] = useState(1);
-    const [activeTab, setActiveTab] = useState("description"); // For Desktop Tabs
-    const [openAccordions, setOpenAccordions] = useState({ description: true }); // For Mobile Accordions
-
-    // Check if product is in wishlist
-    const isWishlisted = wishlist.some(item => item.id === product.id);
 
     const toggleAccordion = (key) => {
         setOpenAccordions(prev => ({ ...prev, [key]: !prev[key] }));
@@ -210,36 +473,40 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
                 {/* --- Top Layout: Grid --- */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-10 lg:gap-16 mb-20">
 
-                    {/* 1. Image Gallery (Left - 7/12 cols) */}
-                    <div className="md:col-span-7 flex flex-col-reverse md:flex-row gap-4">
-                        {/* Thumbnails (Vertical on Desktop) */}
-                        <div className="flex md:flex-col gap-3 overflow-x-auto md:overflow-visible no-scrollbar w-full md:w-20 flex-shrink-0">
-                            {fullProduct.images.map((img, idx) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => setMainImage(img)}
-                                    className={`relative w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${mainImage === img ? "border-pink-400 shadow-md ring-2 ring-pink-100" : "border-transparent hover:border-gray-200"}`}
-                                >
-                                    <img src={img} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
-                                </button>
-                            ))}
-                        </div>
+                    {/* 1. Left Content Area (7/12 cols) - Gallery & Exclusive Rewards */}
+                    <div className="md:col-span-7 flex flex-col gap-8">
+                        {/* Gallery Section */}
+                        <div className="flex flex-col-reverse md:flex-row gap-4">
+                            {/* Thumbnails */}
+                            <div className="flex md:flex-col gap-3 overflow-x-auto md:overflow-visible no-scrollbar w-full md:w-20 flex-shrink-0">
+                                {fullProduct.images.map((img, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => setMainImage(img)}
+                                        className={`relative w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${mainImage === img ? "border-pink-400 shadow-md ring-2 ring-pink-100" : "border-transparent hover:border-gray-200"}`}
+                                    >
+                                        <img src={img} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
+                                    </button>
+                                ))}
+                            </div>
 
-                        {/* Main Image */}
-                        <div className="relative flex-1 bg-white rounded-[32px] overflow-hidden border border-gray-100 shadow-sm group cursor-crosshair h-[400px] md:h-[600px]">
-                            <img src={mainImage} className="w-full h-full object-cover transform md:group-hover:scale-110 transition-transform duration-700" alt={fullProduct.name} />
-                            <span className="absolute top-5 left-5 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-bold tracking-wider text-pink-600 shadow-sm">
-                                BESTSELLER
-                            </span>
-                            <button className="absolute top-5 right-5 p-2 bg-white/50 backdrop-blur rounded-full hover:bg-white text-gray-700 transition">
-                                <Share2 size={18} />
-                            </button>
+                            {/* Main Image */}
+                            <div className="relative flex-1 bg-white rounded-[32px] overflow-hidden border border-gray-100 shadow-sm group cursor-crosshair h-[400px] md:h-[600px]">
+                                <img src={mainImage} className="w-full h-full object-cover transform md:group-hover:scale-110 transition-transform duration-700" alt={fullProduct.name} />
+                                <span className="absolute top-5 left-5 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-bold tracking-wider text-pink-600 shadow-sm">
+                                    BESTSELLER
+                                </span>
+                                <button className="absolute top-5 right-5 p-2 bg-white/50 backdrop-blur rounded-full hover:bg-white text-gray-700 transition">
+                                    <Share2 size={18} />
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     {/* 2. Purchase Panel (Right - 5/12 cols) */}
                     <div className="md:col-span-5 relative">
                         <div className="sticky top-24">
+
                             <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">{fullProduct.brand}</p>
                             <h1 className="text-3xl md:text-4xl font-[900] text-[#151515] mb-3 leading-tight tracking-tight">{fullProduct.name}</h1>
 
@@ -249,7 +516,6 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
                                     <span className="ml-2 text-sm text-gray-500 font-semibold underline decoration-gray-300 underline-offset-4 cursor-pointer">(1,248 Reviews)</span>
                                 </div>
                             </div>
-
 
                             <div className="flex items-baseline gap-3 mb-8">
                                 <span className="text-3xl font-bold text-[#151515]">₹{fullProduct.price}</span>
@@ -309,8 +575,22 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
                                 </div>
                             </div>
 
-                            {/* Actions: Qty & Add Cart */}
-                            <div className="flex gap-4 mb-8">
+                             {/* Mega Deal Price Banner */}
+                             <MegaDealBanner 
+                                price={Math.round(fullProduct.price * 0.85)} 
+                                discount={Math.round(fullProduct.price * 0.1)} 
+                                onOpenDetails={() => setShowDealModal(true)}
+                             />
+
+                             <DealDetailsModal 
+                                isOpen={showDealModal} 
+                                onClose={() => setShowDealModal(false)}
+                                price={Math.round(fullProduct.price * 0.85)}
+                                discount={Math.round(fullProduct.price * 0.1)}
+                             />
+
+                             {/* Actions: Qty & Add Cart */}
+                             <div className="flex gap-4 mb-10 text-center">
                                 {/* Stepper */}
                                 <div className="flex items-center bg-gray-50 rounded-full border border-gray-200 px-1 h-12">
                                     <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-10 h-full flex items-center justify-center text-gray-500 hover:text-black hover:bg-white rounded-full transition"><Minus size={16} /></button>
@@ -336,39 +616,63 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
                                 </button>
                             </div>
 
-                            {/* Compact Info Cards */}
-                            <div className="grid grid-cols-2 gap-3 mb-8">
-                                <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-50 flex items-start gap-2">
-                                    <Truck size={16} className="text-blue-600 mt-0.5" />
-                                    <div>
-                                        <h4 className="text-xs font-bold text-gray-900">Free Delivery</h4>
-                                        <p className="text-[10px] text-gray-500">On orders above ₹999</p>
-                                    </div>
-                                </div>
-                                <div className="p-3 bg-purple-50/50 rounded-xl border border-purple-50 flex items-start gap-2">
-                                    <ShieldCheck size={16} className="text-purple-600 mt-0.5" />
-                                    <div>
-                                        <h4 className="text-xs font-bold text-gray-900">Authentic</h4>
-                                        <p className="text-[10px] text-gray-500">100% Original Products</p>
-                                    </div>
-                                </div>
-                                <div className="p-3 bg-green-50/50 rounded-xl border border-green-50 flex items-start gap-2">
-                                    <CornerUpLeft size={16} className="text-green-600 mt-0.5" />
-                                    <div>
-                                        <h4 className="text-xs font-bold text-gray-900">Easy Returns</h4>
-                                        <p className="text-[10px] text-gray-500">7-Day Return Policy</p>
-                                    </div>
-                                </div>
-                                <div className="p-3 bg-orange-50/50 rounded-xl border border-orange-50 flex items-start gap-2">
-                                    <CreditCard size={16} className="text-orange-600 mt-0.5" />
-                                    <div>
-                                        <h4 className="text-xs font-bold text-gray-900">Secure Pay</h4>
-                                        <p className="text-[10px] text-gray-500">SSL Encrypted</p>
-                                    </div>
-                                </div>
+                            {/* Trust Factors Grid (Circled Position) */}
+                            <div className="grid grid-cols-2 gap-3 mb-10">
+                                <TrustFactor icon={Truck} text="Free Delivery" />
+                                <TrustFactor icon={ShieldCheck} text="100% Authentic" />
+                                <TrustFactor icon={CornerUpLeft} text="Easy Returns" />
+                                <TrustFactor icon={CreditCard} text="Secure Pay" />
                             </div>
-
                         </div>
+                    </div>
+                </div>
+
+                {/* --- NEW: Delivery Details Section --- */}
+                <DeliverySection />
+
+                {/* --- NEW: Exclusive Offers Section (Full Width) --- */}
+                <div className="mb-20">
+                    <SectionHeader title="Exclusive Offers" />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <ExclusiveOfferCard 
+                            icon={Tag} 
+                            title="Save upto ₹300" 
+                            description="On your 1st order above ₹299+ | Use Code: NEW15" 
+                            linkText="APPLY NOW" 
+                        />
+                        <ExclusiveOfferCard 
+                            icon={ArrowRight} 
+                            title="Flat ₹500 OFF" 
+                            description="On luxury skincare above ₹2499 | Use Code: LUXE500" 
+                            linkText="APPLY NOW" 
+                        />
+                        <ExclusiveOfferCard 
+                            icon={Sparkles} 
+                            title="Pick a free sample" 
+                            description="Pick a free sample on Estee Lauder purchase above ₹999" 
+                            linkText="SELECT SAMPLE" 
+                        />
+                    </div>
+                </div>
+
+                {/* --- NEW: Limited Time Gifts Section (Full Width) --- */}
+                <div className="mb-24">
+                    <SectionHeader title="Limited Time Gifts" timer="05:06:00" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <LimitedGiftCard 
+                            image="https://images.unsplash.com/photo-1594465919760-441fe5908ab0?auto=format&fit=crop&w=300&q=80" 
+                            brand="ESTÉE LAUDER" 
+                            name="Free Estée Lauder 4-Pc Kit Fall'25" 
+                            unclaimed={65} 
+                            total={100} 
+                        />
+                        <LimitedGiftCard 
+                            image="https://images.unsplash.com/photo-1599305090598-fe179d501227?auto=format&fit=crop&w=300&q=80" 
+                            brand="LANEIGE" 
+                            name="Laneige Mini Lip Glow (5h 7m left)" 
+                            unclaimed={40} 
+                            total={100} 
+                        />
                     </div>
                 </div>
 
@@ -513,14 +817,14 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
             </div>
 
             {/* --- Sticky Mobile Bottom Bar --- */}
-            <div className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-3 z-50 flex items-center justify-between items-center shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+            <div className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-3 z-50 flex items-center justify-between shadow-lg">
                 <div className="flex flex-col">
                     <span className="text-xs text-gray-400 font-bold uppercase">Total</span>
                     <span className="text-xl font-bold text-gray-900">₹{fullProduct.price}</span>
                 </div>
                 <button
                     onClick={handleAddToCart}
-                    className="bg-[#151515] text-white px-8 py-3 rounded-full font-bold text-sm uppercase tracking-wider shadow-lg"
+                    className="bg-black text-white px-8 py-3 rounded-full font-bold text-sm uppercase tracking-wider"
                 >
                     Add to Cart
                 </button>

@@ -28,6 +28,7 @@ import imgFoundation from "./assets/foundation.jpg";
 import imgMoisturizer from "./assets/Moisturizers.jpg";
 import imgPerfume from "./assets/perfumes.jpg";
 import imgLipstick from "./assets/lipstick.jpg";
+import imgSerums from "./assets/category/Serums.jpg";
 import AdminDashboard from "./AdminDashboard";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
@@ -167,7 +168,8 @@ export default function App() {
   const NAV_CATEGORIES = useMemo(() => [
     { key: "new-arrivals", title: "New Arrivals", image: imgNewArrival },
     { key: "best-sellers", title: "Best Sellers", image: imgBestSeller },
-    ...dynamicCategories.slice(0, 6).map(cat => ({
+    { key: "serums", title: "Serums", image: imgSerums },
+    ...dynamicCategories.slice(0, 5).map(cat => ({
       key: cat.slug,
       title: cat.name,
       image: null // Mapping will happen in Navbar/ByCategory

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, memo } from "react";
+import { useLocation } from "react-router-dom";
 import logo from "./assets/logo.png";
 import searchIcon from "./assets/search.png";
 import locationIcon from "./assets/location.png";
@@ -39,6 +40,7 @@ import { useAuth } from "./context/AuthContext";
 const Navbar = memo(function Navbar({ categories, query, onQueryChange, cartCount, onToggleCart, onNavigate, wishlistCount, onToggleWishlist, onOpenAuth }) {
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const { user, logout } = useAuth();
+  const location = useLocation();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [localQuery, setLocalQuery] = useState(query);
 
@@ -182,78 +184,53 @@ const Navbar = memo(function Navbar({ categories, query, onQueryChange, cartCoun
           </div>
         </div>
 
-        <nav className="border-t border-b border-line-custom relative" aria-label="Primary categories">
-          <div className="w-full py-[14px] flex gap-[28px] items-center px-[20px]">
-            {categories.map((c) => {
-              const isDirectLink = ["New Arrivals", "Best Sellers"].includes(c.title);
+        {location.pathname === "/" && (
+          <nav className="border-b border-stone-100 bg-white relative overflow-x-auto no-scrollbar" aria-label="Primary categories">
+            <div className="w-fit mx-auto py-6 flex gap-8 items-center px-10">
+              {categories.map((c) => {
+                const isDirectLink = ["New Arrivals", "Best Sellers"].includes(c.title);
 
-              if (isDirectLink) {
-                const targetView = c.title === "New Arrivals" ? 'new-arrivals' : 'best-sellers';
+                if (isDirectLink) {
+                  const targetView = c.title === "New Arrivals" ? 'new-arrivals' : 'best-sellers';
+                  return (
+                    <div key={c.key} className="static">
+                      <a
+                        className="flex flex-col items-center gap-3 text-stone-900 font-extrabold text-[13px] cursor-pointer hover:text-pink-500 transition-all group"
+                        href={`#${targetView}`}
+                        onClick={(e) => { e.preventDefault(); onNavigate && onNavigate(targetView); }}
+                      >
+                        <div className="w-[140px] h-[110px] rounded-[28px] overflow-hidden border border-stone-100 shadow-sm group-hover:shadow-xl transition-all duration-500 group-hover:-translate-y-1">
+                          <img src={c.image} alt={c.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        </div>
+                        <span className="uppercase tracking-widest">{c.title}</span>
+                      </a>
+                    </div>
+                  );
+                }
+
                 return (
-                  <div key={c.key} className="static">
+                  <div key={c.key} className="group static">
                     <a
-                      className="flex flex-col items-center gap-[6px] text-text-custom font-[700] text-[15px] cursor-pointer hover:text-[#d1408e] transition-colors py-[0px]"
-                      href={`#${targetView}`}
-                      onClick={(e) => { e.preventDefault(); onNavigate && onNavigate(targetView); }}
+                      className="flex flex-col items-center gap-3 text-stone-900 font-extrabold text-[13px] cursor-pointer hover:text-pink-500 transition-all group"
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); onNavigate && onNavigate(`category/${c.title}`); }}
                     >
-                      <div className="w-[60px] h-[60px] rounded-full overflow-hidden border border-gray-200 ">
-                        <img src={c.image} alt={c.title} className="w-full h-full object-cover rounded-full" />
+                      <div className="w-[140px] h-[110px] rounded-[28px] overflow-hidden border border-stone-100 shadow-sm group-hover:shadow-xl transition-all duration-500 group-hover:-translate-y-1">
+                        <img src={c.image || CATEGORY_IMAGES[c.title] || categorySphere} alt={c.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                       </div>
-                      <span>{c.title}</span>
+                      <div className="flex items-center gap-1.5 uppercase tracking-widest">
+                        {c.title}
+                        <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg" className="group-hover:rotate-180 transition-transform duration-200">
+                          <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
                     </a>
                   </div>
                 );
-              }
-
-              return (
-                <div key={c.key} className="group static">
-                  <a
-                    className="flex flex-col items-center gap-[6px] text-text-custom font-[700] text-[15px] cursor-pointer hover:text-[#d1408e] transition-colors py-[0px]"
-                    href="#"
-                  >
-                    <div className="w-[60px] h-[60px] rounded-full overflow-hidden border border-gray-200 ">
-                      <img src={c.image || CATEGORY_IMAGES[c.title] || categorySphere} alt={c.title} className="w-full h-full object-cover rounded-full" />
-                    </div>
-                    <div className="flex items-center gap-[4px]">
-                      {c.title}
-                      <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg" className="group-hover:rotate-180 transition-transform duration-200">
-                        <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
-                  </a>
-
-                  {/* Mega Dropdown */}
-                  <div className="absolute left-0 right-0 top-[100%] w-full bg-white border-b border-black/6 shadow-[0_10px_40px_rgba(0,0,0,0.08)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-                    <div className="max-w-[1240px] mx-auto p-[30px] grid grid-cols-[300px_1fr] gap-[40px]">
-                      {/* Featured Image */}
-                      <div>
-                        <img src={c.image} alt="" className="w-full h-[180px] object-cover rounded-[12px] shadow-sm" />
-                      </div>
-
-                      {/* Description & Links */}
-                      <div className="flex flex-col justify-center">
-                        <h3 className="text-[24px] font-[800] mb-[8px]">{c.title}</h3>
-                        <p className="text-muted-custom text-[15px] leading-[1.6] max-w-[400px] mb-[20px]">
-                          {c.desc || "Explore our premium collection curated just for you. Find the best products to enhance your beauty routine."}
-                        </p>
-                        <a
-                          href="#"
-                          onClick={(e) => { e.preventDefault(); onNavigate && onNavigate(`/category/${c.title}`); }}
-                          className="text-[#d1408e] font-[700] text-[14px] flex items-center gap-[6px] hover:underline"
-                        >
-                          Shop {c.title}
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-
-
-          </div>
-        </nav>
+              })}
+            </div>
+          </nav>
+        )}
       </header>
 
       <AddressModal isOpen={isAddressModalOpen} onClose={() => setIsAddressModalOpen(false)} />

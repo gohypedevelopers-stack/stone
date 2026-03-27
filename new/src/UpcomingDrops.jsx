@@ -1,212 +1,217 @@
-import React, { useState, useEffect } from "react";
-import { Bell, Lock, Clock, Heart } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { Bell, Clock, Info, Share2, Sparkles, TrendingUp } from "lucide-react";
 
-// Import local images
+// Updated mock data to support time slots and social proof
+const MOCK_TIME_SLOTS = [
+    {
+        id: "slot1",
+        date: "26 Mar",
+        time: "10:00",
+        status: "Coming Soon",
+        products: [
+            {
+                id: "p1",
+                name: "Sakura Silk Essence (Premium Edition)",
+                description: "Unstoppable Radiance All Day - Skin Revitalizing Formula",
+                image: imgG,
+                price: 2499,
+                originalPrice: 3499,
+                reminders: 124,
+                progress: 15, // % of reminders filled
+            },
+            {
+                id: "p2",
+                name: "Lavender Sleeping Mask (Night Repair)",
+                description: "Deep Hydration for Morning Glow - Limited Batch",
+                image: imgJ,
+                price: 1599,
+                originalPrice: 1999,
+                reminders: 89,
+                progress: 45,
+            }
+        ]
+    },
+    {
+        id: "slot2",
+        date: "26 Mar",
+        time: "20:00",
+        status: "Coming Soon",
+        products: [
+            {
+                id: "p3",
+                name: "Glass Skin Barrier Cream (Max)",
+                description: "Fortify Your Skin Barrier - Advanced Ceramide Complex",
+                image: imgH,
+                price: 1850,
+                originalPrice: 2200,
+                reminders: 215,
+                progress: 10,
+            },
+            {
+                id: "p4",
+                name: "Rose Quartz Roller Set (Heritage)",
+                description: "Ancient Cooling Therapy - 100% Authentic Stone",
+                image: imgI,
+                price: 3200,
+                originalPrice: 4500,
+                reminders: 56,
+                progress: 60,
+            }
+        ]
+    }
+];
+
 import imgG from "./assets/COMINGSOON/G.jpg";
 import imgH from "./assets/COMINGSOON/H.jpg";
 import imgI from "./assets/COMINGSOON/I.jpg";
 import imgJ from "./assets/COMINGSOON/J.jpg";
 
-// Mock upcoming products data (✅ quantity added)
-const UPCOMING_PRODUCTS = [
-    {
-        id: "up1",
-        name: "Sakura Silk Essence",
-        image: imgG,
-        launchDate: "Feb 10, 10:00 AM",
-        qty: 120,
-    },
-    {
-        id: "up2",
-        name: "Glass Skin Barrier Cream",
-        image: imgH,
-        launchDate: "Feb 12, 12:00 PM",
-        qty: 80,
-    },
-    {
-        id: "up3",
-        name: "Rose Quartz Roller Set",
-        image: imgI,
-        launchDate: "Feb 14, 09:00 AM",
-        qty: 60,
-    },
-    {
-        id: "up4",
-        name: "Lavender Sleeping Mask",
-        image: imgJ,
-        launchDate: "Feb 15, 08:00 PM",
-        qty: 150,
-    },
-];
+export default React.memo(function UpcomingDrops({ onNavigate }) {
+    const [activeSlotId, setActiveSlotId] = useState(MOCK_TIME_SLOTS[0].id);
 
-export default React.memo(function UpcomingDrops({ onNavigate, wishlist = [], toggleWishlist, products = [], deadline, title }) {
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  });
+    const activeSlot = useMemo(() => 
+        MOCK_TIME_SLOTS.find(s => s.id === activeSlotId), 
+    [activeSlotId]);
 
-  useEffect(() => {
-    const targetDate = deadline ? new Date(deadline) : new Date();
-    if (!deadline) {
-      targetDate.setDate(targetDate.getDate() + 3);
-      targetDate.setHours(10, 0, 0, 0);
-    }
-
-    const interval = setInterval(() => {
-      const now = new Date();
-      const difference = targetDate - now;
-
-      if (difference <= 0) {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        clearInterval(interval);
-        return;
-      }
-
-      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
-      const minutes = Math.floor((difference / 1000 / 60) % 60);
-      const seconds = Math.floor((difference / 1000) % 60);
-
-      setTimeLeft({ days, hours, minutes, seconds });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [deadline]);
-
-  const displayProducts = products && products.length > 0 ? products : UPCOMING_PRODUCTS;
-
-  return (
-    <section className="py-16 md:py-24 px-4 bg-[#fff1f7] overflow-hidden relative">
-      {/* Background Decor */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-linear-to-b from-pink-200/20 to-purple-200/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-linear-to-t from-blue-100/30 to-teal-100/30 rounded-full blur-3xl translate-y-1/4 -translate-x-1/4 pointer-events-none" />
-
-      <div className="max-w-[1240px] mx-auto relative z-10">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-16 gap-10">
-          <div className="relative group">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-pink-100 border border-pink-200 shadow-sm">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-pink-500"></span>
-                </span>
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-600">Exclusive Drop</span>
-              </div>
-            </div>
-            <style>
-              {`
-              @keyframes gradientFlow {
-                0% { background-position: 0% 50%; }
-                50% { background-position: 100% 50%; }
-                100% { background-position: 0% 50%; }
-              }
-              .animate-text-gradient {
-                background-size: 200% auto;
-                animation: gradientFlow 5s linear infinite;
-              }
-              `}
-            </style>
-            <h2 className="text-5xl md:text-7xl font-black text-[#151515] tracking-tight leading-[0.9]">
-              {title ? title.split(' ')[0] : "Upcoming"} <br className="hidden md:block" />
-              {(!title || title.split(' ').length > 1) && (
-                <span className="relative inline-block mt-2">
-                  <span className="text-transparent bg-clip-text bg-linear-to-r from-pink-500 to-purple-600 animate-text-gradient">
-                    {title ? title.split(' ').slice(1).join(' ') : "Beauty Drop"}
-                  </span>
-                  <div className="absolute -bottom-2 left-0 w-full h-2 bg-linear-to-r from-pink-500/20 to-purple-500/20 rounded-full blur-[2px]" />
-                </span>
-              )}
-            </h2>
-          </div>
-
-          {/* Countdown */}
-          <div className="relative">
-            <div className="absolute -inset-4 bg-linear-to-r from-pink-400/20 to-purple-400/20 rounded-3xl blur-2xl opacity-50" />
-            <div className="relative bg-white/95 border border-stone-200 rounded-2xl p-1 shadow-2xl">
-              <div className="bg-white rounded-xl px-8 py-5 flex items-center gap-8 md:gap-12">
-                {Object.entries(timeLeft).map(([unit, value]) => (
-                  <div key={unit} className="flex flex-col items-center">
-                    <span className="text-3xl md:text-4xl font-black tabular-nums leading-none mb-2 bg-clip-text text-transparent bg-linear-to-b from-gray-900 to-gray-600">
-                      {value.toString().padStart(2, "0")}
-                    </span>
-                    <span className="text-[11px] uppercase font-black text-gray-400 tracking-[0.2em]">
-                      {unit}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Product Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {displayProducts.map((product, pId) => {
-            const imgSrc = product.image || product.imageUrl;
-            return (
-              <div
-                key={`${product.id || 'upcoming'}-${pId}`}
-                onClick={() => onNavigate && onNavigate("product-page")}
-                className="group relative bg-white rounded-[24px] border border-stone-100 overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-2 transition-all duration-500 cursor-pointer"
-              >
-                {/* Image */}
-                <div className="relative aspect-4/5 overflow-hidden m-2 rounded-[20px] bg-gray-100">
-                  {imgSrc ? (
-                    <img
-                      src={imgSrc}
-                      alt={product.name}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 filter blur-[2px] group-hover:blur-0"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-stone-200" />
-                  )}
-
-                  {/* Lock Overlay */}
-                  <div className="absolute inset-0 bg-black/5 flex items-center justify-center group-hover:bg-black/0 transition-colors duration-300">
-                    <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-gray-400 shadow-sm group-hover:scale-0 group-hover:opacity-0 transition-all duration-300">
-                      <Lock size={20} />
+    return (
+        <section className="py-20 px-4 bg-[#fff1f7]/50 relative overflow-hidden">
+            {/* Background Decor */}
+            <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-pink-100/30 rounded-full blur-[100px] -z-0" />
+            
+            <div className="max-w-[1000px] mx-auto relative z-10">
+                {/* Header Title */}
+                <div className="mb-12 px-2">
+                    <div className="flex items-center gap-2 mb-4">
+                        <Sparkles className="text-pink-500" size={24} />
+                        <span className="text-[11px] font-black uppercase tracking-[0.3em] text-pink-600">Flash Event</span>
                     </div>
-                  </div>
-
-                  {/* Launch Date */}
-                  <div className="absolute top-3 left-3 bg-white px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm border border-stone-100">
-                    <Clock size={12} className="text-purple-500" />
-                    <span className="text-[12px] font-extrabold uppercase tracking-wider text-[#151515]">
-                      {product.launchDate}
-                    </span>
-                  </div>
-
-                  {/* Quantity Badge */}
-                  <div className="absolute top-3 right-3 bg-white px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm border border-stone-100">
-                    <span className="text-[12px] font-extrabold tracking-wide text-gray-800">
-                      Qty: {product.qty || product.inventoryCount || 0}
-                    </span>
-                  </div>
+                    <h2 className="text-5xl md:text-7xl font-bold text-[#151515] tracking-tight leading-[0.85] uppercase">
+                        Limited Time <br className="hidden md:block" />
+                        <span className="text-transparent bg-clip-text bg-linear-to-r from-pink-500 via-purple-500 to-indigo-500">
+                            Drops
+                        </span>
+                    </h2>
                 </div>
 
-                {/* Content */}
-                <div className="px-5 pb-6 pt-2 text-center">
-                  <h3 className="text-lg font-bold text-[#151515] mb-4 truncate">
-                    {product.name}
-                  </h3>
-
-                  {/* Notify Button */}
-                  <button className="w-full py-3 rounded-xl border border-transparent bg-linear-to-r from-pink-500 via-purple-500 to-indigo-500 p-px group/btn overflow-hidden relative shadow-sm hover:shadow-lg transition-all active:scale-95">
-                    <div className="absolute inset-0 bg-white rounded-[10px] group-hover/btn:opacity-0 transition-opacity duration-300" />
-                    <div className="relative flex items-center justify-center gap-2 text-sm font-black bg-clip-text text-transparent bg-linear-to-r from-pink-600 to-purple-600 group-hover/btn:bg-none group-hover/btn:text-white transition-all duration-300">
-                      <Bell size={16} className="text-purple-600 group-hover/btn:text-white transition-colors" />
-                      Notify Me
-                    </div>
-                  </button>
+                {/* Time Slot Tabs */}
+                <div className="flex gap-4 mb-8 overflow-x-auto no-scrollbar pb-2">
+                    {MOCK_TIME_SLOTS.map((slot) => {
+                        const isActive = activeSlotId === slot.id;
+                        return (
+                            <button
+                                key={slot.id}
+                                onClick={() => setActiveSlotId(slot.id)}
+                                className={`flex-1 min-w-[180px] rounded-2xl p-4 transition-all duration-300 border h-[110px] flex flex-col items-center justify-center gap-1 relative overflow-hidden group
+                                    ${isActive 
+                                        ? 'bg-linear-to-r from-pink-500 to-purple-600 border-transparent text-white shadow-lg shadow-pink-200' 
+                                        : 'bg-white border-gray-200 text-gray-500 hover:border-pink-300'
+                                    }
+                                `}
+                            >
+                                <span className={`text-[14px] font-medium ${isActive ? 'opacity-90' : 'opacity-80'}`}>{slot.date}</span>
+                                <span className={`text-3xl font-black leading-none ${isActive ? 'text-white' : 'text-gray-900'}`}>
+                                    {slot.time}
+                                </span>
+                                <span className="text-[12px] font-bold opacity-80 uppercase tracking-wide">
+                                    {slot.status}
+                                </span>
+                                {isActive && (
+                                    <div className="absolute top-0 right-0 p-2 opacity-20">
+                                        <Clock size={40} className="rotate-12" />
+                                    </div>
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
+
+                {/* Product Section - Adaptive Layout */}
+                <div className="md:grid md:grid-cols-3 lg:grid-cols-3 gap-8 space-y-4 md:space-y-0">
+                    {activeSlot.products.map((product) => (
+                        <React.Fragment key={product.id}>
+                            {/* --- MOBILE LAYOUT (Horizontal Row) --- */}
+                            <div className="md:hidden bg-white rounded-[24px] p-3 flex gap-4 items-center border border-pink-50/50 shadow-sm relative overflow-hidden">
+                                <div className="w-[110px] h-[110px] flex-shrink-0 relative">
+                                    <div className="w-full h-full rounded-[18px] overflow-hidden bg-stone-50 border border-gray-50">
+                                        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="absolute -top-1 -left-1 bg-white text-pink-600 p-1.5 rounded-lg shadow-md border border-pink-50">
+                                        <TrendingUp size={12} />
+                                    </div>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="text-[13px] font-black text-gray-900 leading-tight mb-1 truncate">{product.name}</h3>
+                                    <p className="text-[10px] text-gray-500 font-medium mb-3 line-clamp-1">{product.description}</p>
+                                    
+                                    <div className="w-full h-[4px] bg-gray-100 rounded-full mb-2 overflow-hidden">
+                                        <div className="h-full bg-linear-to-r from-pink-400 to-purple-600 rounded-full" style={{ width: `${product.progress}%` }} />
+                                    </div>
+                                    
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex flex-col">
+                                            <span className="text-[15px] font-black text-gray-900 leading-none">₹{product.price.toLocaleString()}</span>
+                                            <span className="text-[10px] font-bold text-gray-400 line-through">₹{product.originalPrice.toLocaleString()}</span>
+                                        </div>
+                                        <button className="bg-[#151515] text-white h-8 px-4 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5">
+                                            <Bell size={10} /> Remind
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* --- DESKTOP LAYOUT (Vertical Grid Card) --- */}
+                            <div className="hidden md:flex flex-col bg-white rounded-[40px] p-4 border border-pink-50/50 shadow-sm hover:shadow-2xl hover:-translate-y-3 transition-all duration-700 group relative">
+                                <div className="relative aspect-[4/5] rounded-[32px] overflow-hidden bg-stone-50 mb-6">
+                                    <img
+                                        src={product.image}
+                                        alt={product.name}
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
+                                    />
+                                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-pink-600 p-3 rounded-2xl shadow-xl shadow-pink-100/50 border border-pink-50">
+                                        <TrendingUp size={20} />
+                                    </div>
+                                    <div className="absolute bottom-4 left-4 right-4">
+                                        <div className="bg-white/90 backdrop-blur-md p-4 rounded-[24px] border border-white/50 shadow-xl">
+                                            <div className="w-full h-[6px] bg-pink-50/50 rounded-full mb-2 overflow-hidden">
+                                                <div className="h-full bg-linear-to-r from-pink-400 via-purple-500 to-indigo-600 transition-all duration-1000" style={{ width: `${product.progress}%` }} />
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex -space-x-1.5">
+                                                    {[1,2,3].map(i => <div key={i} className="w-5 h-5 rounded-full border-2 border-white bg-pink-100" />)}
+                                                </div>
+                                                <span className="text-[10px] font-black text-gray-600 uppercase tracking-tighter">{product.reminders} Reminders</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="px-2 pb-4 flex-1 flex flex-col">
+                                    <h3 className="text-xl font-black text-gray-900 leading-tight mb-2 uppercase group-hover:text-pink-600 transition-colors">{product.name}</h3>
+                                    <p className="text-[13px] text-gray-500 font-medium mb-6 line-clamp-2">{product.description}</p>
+                                    
+                                    <div className="mt-auto flex items-end justify-between">
+                                        <div className="flex flex-col">
+                                            <span className="text-[13px] font-bold text-gray-400 line-through">₹{product.originalPrice.toLocaleString()}</span>
+                                            <span className="text-2xl font-black text-gray-900 leading-none">₹{product.price.toLocaleString()}</span>
+                                        </div>
+                                        <button className="bg-[#151515] text-white px-8 h-[54px] rounded-full text-xs font-black uppercase tracking-widest hover:bg-pink-600 hover:scale-105 active:scale-95 transition-all shadow-lg hover:shadow-pink-200 flex items-center gap-2">
+                                            <Bell size={16} /> Remind Me
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </React.Fragment>
+                    ))}
+                </div>
+
+                {/* Empty State */}
+                {activeSlot.products.length === 0 && (
+                    <div className="text-center py-20 bg-white rounded-[32px] border-2 border-dashed border-pink-100 flex flex-col items-center gap-4">
+                        <Clock size={48} className="text-pink-100" />
+                        <p className="text-gray-400 font-black uppercase tracking-widest text-sm">No drops remaining for this slot</p>
+                    </div>
+                )}
+            </div>
+        </section>
+    );
 });

@@ -29,13 +29,13 @@ export default React.memo(function OfferTimer({ offers = [] }) {
     };
 
     const displayOffers = offers && offers.length > 0 ? offers : [{ text: "20% OFF on orders over $100", code: "SAVE20" }];
-    // Repeat the offers to ensure a smooth infinite marquee scroll
-    const marqueeItems = [...displayOffers, ...displayOffers, ...displayOffers, ...displayOffers];
+    // Repeat the offers many times to ensure a truly seamless infinite marquee scroll
+    const marqueeItems = [...displayOffers, ...displayOffers, ...displayOffers, ...displayOffers, ...displayOffers, ...displayOffers, ...displayOffers, ...displayOffers];
 
     return (
         <section className="pb-[18px]">
             <div className="w-full px-0 sm:px-[10px]">
-                <div className="relative overflow-hidden rounded-[20px] py-[16px] flex items-center bg-linear-to-r from-[#e3e3e3] to-[#f2f2f2] shadow-[inset_0_1px_4px_rgba(255,255,255,0.8)] border border-white/50">
+                <div className="relative overflow-hidden rounded-[24px] py-[14px] flex items-center bg-[#e5e5e5]/80 backdrop-blur-sm border border-white/40 shadow-sm">
                     <style>
                         {`
                         @keyframes offerMarquee {
@@ -45,7 +45,8 @@ export default React.memo(function OfferTimer({ offers = [] }) {
                         .animate-offer-marquee {
                             display: flex;
                             width: fit-content;
-                            animation: offerMarquee 40s linear infinite;
+                            animation: offerMarquee 30s linear infinite;
+                            will-change: transform;
                         }
                         .animate-offer-marquee:hover {
                             animation-play-state: paused;
@@ -54,19 +55,19 @@ export default React.memo(function OfferTimer({ offers = [] }) {
                     </style>
                     <div className="animate-offer-marquee whitespace-nowrap flex items-center">
                         {marqueeItems.map((offer, i) => (
-                            <div key={i} className="flex items-center gap-[40px] px-[28px]">
-                                <span className="text-[20px] font-medium text-[#1a1a1a] tracking-tight">
+                            <div key={i} className="flex items-center gap-[40px] px-[40px]">
+                                <span className="text-[15px] font-bold text-[#1a1a1a] tracking-tight uppercase">
                                     {offer.text}
                                 </span>
                                 {offer.code && (
                                     <button
                                         onClick={() => handleCopy(offer.code)}
-                                        className="flex items-center gap-[8px] bg-white rounded-[999px] px-[14px] py-[6px] text-[13px] font-bold uppercase tracking-wide cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] active:scale-95 transition-all outline-none"
+                                        className="flex items-center gap-[6px] bg-white/90 rounded-full px-[12px] py-[4px] text-[11px] font-black uppercase tracking-tighter cursor-pointer border border-black/10 hover:bg-white transition-all outline-none"
                                         title="Click to copy"
                                     >
-                                        <span className="pt-px">{copiedCode === offer.code ? "COPIED" : offer.code}</span>
+                                        <span className="text-[#1a1a1a]">{copiedCode === offer.code ? "COPIED" : offer.code}</span>
                                         {copiedCode !== offer.code && (
-                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#666]">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-black/40">
                                                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                                                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                                             </svg>
