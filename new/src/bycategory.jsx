@@ -93,18 +93,19 @@ export const CATEGORY_IMAGES = {
 
 const CategoryCard = memo(({ label, image, onClick, isGrid }) => (
   <div
-    className={`text-center flex-none snap-center cursor-pointer group ${isGrid ? 'w-full' : 'w-[140px] sm:w-[160px] md:w-[180px] xl:w-[200px]'}`}
+    className={`text-center flex-none snap-center cursor-pointer group ${isGrid ? 'w-full' : 'w-[180px] sm:w-[200px] md:w-[220px] xl:w-[240px]'}`}
     onClick={() => onClick(label)}
   >
-    <div className="relative aspect-square rounded-[22px] overflow-hidden border border-black/5 shadow-[0_8px_20px_rgba(0,0,0,0.06)] group-hover:shadow-[0_12px_28px_rgba(0,0,0,0.1)] transition-all duration-300">
+    <div className="relative aspect-[4/3] rounded-[40px] overflow-hidden border border-black/5 shadow-[0_10px_30px_rgba(0,0,0,0.08)] group-hover:shadow-[0_20px_45px_rgba(0,0,0,0.15)] transition-all duration-500 group-hover:-translate-y-2">
       <img
-        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 will-change-transform"
+        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out will-change-transform"
         src={image || categorySphere}
         alt={label}
         loading="lazy"
       />
+      <div className="absolute inset-0 bg-linear-to-b from-transparent to-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
     </div>
-    <div className="mt-2.5 font-black text-[14px] text-[#151515] group-hover:text-[#b36cff] transition-colors uppercase tracking-tight">
+    <div className="mt-4 font-black text-sm md:text-base text-[#151515] group-hover:text-[#b36cff] transition-colors uppercase tracking-tight">
       {label}
     </div>
   </div>
@@ -141,7 +142,7 @@ export default React.memo(function ByCategory({ onNavigate, onSelectCategory, ti
       <div className={`w-full relative mx-auto ${isAdmin ? 'px-2' : 'px-0 sm:px-4 max-w-[1440px]'}`}>
         {/* Main Category Block */}
         <div className={`relative bg-[#f8f0ff] rounded-[40px] border border-stone-200 py-10 md:py-16 shadow-sm overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:w-32 before:h-full before:bg-linear-to-r before:from-[#e7c6ff]/20 before:to-transparent before:z-0 after:content-[''] after:absolute after:top-0 after:right-0 after:w-32 after:h-full after:bg-linear-to-l after:from-[#e7c6ff]/20 after:to-transparent after:z-0 ${isAdmin ? 'rounded-2xl py-6' : ''}`}>
-          
+
           {/* Heading */}
           <div className="relative z-10 text-center mb-10 md:mb-14">
             <h2 className={`${isAdmin ? 'text-2xl' : 'text-3xl md:text-5xl'} font-black uppercase tracking-tight text-[#151515]`}>
@@ -166,22 +167,22 @@ export default React.memo(function ByCategory({ onNavigate, onSelectCategory, ti
           {/* Category List */}
           <div className="relative z-10 group px-4 md:px-12">
             {!isAdmin && (
-               <button
-                  onClick={() => handleScroll("left")}
-                  className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 z-20 w-10 md:w-12 h-10 md:h-12 bg-white rounded-full shadow-lg flex items-center justify-center border border-black/5 hover:bg-white transition-all cursor-pointer hover:scale-110 active:scale-95 group-hover:opacity-100 opacity-0 md:opacity-100"
-                  aria-label="Scroll Left"
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="15 18 9 12 15 6"></polyline>
-                  </svg>
-                </button>
+              <button
+                onClick={() => handleScroll("left")}
+                className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 z-20 w-10 md:w-12 h-10 md:h-12 bg-white rounded-full shadow-lg flex items-center justify-center border border-black/5 hover:bg-white transition-all cursor-pointer hover:scale-110 active:scale-95 group-hover:opacity-100 opacity-0 md:opacity-100"
+                aria-label="Scroll Left"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
             )}
 
             {/* Scroll Container or Grid */}
             <div
               ref={isAdmin ? null : scrollRef}
-              className={`${isAdmin 
-                ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10' 
+              className={`${isAdmin
+                ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10'
                 : 'flex overflow-x-auto snap-x snap-mandatory gap-4 md:gap-6 py-4 no-scrollbar scroll-smooth gpu-accelerated'}`}
             >
               {displayItems.map((cat, idx) => (

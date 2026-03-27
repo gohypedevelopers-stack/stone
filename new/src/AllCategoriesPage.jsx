@@ -42,16 +42,16 @@ export default function AllCategoriesPage({ onNavigate, onSelectCategory, dynami
               style={{ animationDelay: `${idx * 50}ms` }}
               onClick={() => handleCategoryClick(cat.label)}
             >
-              <div className="relative aspect-square rounded-[32px] overflow-hidden border border-black/5 shadow-[0_8px_20px_rgba(0,0,0,0.06)] group-hover:shadow-[0_20px_40px_rgba(0,0,0,0.12)] transition-all duration-500 group-hover:-translate-y-2">
+              <div className="relative aspect-[4/3] rounded-[40px] overflow-hidden border border-black/5 shadow-[0_12px_36px_rgba(0,0,0,0.08)] group-hover:shadow-[0_24px_50px_rgba(0,0,0,0.15)] transition-all duration-500 group-hover:-translate-y-2">
                 <img
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                   src={cat.image || categorySphere}
                   alt={cat.label}
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors duration-500" />
+                <div className="absolute inset-0 bg-linear-to-b from-transparent to-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               </div>
-              <div className="mt-4 font-black text-sm md:text-base text-[#151515] group-hover:text-[#b36cff] transition-colors uppercase tracking-tight">
+              <div className="mt-5 font-black text-sm md:text-lg text-[#151515] group-hover:text-[#b36cff] transition-colors uppercase tracking-tight">
                 {cat.label}
               </div>
             </div>
