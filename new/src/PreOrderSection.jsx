@@ -20,6 +20,44 @@ export default React.memo(function PreOrderSection({ wishlist = [], toggleWishli
         }
     };
 
+    // Drag-to-Scroll Logic
+    const [isDragging, setIsDragging] = useState(false);
+    const [startX, setStartX] = useState(0);
+    const [scrollLeft, setScrollLeft] = useState(0);
+
+    const handleMouseDown = (e) => {
+        setIsDragging(true);
+        setStartX(e.pageX - scrollRef.current.offsetLeft);
+        setScrollLeft(scrollRef.current.scrollLeft);
+        // Disable text selection and snapping while dragging
+        scrollRef.current.style.scrollSnapType = 'none';
+        scrollRef.current.style.cursor = 'grabbing';
+    };
+
+    const handleMouseLeave = () => {
+        setIsDragging(false);
+        if (scrollRef.current) {
+            scrollRef.current.style.scrollSnapType = 'x mandatory';
+            scrollRef.current.style.cursor = 'grab';
+        }
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
+        if (scrollRef.current) {
+            scrollRef.current.style.scrollSnapType = 'x mandatory';
+            scrollRef.current.style.cursor = 'grab';
+        }
+    };
+
+    const handleMouseMove = (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const x = e.pageX - scrollRef.current.offsetLeft;
+        const walk = (x - startX) * 2; // Multiplier for speed
+        scrollRef.current.scrollLeft = scrollLeft - walk;
+    };
+
     return (
         <section className="relative py-16 md:py-24 px-4 overflow-hidden bg-gradient-to-br from-[#fff0f5] via-[#f8f4ff] to-[#fffbea]">
             {/* Background Ambience */}
@@ -70,8 +108,12 @@ export default React.memo(function PreOrderSection({ wishlist = [], toggleWishli
                     {/* Scrollable Grid */}
                     <div
                         ref={scrollRef}
-                        className="flex overflow-x-auto gap-4 md:gap-6 pb-8 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory no-scrollbar"
-                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                        onMouseDown={handleMouseDown}
+                        onMouseMove={handleMouseMove}
+                        onMouseUp={handleMouseUp}
+                        onMouseLeave={handleMouseLeave}
+                        className="flex overflow-x-auto gap-4 md:gap-6 pb-8 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory no-scrollbar cursor-grab active:cursor-grabbing"
+                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', userSelect: isDragging ? 'none' : 'auto' }}
                     >
                         {PREORDER_PRODUCTS.map((product) => (
                             <div

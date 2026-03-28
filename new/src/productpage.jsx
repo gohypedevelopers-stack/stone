@@ -114,18 +114,75 @@ const SectionHeader = ({ title, timer }) => (
     </div>
 );
 
-const ExclusiveOfferCard = ({ icon: Icon, title, description, linkText }) => (
-    <div className="bg-white rounded-[24px] border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.02)] p-8 flex flex-col items-start gap-5 transition-all hover:shadow-md group">
-        <div className="w-12 h-12 bg-pink-50 rounded-xl flex items-center justify-center text-pink-600 transition-transform group-hover:scale-110">
-            <Icon size={24} />
+const OfferCouponCard = ({ title, sub, code, color = "from-pink-50 to-white" }) => (
+    <div className={`relative bg-gradient-to-br ${color} rounded-[24px] border border-pink-100/50 p-6 flex flex-col justify-between h-full min-h-[160px] overflow-hidden group transition-all hover:shadow-xl hover:shadow-pink-100/20`}>
+        {/* Decorative Background Icon */}
+        <div className="absolute -right-4 -top-4 text-pink-500/5 opacity-[0.08] transform rotate-12 transition-transform group-hover:scale-125">
+             <Tag size={120} strokeWidth={1} />
         </div>
-        <div className="space-y-2">
-            <h3 className="font-black text-lg text-gray-900 leading-tight uppercase tracking-tight">{title}</h3>
-            <p className="text-sm font-medium text-gray-400 leading-relaxed">{description}</p>
+        
+        <div>
+            <h3 className="text-[17px] font-[1000] text-emerald-600 mb-1 leading-tight tracking-tight">{title}</h3>
+            <p className="text-[13px] font-bold text-gray-500 leading-tight pr-10">{sub}</p>
         </div>
-        <button className="text-pink-600 font-black text-xs uppercase tracking-widest border-b-2 border-transparent hover:border-pink-600 transition-all pt-2">
-            {linkText}
-        </button>
+        
+        <div className="flex items-center justify-between mt-auto pt-4 relative z-10">
+            <span className="text-[15px] font-[1000] text-gray-900 tracking-wider font-mono">{code}</span>
+            <button className="text-pink-600 font-[1000] text-sm uppercase tracking-widest hover:scale-105 transition-transform">
+                Apply
+            </button>
+        </div>
+    </div>
+);
+
+const OfferGiftCard = ({ image, title, sub, status = "FREE", isLocked = true }) => (
+    <div className="relative bg-white rounded-[24px] border border-gray-100/80 p-5 flex gap-5 h-full min-h-[160px] overflow-hidden group hover:shadow-xl hover:shadow-gray-100 transition-all">
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-50/50 to-transparent pointer-none" />
+        
+        <div className="w-28 h-28 rounded-2xl overflow-hidden bg-gray-50 relative z-10 shrink-0">
+            <img src={image} alt={title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+            <div className="absolute top-2 left-2 bg-emerald-100 text-emerald-600 text-[9px] font-black px-2 py-0.5 rounded-md border border-emerald-200 shadow-sm">
+                {status}
+            </div>
+        </div>
+        
+        <div className="flex flex-col flex-1 py-1 relative z-10">
+            <div className="mb-auto">
+                <h4 className="text-[13px] font-black text-gray-900 leading-tight mb-1">{title}</h4>
+                <p className="text-[12px] font-bold text-gray-400 line-clamp-2">{sub}</p>
+            </div>
+            
+            <div className="flex items-center justify-between mt-4">
+               {isLocked && <div className="p-1.5 bg-gray-50 rounded-full text-gray-300"><Clock size={14} /></div>}
+               <button className="text-pink-600 font-black text-[11px] uppercase tracking-widest flex items-center gap-1 group-hover:gap-2 transition-all">
+                   View Products <ArrowRight size={10} />
+               </button>
+            </div>
+        </div>
+    </div>
+);
+
+const OfferSampleCard = ({ title, sub, color = "from-emerald-50 to-white" }) => (
+    <div className={`relative bg-gradient-to-br ${color} rounded-[24px] border border-emerald-100/50 p-6 flex flex-col h-full min-h-[160px] overflow-hidden group hover:shadow-xl hover:shadow-emerald-100/20 transition-all`}>
+        {/* Decorative Background Icon */}
+        <div className="absolute -right-6 -bottom-6 text-emerald-500/10 opacity-[0.08] transform -rotate-12 group-hover:scale-125 transition-transform">
+             <Sparkles size={140} strokeWidth={1} />
+        </div>
+
+        <div className="mb-auto">
+            <h3 className="text-[17px] font-[1000] text-gray-900 mb-1 leading-tight tracking-tight">{title}</h3>
+            <p className="text-[13px] font-bold text-gray-500 leading-tight pr-12">{sub}</p>
+        </div>
+
+        <div className="flex items-center justify-between mt-auto pt-4 relative z-10">
+             <div className="flex items-center gap-2">
+                 <Clock size={12} className="text-orange-500" />
+                 <span className="text-[11px] font-[1000] text-orange-500 uppercase tracking-tighter">5h 7m left</span>
+             </div>
+             <button className="text-pink-600 font-[1000] text-[11px] uppercase tracking-[0.2em] group-hover:translate-x-1 transition-transform">
+                 View Products →
+             </button>
+        </div>
     </div>
 );
 
@@ -200,6 +257,121 @@ const MegaDealBanner = ({ price, discount, onOpenDetails }) => (
         </div>
     </div>
 );
+
+const GenuineSeal = ({ onClick }) => (
+    <button onClick={onClick} className="flex flex-col items-center gap-3 group cursor-pointer outline-none tap-highlight-transparent">
+        <div className="relative w-20 h-20 md:w-24 md:h-24">
+             {/* Seal Background */}
+             <div className="absolute inset-0 bg-sky-100 rounded-full animate-pulse-slow opacity-50 group-hover:opacity-100 transition-opacity" style={{clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)'}} />
+             <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center shadow-inner">
+                 <div className="bg-pink-500 text-white text-[9px] font-black px-3 py-1.5 rotate-[-25deg] shadow-lg flex items-center gap-1 border-2 border-white">
+                    <Sparkles size={8} className="fill-white" /> ORIGINAL
+                 </div>
+             </div>
+        </div>
+        <span className="text-pink-600 font-black text-[11px] uppercase tracking-[0.2em] text-center leading-relaxed">Genuine<br/>Product</span>
+    </button>
+);
+
+const QualitySeal = ({ onClick }) => (
+    <button onClick={onClick} className="flex flex-col items-center gap-3 group cursor-pointer outline-none tap-highlight-transparent">
+        <div className="relative w-20 h-20 md:w-24 md:h-24">
+             {/* Quality Seal Background */}
+             <div className="absolute inset-0 bg-sky-200 rounded-full" style={{clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)'}} />
+             <div className="absolute inset-1 bg-white rounded-full flex items-center justify-center shadow-inner">
+                 <div className="text-sky-500 transform scale-150 drop-shadow-sm">
+                    <CheckCircle size={32} strokeWidth={3} className="fill-sky-50 shadow-blue-200" />
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
+                       <div className="w-1.5 h-3 bg-red-400 rounded-full rotate-[-45deg] origin-top" />
+                       <div className="w-1.5 h-3 bg-red-400 rounded-full rotate-[45deg] origin-top" />
+                    </div>
+                 </div>
+             </div>
+        </div>
+        <span className="text-pink-600 font-black text-[11px] uppercase tracking-[0.2em] text-center leading-relaxed">Quality<br/>Checked</span>
+    </button>
+);
+
+const QualityProcessModal = ({ isOpen, onClose }) => {
+    if (!isOpen) return null;
+    
+    const steps = [
+        {
+            id: 1,
+            title: "Sample Check",
+            desc: "A style sample out of a lot is checked before a brand is onboarded on our platform.",
+            icon: "🛍️",
+            color: "bg-rose-50"
+        },
+        {
+            id: 2,
+            title: "Aspect Check",
+            desc: "Aspects such as color stability, texture, and packaging integrity for a sample out of every lot is checked carefully.",
+            icon: "📐",
+            color: "bg-sky-50"
+        },
+        {
+            id: 3,
+            title: "Product Check",
+            desc: "Brands are mandated to check the batch number, MRP, formulation stability, and expiry for every product before listing.",
+            icon: "✅",
+            color: "bg-emerald-50"
+        },
+        {
+            id: 4,
+            title: "Safety Check",
+            desc: "All global safety and handling precautions are strictly followed to get the product safely to you.",
+            icon: "🌿",
+            color: "bg-pink-50"
+        }
+    ];
+
+    return (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+            <div className="relative bg-white w-full max-w-lg rounded-[40px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                <div className="p-8 pb-4 flex justify-between items-center border-b border-gray-50">
+                    <h2 className="text-xl font-black text-[#151515] uppercase tracking-tight">Quality Check Process</h2>
+                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-all">
+                        <X size={20} className="text-gray-400" />
+                    </button>
+                </div>
+                
+                <div className="p-8 pt-6 space-y-10 relative">
+                    {/* Timeline Line */}
+                    <div className="absolute left-[51px] top-10 bottom-24 w-px border-l-2 border-dashed border-gray-100" />
+                    
+                    {steps.map((step, idx) => (
+                        <div key={step.id} className="flex gap-6 relative z-10">
+                            {/* Step Number Dot */}
+                            <div className="w-8 h-8 rounded-full bg-[#151515] text-white text-[10px] font-black flex items-center justify-center shrink-0 shadow-lg">
+                                {step.id}
+                            </div>
+                            
+                            {/* Illustration Card */}
+                            <div className={`w-28 h-28 rounded-3xl ${step.color} flex items-center justify-center text-4xl shadow-inner border border-white/50 shrink-0`}>
+                                {step.icon}
+                            </div>
+                            
+                            {/* Text Content */}
+                            <div className="space-y-1.5 pt-1">
+                                <h3 className="font-black text-[15px] text-[#151515] uppercase tracking-tight">{step.title}</h3>
+                                <p className="text-[13px] font-medium text-gray-500 leading-relaxed pr-4">{step.desc}</p>
+                            </div>
+                        </div>
+                    ))}
+                    
+                    <button 
+                        onClick={onClose}
+                        className="w-full bg-[#151515] text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black transition-all shadow-xl active:scale-95 mt-4"
+                    >
+                        I Trust the Process
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const DealDetailsModal = ({ isOpen, onClose, price, discount }) => {
     if (!isOpen) return null;
@@ -376,6 +548,51 @@ const DeliverySection = () => {
 
 
 
+const GenuineProductModal = ({ isOpen, onClose, brand }) => {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-0 md:p-4">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+            <div className="relative bg-white w-full max-w-lg rounded-t-[40px] sm:rounded-[40px] overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-300">
+                <div className="p-8 pb-4 flex justify-between items-center border-b border-gray-50">
+                    <h2 className="text-xl font-black text-[#151515] uppercase tracking-tight">Genuine Product</h2>
+                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-all">
+                        <X size={24} className="text-gray-900" />
+                    </button>
+                </div>
+                
+                <div className="p-8 pt-10 flex gap-6 items-center">
+                    <div className="shrink-0 p-1 bg-sky-50 rounded-2xl rotate-[-5deg] shadow-sm scale-110">
+                        {/* Static Seal Image/SVG */}
+                        <div className="relative w-20 h-20">
+                             <div className="absolute inset-0 bg-sky-100 rounded-full opacity-50" style={{clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)'}} />
+                             <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center shadow-inner">
+                                 <div className="bg-pink-500 text-white text-[9px] font-black px-3 py-1.5 rotate-[-25deg] shadow-lg flex items-center gap-1 border-2 border-white">
+                                    <Sparkles size={8} className="fill-white" /> ORIGINAL
+                                 </div>
+                             </div>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <p className="text-[17px] font-black leading-tight text-gray-800 tracking-tight">
+                            This is a genuine product, sold by an authorized seller of brand <span className="text-pink-600 underline underline-offset-4 decoration-2">{brand}</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div className="p-8 pb-10">
+                    <button 
+                        onClick={onClose}
+                        className="w-full bg-[#151515] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black transition-all shadow-xl active:scale-95"
+                    >
+                        Verified & Confirmed
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist }) {
     const { id } = useParams();
     const { products } = useProducts();
@@ -389,6 +606,8 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
     const [activeTab, setActiveTab] = useState("description"); // For Desktop Tabs
     const [openAccordions, setOpenAccordions] = useState({ description: true }); // For Mobile Accordions
     const [showDealModal, setShowDealModal] = useState(false);
+    const [showQualityModal, setShowQualityModal] = useState(false);
+    const [showGenuineModal, setShowGenuineModal] = useState(false);
 
     // Try to get product
     const stateProduct = location.state?.product;
@@ -630,27 +849,32 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
                 {/* --- NEW: Delivery Details Section --- */}
                 <DeliverySection />
 
-                {/* --- NEW: Exclusive Offers Section (Full Width) --- */}
+                {/* --- Exclusive Offers Section (Refined High-Fidelity) --- */}
                 <div className="mb-20">
-                    <SectionHeader title="Exclusive Offers" />
+                    <div className="flex items-center justify-between mb-8">
+                        <SectionHeader title="Exclusive Offers" />
+                        <div className="hidden md:flex items-center gap-2">
+                            <span className="text-[10px] font-black text-pink-600 bg-pink-50 px-3 py-1 rounded-full uppercase tracking-tighter shadow-sm border border-pink-100">8 AVAILABLE</span>
+                        </div>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <ExclusiveOfferCard 
-                            icon={Tag} 
-                            title="Save upto ₹300" 
-                            description="On your 1st order above ₹299+ | Use Code: NEW15" 
-                            linkText="APPLY NOW" 
+                        <OfferCouponCard 
+                            title="Save upto ₹300"
+                            sub="On your 1st order above ₹299+"
+                            code="NEW15"
+                            color="from-[#FFF0F7] to-white"
                         />
-                        <ExclusiveOfferCard 
-                            icon={ArrowRight} 
-                            title="Flat ₹500 OFF" 
-                            description="On luxury skincare above ₹2499 | Use Code: LUXE500" 
-                            linkText="APPLY NOW" 
+                        <OfferGiftCard 
+                            image="/estee_lauder_free_kit.png"
+                            title="Estee Lauder Free Kit"
+                            sub="Estee Lauder 4-Pc Kit Fall'25"
+                            status="FREE"
+                            isLocked={true}
                         />
-                        <ExclusiveOfferCard 
-                            icon={Sparkles} 
-                            title="Pick a free sample" 
-                            description="Pick a free sample on Estee Lauder purchase above ₹999" 
-                            linkText="SELECT SAMPLE" 
+                        <OfferSampleCard 
+                            title="Pick a free sample"
+                            sub="On Estee Lauder purchase above ₹999"
+                            color="from-[#E6F9F0] to-white"
                         />
                     </div>
                 </div>
@@ -775,8 +999,23 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
                             </div>
                         </div>
 
+                        {/* Always Visible Trust Seals */}
+                        <div className="mt-20 pt-16 border-t border-gray-100 flex flex-col items-center gap-12">
+                            <div className="text-center space-y-2">
+                                <h3 className="text-sm font-black text-gray-400 uppercase tracking-[0.3em]">Verified Guarantees</h3>
+                                <div className="h-1 w-12 bg-pink-500 mx-auto rounded-full" />
+                            </div>
+                             <div className="flex items-center justify-center gap-16 md:gap-40">
+                                <GenuineSeal onClick={() => setShowGenuineModal(true)} />
+                                <QualitySeal onClick={() => setShowQualityModal(true)} />
+                            </div>
+                        </div>
+
                     </div>
                 </section>
+
+                <QualityProcessModal isOpen={showQualityModal} onClose={() => setShowQualityModal(false)} />
+                <GenuineProductModal isOpen={showGenuineModal} onClose={() => setShowGenuineModal(false)} brand={fullProduct.brand} />
 
 
                 {/* --- Reviews Section --- */}

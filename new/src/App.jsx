@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import Lenis from "lenis";
+import "lenis/dist/lenis.css";
 import HomePage from "./HomePage";
 import Shop from "./Shop";
 import Navbar from "./navbar";
@@ -52,6 +54,32 @@ export default function App() {
   const [dynamicCategories, setDynamicCategories] = useState([]);
 
   const API_URL = "http://localhost:5000/api";
+
+  // Global Smooth Scroll (Lenis)
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: "vertical",
+      gestureOrientation: "vertical",
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      smoothTouch: false,
+      touchMultiplier: 2,
+      infinite: false,
+    });
+
+    function raf(time) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+
+    requestAnimationFrame(raf);
+
+    return () => {
+      lenis.destroy();
+    };
+  }, []);
 
   useEffect(() => {
     fetch(`${API_URL}/admin/categories`)
@@ -165,16 +193,26 @@ export default function App() {
   }, []);
 
   // Categories Data
-  const NAV_CATEGORIES = useMemo(() => [
-    { key: "new-arrivals", title: "New Arrivals", image: imgNewArrival },
-    { key: "best-sellers", title: "Best Sellers", image: imgBestSeller },
-    { key: "serums", title: "Serums", image: imgSerums },
-    ...dynamicCategories.slice(0, 5).map(cat => ({
+  const NAV_CATEGORIES = useMemo(() => {
+    const base = [
+      { key: "new-arrivals", title: "New Arrivals", image: imgNewArrival },
+      { key: "best-sellers", title: "Best Sellers", image: imgBestSeller },
+      { key: "serums", title: "Serums", image: imgSerums },
+    ];
+    
+    const dynamic = dynamicCategories.slice(0, 5).map(cat => ({
       key: cat.slug,
       title: cat.name,
-      image: null // Mapping will happen in Navbar/ByCategory
-    }))
-  ], [dynamicCategories]);
+      image: null
+    }));
+
+    // Deduplicate by key
+    const unique = [...base, ...dynamic].filter((item, index, self) =>
+      index === self.findIndex(t => t.key === item.key)
+    );
+
+    return unique;
+  }, [dynamicCategories]);
 
   const CATEGORIES = NAV_CATEGORIES;
 
