@@ -2,6 +2,177 @@ import prisma from "../lib/prisma.js";
 import { sendError, sendSuccess } from "../utils/http.js";
 import { calculateRewardPoints } from "./settings.controller.js";
 
+export const getAdminVendorAnalytics = async (req, res) => {
+  try {
+    const { vendorId, timeRange = '1y' } = req.query;
+    
+    // Calculate time bounds and graph structure
+    let startDate = new Date();
+    let dateFormat = 'month'; // 'day' or 'month'
+    let dataPointsCount = 12;
+
+    const now = new Date();
+    if (timeRange === '7d') {
+      startDate.setDate(now.getDate() - 6);
+      dateFormat = 'day';
+      dataPointsCount = 7;
+    } else if (timeRange === '1m') {
+      startDate.setDate(now.getDate() - 29);
+      dateFormat = 'day';
+      dataPointsCount = 30;
+    } else if (timeRange === '6m') {
+      startDate.setMonth(now.getMonth() - 5);
+      startDate.setDate(1);
+      dateFormat = 'month';
+      dataPointsCount = 6;
+    } else { // 1y
+      startDate.setMonth(now.getMonth() - 11);
+      startDate.setDate(1);
+      dateFormat = 'month';
+      dataPointsCount = 12;
+    }
+    startDate.setHours(0,0,0,0);
+
+    const orderWhere = { createdAt: { gte: startDate } };
+    const purchaseWhere = { purchaseDate: { gte: startDate } };
+    
+    if (vendorId) {
+      orderWhere.vendorId = vendorId;
+      purchaseWhere.vendorId = vendorId;
+    }
+
+    const [orders, offlinePurchases, vendors] = await Promise.all([
+      prisma.order.findMany({ 
+        where: orderWhere, 
+        include: { 
+          vendor: { select: { businessCategory: true } },
+          items: {
+            include: { product: { select: { imageUrls: true } } }
+          }
+        } 
+      }),
+      prisma.offlinePurchase.findMany({ 
+        where: purchaseWhere, 
+        include: { 
+          vendor: { select: { businessCategory: true } },
+          items: {
+            include: { product: { select: { imageUrls: true } } }
+          }
+        } 
+      }),
+      prisma.vendor.findMany({ select: { id: true, businessName: true, businessCategory: true } })
+    ]);
+
+    // Graph Data Initialization
+    const graphData = [];
+    if (dateFormat === 'day') {
+      for (let i = 0; i < dataPointsCount; i++) {
+        const d = new Date(startDate);
+        d.setDate(startDate.getDate() + i);
+        graphData.push({
+          date: d.toDateString(),
+          label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          amount: 0
+        });
+      }
+    } else {
+      for (let i = 0; i < dataPointsCount; i++) {
+        const d = new Date(startDate);
+        d.setMonth(startDate.getMonth() + i);
+        graphData.push({
+          month: d.getMonth(),
+          year: d.getFullYear(),
+          label: d.toLocaleDateString('en-US', { month: 'short' }),
+          amount: 0
+        });
+      }
+    }
+
+    // Total Sale Units
+    const totalSaleUnits = orders.length + offlinePurchases.length;
+
+    // Gross Revenue & Product Performance & Graph Data
+    let grossRevenue = 0;
+    const productStatsMap = {};
+    
+    const processData = (record, dateField, amountField) => {
+      const amount = Number(record[amountField] || 0);
+      const d = new Date(record[dateField]);
+      
+      // Totals
+      grossRevenue += amount;
+
+      // Graph
+      if (dateFormat === 'day') {
+        const dateStr = d.toDateString();
+        const point = graphData.find(g => g.date === dateStr);
+        if (point) point.amount += amount;
+      } else {
+        const point = graphData.find(g => g.month === d.getMonth() && g.year === d.getFullYear());
+        if (point) point.amount += amount;
+      }
+    };
+    
+    const processProductRevenue = (record, items, isOffline) => {
+      // If no items exist (seed data), create a synthetic product derived from the vendor category
+      if (!items || items.length === 0) {
+        const category = record.vendor?.businessCategory || 'Store Product';
+        const syntheticName = `Signature ${category.split('&')[0].trim()} Kit`;
+        const amt = isOffline ? Number(record.amount || 0) : Number(record.totalAmount || 0);
+        
+        if (!productStatsMap[syntheticName]) productStatsMap[syntheticName] = { rev: 0, qty: 0, image: null };
+        productStatsMap[syntheticName].rev += amt;
+        productStatsMap[syntheticName].qty += 1;
+        return;
+      }
+
+      items.forEach(item => {
+        const pName = item.name || 'Unknown Product';
+        const amt = isOffline ? (Number(item.quantity || 0) * Number(item.unitPrice || 0)) : Number(item.lineTotal || 0);
+        const image = item.product?.imageUrls?.[0] || null;
+        
+        if (!productStatsMap[pName]) productStatsMap[pName] = { rev: 0, qty: 0, image };
+        productStatsMap[pName].rev += amt;
+        productStatsMap[pName].qty += Number(item.quantity || 0);
+        if (!productStatsMap[pName].image && image) productStatsMap[pName].image = image;
+      });
+    };
+    
+    orders.forEach(o => {
+      processData(o, 'createdAt', 'totalAmount');
+      processProductRevenue(o, o.items, false);
+    });
+    offlinePurchases.forEach(p => {
+      processData(p, 'purchaseDate', 'amount');
+      processProductRevenue(p, p.items, true);
+    });
+
+    // Platform Earnings
+    const platformEarnings = (grossRevenue * 0.15);
+
+    // Dynamic Product Heights
+    const maxProductRev = Math.max(...Object.values(productStatsMap).map(p => p.rev), 1);
+    const productPerformance = Object.keys(productStatsMap).map(label => ({
+      label,
+      val: productStatsMap[label].rev,
+      qty: productStatsMap[label].qty,
+      image: productStatsMap[label].image,
+      p: Math.min(100, Math.round((productStatsMap[label].rev / maxProductRev) * 100))
+    })).sort((a, b) => b.val - a.val); // All sold products sorted by revenue
+
+    return sendSuccess(res, {
+      totalSaleUnits,
+      grossRevenue,
+      platformEarnings,
+      productPerformance,
+      graphData,
+      vendorsList: vendors
+    }, "Vendor analytics fetched");
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
 export const getAdminDashboard = async (req, res) => {
   try {
     const [
@@ -145,6 +316,22 @@ export const getAdminCustomers = async (req, res) => {
   }
 };
 
+export const lookupCustomerByMobile = async (req, res) => {
+  try {
+    const { mobile } = req.query;
+    if (!mobile || mobile.length < 10) {
+      return sendSuccess(res, null, "Mobile number too short");
+    }
+    const customer = await prisma.customer.findUnique({
+      where: { mobile },
+      select: { id: true, name: true, rewardPoints: true, mobile: true }
+    });
+    return sendSuccess(res, customer, customer ? "Customer found" : "No customer found");
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
 export const getAdminCustomerDetail = async (req, res) => {
   try {
     const { id } = req.params;
@@ -252,6 +439,7 @@ export const createAdminOfflinePurchase = async (req, res) => {
           rewardPointsEarned,
           items: {
             create: items.map(item => ({
+              productId: item.productId || null,
               name: item.name,
               quantity: Number(item.quantity),
               unitPrice: item.unitPrice

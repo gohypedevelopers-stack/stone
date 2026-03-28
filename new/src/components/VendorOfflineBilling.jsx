@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,7 +23,8 @@ import {
   ShoppingCart,
   Store,
   CheckCircle2,
-  Printer
+  Printer,
+  Coins
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -41,17 +42,21 @@ export function VendorOfflineBilling() {
   const [customerName, setCustomerName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successBill, setSuccessBill] = useState(null);
+  const [pointsSettings, setPointsSettings] = useState({ pointsPerAmount: 0, amountThreshold: 100 });
+  const [lookedUpCustomer, setLookedUpCustomer] = useState(null);
+  const lookupTimerRef = useRef(null);
 
   // Fetch initial data
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [vRes, pRes] = await Promise.all([
+        const [vRes, pRes, psRes] = await Promise.all([
           fetch(`${API_URL}/admin/vendors`),
-          fetch(`${API_URL}/admin/products`)
+          fetch(`${API_URL}/admin/products`),
+          fetch(`${API_URL}/admin/settings/points`)
         ]);
         
-        const [vData, pData] = await Promise.all([vRes.json(), pRes.json()]);
+        const [vData, pData, psData] = await Promise.all([vRes.json(), pRes.json(), psRes.json()]);
         
         if (vData.success) {
           // Only show approved vendors
@@ -60,12 +65,48 @@ export function VendorOfflineBilling() {
         if (pData.success) {
           setProducts(pData.data);
         }
+        if (psData.success) {
+          setPointsSettings(psData.data);
+        }
       } catch (err) {
         console.error("Failed to load generic data", err);
       }
     };
     fetchInitialData();
   }, []);
+
+  // Debounced customer lookup by mobile
+  useEffect(() => {
+    if (lookupTimerRef.current) clearTimeout(lookupTimerRef.current);
+    setLookedUpCustomer(null);
+
+    const trimmed = customerMobile.trim();
+    if (trimmed.length < 10) return;
+
+    lookupTimerRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`${API_URL}/admin/customers/lookup?mobile=${encodeURIComponent(trimmed)}`);
+        const data = await res.json();
+        if (data.success && data.data) {
+          setLookedUpCustomer(data.data);
+          if (data.data.name && !customerName) {
+            setCustomerName(data.data.name);
+          }
+        }
+      } catch (err) {
+        console.error("Customer lookup failed", err);
+      }
+    }, 400);
+
+    return () => clearTimeout(lookupTimerRef.current);
+  }, [customerMobile]);
+
+  // Calculate reward points for a given price
+  const calcPoints = (price) => {
+    const { pointsPerAmount, amountThreshold } = pointsSettings;
+    if (!amountThreshold || amountThreshold <= 0) return 0;
+    return Math.floor(price / amountThreshold) * pointsPerAmount;
+  };
 
   const selectedVendor = useMemo(() => 
     vendors.find(v => v.id === selectedVendorId), [vendors, selectedVendorId]
@@ -267,7 +308,7 @@ export function VendorOfflineBilling() {
         
         {/* Left Side: Product Selector */}
         <div className="lg:col-span-8 space-y-6">
-          <Card className="border border-stone-200 shadow-sm rounded-xl overflow-hidden bg-white h-[600px] flex flex-col">
+          <Card className="border border-stone-200 shadow-sm rounded-xl overflow-hidden bg-white h-[800px] flex flex-col">
             <CardHeader className="bg-stone-50 border-b border-stone-100 flex flex-row items-center justify-between pb-4">
               <div>
                 <CardTitle className="text-lg font-bold text-stone-900 tracking-tight flex items-center gap-2">
@@ -319,7 +360,15 @@ export function VendorOfflineBilling() {
                       </div>
                       <div className="flex flex-col flex-1">
                         <h4 className="font-semibold text-sm text-stone-800 line-clamp-2 leading-tight">{p.name}</h4>
-                        <span className="font-bold text-stone-900 mt-auto pt-2 block text-base">&#8377;{Number(p.discountPrice || p.price).toLocaleString('en-IN')}</span>
+                        <div className="mt-auto pt-2 flex items-center justify-between gap-1">
+                          <span className="font-bold text-stone-900 block text-base">&#8377;{Number(p.discountPrice || p.price).toLocaleString('en-IN')}</span>
+                          {calcPoints(Number(p.discountPrice || p.price)) > 0 && (
+                            <span className="flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200/60 rounded-lg px-2 py-0.5 text-[10px] font-bold whitespace-nowrap">
+                              <Coins className="h-3 w-3" />
+                              +{calcPoints(Number(p.discountPrice || p.price))} pts
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </motion.div>
                   ))}
@@ -331,7 +380,7 @@ export function VendorOfflineBilling() {
 
         {/* Right Side: Electronic Ledger / Cart */}
         <div className="lg:col-span-4">
-          <Card className="border border-stone-200 shadow-sm rounded-xl overflow-hidden bg-white min-h-[600px] h-[calc(100vh-140px)] max-h-[800px] flex flex-col">
+          <Card className="border border-stone-200 shadow-sm rounded-xl overflow-hidden bg-white flex flex-col">
             <CardHeader className="bg-stone-50 border-b border-stone-200 pb-4 pt-4 z-10">
               <CardTitle className="text-lg font-bold text-stone-900 flex items-center gap-2">
                 <div className="h-8 w-8 flex items-center justify-center rounded-lg bg-stone-200">
@@ -342,7 +391,7 @@ export function VendorOfflineBilling() {
             </CardHeader>
             
             <CardContent className="p-0 flex-1 flex flex-col overflow-hidden relative bg-stone-50/50">
-              <ScrollArea className="flex-1 px-5">
+              <div className="flex-1 overflow-y-auto max-h-[340px] px-5">
                 <AnimatePresence>
                   {cart.length === 0 ? (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-20 text-center text-stone-400 font-medium">
@@ -390,6 +439,12 @@ export function VendorOfflineBilling() {
                             </div>
                             <div className="text-right">
                               <span className="font-bold text-stone-900 text-sm">&#8377;{(Number(item.unitPrice) * item.quantity).toLocaleString()}</span>
+                              {calcPoints(Number(item.unitPrice) * item.quantity) > 0 && (
+                                <span className="flex items-center justify-end gap-0.5 text-amber-600 text-[10px] font-bold mt-0.5">
+                                  <Coins className="h-2.5 w-2.5" />
+                                  +{calcPoints(Number(item.unitPrice) * item.quantity)} pts
+                                </span>
+                              )}
                             </div>
                           </div>
                         </motion.div>
@@ -397,7 +452,7 @@ export function VendorOfflineBilling() {
                     </div>
                   )}
                 </AnimatePresence>
-              </ScrollArea>
+              </div>
 
               {/* Ledger Footer */}
               <div className="bg-white p-6 border-t border-stone-200 z-10 flex flex-col gap-5 shrink-0 mt-auto">
@@ -410,6 +465,16 @@ export function VendorOfflineBilling() {
                      <span className="font-semibold text-stone-500">Tax</span>
                      <span className="font-bold text-stone-900">&#8377;{tax.toLocaleString('en-IN')}</span>
                    </div>
+                   {calcPoints(subtotal) > 0 && (
+                     <div className="flex justify-between items-center text-sm bg-amber-50/70 -mx-6 px-6 py-2.5 border-y border-amber-100">
+                       <span className="font-semibold text-amber-700 flex items-center gap-1.5">
+                         <Coins className="h-3.5 w-3.5" /> Reward Points
+                       </span>
+                       <span className="font-bold text-amber-700 flex items-center gap-1">
+                         +{calcPoints(subtotal)} pts
+                       </span>
+                     </div>
+                   )}
                    <Separator className="bg-stone-200" />
                    <div className="flex justify-between items-end pt-1">
                      <span className="font-semibold uppercase tracking-wide text-xs text-stone-500 pb-1">Total Net</span>
@@ -436,6 +501,19 @@ export function VendorOfflineBilling() {
                         onChange={e => setCustomerMobile(e.target.value)}
                         className="h-10 border-stone-200 rounded-lg focus-visible:ring-stone-900 px-3"
                       />
+                      {lookedUpCustomer && (
+                        <div className="flex items-center gap-2 mt-1.5 bg-emerald-50 border border-emerald-200/60 rounded-lg px-3 py-2">
+                          <div className="flex-1">
+                            <p className="text-[11px] font-bold text-emerald-800">{lookedUpCustomer.name}</p>
+                            <p className="text-[10px] text-emerald-600 font-medium">Existing customer</p>
+                          </div>
+                          <div className="flex items-center gap-1 bg-amber-50 border border-amber-200/60 rounded-lg px-2.5 py-1">
+                            <Coins className="h-3.5 w-3.5 text-amber-600" />
+                            <span className="text-sm font-bold text-amber-700">{lookedUpCustomer.rewardPoints}</span>
+                            <span className="text-[9px] font-bold text-amber-500 uppercase">pts</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <Button 

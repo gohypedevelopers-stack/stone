@@ -130,7 +130,14 @@ const AdminDashboard = () => {
   const [newVendorData, setNewVendorData] = useState({
     businessName: '', ownerName: '', contactNumber: '', email: '', businessCategory: '', storeAddress: ''
   });
+  const [selectedOrderTab, setSelectedOrderTab] = useState('online');
+  const [selectedOutletFilter, setSelectedOutletFilter] = useState('All');
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [selectedAnalyticsVendor, setSelectedAnalyticsVendor] = useState('All');
+  const [selectedTimeRange, setSelectedTimeRange] = useState('1y');
+  const [selectedTopProduct, setSelectedTopProduct] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [manualOrderProducts, setManualOrderProducts] = useState([]);
   const [isOrderOpen, setIsOrderOpen] = useState(false);
   const [isManualOrderOpen, setIsManualOrderOpen] = useState(false);
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
@@ -282,16 +289,28 @@ const AdminDashboard = () => {
   const fetchDataForView = async (view) => {
     setLoading(true);
     try {
-      const endpoint = view === 'inventory' ? 'products' :
-        view === 'orders' ? 'orders' :
-          view === 'vendors' ? 'vendors' : 'customers';
-      const resp = await fetch(`${API_URL}/admin/${endpoint}`);
-      const data = await resp.json();
-      if (data.success) {
-        if (view === 'inventory') setProducts(data.data);
-        else if (view === 'orders') setOrders(data.data);
-        else if (view === 'vendors') setVendors(data.data);
-        else if (view === 'customers') setCustomers(data.data);
+      if (view === 'vendor-analytics') {
+        const url = new URL(`${API_URL}/admin/vendor-analytics`);
+        if (selectedAnalyticsVendor !== 'All') url.searchParams.append('vendorId', selectedAnalyticsVendor);
+        url.searchParams.append('timeRange', selectedTimeRange);
+        
+        const resp = await fetch(url.toString(), { cache: 'no-store' });
+        const data = await resp.json();
+        if (data.success) {
+          setAnalyticsData(data.data);
+        }
+      } else {
+        const endpoint = view === 'inventory' ? 'products' :
+          view === 'orders' ? 'orders' :
+            view === 'vendors' ? 'vendors' : 'customers';
+        const resp = await fetch(`${API_URL}/admin/${endpoint}`);
+        const data = await resp.json();
+        if (data.success) {
+          if (view === 'inventory') setProducts(data.data);
+          else if (view === 'orders') setOrders(data.data);
+          else if (view === 'vendors') setVendors(data.data);
+          else if (view === 'customers') setCustomers(data.data);
+        }
       }
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
@@ -514,6 +533,90 @@ const AdminDashboard = () => {
           )}
         </CardContent>
       </Card>
+    );
+  };
+
+  const offlineOrders = (orders || []).filter(o => o.type === 'Offline');
+  const uniqueOutlets = [...new Set(offlineOrders.map(o => o.vendorName).filter(Boolean))].sort();
+  const filteredOfflineOrders = selectedOutletFilter === 'All' 
+    ? offlineOrders 
+    : offlineOrders.filter(o => o.vendorName === selectedOutletFilter);
+
+  const formatMoney = (val) => {
+    if (!val) return '₹0';
+    if (val >= 100000) return `₹${(val / 100000).toFixed(1)}L`;
+    if (val >= 1000) return `₹${(val / 1000).toFixed(1)}K`;
+    return `₹${val.toLocaleString('en-IN')}`;
+  };
+
+  const handleVendorAnalyticsFilterChange = async (type, value) => {
+    let vendor = selectedAnalyticsVendor;
+    let time = selectedTimeRange;
+    if (type === 'vendor') { vendor = value; setSelectedAnalyticsVendor(value); }
+    if (type === 'time') { time = value; setSelectedTimeRange(value); }
+    
+    try {
+      const url = new URL(`${API_URL}/admin/vendor-analytics`);
+      if (vendor !== 'All') url.searchParams.append('vendorId', vendor);
+      url.searchParams.append('timeRange', time);
+      
+      const resp = await fetch(url.toString(), { cache: 'no-store' });
+      const data = await resp.json();
+      if (data.success) setAnalyticsData(data.data);
+    } catch (err) { console.error(err); }
+  };
+
+  const renderLineGraph = () => {
+    const data = analyticsData?.graphData || [];
+    if (data.length === 0) return <div className="h-56 w-full mt-6 bg-stone-50 rounded-2xl" />;
+    
+    const maxAmt = Math.max(...data.map(d => d.amount), 1);
+    const points = data.map((d, i) => {
+      const x = data.length > 1 ? (i / (data.length - 1)) * 100 : 50;
+      const y = 100 - (d.amount / maxAmt) * 100;
+      return `${x},${y}`;
+    });
+    
+    const pathData = `M ${points.join(' L ')}`;
+    const areaData = `M 0,100 L ${points.join(' L ')} L 100,100 Z`;
+
+    return (
+      <div className="w-full h-56 mt-8 relative">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full overflow-visible">
+          <defs>
+            <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          
+          {[0, 25, 50, 75, 100].map(y => (
+            <line key={y} x1="0" y1={y} x2="100" y2={y} stroke="#f5f5f4" strokeWidth="0.5" vectorEffect="non-scaling-stroke" />
+          ))}
+          
+          <path d={areaData} fill="url(#lineGrad)" className="transition-all duration-700 ease-out opacity-60 hover:opacity-100" />
+          <path d={pathData} fill="none" stroke="#10b981" strokeWidth="2" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" className="transition-all duration-700 ease-out drop-shadow-sm" />
+        </svg>
+
+        {/* Hover overlay targets and physical dots */}
+        {data.map((d, i) => {
+          const x = data.length > 1 ? (i / (data.length - 1)) * 100 : 50;
+          const y = 100 - (d.amount / maxAmt) * 100;
+          return (
+            <div key={`target-${i}`} className="absolute w-6 h-6 -ml-3 -mt-3 group/tip z-10 cursor-pointer flex items-center justify-center transition-all duration-500" style={{ left: `${x}%`, top: `${y}%` }}>
+              {/* Visible clean dot (HTML based to prevent SVG stretch) */}
+              <div className="w-[7px] h-[7px] rounded-full bg-white border-[1.5px] border-emerald-500 shadow-sm transition-all duration-300 group-hover/tip:scale-[1.8] group-hover/tip:bg-emerald-50 z-20 pointer-events-none" />
+              
+              {/* Tooltip Popup */}
+              <div className="opacity-0 group-hover/tip:opacity-100 absolute bottom-full left-1/2 -translate-x-1/2 mb-3 bg-indigo-950 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg shadow-xl shadow-indigo-950/20 whitespace-nowrap pointer-events-none transition-all duration-300 transform translate-y-2 group-hover/tip:translate-y-0 text-center z-50 border border-white/10">
+                <div className="text-[8px] font-bold text-emerald-400 mb-0.5 tracking-wider uppercase">{d.label}</div>
+                {formatMoney(d.amount)}
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-x-4 border-t-4 border-x-transparent border-t-indigo-950" />
+              </div>
+            </div>
+          );
+        })}
+      </div>
     );
   };
 
@@ -845,12 +948,36 @@ const AdminDashboard = () => {
                   <p className={`${THEME.colors.text.secondary} ${THEME.typography.weights.medium} mt-1`}>Monitoring real-time transaction flow and manual records.</p>
                 </header>
 
-                <Tabs defaultValue="online" className="space-y-8">
-                  <div className="flex items-center justify-between">
-                    <TabsList className="bg-stone-50 p-1.5 rounded-[1.25rem] border border-stone-100 gap-2 h-auto">
+                <Tabs value={selectedOrderTab} onValueChange={setSelectedOrderTab} className="space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <TabsList className="bg-stone-50 p-1.5 rounded-[1.25rem] border border-stone-100 gap-2 h-auto w-fit">
                       <TabsTrigger value="online" className="rounded-xl px-12 h-10 data-[state=active]:bg-indigo-950 data-[state=active]:text-white font-black text-[10px] uppercase tracking-widest transition-all">Online</TabsTrigger>
                       <TabsTrigger value="offline" className="rounded-xl px-12 h-10 data-[state=active]:bg-indigo-950 data-[state=active]:text-white font-black text-[10px] uppercase tracking-widest transition-all">Offline</TabsTrigger>
                     </TabsList>
+
+                    {selectedOrderTab === 'offline' && (
+                      <div className="group flex items-center bg-stone-50/80 hover:bg-white transition-all duration-300 rounded-[1.25rem] border border-stone-200/60 hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/5 px-2 py-1.5 w-fit cursor-pointer animate-in fade-in slide-in-from-right-2">
+                        <div className="flex items-center justify-center h-8 w-8 rounded-xl bg-white group-hover:bg-indigo-50 transition-colors shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] border border-stone-100 mr-3">
+                          <Filter className="h-[14px] w-[14px] text-stone-400 group-hover:text-indigo-600 transition-colors" />
+                        </div>
+                        <span className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider mr-1">Origin Node:</span>
+                        <div className="relative flex items-center min-w-[140px]">
+                          <select 
+                            className="appearance-none bg-transparent border-none text-indigo-950 font-bold text-xs focus:ring-0 cursor-pointer py-1 pl-2 pr-8 w-full hover:text-indigo-600 transition-colors outline-none"
+                            value={selectedOutletFilter}
+                            onChange={(e) => setSelectedOutletFilter(e.target.value)}
+                          >
+                            <option value="All">All Network Nodes</option>
+                            {uniqueOutlets.map((outlet, idx) => (
+                              <option key={idx} value={outlet}>{outlet}</option>
+                            ))}
+                          </select>
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none bg-stone-100 group-hover:bg-indigo-100 rounded-md p-1 transition-colors">
+                            <ChevronRight className="h-3 w-3 text-stone-500 group-hover:text-indigo-600 rotate-90 transition-transform" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <TabsContent value="online" className="animate-in slide-in-from-bottom-2 duration-500">
@@ -928,9 +1055,9 @@ const AdminDashboard = () => {
                         <TableBody>
                           {loading ? (
                             [1, 2, 3].map(i => <TableRow key={i} className="animate-pulse"><TableCell colSpan={6} className="h-20 bg-stone-50/50" /></TableRow>)
-                          ) : orders.filter(o => o.type === 'Offline').length === 0 ? (
+                          ) : filteredOfflineOrders.length === 0 ? (
                             <TableRow><TableCell colSpan={6} className="text-center p-32 text-stone-300 text-[11px] font-black uppercase tracking-[0.4em]">No manual records found in this cycle.</TableCell></TableRow>
-                          ) : orders.filter(o => o.type === 'Offline').map((o) => (
+                          ) : filteredOfflineOrders.map((o) => (
                             <TableRow
                               key={o.id}
                               onClick={() => fetchOrderDetail(o.id, 'Offline')}
@@ -1078,108 +1205,160 @@ const AdminDashboard = () => {
 
             {activeView === 'vendor-analytics' && (
               <div className="space-y-12 animate-in fade-in">
-                <header>
-                  <h1 className={`${THEME.typography.headings.h1} bg-clip-text text-transparent ${THEME.gradients.brand} pb-1`}>Vendor Analytics</h1>
-                  <p className={`${THEME.colors.text.secondary} ${THEME.typography.weights.medium} mt-1`}>Cross-sector sales performance and revenue intelligence.</p>
+                <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+                  <div>
+                    <h1 className="text-3xl sm:text-4xl font-bold text-indigo-950 tracking-tight">Vendor Analytics</h1>
+                    <p className="text-sm font-medium text-stone-500 mt-2">Cross-sector sales performance and revenue intelligence.</p>
+                  </div>
+
+                  <div className="flex gap-3">
+                    {/* Time Filter */}
+                    <div className="group flex items-center bg-stone-50 hover:bg-white transition-all duration-300 rounded-2xl border border-stone-200/60 hover:border-indigo-200 px-3 py-2 w-fit cursor-pointer animate-in fade-in zoom-in-95">
+                      <span className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider mr-2">Range:</span>
+                      <div className="relative flex items-center min-w-[100px]">
+                        <select 
+                          className="appearance-none bg-transparent border-none text-indigo-950 font-bold text-xs focus:ring-0 cursor-pointer py-1 pl-1 pr-8 w-full hover:text-indigo-600 outline-none truncate"
+                          value={selectedTimeRange}
+                          onChange={(e) => handleVendorAnalyticsFilterChange('time', e.target.value)}
+                        >
+                          <option value="7d">7 Days</option>
+                          <option value="1m">1 Month</option>
+                          <option value="6m">6 Months</option>
+                          <option value="1y">1 Year</option>
+                        </select>
+                        <div className="absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none">
+                          <ChevronRight className="h-3 w-3 text-stone-500 group-hover:text-indigo-600 transition-colors rotate-90" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Vendor Filter */}
+                    <div className="group flex items-center bg-stone-50 hover:bg-white transition-all duration-300 rounded-2xl border border-stone-200/60 hover:border-indigo-200 px-3 py-2 w-fit cursor-pointer animate-in fade-in zoom-in-95">
+                      <span className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider mr-2">Source:</span>
+                      <div className="relative flex items-center min-w-[130px]">
+                        <select 
+                          className="appearance-none bg-transparent border-none text-indigo-950 font-bold text-xs focus:ring-0 cursor-pointer py-1 pl-1 pr-8 w-full hover:text-indigo-600 outline-none truncate"
+                          value={selectedAnalyticsVendor}
+                          onChange={(e) => handleVendorAnalyticsFilterChange('vendor', e.target.value)}
+                        >
+                          <option value="All">All Nodes</option>
+                          {analyticsData?.vendorsList?.map((v) => (
+                            <option key={v.id} value={v.id}>{v.businessName}</option>
+                          ))}
+                        </select>
+                        <div className="absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none">
+                          <ChevronRight className="h-3 w-3 text-stone-500 group-hover:text-indigo-600 transition-colors rotate-90" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </header>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  <div className="p-10 bg-white rounded-[2.5rem] shadow-sm border border-stone-100/50 group hover:shadow-2xl transition-all duration-500">
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="h-14 w-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                        <ShoppingCart className="h-7 w-7" />
+                  <div className="p-6 bg-white rounded-2xl shadow-sm border border-stone-100/40 group hover:shadow-xl transition-all duration-500">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="h-8 w-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <ShoppingCart className="h-4 w-4" />
                       </div>
-                      <Badge className="bg-emerald-50 text-emerald-600 border-none font-black text-[10px]">+14.2%</Badge>
+                      <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold text-[9px]">+14.2%</Badge>
                     </div>
-                    <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.3em] mb-2">Total Sale Units</p>
-                    <h2 className={`text-5xl font-['Playfair_Display'] ${THEME.typography.weights.heavy} bg-clip-text text-transparent ${THEME.gradients.brand} tracking-tighter leading-none`}>8.4K</h2>
-                    <p className="text-xs font-medium text-stone-400 mt-4 leading-relaxed tracking-tight">Consolidated volume across all verified partner nodes.</p>
+                    <p className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider mb-1">Total Sale Units</p>
+                    <h2 className="text-2xl font-bold text-indigo-950 tracking-tight">
+                      {analyticsData?.totalSaleUnits >= 1000 ? (analyticsData.totalSaleUnits / 1000).toFixed(1) + 'K' : analyticsData?.totalSaleUnits || 0}
+                    </h2>
+                    <p className="text-[10px] font-medium text-stone-400 mt-1.5 leading-relaxed">Consolidated volume across all verified partner nodes.</p>
                   </div>
 
-                  <div className="p-10 bg-white rounded-[2.5rem] shadow-sm border border-stone-100/50 group hover:shadow-2xl transition-all duration-500">
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="h-14 w-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                        <DollarSign className="h-7 w-7" />
+                  <div className="p-6 bg-white rounded-2xl shadow-sm border border-stone-100/40 group hover:shadow-xl transition-all duration-500">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                        <DollarSign className="h-4 w-4" />
                       </div>
-                      <Badge className="bg-emerald-50 text-emerald-600 border-none font-black text-[10px]">+8.7%</Badge>
+                      <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold text-[9px]">+8.7%</Badge>
                     </div>
-                    <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.3em] mb-2">Gross Revenue</p>
-                    <h2 className={`text-5xl font-['Playfair_Display'] ${THEME.typography.weights.heavy} bg-clip-text text-transparent ${THEME.gradients.brand} tracking-tighter leading-none`}>&#8377;52.8L</h2>
-                    <p className="text-xs font-medium text-stone-400 mt-4 leading-relaxed tracking-tight">Total market value processed through secure enterprise channels.</p>
+                    <p className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider mb-1">Gross Revenue</p>
+                    <h2 className="text-2xl font-bold text-indigo-950 tracking-tight">
+                      {formatMoney(analyticsData?.grossRevenue || 0)}
+                    </h2>
+                    <p className="text-[10px] font-medium text-stone-400 mt-1.5 leading-relaxed">Total market value processed through secure enterprise channels.</p>
                   </div>
 
-                  <div className="p-10 bg-indigo-950 rounded-[2.5rem] shadow-2xl shadow-indigo-950/20 text-white relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-12 opacity-5 blur-2xl bg-emerald-500 rounded-full -mr-8 -mt-8" />
-                    <div className="relative z-10">
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="h-14 w-14 rounded-2xl bg-white/10 text-emerald-400 flex items-center justify-center">
-                          <TrendingUp className="h-7 w-7" />
-                        </div>
-                        <Badge className="bg-emerald-500 text-white border-none font-black text-[10px]">PEAK</Badge>
+                  <div className="p-6 bg-white rounded-2xl shadow-sm border border-stone-100/40 group hover:shadow-xl transition-all duration-500">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="h-8 w-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                        <TrendingUp className="h-4 w-4" />
                       </div>
-                      <p className="text-[10px] font-black text-stone-500 uppercase tracking-[0.3em] mb-2">Platform Earnings</p>
-                      <h2 className="text-5xl font-black text-white tracking-tighter leading-none">&#8377;14.2L</h2>
-                      <p className="text-xs font-medium text-stone-500 mt-4 leading-relaxed tracking-tight">Net marketplace yield after partner settlement protocol.</p>
+                      <Badge className="bg-indigo-50 text-indigo-600 border-none font-bold text-[9px]">PEAK</Badge>
                     </div>
+                    <p className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider mb-1">Platform Earnings</p>
+                    <h2 className="text-2xl font-bold text-indigo-950 tracking-tight">
+                      {formatMoney(analyticsData?.platformEarnings || 0)}
+                    </h2>
+                    <p className="text-[10px] font-medium text-stone-400 mt-1.5 leading-relaxed">Net marketplace yield after partner settlement protocol.</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-12 gap-8">
-                  <Card className="col-span-8 p-12 rounded-[3rem] border-none shadow-sm bg-white overflow-hidden relative">
-                    <div className="flex items-center justify-between mb-12">
-                      <h3 className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.4em] flex items-center gap-4">
-                        <span className="h-px w-8 bg-indigo-950" />
+                  <Card className="col-span-8 p-10 rounded-3xl border border-stone-100/40 shadow-sm bg-white overflow-hidden relative group">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-[11px] font-bold text-stone-500 uppercase tracking-widest flex items-center gap-3">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                         Revenue Distribution
                       </h3>
-                      <div className="flex gap-2">
-                        <div className="h-2 w-2 rounded-full bg-indigo-950" />
-                        <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                      </div>
                     </div>
-                    <div className="h-64 flex items-end gap-6">
-                      {[45, 75, 55, 90, 65, 80, 50, 70, 85, 60, 95, 40].map((h, i) => (
-                        <div key={i} className="flex-1 bg-stone-50 rounded-2xl relative group cursor-pointer">
-                          <div
-                            className="absolute bottom-0 left-0 right-0 bg-stone-100 rounded-3xl transition-all duration-700 group-hover:bg-emerald-500/20"
-                            style={{ height: `${h}%` }}
-                          />
-                          <div
-                            className="absolute bottom-0 left-2 right-2 bg-indigo-950 rounded-t-lg transition-all duration-1000 delay-100 ease-out group-hover:bg-emerald-500"
-                            style={{ height: `${h * 0.7}%` }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex justify-between mt-8 px-2">
-                      {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].map(m => (
-                        <span key={m} className="text-[9px] font-black text-stone-300 uppercase tracking-widest">{m}</span>
-                      ))}
+                    
+                    {renderLineGraph()}
+                    
+                    {/* X Axis Labels */}
+                    <div className="relative w-full h-4 mt-3">
+                      {analyticsData?.graphData?.map((d, i) => {
+                        const len = analyticsData.graphData.length;
+                        const showLabel = len > 15 ? (i % Math.ceil(len / 6) === 0 || i === len - 1) : true;
+                        if (!showLabel) return null;
+                        const x = len > 1 ? (i / (len - 1)) * 100 : 50;
+                        return (
+                          <span key={`l-${i}`} className="absolute top-0 -translate-x-1/2 text-[9px] font-bold text-stone-400 uppercase tracking-wider whitespace-nowrap" style={{ left: `${x}%` }}>
+                            {d.label}
+                          </span>
+                        );
+                      })}
                     </div>
                   </Card>
 
-                  <Card className="col-span-4 p-12 rounded-[3rem] border-none shadow-sm bg-stone-50 relative overflow-hidden group">
-                    <div className="absolute bottom-0 right-0 p-16 opacity-[0.02] -mr-8 -mb-8">
-                      <Activity className="h-40 w-40" />
+                  <Card className="col-span-4 p-10 rounded-3xl border border-stone-100/40 shadow-sm bg-white overflow-hidden relative group">
+                    <div className="flex items-center justify-between mb-8">
+                      <h3 className="text-[11px] font-bold text-stone-500 uppercase tracking-widest flex items-center gap-3">
+                        <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                        Product Sales Performance
+                      </h3>
                     </div>
-                    <h3 className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.4em] mb-10">Sector performance</h3>
-                    <div className="space-y-8">
-                      {[
-                        { label: 'E-Commerce', val: '&#8377;22.4L', p: 85 },
-                        { label: 'Cloud Services', val: '&#8377;14.8L', p: 65 },
-                        { label: 'Logistics', val: '&#8377;8.9L', p: 45 },
-                        { label: 'Procurement', val: '&#8377;6.7L', p: 35 }
-                      ].map(s => (
-                        <div key={s.label} className="space-y-3">
-                          <div className="flex justify-between items-end">
-                            <span className="text-[11px] font-bold text-indigo-950 tracking-tight">{s.label}</span>
-                            <span className="text-[11px] font-black text-indigo-950 tracking-tighter">{s.val}</span>
+                    
+                    <ScrollArea className="h-[350px] pr-4 -mr-4">
+                      <div className="space-y-6 relative z-10 pb-4">
+                      {analyticsData?.productPerformance && analyticsData.productPerformance.length > 0 ? analyticsData.productPerformance.map((s, i) => (
+                        <div key={i} className="group/item cursor-pointer" onClick={() => setSelectedTopProduct(s)}>
+                          <div className="flex justify-between items-end mb-2">
+                            <span className="text-xs font-bold text-indigo-950 truncate max-w-[65%] group-hover/item:text-blue-600 transition-colors">{s.label}</span>
+                            <div className="text-right">
+                              <span className="text-xs font-bold text-indigo-950 block">{formatMoney(s.val)}</span>
+                              <span className="text-[9px] font-semibold text-stone-400">{s.qty} units</span>
+                            </div>
                           </div>
-                          <div className="h-1.5 w-full bg-white rounded-full overflow-hidden">
-                            <div className="h-full bg-indigo-950 rounded-full group-hover:bg-emerald-500 transition-all duration-700" style={{ width: `${s.p}%` }} />
+                          <div className="h-1.5 w-full bg-stone-50 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-indigo-950 rounded-full transition-all duration-1000 ease-out group-hover/item:bg-blue-500 shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
+                              style={{ width: `${Math.max(2, s.p)}%` }}
+                            />
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      )) : (
+                        <div className="flex flex-col items-center justify-center py-12 opacity-20">
+                          <Package className="h-12 w-12 text-stone-300 mb-4" />
+                          <p className="text-[10px] font-black uppercase tracking-widest">No Sales Protocol Data</p>
+                        </div>
+                      )}
+                      </div>
+                    </ScrollArea>
                   </Card>
                 </div>
               </div>
@@ -1618,7 +1797,7 @@ const AdminDashboard = () => {
               <div className="flex flex-col items-center gap-6">
                 <div className="h-12 w-12 animate-spin rounded-full border-[3px] border-stone-100 border-t-indigo-950 shadow-xl" />
                 <div className="space-y-1 text-center">
-                  <p className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.3em]">Accessing Intel</p>
+                  <p className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.3em] ">Accessing Intel</p>
                   <p className="text-[8px] font-bold text-stone-400 uppercase tracking-widest">Decrypting User Node...</p>
                 </div>
               </div>
@@ -2025,12 +2204,14 @@ const AdminDashboard = () => {
           <form onSubmit={async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
+            const selectedProd = manualOrderProducts.find(p => p.id === formData.get('productId'));
             const payload = {
               vendorId: formData.get('vendorId'),
               mobile: formData.get('mobile'),
-              amount: parseFloat(formData.get('amount')),
+              amount: parseFloat(formData.get('unitPrice')) * parseInt(formData.get('quantity')),
               items: [{
-                name: formData.get('itemName'),
+                productId: formData.get('productId'),
+                name: selectedProd?.name || formData.get('itemName'),
                 quantity: parseInt(formData.get('quantity')),
                 unitPrice: parseFloat(formData.get('unitPrice'))
               }]
@@ -2050,7 +2231,20 @@ const AdminDashboard = () => {
             <div className="grid grid-cols-2 gap-8">
               <div className="space-y-3">
                 <Label className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.2em]">Partner Merchant</Label>
-                <select name="vendorId" required className="w-full h-12 bg-stone-50 border-stone-100 rounded-xl px-4 text-sm font-bold focus:ring-2 focus:ring-indigo-950 transition-all outline-none">
+                <select 
+                  name="vendorId" 
+                  required 
+                  className="w-full h-12 bg-stone-50 border-stone-100 rounded-xl px-4 text-sm font-bold focus:ring-2 focus:ring-indigo-950 transition-all outline-none"
+                  onChange={async (e) => {
+                    const vid = e.target.value;
+                    if (!vid) { setManualOrderProducts([]); return; }
+                    try {
+                      const resp = await fetch(`${API_URL}/admin/vendors/${vid}`);
+                      const data = await resp.json();
+                      if (data.success) setManualOrderProducts(data.data.products || []);
+                    } catch (err) { console.error(err); }
+                  }}
+                >
                   <option value="">Select Vendor...</option>
                   {vendors.map(v => <option key={v.id} value={v.id}>{v.businessName}</option>)}
                 </select>
@@ -2065,8 +2259,22 @@ const AdminDashboard = () => {
               <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.3em]">Transmission Details</p>
               <div className="grid grid-cols-12 gap-4">
                 <div className="col-span-6 space-y-2">
-                  <Label className="text-[9px] font-bold text-stone-500 uppercase">Item Identifier</Label>
-                  <Input name="itemName" placeholder="Product Name" required className="h-10 bg-white border-none rounded-lg text-xs font-bold shadow-sm" />
+                  <Label className="text-[9px] font-bold text-stone-500 uppercase">Product Selector</Label>
+                  <select 
+                    name="productId" 
+                    required 
+                    className="w-full h-10 bg-white border-none rounded-lg text-xs font-bold shadow-sm px-3 outline-none"
+                    onChange={(e) => {
+                      const p = manualOrderProducts.find(prod => prod.id === e.target.value);
+                      if (p) {
+                         const form = e.target.closest('form');
+                         form.unitPrice.value = p.price;
+                      }
+                    }}
+                  >
+                    <option value="">Choose item...</option>
+                    {manualOrderProducts.map(p => <option key={p.id} value={p.id}>{p.name} - ₹{p.price}</option>)}
+                  </select>
                 </div>
                 <div className="col-span-3 space-y-2">
                   <Label className="text-[9px] font-bold text-stone-500 uppercase">Qty</Label>
@@ -2081,8 +2289,11 @@ const AdminDashboard = () => {
 
             <div className="flex items-center justify-between pt-4 border-t border-stone-100">
               <div className="space-y-1">
-                <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest leading-none">Gross Archive Value</p>
-                <Input name="amount" placeholder="Total" required className="h-12 w-48 bg-transparent border-none text-3xl font-black text-indigo-950 p-0 shadow-none focus-visible:ring-0" />
+                <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest leading-none">Status</p>
+                <div className="flex items-center gap-2 mt-1">
+                   <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                   <span className="text-xl font-black text-indigo-950">LIVE SESSION</span>
+                </div>
               </div>
               <div className="flex gap-3">
                 <Button type="button" onClick={() => setIsManualOrderOpen(false)} variant="ghost" className="h-12 rounded-xl px-8 text-[10px] font-black uppercase tracking-widest">Abort</Button>
@@ -2093,7 +2304,37 @@ const AdminDashboard = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Order Insight Dossier */}
+      {/* Top Product Preview Modal */}
+      {selectedTopProduct && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in" onClick={() => setSelectedTopProduct(null)}>
+          <div className="bg-white rounded-3xl p-6 w-[90%] max-w-sm shadow-2xl animate-in zoom-in-95 duration-300 relative" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setSelectedTopProduct(null)} className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center rounded-full hover:bg-stone-100 transition-colors cursor-pointer">
+              <X className="h-4 w-4 text-stone-500" />
+            </button>
+            <div className="flex flex-col items-center mt-2">
+              <div className="w-48 h-48 rounded-2xl bg-stone-50 border border-stone-100/50 mb-6 overflow-hidden flex items-center justify-center p-2">
+                {selectedTopProduct.image ? (
+                  <img src={selectedTopProduct.image} alt={selectedTopProduct.label} className="w-full h-full object-contain mix-blend-multiply drop-shadow-sm" />
+                ) : (
+                  <Package className="h-16 w-16 text-stone-300" />
+                )}
+              </div>
+              <h3 className="text-xl font-bold text-indigo-950 text-center leading-tight mb-2">{selectedTopProduct.label}</h3>
+              <div className="flex items-center gap-6 mt-4 bg-stone-50 px-8 py-3.5 rounded-2xl border border-stone-100">
+                <div className="text-center">
+                  <span className="block text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-0.5">Revenue</span>
+                  <span className="font-black text-indigo-950">{formatMoney(selectedTopProduct.val)}</span>
+                </div>
+                <div className="w-px h-8 bg-stone-200" />
+                <div className="text-center">
+                  <span className="block text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-0.5">Units Sold</span>
+                  <span className="font-black text-indigo-950">{selectedTopProduct.qty}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <Dialog open={isOrderOpen} onOpenChange={setIsOrderOpen}>
         <DialogContent className="sm:max-w-3xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-stone-50/50 backdrop-blur-xl ring-1 ring-indigo-900/5">
           {detailLoading ? (

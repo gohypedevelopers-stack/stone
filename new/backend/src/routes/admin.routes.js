@@ -10,9 +10,11 @@ import {
   getAdminOrderDetail,
   getAdminCustomers,
   getAdminCustomerDetail,
+  lookupCustomerByMobile,
   approveVendor,
   seedFrontendProducts,
-  getAdminCategories
+  getAdminCategories,
+  getAdminVendorAnalytics
 } from "../controllers/admin.controller.js";
 import { getPointsSettings, updatePointsSettings } from "../controllers/settings.controller.js";
 import { createProduct, updateProduct, deleteProduct } from "../controllers/products.controller.js";
@@ -36,9 +38,11 @@ router.get("/orders", getAdminOrders);
 router.get("/orders/:id", getAdminOrderDetail);
 router.get("/vendors", getAdminVendors);
 router.get("/vendors/:id", getAdminVendorDetail);
+router.get("/vendor-analytics", getAdminVendorAnalytics);
 router.get("/offline-ledgers", getAdminOfflinePurchases);
 router.post("/offline-ledgers", createAdminOfflinePurchase);
 router.get("/customers", getAdminCustomers);
+router.get("/customers/lookup", lookupCustomerByMobile);
 router.get("/customers/:id", getAdminCustomerDetail);
 router.patch("/vendors/:id/approve", approveVendor);
 router.post("/seed-products", seedFrontendProducts);

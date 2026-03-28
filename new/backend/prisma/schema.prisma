@@ -138,6 +138,7 @@ model Product {
   vendor         Vendor        @relation(fields: [vendorId], references: [id], onDelete: Cascade)
   category       Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   orderItems     OrderItem[]
+  offlinePurchaseItems OfflinePurchaseItem[]
 
   @@index([vendorId])
   @@index([categoryId])
@@ -220,13 +221,16 @@ model OfflinePurchase {
 model OfflinePurchaseItem {
   id                String          @id @default(cuid())
   offlinePurchaseId String
+  productId         String?
   name              String
   quantity          Int
   unitPrice         Decimal         @db.Decimal(10, 2)
   createdAt         DateTime        @default(now())
   offlinePurchase   OfflinePurchase @relation(fields: [offlinePurchaseId], references: [id], onDelete: Cascade)
+  product           Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   @@index([offlinePurchaseId])
+  @@index([productId])
 }
 
 model RewardTransaction {
@@ -293,11 +297,11 @@ model Notification {
 model HomepageSection {
   id          String   @id @default(cuid())
   title       String
-  componentId String   @unique // e.g. "hero-slider", "best-sellers", "shop-by-brand"
-  type        String   @default("BUILT_IN") // "BUILT_IN" or "CUSTOM"
+  componentId String   @unique
+  type        String   @default("BUILT_IN")
   isActive    Boolean  @default(true)
   sortOrder   Int      @default(0)
-  settings    Json?    // Optional JSON for configuration (e.g. maxItems, colors)
+  settings    Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
