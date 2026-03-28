@@ -5,4 +5,4 @@ app.listen(env.port, () => {
   console.log(`OMW backend running on http://localhost:${env.port}`);
 });
 
-// Trigger nodemon restart
+// Trigger nodemon restart - customer rewards page backend updated

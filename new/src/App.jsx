@@ -21,6 +21,7 @@ import WishlistDrawer from "./WishlistDrawer.jsx";
 import CartPage from "./CartPage.jsx";
 import CheckoutPage from "./CheckoutPage.jsx";
 import AccountPage from "./AccountPage.jsx";
+import RewardsPage from "./RewardsPage.jsx";
 import { useProducts } from "./context/ProductContext";
 import { AuthProvider } from "./context/AuthContext";
 import AuthModal from "./components/AuthModal";
@@ -229,6 +230,7 @@ export default function App() {
       "shop-by-offer-page": "/offer/flat-20", // Default offer
       "cart": "/cart",
       "account": "/account",
+      "rewards": "/rewards",
       "admin": "/admin",
       "all-categories": "/categories"
     };
@@ -293,6 +295,7 @@ export default function App() {
         } />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/account" element={<AccountPage />} />
+        <Route path="/rewards" element={<RewardsPage />} />
         <Route path="/brands" element={<AllBrandsPage />} />
         <Route path="/categories" element={<AllCategoriesPage dynamicCategories={dynamicCategories} onSelectCategory={(cat) => navigate(`/category/${cat}`)} onNavigate={handleNavigate} />} />
         <Route path="/admin/*" element={<AdminDashboard />} />

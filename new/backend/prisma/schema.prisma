@@ -203,8 +203,9 @@ model OfflinePurchase {
   vendorId     String
   customerName String?
   mobile       String
-  amount       Decimal               @db.Decimal(10, 2)
-  purchaseDate DateTime             @default(now())
+  amount             Decimal               @db.Decimal(10, 2)
+  rewardPointsEarned Int                   @default(0)
+  purchaseDate       DateTime              @default(now())
   linkedAt    DateTime?
   createdAt   DateTime              @default(now())
   customer    Customer?             @relation(fields: [customerId], references: [id], onDelete: SetNull)
@@ -233,12 +234,14 @@ model RewardTransaction {
   customerId String
   type       RewardEntryType
   source     String
+  sourceId   String?
   points     Int
   note       String?
   createdAt  DateTime        @default(now())
   customer   Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   @@index([customerId])
+  @@index([sourceId])
 }
 
 model Campaign {
@@ -297,4 +300,11 @@ model HomepageSection {
   settings    Json?    // Optional JSON for configuration (e.g. maxItems, colors)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
 }
