@@ -35,7 +35,7 @@ export default React.memo(function OfferTimer({ offers = [] }) {
     return (
         <section className="pb-[18px]">
             <div className="w-full px-0 sm:px-[10px]">
-                <div className="relative overflow-hidden rounded-[24px] py-[14px] flex items-center bg-[#e5e5e5]/80 backdrop-blur-sm border border-white/40 shadow-sm">
+                <div className="relative overflow-hidden rounded-[24px] py-[14px] flex items-center bg-white/95 border border-white/40 shadow-sm transform-gpu optimize-gpu">
                     <style>
                         {`
                         @keyframes offerMarquee {

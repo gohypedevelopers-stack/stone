@@ -23,7 +23,7 @@ export default React.memo(function LimitedOfferBanner() {
 
     return (
         <section className="w-full py-8 md:py-12 px-4 sm:px-6">
-            <div className="max-w-[1400px] mx-auto bg-gradient-to-r from-[#ffeef4] via-[#f3f0ff] to-[#eaddff] rounded-[24px] overflow-hidden relative p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-10 shadow-sm">
+            <div className="section max-w-[1400px] mx-auto bg-gradient-to-r from-[#ffeef4] via-[#f3f0ff] to-[#eaddff] rounded-[24px] overflow-hidden relative p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-10 shadow-sm transform-gpu optimize-gpu">
 
                 {/* Left Content */}
                 <div className="flex flex-col items-start z-10 max-w-[600px]">
@@ -44,7 +44,7 @@ export default React.memo(function LimitedOfferBanner() {
                             Claim Offer
                         </button>
 
-                        <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full border border-white/50">
+                        <div className="flex items-center gap-3 bg-white/90 px-4 py-2 rounded-full border border-white/50 transform-gpu optimize-gpu">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e91e63" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <polyline points="12 6 12 12 16 14"></polyline>

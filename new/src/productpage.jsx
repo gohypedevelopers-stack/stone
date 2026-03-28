@@ -228,7 +228,7 @@ const MegaDealBanner = ({ price, discount, onOpenDetails }) => (
         
         <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2.5">
-                <div className="bg-gradient-to-r from-pink-600 to-rose-500 text-white text-[9px] font-[900] px-2 py-0.5 rounded shadow-sm italic tracking-tighter uppercase transform -skew-x-12 border border-pink-400/20">
+                <div className="bg-gradient-to-r from-pink-600 to-rose-500 text-white text-[9px] font-black px-2 py-0.5 rounded shadow-sm tracking-tighter uppercase transform -skew-x-12 border border-pink-400/20">
                     MEGA DEAL
                 </div>
                 <div className="flex items-baseline gap-1">
@@ -385,7 +385,7 @@ const DealDetailsModal = ({ isOpen, onClose, price, discount }) => {
                         <X size={20} className="text-gray-400" />
                     </button>
                     
-                    <div className="bg-pink-600 text-white text-[10px] font-black px-3 py-1 rounded shadow-sm italic mb-4">MEGA DEAL</div>
+                    <div className="bg-pink-600 text-white text-[10px] font-black px-3 py-1 rounded shadow-sm mb-4">MEGA DEAL</div>
                     
                     <div className="flex items-center gap-3 mb-2">
                         <span className="text-2xl font-[900] text-gray-900">Get at ₹{price}</span>

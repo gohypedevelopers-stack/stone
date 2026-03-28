@@ -149,14 +149,14 @@ export default React.memo(function ByCategory({ onNavigate, onSelectCategory, ti
               {title ? (
                 <>
                   {title.trim().split(' ').slice(0, -1).join(' ')}{" "}
-                  <span className="text-transparent bg-clip-text bg-linear-to-r from-[#b36cff] to-[#ff5db1] italic">
+                  <span className="text-transparent bg-clip-text bg-linear-to-r from-[#b36cff] to-[#ff5db1]">
                     {title.trim().split(' ').slice(-1)[0]}
                   </span>
                 </>
               ) : (
                 <>
                   Shop by{" "}
-                  <span className="text-transparent bg-clip-text bg-linear-to-r from-[#b36cff] to-[#ff5db1] italic">
+                  <span className="text-transparent bg-clip-text bg-linear-to-r from-[#b36cff] to-[#ff5db1]">
                     Category
                   </span>
                 </>

@@ -297,7 +297,7 @@ export function VendorOfflineBilling() {
                 <span className="font-semibold text-sm text-stone-800 truncate">{selectedVendor.storeAddress || 'No physical address logged.'}</span>
               </>
             ) : (
-              <span className="text-stone-400 font-medium italic text-sm">Awaiting merchant selection...</span>
+              <span className="text-stone-400 font-medium text-sm">Awaiting merchant selection...</span>
             )}
           </div>
         </div>
@@ -329,7 +329,7 @@ export function VendorOfflineBilling() {
               <ScrollArea className="h-full">
                 <div className="p-6 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
                   {vendorProducts.length === 0 ? (
-                    <div className="col-span-full py-20 text-center text-stone-400 font-medium italic text-sm">
+                    <div className="col-span-full py-20 text-center text-stone-400 font-medium text-sm">
                       No products found for this terminal.
                     </div>
                   ) : vendorProducts.map(p => (

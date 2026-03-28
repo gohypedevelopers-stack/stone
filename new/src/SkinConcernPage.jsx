@@ -92,7 +92,7 @@ export default function SkinConcernPage({ userConcern = "acne", onConcernChange,
             {/* 1. HERO HEADER */}
             <header className="relative pt-32 pb-16 px-6 text-center overflow-hidden bg-white/50 backdrop-blur-sm">
                 <div className="relative z-10 max-w-3xl mx-auto">
-                    <h1 className="text-4xl md:text-6xl font-serif italic font-medium mb-4 tracking-tight">Shop by Skin Concern</h1>
+                    <h1 className="text-4xl md:text-6xl font-extrabold mb-4 tracking-tight">Shop by Skin Concern</h1>
                     <p className="text-gray-500 text-lg mb-8 max-w-xl mx-auto">Pick your goal — we’ll show the right products fast.</p>
 
                     <div className="relative max-w-lg mx-auto">
@@ -211,7 +211,7 @@ export default function SkinConcernPage({ userConcern = "acne", onConcernChange,
 
                 {/* 5. TOP PICKS */}
                 <section className="mb-20">
-                    <h2 className="text-3xl font-serif italic mb-8">Bestsellers for {currentConcernData.label}</h2>
+                    <h2 className="text-3xl font-bold mb-8">Bestsellers for {currentConcernData.label}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {TOP_PICKS.map((p, i) => (
                             <div key={p.id} className="bg-white rounded-[32px] p-4 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 group flex flex-col">

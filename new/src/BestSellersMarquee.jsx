@@ -64,11 +64,11 @@ const BestSellersMarquee = React.memo(function BestSellersMarquee({
   }, [marqueeItems]);
 
   return (
-    <section className="py-16 md:py-20 overflow-hidden bg-white">
+    <section className="section py-16 md:py-20 overflow-hidden bg-white">
       <div className="max-w-[1440px] mx-auto px-4 md:px-6 mb-12">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="w-full md:w-auto">
-            <h2 className="text-4xl md:text-5xl font-black text-[#151515] tracking-tighter leading-none mb-4 uppercase italic">
+            <h2 className="text-4xl md:text-5xl font-black text-[#151515] tracking-tighter leading-none mb-4 uppercase">
               Best Sellers
             </h2>
             <p className="text-gray-400 text-lg max-w-md mb-8 font-medium">
@@ -124,7 +124,7 @@ const BestSellersMarquee = React.memo(function BestSellersMarquee({
             {marqueeItems.map((product, idx) => (
               <div
                 key={`${product.id}-${idx}`}
-                className="shrink-0 w-[280px] md:w-[320px] transition-transform duration-500 hover:scale-[1.02]"
+                className="shrink-0 w-[280px] md:w-[320px] transition-transform duration-500 hover:scale-[1.02] transform-gpu optimize-gpu"
                 onClickCapture={(e) => {
                   if (isDraggingRef.current) {
                     e.stopPropagation();

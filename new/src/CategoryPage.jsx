@@ -513,7 +513,7 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
                         <div className="h-px w-8 bg-[#1a1a1a]/20" />
                     </div>
 
-                    <h1 className="text-5xl md:text-7xl font-[450] tracking-tight mb-6 text-[#1a1a1a] font-serif italic">
+                    <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 text-[#1a1a1a] uppercase">
                         {currentContent.title}
                     </h1>
 

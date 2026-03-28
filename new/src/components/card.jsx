@@ -34,7 +34,7 @@ const ProductCard = React.memo(
     return (
       <div
         onClick={handleNavigate}
-        className="group relative bg-white rounded-lg transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] cursor-pointer flex flex-col h-full overflow-hidden shadow-sm hover:shadow-md border-none"
+        className="group relative bg-white rounded-lg transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] cursor-pointer flex flex-col h-full overflow-hidden shadow-sm hover:shadow-md border-none transform-gpu optimize-gpu"
       >
         {/* Image Container */}
         <div className="relative aspect-square overflow-hidden rounded-t-lg bg-[#F7F7F6]">
@@ -42,12 +42,13 @@ const ProductCard = React.memo(
             src={product.image || "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=600&q=80"}
             alt={product.name}
             draggable={false}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s] ease-[cubic-bezier(0.16,1,0.3,1)]"
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s] ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu optimize-gpu"
+            loading="lazy"
           />
 
           {/* Points & Discount */}
           <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-            <div className="bg-[#151515] text-white text-[9px] font-black px-2.5 py-1 rounded-lg shadow-md tracking-widest uppercase italic">
+            <div className="bg-[#151515] text-white text-[9px] font-black px-2.5 py-1 rounded-lg shadow-md tracking-widest uppercase">
               {points} POINTS
             </div>
             <div className="bg-[#ff3b8f] text-white text-[9px] font-black px-2 py-0.5 rounded shadow-md uppercase tracking-widest">
@@ -58,14 +59,14 @@ const ProductCard = React.memo(
           {/* Heart/Wishlist */}
           <button
             onClick={handleWishlistClick}
-            className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-500 shadow-md backdrop-blur-md
-            ${isWishlisted ? "bg-white text-pink-500 scale-110" : "bg-white/80 text-stone-400 opacity-0 group-hover:opacity-100 hover:text-pink-500 hover:bg-white hover:scale-110"}`}
+            className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-500 shadow-sm
+            ${isWishlisted ? "bg-white text-pink-500 scale-110" : "bg-white text-stone-400 opacity-0 group-hover:opacity-100 hover:text-pink-500 hover:bg-white hover:scale-110"}`}
           >
             <Heart size={16} fill={isWishlisted ? "currentColor" : "none"} strokeWidth={2.5} />
           </button>
 
           {/* Stock Status Badge */}
-          <div className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-lg shadow-sm">
+          <div className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg shadow-sm">
             <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
             <span className="text-[8px] font-black text-stone-900 tracking-widest uppercase">
               IN STOCK
@@ -98,7 +99,7 @@ const ProductCard = React.memo(
                   </span>
                 </div>
               </div>
-              <div className="text-[11px] text-stone-400 mt-0.5 font-medium italic">
+              <div className="text-[11px] text-stone-400 mt-0.5 font-medium">
                 M.R.P.: <span className="line-through">₹{mrp.toLocaleString()}</span>
               </div>
             </div>

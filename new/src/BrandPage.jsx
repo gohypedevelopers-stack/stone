@@ -161,7 +161,7 @@ export default function BrandPage({ brandName = "Laneige", onBrandChange, addToC
                 {/* 3. FEATURED TOP PICKS */}
                 <section className="mb-20">
                     <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-2xl font-serif italic text-[#1a1a1a]">Top Picks from {brandName}</h2>
+                        <h2 className="text-2xl font-bold text-[#1a1a1a]">Top Picks from {brandName}</h2>
                         <a href="#" className="text-xs font-bold uppercase tracking-wider underline decoration-gray-300 hover:decoration-black transition-all">View All</a>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -244,7 +244,7 @@ export default function BrandPage({ brandName = "Laneige", onBrandChange, addToC
                 {/* 5. ABOUT BRAND & NEWSLETTER */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 border-t border-gray-100 pt-16">
                     <div className="bg-gray-50 rounded-[32px] p-10 flex flex-col justify-center">
-                        <h3 className="text-2xl font-serif italic mb-4">About {brandName}</h3>
+                        <h3 className="text-2xl font-bold mb-4">About {brandName}</h3>
                         <p className="text-gray-500 leading-relaxed mb-6">
                             Discover the science and nature behind {brandName}. Known for their innovative formulas and dedication to clean, effective beauty. Every product is tested for quality and performance.
                         </p>

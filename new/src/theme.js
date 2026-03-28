@@ -58,15 +58,15 @@ export const THEME = {
 
     // Standardized Headline Formats
     headings: {
-      h1: "text-4xl md:text-5xl font-black font-['Playfair_Display'] tracking-tighter leading-none", // Page Titles
-      h2: "text-2xl md:text-[32px] font-extrabold font-['Playfair_Display'] tracking-wide",          // Section Headers
-      h3: "text-lg md:text-xl font-bold font-['Playfair_Display'] tracking-tight",                   // Card Titles
+      h1: "text-[32px] font-black tracking-tighter leading-none", // 32px Page Titles
+      h2: "text-2xl font-extrabold tracking-wide",          // 24px Section Headers
+      h3: "text-lg font-bold tracking-tight",                   // 18px Card Titles
     },
 
-    // Standardized Micro-coy (Those super tiny capitalized subtitles)
+    // Standardized Micro-copy (Those super tiny capitalized subtitles)
     micro: {
-      default: "text-[10px] font-black uppercase tracking-widest leading-none",
-      muted: "text-[9px] font-bold uppercase tracking-[0.2em] text-stone-400"
+      default: "text-sm font-black uppercase tracking-widest leading-none", // 14px
+      muted: "text-xs font-bold uppercase tracking-[0.2em] text-stone-400"  // 12px
     }
   },
 

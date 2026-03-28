@@ -126,7 +126,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                         <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase mb-6 shadow-sm text-pink-600 border border-pink-100">
                             <Flame size={14} fill="currentColor" /> Sitewide Savings
                         </div>
-                        <h1 className="text-5xl md:text-7xl font-bold mb-4 font-['Playfair_Display'] tracking-tight text-[#1b1b1b]">
+                        <h1 className="text-5xl md:text-7xl font-bold mb-4 tracking-tight text-[#1b1b1b]">
                             Flat 20% Off
                         </h1>
                         <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-2xl mx-auto font-light leading-relaxed">
@@ -309,7 +309,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                         <div className="inline-flex items-center gap-2 bg-[#ff4f6e]/10 px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase mb-6 text-[#ff4f6e]">
                             <Gift size={14} /> Limited Time Offer
                         </div>
-                        <h1 className="text-5xl md:text-8xl font-black mb-4 tracking-tighter text-[#1b1b1b] uppercase italic leading-none">
+                        <h1 className="text-5xl md:text-8xl font-black mb-4 tracking-tighter text-[#1b1b1b] uppercase leading-none">
                             Buy 1 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff4f6e] to-[#ff8a2a]">Get 1</span>
                         </h1>
                         <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-2xl mx-auto font-light">
@@ -382,7 +382,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                     <section>
                         <div className="flex items-end justify-between mb-8">
                             <div>
-                                <h2 className="text-3xl font-black italic uppercase tracking-tighter">Top BOGO Picks</h2>
+                                <h2 className="text-3xl font-black uppercase tracking-tighter">Top BOGO Picks</h2>
                                 <p className="text-gray-500 mt-2">Customers are loving these combos right now</p>
                             </div>
                         </div>
@@ -473,7 +473,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                         <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase mb-6 text-white border border-white/30 shadow-sm">
                             <Wallet size={14} /> Budget Friendly
                         </div>
-                        <h1 className="text-5xl md:text-7xl font-bold mb-4 font-['Playfair_Display'] tracking-tight text-white drop-shadow-sm">
+                        <h1 className="text-5xl md:text-7xl font-bold mb-4 tracking-tight text-white drop-shadow-sm">
                             Under ₹499
                         </h1>
                         <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto font-medium leading-relaxed">
@@ -671,7 +671,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                         <div className="inline-flex items-center gap-2 bg-purple-100/80 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase mb-6 text-purple-700 border border-purple-200 shadow-sm">
                             <Layers size={14} /> Bundle & Save
                         </div>
-                        <h1 className="text-5xl md:text-7xl font-bold mb-4 font-['Playfair_Display'] tracking-tight text-[#1b1b1b]">
+                        <h1 className="text-5xl md:text-7xl font-bold mb-4 tracking-tight text-[#1b1b1b]">
                             Combo Deals
                         </h1>
                         <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-2xl mx-auto font-light leading-relaxed">
@@ -730,7 +730,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                 <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-12 space-y-16">
                     {/* Top Combo Picks */}
                     <section>
-                        <h2 className="flex items-center gap-3 text-3xl font-black italic mb-8">
+                        <h2 className="flex items-center gap-3 text-3xl font-black mb-8">
                             <SparklesText text="Top Combo Picks" colors={{ first: "#a855f7", second: "#ec4899" }} />
                         </h2>
 
@@ -817,7 +817,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                         <div className="inline-flex items-center gap-2 bg-white/30 backdrop-blur-md px-6 py-2 rounded-full text-sm font-bold tracking-wider uppercase mb-8 text-white border border-white/40 shadow-lg animate-pulse">
                             <Siren size={16} /> Limited Time Event
                         </div>
-                        <h1 className="text-6xl md:text-8xl font-black mb-6 font-['Playfair_Display'] tracking-tighter text-white drop-shadow-md">
+                        <h1 className="text-6xl md:text-8xl font-black mb-6 tracking-tighter text-white drop-shadow-md">
                             Weekend Specials
                         </h1>
                         <p className="text-xl md:text-2xl text-white/90 mb-10 max-w-2xl mx-auto font-medium">
@@ -967,7 +967,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                         <div className="inline-flex items-center gap-2 bg-red-600 px-6 py-2 rounded-full text-xs font-bold tracking-wider uppercase mb-8 text-white shadow-xl shadow-red-500/30 animate-bounce">
                             <Hourglass size={14} /> Hurry — Ends Soon
                         </div>
-                        <h1 className="text-6xl md:text-8xl font-black mb-6 font-['Playfair_Display'] tracking-tighter text-white drop-shadow-md">
+                        <h1 className="text-6xl md:text-8xl font-black mb-6 tracking-tighter text-white drop-shadow-md">
                             Limited Time Offers
                         </h1>
                         <p className="text-xl md:text-2xl text-white/90 mb-10 max-w-2xl mx-auto font-medium">
@@ -1094,10 +1094,10 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                 </div>
 
                 <div className="relative z-10 text-center max-w-3xl mx-auto">
-                    <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-4 font-['Playfair_Display'] italic">
+                    <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-4 uppercase">
                         <SparklesText text="Beauty Treats & Offers" className="inline-block" colors={{ first: "#FF4FA3", second: "#efd31eff" }} />
                     </h1>
-                    <p className="text-xl text-muted-custom font-['Playfair_Display']">
+                    <p className="text-xl text-muted-custom">
                         Exclusive savings on your favorite beauty essentials
                     </p>
                 </div>

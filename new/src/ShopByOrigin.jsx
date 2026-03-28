@@ -80,14 +80,14 @@ export default function ShopByOrigin() {
    }, [activeOrigin, activeOrigin.products.length]);
 
    return (
-      <section className="py-24 bg-white">
+      <section className="section py-24 bg-white">
          <div className="max-w-[1440px] mx-auto px-6">
 
             {/* Pills Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 px-2">
                <div className="flex flex-col">
                   <span className="text-[10px] font-black text-[#ff3b8f] uppercase tracking-[0.4em] mb-3 leading-none animate-in fade-in slide-in-from-bottom-2 duration-700">CURATED ORIGINS</span>
-                  <h2 className="text-[48px] font-black text-[#151515] tracking-tighter uppercase leading-none italic animate-in fade-in slide-in-from-bottom-4 duration-1000">Shop By Origin</h2>
+                  <h2 className="text-[48px] font-black text-[#151515] tracking-tighter uppercase leading-none animate-in fade-in slide-in-from-bottom-4 duration-1000">Shop By Origin</h2>
                </div>
                
                <div className="flex gap-2 overflow-x-auto no-scrollbar py-2">
@@ -114,20 +114,21 @@ export default function ShopByOrigin() {
                      <img
                         src={activeOrigin.heroImage}
                         alt={activeOrigin.title}
-                        className="w-full h-full object-cover group-hover/hero:scale-110 transition-transform duration-[2s] cubic-bezier(0.16,1,0.3,1)"
+                        className="w-full h-full object-cover group-hover/hero:scale-110 transition-transform duration-[2s] ease-out transform-gpu optimize-gpu"
                         draggable={false}
+                        loading="lazy"
                       />
                      <div className="absolute inset-0 bg-gradient-to-t from-stone-900/90 via-stone-900/20 to-transparent opacity-80" />
 
                      <div className="absolute bottom-12 left-0 right-0 text-center text-white px-10 animate-in fade-in slide-in-from-bottom-6 duration-1000">
                         <span className="text-[9px] font-black uppercase tracking-[0.5em] text-[#ff3b8f] mb-5 block opacity-0 group-hover/hero:opacity-100 transition-opacity duration-700">GLOBAL CHOICE</span>
-                        <h3 className="text-[48px] font-serif italic font-medium tracking-tight mb-5 leading-none lowercase group-hover/hero:scale-105 transition-transform duration-1000">{activeOrigin.title}</h3>
+                        <h3 className="text-[48px] font-bold tracking-tight mb-5 leading-none group-hover/hero:scale-105 transition-transform duration-1000">{activeOrigin.title}</h3>
                         <div className="w-12 h-px bg-white/30 mx-auto mb-5" />
                         <p className="text-[11px] font-black uppercase tracking-[0.4em] text-white/60 leading-relaxed max-w-[280px] mx-auto">{activeOrigin.subtitle}</p>
                      </div>
 
-                     <div className="absolute top-10 right-10 w-20 h-20 rounded-full border border-white/10 backdrop-blur-xl flex items-center justify-center text-white/90 group-hover/hero:rotate-12 group-hover/hero:scale-110 shadow-2xl transition-all duration-700">
-                        <div className="text-[9px] font-black text-center leading-tight uppercase tracking-widest italic opacity-60">Global<br />Curated</div>
+                     <div className="absolute top-10 right-10 w-20 h-20 rounded-full border border-white/10 bg-white/10 flex items-center justify-center text-white/90 group-hover/hero:rotate-12 group-hover/hero:scale-110 shadow-2xl transition-all duration-700 transform-gpu optimize-gpu">
+                        <div className="text-[9px] font-black text-center leading-tight uppercase tracking-widest opacity-60">Global<br />Curated</div>
                      </div>
                   </div>
                </div>
@@ -166,7 +167,7 @@ export default function ShopByOrigin() {
                   {/* View All Footer */}
                   <div className="pt-10 border-t border-stone-200/50 flex flex-col md:flex-row items-center justify-between gap-8 mt-4">
                      <div className="flex flex-col max-md:text-center">
-                        <span className="text-[10px] font-black text-stone-300 uppercase tracking-[0.3em] leading-none mb-3 italic">Curated Collections from {activeOrigin.name}</span>
+                        <span className="text-[10px] font-black text-stone-300 uppercase tracking-[0.3em] leading-none mb-3">Curated Collections from {activeOrigin.name}</span>
                         <p className="text-[#151515] font-black text-[18px] tracking-tight">Discover {activeOrigin.products.length || 0}+ handcrafted beauty rituals.</p>
                      </div>
                      <button className="relative px-14 py-5 rounded-lg bg-[#151515] text-white font-black text-[11px] uppercase tracking-[0.3em] hover:bg-[#ff3b8f] hover:translate-y-[-2px] transition-all duration-500 shadow-xl shadow-stone-200 active:scale-95 group">

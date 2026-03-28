@@ -121,7 +121,7 @@ export default function RewardsPage() {
                     <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-0.5">Total Balance</p>
                     <div className="text-4xl font-bold flex items-end justify-end gap-1">
                       {balance}
-                      <span className="text-base text-amber-400 mb-1 font-medium italic">pts</span>
+                      <span className="text-base text-amber-400 mb-1 font-medium">pts</span>
                     </div>
                   </div>
                 </div>
@@ -137,8 +137,8 @@ export default function RewardsPage() {
                       style={{ width: `${progress}%` }}
                     />
                   </div>
-                  <p className="text-[9px] text-stone-500 font-medium italic">
-                    {nextMilestone - balance} points to your next surprise
+                  <p className="text-[9px] text-stone-500 font-medium">
+                    *points are calculated based on your current tier.
                   </p>
                 </div>
               </div>

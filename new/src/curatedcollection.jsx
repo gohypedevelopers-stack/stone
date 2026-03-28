@@ -41,7 +41,7 @@ export default function CuratedCollection() {
         <div className="text-center mb-[18px]">
           <div className="text-[32px] tracking-[2px] uppercase">
             <span className="font-[900]">Curated</span>{" "}
-            <span className="italic font-[500] ml-[6px]">Collection</span>
+            <span className="font-[500] ml-[6px]">Collection</span>
           </div>
           <p className="m-[8px_0_0] text-muted-custom text-[15px]">From viral faves to hidden gems, find your match!</p>
         </div>

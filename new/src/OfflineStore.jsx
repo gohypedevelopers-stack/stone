@@ -18,7 +18,7 @@ export default function OfflineStore() {
    ];
 
    return (
-      <section className="py-24 bg-[#F8F9FA]">
+      <section className="section py-24 bg-[#F8F9FA]">
          <div className="max-w-[1440px] mx-auto px-6 lg:px-12">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
 
@@ -26,7 +26,7 @@ export default function OfflineStore() {
                <div className="lg:col-span-5 space-y-12">
                   <div className="space-y-4">
                      <span className="text-[10px] font-[1000] text-brand2 uppercase tracking-[0.5em] leading-none">VISIT US IN PERSON</span>
-                     <h2 className="text-[52px] font-serif font-medium italic text-[#151515] tracking-tight leading-none lowercase">
+                     <h2 className="text-[52px] font-bold text-[#151515] tracking-tight leading-none">
                         Offline Store
                      </h2>
                   </div>
@@ -36,12 +36,12 @@ export default function OfflineStore() {
                         <div key={idx} className="relative group">
                            {/* Active vertical line indicator */}
                            {store.active && (
-                              <div className="absolute -left-[33px] top-0 bottom-0 w-1.5 bg-brand2 rounded-full shadow-[0_0_15px_rgba(255,93,177,0.3)] transition-all" />
+                              <div className="absolute -left-[33px] top-0 bottom-0 w-1.5 bg-brand2 rounded-full shadow-sm transition-all" />
                            )}
 
-                           <div className={`p-8 rounded-[40px] transition-all duration-700 ${store.active ? 'bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-stone-50' : 'opacity-40 grayscale'}`}>
+                           <div className={`p-8 rounded-[40px] transition-all duration-700 transform-gpu optimize-gpu ${store.active ? 'bg-white shadow-sm border border-stone-50' : 'opacity-40 grayscale'}`}>
                               <div className="flex items-center justify-between mb-4">
-                                 <h3 className="text-xl font-serif font-bold text-[#151515]">
+                                 <h3 className="text-xl font-bold text-[#151515]">
                                     {store.name}
                                  </h3>
                                  {store.distance && (
@@ -71,15 +71,16 @@ export default function OfflineStore() {
                </div>
 
                {/* Right Column: Hero Card */}
-               <div className="lg:col-span-7 h-full">
-                  <div className="bg-white rounded-[56px] overflow-hidden shadow-[0_30px_70px_-20px_rgba(0,0,0,0.1)] border border-stone-50 flex flex-col md:flex-row h-full min-h-[500px] group/hero relative border-[12px] border-white">
+               <div className="lg:col-span-7 h-full transform-gpu optimize-gpu">
+                  <div className="bg-white rounded-[56px] overflow-hidden shadow-md border border-stone-50 flex flex-col md:flex-row h-full min-h-[500px] group/hero relative border-[12px] border-white transform-gpu optimize-gpu">
 
                      {/* Person Image */}
                      <div className="md:w-2/5 relative h-[400px] md:h-auto overflow-hidden">
                         <img
                            src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200"
                            alt="Boutique"
-                           className="w-full h-full object-cover group-hover/hero:scale-110 transition-transform duration-[2s] ease-out"
+                           className="w-full h-full object-cover group-hover/hero:scale-110 transition-transform duration-[2s] ease-out transform-gpu optimize-gpu"
+                           loading="lazy"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover/hero:opacity-100 transition-opacity" />
                      </div>
@@ -88,11 +89,11 @@ export default function OfflineStore() {
                      <div className="md:w-3/5 p-12 lg:p-16 flex flex-col justify-between">
                         <div>
                            <span className="text-[10px] font-[1000] text-brand2 uppercase tracking-[0.4em] mb-4 block">SELECT BOUTIQUE SHOP</span>
-                           <h4 className="text-3xl font-serif font-medium italic text-[#151515] tracking-tight mb-2 leading-none">
+                           <h4 className="text-3xl font-bold text-[#151515] tracking-tight mb-2 leading-none">
                               The Art of Selection
                            </h4>
                            <span className="text-[64px] font-[1000] text-[#151515] tracking-[1.5px] uppercase block leading-none mt-2">
-                              mol<span className="text-pink-600 italic">da</span>
+                              mol<span className="text-pink-600">da</span>
                            </span>
                         </div>
 
@@ -100,11 +101,11 @@ export default function OfflineStore() {
                         <div className="space-y-6">
                            <p className="text-[13px] font-medium text-stone-400 leading-relaxed max-w-[90%]">Experience our curated collections in a space designed for discovery, featuring exclusive in-store rituals and expert consultations.</p>
                            <div className="flex gap-4 overflow-x-auto no-scrollbar py-2">
-                              <div className="flex-none w-32 aspect-square rounded-[24px] overflow-hidden shadow-lg border-4 border-white group/thumb hover:scale-105 transition-transform duration-500">
-                                 <img src="https://images.unsplash.com/photo-1555529771-7888783a18d3?auto=format&fit=crop&w=400" alt="Boutique Interior" className="w-full h-full object-cover" />
+                              <div className="flex-none w-32 aspect-square rounded-[24px] overflow-hidden shadow-sm border-4 border-white group/thumb hover:scale-105 transition-transform duration-500 transform-gpu optimize-gpu">
+                                 <img src="https://images.unsplash.com/photo-1555529771-7888783a18d3?auto=format&fit=crop&w=400" alt="Boutique Interior" className="w-full h-full object-cover transform-gpu optimize-gpu" loading="lazy" />
                               </div>
-                              <div className="flex-none w-32 aspect-square rounded-[24px] overflow-hidden shadow-lg border-4 border-white group/thumb hover:scale-105 transition-transform duration-500">
-                                 <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=400" alt="Boutique Details" className="w-full h-full object-cover" />
+                              <div className="flex-none w-32 aspect-square rounded-[24px] overflow-hidden shadow-sm border-4 border-white group/thumb hover:scale-105 transition-transform duration-500 transform-gpu optimize-gpu">
+                                 <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=400" alt="Boutique Details" className="w-full h-full object-cover transform-gpu optimize-gpu" loading="lazy" />
                               </div>
                               <div className="flex-none w-32 aspect-square rounded-[24px] bg-[#FAFAFA] flex items-center justify-center text-stone-300 border-4 border-white shadow-lg pointer-events-none">
                                  <MapPin size={24} />

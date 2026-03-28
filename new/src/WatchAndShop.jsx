@@ -10,9 +10,62 @@ import vidD from "./assets/reels/D.mp4";
 import vidE from "./assets/reels/E.mp4";
 import vidF from "./assets/reels/F.mp4";
 
+const VideoCard = ({ card, onNavigate }) => {
+    const videoRef = useRef(null);
+    const [isInView, setIsInView] = React.useState(false);
+
+    React.useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => setIsInView(entry.isIntersecting),
+            { threshold: 0.1 }
+        );
+        if (videoRef.current) observer.observe(videoRef.current);
+        return () => observer.disconnect();
+    }, []);
+
+    React.useEffect(() => {
+        if (!videoRef.current) return;
+        if (isInView) {
+            videoRef.current.play().catch(() => {});
+        } else {
+            videoRef.current.pause();
+        }
+    }, [isInView]);
+
+    return (
+        <div
+            onClick={() => onNavigate && onNavigate("product-page")}
+            className="relative flex-shrink-0 w-[260px] md:w-[280px] h-[450px] md:h-[500px] rounded-[32px] overflow-hidden group snap-center shadow-sm hover:shadow-md transition-all duration-500 bg-gray-100 cursor-pointer transform-gpu optimize-gpu"
+        >
+            <video
+                ref={videoRef}
+                src={card.video}
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 transform-gpu optimize-gpu"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/60 group-hover:to-black/80 transition-all duration-300" />
+            <div className="absolute bottom-0 left-0 w-full p-5 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                <h3 className="text-xl font-bold text-white mb-4 leading-tight shadow-sm drop-shadow-md">
+                    {card.productName}
+                </h3>
+                <button
+                    onClick={(e) => { e.stopPropagation(); onNavigate && onNavigate("product-page"); }}
+                    className="w-full bg-white text-[#151515] font-bold py-3.5 rounded-[20px] flex items-center justify-center gap-2 shadow-lg hover:bg-gradient-to-r hover:from-pink-500 hover:to-purple-500 hover:text-white transition-all duration-300 active:scale-95 group/btn"
+                >
+                    <ShoppingBag size={18} className="text-[#151515] group-hover/btn:text-white transition-colors" />
+                    <span className="uppercase tracking-wide text-xs">Shop Now</span>
+                </button>
+            </div>
+        </div>
+    );
+};
+
 export default React.memo(function WatchAndShop({ onNavigate }) {
     const scrollRef = useRef(null);
-    const products = getAllProducts().slice(0, 6); // Use first 6 products for demo
+    const products = getAllProducts().slice(0, 6);
 
     // Video mock data
     const videoCards = [
@@ -61,7 +114,7 @@ export default React.memo(function WatchAndShop({ onNavigate }) {
     ];
 
     return (
-        <section className="py-16 md:py-24 bg-gradient-to-b from-white to-pink-50/30 overflow-hidden">
+        <section className="section py-16 md:py-24 bg-gradient-to-b from-white to-pink-50/30 overflow-hidden">
             <div className="max-w-[1440px] mx-auto px-4 md:px-6">
 
                 {/* Header */}
@@ -81,49 +134,7 @@ export default React.memo(function WatchAndShop({ onNavigate }) {
                     className="flex gap-17 overflow-x-auto pb-8 px-2 snap-x mandatory no-scrollbar cursor-grab active:cursor-grabbing"
                 >
                     {videoCards.map((card) => (
-                        <div
-                            onClick={() => onNavigate && onNavigate("product-page")}
-                            key={card.id}
-                            className="relative flex-shrink-0 w-[260px] md:w-[280px] h-[450px] md:h-[500px] rounded-[32px] overflow-hidden group snap-center shadow-[0_10px_30px_rgba(0,0,0,0.1)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] transition-all duration-500 bg-gray-100 cursor-pointer"
-                        >
-                            {/* Video Player */}
-                            <video
-                                src={card.video}
-                                autoPlay
-                                muted
-                                loop
-                                playsInline
-                                preload="metadata"
-                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                            />
-
-                            {/* Gradient Overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/60 group-hover:to-black/80 transition-all duration-300" />
-
-                            {/* Top UI */}
-
-
-                            {/* Bottom UI */}
-                            <div className="absolute bottom-0 left-0 w-full p-5 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-
-
-                                <h3 className="text-xl font-bold text-white mb-4 leading-tight shadow-sm drop-shadow-md">
-                                    {card.productName}
-                                </h3>
-
-                                {/* Shop Button */}
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); onNavigate && onNavigate("product-page"); }}
-                                    className="w-full bg-white text-[#151515] font-bold py-3.5 rounded-[20px] flex items-center justify-center gap-2 shadow-lg hover:bg-gradient-to-r hover:from-pink-500 hover:to-purple-500 hover:text-white transition-all duration-300 active:scale-95 group/btn"
-                                >
-                                    <ShoppingBag size={18} className="text-[#151515] group-hover/btn:text-white transition-colors" />
-                                    <span className="uppercase tracking-wide text-xs">Shop Now</span>
-                                </button>
-                            </div>
-
-                            {/* Sparkle Decoration */}
-
-                        </div>
+                        <VideoCard key={card.id} card={card} onNavigate={onNavigate} />
                     ))}
 
                     {/* Spacer for right padding */}

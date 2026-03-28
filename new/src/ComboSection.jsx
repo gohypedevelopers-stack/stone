@@ -52,15 +52,15 @@ const COMBOS = [
 const ComboCard = ({ combo }) => (
   <div className="flex flex-col group cursor-pointer group/card">
     {/* Image Container with Badges */}
-    <div className={`relative aspect-square rounded-[40px] overflow-hidden mb-6 bg-gradient-to-br ${combo.color} border border-stone-100 shadow-[0_8px_30px_rgba(0,0,0,0.02)] group-hover/card:shadow-2xl group-hover/card:shadow-stone-100 transition-all duration-700`}>
-      <img src={combo.image} alt={combo.name} className="w-full h-full object-cover group-hover/card:scale-110 transition-transform duration-[1.2s] ease-out mix-blend-multiply opacity-90 group-hover/card:opacity-100" />
+    <div className={`relative aspect-square rounded-[40px] overflow-hidden mb-6 bg-gradient-to-br ${combo.color} border border-stone-100 shadow-sm group-hover/card:shadow-md transition-all duration-700 transform-gpu optimize-gpu`}>
+      <img src={combo.image} alt={combo.name} className="w-full h-full object-cover group-hover/card:scale-110 transition-transform duration-[1.2s] ease-out mix-blend-multiply opacity-90 group-hover/card:opacity-100 transform-gpu optimize-gpu" loading="lazy" />
 
       {/* Top Badges */}
       <div className="absolute top-6 left-6 flex flex-col gap-2">
-        <div className="bg-brand2 text-white text-[9px] font-[1000] px-3 py-1 rounded shadow-lg italic tracking-tighter uppercase transform -skew-x-12 border border-white/20">
+        <div className="bg-brand2 text-white text-[9px] font-[1000] px-3 py-1 rounded shadow-lg tracking-tighter uppercase transform -skew-x-12 border border-white/20">
           BEST VALUE
         </div>
-        <div className="bg-white/80 backdrop-blur-md px-2 py-1 rounded-full text-[9px] font-black uppercase text-stone-800 border border-white/40 w-fit flex items-center gap-1 shadow-sm">
+        <div className="bg-white/95 px-2 py-1 rounded-full text-[9px] font-black uppercase text-stone-800 border border-white/40 w-fit flex items-center gap-1 shadow-sm">
           <Clock size={10} className="text-pink-500" /> <span>Limited</span>
         </div>
       </div>
@@ -109,12 +109,12 @@ const ComboCard = ({ combo }) => (
 
 export default function ComboSection() {
   return (
-    <section className="py-24 bg-white">
+    <section className="section py-24 bg-white">
       <div className="max-w-[1440px] mx-auto px-6">
         <div className="flex items-center justify-between mb-16">
           <div className="space-y-3">
             <span className="text-[10px] font-[1000] text-brand2 uppercase tracking-[0.5em] leading-none">THE ART OF THE BUNDLE</span>
-            <h2 className="text-[48px] font-serif font-medium italic text-[#151515] tracking-tight leading-none lowercase">Value Bundles</h2>
+            <h2 className="text-[48px] font-bold text-[#151515] tracking-tight leading-none uppercase">Value Bundles</h2>
             <p className="text-stone-400 text-sm font-medium">Limited-time signature rituals at curated pricing.</p>
           </div>
           <button className="px-10 py-4 rounded-full border border-stone-200 text-[#151515] font-[1000] text-[10px] uppercase tracking-[0.2em] hover:bg-stone-900 hover:text-white transition-all shadow-sm">View all Rituals</button>

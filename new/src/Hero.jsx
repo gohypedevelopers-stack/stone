@@ -19,7 +19,7 @@ const HeroSlider = React.memo(({ customSlides }) => {
       <div className="w-full px-0 sm:px-[10px]">
         <div className="relative overflow-hidden rounded-xl border border-black/6 shadow-[0_18px_40px_rgba(0,0,0,0.12)] bg-white" aria-label="Featured banner">
           <div 
-            className="flex transition-transform duration-1000 ease-in-out"
+            className="flex transition-transform duration-1000 ease-in-out transform-gpu optimize-gpu"
             style={{ 
               width: `${slideCount * 100}%`,
               animation: slideCount > 1 ? `heroSlideDynamic ${slideCount * 6}s ease-in-out infinite` : 'none'
@@ -28,15 +28,16 @@ const HeroSlider = React.memo(({ customSlides }) => {
             {slides.map((slide, idx) => (
               <div key={idx} className="relative flex-1 overflow-hidden group">
                 <img 
-                  className="block w-full h-[585px] object-cover transition-transform duration-[2s] group-hover:scale-105" 
+                  className="block w-full h-[585px] object-cover transition-transform duration-[2s] group-hover:scale-105 transform-gpu optimize-gpu" 
                   src={slide.imageUrl} 
                   alt={slide.title || "Banner"} 
+                  loading={idx === 0 ? "eager" : "lazy"}
                 />
                 {(slide.title || slide.subtitle) && (
                   <div className="absolute inset-0 bg-linear-to-r from-white/40 via-white/10 to-transparent flex flex-col items-start justify-center text-left p-12 sm:p-24">
                      <div className="max-w-xl animate-in fade-in slide-in-from-left-8 duration-1000">
                         {slide.subtitle && <p className="text-sm sm:text-base font-bold text-indigo-900/60 mb-2 uppercase tracking-[0.3em] font-['Inter']">{slide.subtitle}</p>}
-                        {slide.title && <h2 className="text-5xl sm:text-7xl font-['Playfair_Display'] font-black text-indigo-950 mb-8 leading-[1.1] drop-shadow-sm">{slide.title}</h2>}
+                        {slide.title && <h2 className="text-5xl sm:text-7xl font-black text-indigo-950 mb-8 leading-[1.1] drop-shadow-sm">{slide.title}</h2>}
                         {slide.link && (
                           <a href={slide.link} className="inline-block bg-indigo-950 text-white px-10 py-4 rounded-lg font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-indigo-950/40 hover:scale-110 active:scale-95 transition-all">
                             Explore Now
@@ -54,7 +55,7 @@ const HeroSlider = React.memo(({ customSlides }) => {
               {slides.map((_, idx) => (
                 <span 
                   key={idx}
-                  className="w-[10px] h-[10px] rounded-full bg-indigo-950/20 backdrop-blur-md shadow-sm border border-white/50 animate-pulse"
+                  className="w-[10px] h-[10px] rounded-full bg-indigo-950/20 shadow-sm border border-white/50 animate-pulse"
                   style={{
                     animation: `heroDotDynamic ${slideCount * 6}s infinite`,
                     animationDelay: `${idx * 6}s`

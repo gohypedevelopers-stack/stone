@@ -22,7 +22,7 @@ export default function AllCategoriesPage({ onNavigate, onSelectCategory, dynami
           <div className="flex items-center gap-3 mb-4">
             <Sparkles className="text-[#b36cff]" size={24} />
             <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-[#151515]">
-              Shop by <span className="text-transparent bg-clip-text bg-linear-to-r from-[#b36cff] to-[#ff5db1] italic">Category</span>
+              Shop by <span className="text-transparent bg-clip-text bg-linear-to-r from-[#b36cff] to-[#ff5db1]">Category</span>
             </h1>
           </div>
           <p className="text-stone-500 max-w-2xl text-lg font-medium">
