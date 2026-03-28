@@ -17,7 +17,7 @@ const HeroSlider = React.memo(({ customSlides }) => {
   return (
     <section className="pt-[18px]">
       <div className="w-full px-0 sm:px-[10px]">
-        <div className="relative overflow-hidden rounded-[26px] border border-black/6 shadow-[0_18px_40px_rgba(0,0,0,0.12)] bg-white" aria-label="Featured banner">
+        <div className="relative overflow-hidden rounded-xl border border-black/6 shadow-[0_18px_40px_rgba(0,0,0,0.12)] bg-white" aria-label="Featured banner">
           <div 
             className="flex transition-transform duration-1000 ease-in-out"
             style={{ 
@@ -38,7 +38,7 @@ const HeroSlider = React.memo(({ customSlides }) => {
                         {slide.subtitle && <p className="text-sm sm:text-base font-bold text-indigo-900/60 mb-2 uppercase tracking-[0.3em] font-['Inter']">{slide.subtitle}</p>}
                         {slide.title && <h2 className="text-5xl sm:text-7xl font-['Playfair_Display'] font-black text-indigo-950 mb-8 leading-[1.1] drop-shadow-sm">{slide.title}</h2>}
                         {slide.link && (
-                          <a href={slide.link} className="inline-block bg-indigo-950 text-white px-10 py-4 rounded-full font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-indigo-950/40 hover:scale-110 active:scale-95 transition-all">
+                          <a href={slide.link} className="inline-block bg-indigo-950 text-white px-10 py-4 rounded-lg font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-indigo-950/40 hover:scale-110 active:scale-95 transition-all">
                             Explore Now
                           </a>
                         )}
