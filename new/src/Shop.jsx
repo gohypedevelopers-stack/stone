@@ -51,9 +51,9 @@ export default function Shop({ addToCart, wishlist, toggleWishlist }) {
     }
 
     return (
-        <div className="w-full px-[24px] sm:px-[40px] py-[40px] lg:py-[80px] flex flex-col md:flex-row gap-[48px] max-w-[1536px] mx-auto min-h-[80vh] relative">
+        <div className="w-full px-[12px] sm:px-[24px] md:px-[40px] pt-[12px] pb-[40px] lg:pt-[24px] lg:pb-[80px] flex flex-col md:flex-row gap-[24px] lg:gap-[48px] max-w-[1720px] mx-auto min-h-[80vh] relative">
             {/* Sidebar with Glassmorphism */}
-            <aside className="w-full md:w-[280px] flex-shrink-0 flex flex-col gap-[40px] md:sticky md:top-[120px] self-start h-fit transition-all duration-300 bg-white/40 backdrop-blur-2xl border border-white/60 p-8 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+            <aside className="w-full md:w-[300px] flex-shrink-0 flex flex-col gap-[40px] md:sticky md:top-[110px] self-start h-fit z-30 transition-all duration-300 bg-white/40 backdrop-blur-2xl border border-white/60 p-8 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
                 {/* Header for Sidebar */}
                 <div className="pb-4 border-b border-stone-100 mb-2">
                     <h2 className="text-[20px] font-black tracking-tight text-[#1a1a1a] flex items-center gap-2">

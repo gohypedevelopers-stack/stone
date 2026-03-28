@@ -15,7 +15,16 @@ const CartDrawer = memo(function CartDrawer({
   onCheckout
 }) {
   return (
-    <aside className={`fixed top-0 right-0 w-[min(420px,92vw)] h-[100vh] bg-white shadow-[-20px_0_60px_rgba(0,0,0,0.15)] transform transition-transform duration-250 z-50 flex flex-col ${isOpen ? "translate-x-0" : "translate-x-[110%]"}`} aria-label="Shopping cart">
+    <div className="cart-drawer-wrapper">
+      {/* Backdrop for closing by clicking outside */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity animate-fade-in"
+          onClick={onClose}
+        />
+      )}
+      
+      <aside className={`fixed top-0 right-0 w-[min(420px,92vw)] h-[100vh] bg-white shadow-[-20px_0_60px_rgba(0,0,0,0.15)] transform transition-transform duration-300 z-50 flex flex-col pt-10 ${isOpen ? "translate-x-0" : "translate-x-[110%]"}`} aria-label="Shopping cart">
       <div className="p-[16px] border-b border-line-custom flex items-start justify-between gap-[12px]">
         <div>
           <div className="font-bold">Your Cart</div>
@@ -42,7 +51,14 @@ const CartDrawer = memo(function CartDrawer({
             <ul className="list-none m-0 p-0 flex flex-col gap-[12px]">
               {cartItems.map((it) => (
                 <li key={it.id} className="grid grid-cols-[54px_1fr_auto] gap-[12px] items-center p-[10px] border border-line-custom rounded-[14px]">
-                  <div className="h-[54px] w-[54px] rounded-[12px] bg-[linear-gradient(135deg,rgba(111,92,255,0.25),rgba(255,93,177,0.18),rgba(255,138,42,0.18))]" aria-hidden="true" />
+                  <div className="h-[54px] w-[54px] rounded-[12px] bg-stone-100 overflow-hidden shrink-0">
+                    <img 
+                      src={it.image} 
+                      alt={it.name} 
+                      className="w-full h-full object-cover"
+                      decoding="async"
+                    />
+                  </div>
                   <div>
                     <div className="font-[650] text-[13px]">{it.name}</div>
                     <div className="text-[12px] text-muted-custom mt-[2px]">{formatINR(it.price)}</div>
@@ -72,6 +88,7 @@ const CartDrawer = memo(function CartDrawer({
         )}
       </div>
     </aside>
+    </div>
   );
 });
 

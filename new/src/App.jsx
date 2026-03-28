@@ -176,7 +176,11 @@ export default function App() {
       }
       return [...prev, { id, qty: 1, productData }];
     });
-  }, []);
+
+    // Auto-open cart drawer and provide feedback
+    setCartOpen(true);
+    toast.success("Added to cart!");
+  }, [setCartOpen]);
 
   const decQty = useCallback((id) => {
     setCart((prev) =>
@@ -285,7 +289,7 @@ export default function App() {
   const isAdminPath = location.pathname.startsWith("/admin");
 
   return (
-    <div className="relative overflow-x-hidden">
+    <div className="relative min-h-screen">
       {!isAdminPath && (
         <>
           <Navbar

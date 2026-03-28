@@ -121,7 +121,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
         return (
             <div className="min-h-screen bg-[#faf9f8] font-sans text-[#1b1b1b]">
                 {/* Hero Section */}
-                <div className="relative overflow-hidden bg-[linear-gradient(135deg,#fff0f5,#e6e6fa,#ffe4e1)] py-16 px-6 text-center">
+                <div className="relative overflow-hidden bg-[linear-gradient(135deg,#fff0f5,#e6e6fa,#ffe4e1)] py-8 px-6 text-center">
                     <div className="relative z-10 max-w-4xl mx-auto">
                         <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase mb-6 shadow-sm text-pink-600 border border-pink-100">
                             <Flame size={14} fill="currentColor" /> Sitewide Savings
@@ -152,8 +152,8 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                 </div>
 
                 {/* Sticky Offer Bar */}
-                <div className="sticky top-[60px] z-40 bg-white/90 backdrop-blur-xl border-y border-gray-100 shadow-sm transition-all duration-300">
-                    <div className="max-w-[1400px] mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-4">
+                <div className="sticky top-[96px] z-40 bg-white/90 backdrop-blur-xl border-y border-gray-100 shadow-sm transition-all duration-300">
+                    <div className="max-w-[1720px] mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
                             <div className="hidden md:flex items-center gap-2 text-sm font-medium text-gray-900 bg-green-50 px-3 py-1 rounded-full border border-green-100">
                                 <Check size={14} className="text-green-600" />
@@ -187,7 +187,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                     </div>
                 </div>
 
-                <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-12 space-y-16">
+                <div className="max-w-[1720px] mx-auto px-4 md:px-8 py-12 space-y-16">
 
                     {/* Featured Deals */}
                     <section>
@@ -347,7 +347,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
 
                 {/* Sticky BOGO Bar */}
                 <div className="sticky top-[60px] z-40 bg-white/95 backdrop-blur-xl border-y border-pink-100 shadow-sm">
-                    <div className="max-w-[1400px] mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-4">
+                    <div className="max-w-[1720px] mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
                             <span className="flex items-center justify-center w-6 h-6 bg-black text-white rounded-full text-xs font-bold">1/2</span>
                             <span className="text-sm font-medium text-gray-900">
@@ -377,7 +377,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                     </div>
                 </div>
 
-                <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-12 space-y-16">
+                <div className="max-w-[1720px] mx-auto px-4 md:px-8 py-12 space-y-16">
                     {/* Top BOGO Picks */}
                     <section>
                         <div className="flex items-end justify-between mb-8">
@@ -489,7 +489,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
 
                 {/* Sticky Summary Bar */}
                 <div className="sticky top-[60px] z-40 bg-white/95 backdrop-blur-xl border-y border-gray-100 shadow-sm">
-                    <div className="max-w-[1400px] mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-4">
+                    <div className="max-w-[1720px] mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
                             <div className="hidden md:flex items-center gap-2 text-sm font-medium text-gray-900 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
                                 <Filter size={14} className="text-blue-600" />
@@ -523,7 +523,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                     </div>
                 </div>
 
-                <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-12 space-y-16">
+                <div className="max-w-[1720px] mx-auto px-4 md:px-8 py-12 space-y-16">
 
                     {/* Top Picks Under 499 */}
                     <section>
@@ -698,7 +698,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
 
                 {/* Sticky Combo Bar */}
                 <div className="sticky top-[60px] z-40 bg-white/95 backdrop-blur-xl border-y border-purple-50 shadow-sm">
-                    <div className="max-w-[1400px] mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-4">
+                    <div className="max-w-[1720px] mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
                             <span className="flex items-center justify-center p-1.5 bg-purple-100 text-purple-600 rounded-lg">
                                 <Package size={16} />
@@ -727,7 +727,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                     </div>
                 </div>
 
-                <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-12 space-y-16">
+                <div className="max-w-[1720px] mx-auto px-4 md:px-8 py-12 space-y-16">
                     {/* Top Combo Picks */}
                     <section>
                         <h2 className="flex items-center gap-3 text-3xl font-black mb-8">
@@ -849,7 +849,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
 
                 {/* Sticky Weekend Bar */}
                 <div className="sticky top-[60px] z-40 bg-white/95 backdrop-blur-xl border-y border-pink-100 shadow-sm">
-                    <div className="max-w-[1400px] mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-4">
+                    <div className="max-w-[1720px] mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
                             <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                             <span className="text-sm font-medium text-gray-900">
@@ -876,7 +876,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                     </div>
                 </div>
 
-                <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-12 space-y-16">
+                <div className="max-w-[1720px] mx-auto px-4 md:px-8 py-12 space-y-16">
 
                     {/* Top Weekend Picks */}
                     <section>
@@ -986,7 +986,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
 
                 {/* Sticky Limited Bar */}
                 <div className="sticky top-[60px] z-40 bg-white/95 backdrop-blur-xl border-y border-red-50 shadow-sm">
-                    <div className="max-w-[1400px] mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-4">
+                    <div className="max-w-[1720px] mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
                             <AlertCircle size={16} className="text-red-500 animate-pulse" />
                             <span className="text-sm font-medium text-gray-900">
@@ -1013,7 +1013,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                     </div>
                 </div>
 
-                <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-12 space-y-16">
+                <div className="max-w-[1720px] mx-auto px-4 md:px-8 py-12 space-y-16">
 
                     {/* Hurry Picks */}
                     <section>
@@ -1104,7 +1104,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
             </div>
 
             {/* Offer Type Cards Nav */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20">
+            <div className="max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20">
                 <div className="grid grid-flow-col auto-cols-[160px] md:auto-cols-min md:grid-flow-row md:grid-cols-3 lg:grid-cols-6 gap-4 overflow-x-auto pb-4 snap-x no-scrollbar">
                     {OFFERS.map((offer) => (
                         <button
@@ -1132,7 +1132,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
 
             {/* Sticky Filter Bar */}
             <div className="sticky top-[60px] z-30 bg-white/80 backdrop-blur-md border-y border-line-custom mb-8">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between">
+                <div className="max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between">
                     <div className="text-sm font-medium text-text-custom">
                         Showing results for: <span className="font-bold text-brand1">{selectedOffer.label}</span>
                     </div>
@@ -1151,7 +1151,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
             </div>
 
             {/* Top Deals Section */}
-            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+            <section className="max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 mb-12">
                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
                     🔥 Top Deals Today
                 </h2>
@@ -1183,7 +1183,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
 
 
             {/* Product Grid */}
-            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
+            <section className="max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 mb-16">
                 <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
                     {filteredProducts.map((p) => (
                         <ProductCard
@@ -1203,7 +1203,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
             </section>
 
             {/* FAQ Recommendations */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div className="max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-3 gap-12">
                 <div className="lg:col-span-2">
                     <h3 className="text-xl font-bold mb-6">You May Also Like</h3>
                     {/* Reuse a recommendation row or just random products */}
