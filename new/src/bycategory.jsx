@@ -93,19 +93,20 @@ export const CATEGORY_IMAGES = {
 
 const CategoryCard = memo(({ label, image, onClick, isGrid }) => (
   <div
-    className={`text-center flex-none snap-center cursor-pointer group ${isGrid ? 'w-full' : 'w-[180px] sm:w-[200px] md:w-[220px] xl:w-[240px]'}`}
+    className={`text-center flex-none snap-center cursor-pointer ${isGrid ? 'w-full' : 'w-[180px] sm:w-[200px] md:w-[220px] xl:w-[240px]'}`}
     onClick={() => onClick(label)}
   >
-    <div className="relative aspect-[4/3] rounded-[40px] overflow-hidden border border-black/5 shadow-[0_10px_30px_rgba(0,0,0,0.08)] group-hover:shadow-[0_20px_45px_rgba(0,0,0,0.15)] transition-all duration-500 group-hover:-translate-y-2">
+    <div className="peer relative aspect-[4/3] rounded-[40px] overflow-hidden border border-black/5 shadow-[0_10px_30px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_45px_rgba(0,0,0,0.15)] transition-all duration-300 hover:-translate-y-2 group optimize-gpu will-change-transform [content-visibility:auto] [contain-intrinsic-size:aspect-ratio(4/3)]">
       <img
-        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out will-change-transform"
+        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out will-change-transform optimize-gpu"
         src={image || categorySphere}
         alt={label}
         loading="lazy"
+        decoding="async"
       />
       <div className="absolute inset-0 bg-linear-to-b from-transparent to-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
     </div>
-    <div className="mt-4 font-black text-sm md:text-base text-[#151515] group-hover:text-[#b36cff] transition-colors uppercase tracking-tight">
+    <div className="mt-4 font-black text-sm md:text-base text-[#151515] peer-hover:text-[#b36cff] transition-colors uppercase tracking-tight">
       {label}
     </div>
   </div>
@@ -138,13 +139,13 @@ export default React.memo(function ByCategory({ onNavigate, onSelectCategory, ti
   };
 
   return (
-    <section className={`relative overflow-hidden ${isAdmin ? 'py-4' : 'py-12 md:py-20'}`}>
+    <section className={`relative overflow-hidden ${isAdmin ? 'py-4' : 'py-6 md:py-10'}`}>
       <div className={`w-full relative mx-auto ${isAdmin ? 'px-2' : 'px-0 sm:px-4 max-w-[1440px]'}`}>
         {/* Main Category Block */}
-        <div className={`relative bg-[#f8f0ff] rounded-[40px] border border-stone-200 py-10 md:py-16 shadow-sm overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:w-32 before:h-full before:bg-linear-to-r before:from-[#e7c6ff]/20 before:to-transparent before:z-0 after:content-[''] after:absolute after:top-0 after:right-0 after:w-32 after:h-full after:bg-linear-to-l after:from-[#e7c6ff]/20 after:to-transparent after:z-0 ${isAdmin ? 'rounded-2xl py-6' : ''}`}>
+        <div className={`relative bg-[#f8f0ff] rounded-[40px] border border-stone-200 py-6 md:py-10 shadow-sm overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:w-32 before:h-full before:bg-linear-to-r before:from-[#e7c6ff]/20 before:to-transparent before:z-0 after:content-[''] after:absolute after:top-0 after:right-0 after:w-32 after:h-full after:bg-linear-to-l after:from-[#e7c6ff]/20 after:to-transparent after:z-0 ${isAdmin ? 'rounded-2xl py-6' : ''}`}>
 
           {/* Heading */}
-          <div className="relative z-10 text-center mb-10 md:mb-14">
+          <div className="relative z-10 text-center mb-6 md:mb-8">
             <h2 className={`${isAdmin ? 'text-2xl' : 'text-3xl md:text-5xl'} font-black uppercase tracking-tight text-[#151515]`}>
               {title ? (
                 <>
@@ -169,7 +170,7 @@ export default React.memo(function ByCategory({ onNavigate, onSelectCategory, ti
             {!isAdmin && (
               <button
                 onClick={() => handleScroll("left")}
-                className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 z-20 w-10 md:w-12 h-10 md:h-12 bg-white rounded-full shadow-lg flex items-center justify-center border border-black/5 hover:bg-white transition-all cursor-pointer hover:scale-110 active:scale-95 group-hover:opacity-100 opacity-0 md:opacity-100"
+                className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 z-20 w-10 md:w-12 h-10 md:h-12 bg-white rounded-full shadow-lg flex items-center justify-center border border-black/5 hover:bg-white cursor-pointer hover:scale-110 active:scale-95 group-hover:opacity-100 opacity-0 md:opacity-100 transition-[transform,opacity] duration-300 optimize-gpu"
                 aria-label="Scroll Left"
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -183,7 +184,7 @@ export default React.memo(function ByCategory({ onNavigate, onSelectCategory, ti
               ref={isAdmin ? null : scrollRef}
               className={`${isAdmin
                 ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10'
-                : 'flex overflow-x-auto snap-x snap-mandatory gap-4 md:gap-6 py-4 no-scrollbar scroll-smooth gpu-accelerated'}`}
+                : 'flex overflow-x-auto snap-x snap-mandatory gap-4 md:gap-6 py-4 no-scrollbar scroll-smooth gpu-accelerated will-change-scroll'}`}
             >
               {displayItems.map((cat, idx) => (
                 <CategoryCard key={cat.label || idx} label={cat.label} image={cat.image} onClick={handleCategoryClick} isGrid={isAdmin} />
@@ -193,7 +194,7 @@ export default React.memo(function ByCategory({ onNavigate, onSelectCategory, ti
             {!isAdmin && (
               <button
                 onClick={() => handleScroll("right")}
-                className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 z-20 w-10 md:w-12 h-10 md:h-12 bg-white rounded-full shadow-lg flex items-center justify-center border border-black/5 hover:bg-white transition-all cursor-pointer hover:scale-110 active:scale-95 group-hover:opacity-100 opacity-0 md:opacity-100"
+                className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 z-20 w-10 md:w-12 h-10 md:h-12 bg-white rounded-full shadow-lg flex items-center justify-center border border-black/5 hover:bg-white cursor-pointer hover:scale-110 active:scale-95 group-hover:opacity-100 opacity-0 md:opacity-100 transition-[transform,opacity] duration-300 optimize-gpu"
                 aria-label="Scroll Right"
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -204,7 +205,7 @@ export default React.memo(function ByCategory({ onNavigate, onSelectCategory, ti
           </div>
 
           {!isAdmin && (
-            <div className="mt-14 text-center">
+            <div className="mt-8 text-center">
               <button
                 onClick={() => onNavigate("all-categories")}
                 className="px-10 py-3.5 rounded-full bg-[#151515] text-white font-black text-sm uppercase tracking-widest hover:bg-[#b36cff] hover:scale-105 transition-all shadow-xl active:scale-95 group relative overflow-hidden"

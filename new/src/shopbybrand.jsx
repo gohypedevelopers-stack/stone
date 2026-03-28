@@ -119,7 +119,7 @@ export default React.memo(function ShopByBrand({ onSelectBrand, isAdmin, selecte
             </div>
           ) : (
             <>
-              <InfiniteSlider gap={40} duration={40}>
+              <InfiniteSlider gap={40} duration={60}>
                 {adminBrands.slice(0, Math.ceil(adminBrands.length / 2)).map((brand, idx) => (
                     <div
                       key={`r1-${brand.name}-${idx}`}
@@ -130,7 +130,7 @@ export default React.memo(function ShopByBrand({ onSelectBrand, isAdmin, selecte
                         <img
                           src={brand.logo}
                           alt={brand.name}
-                          className="max-w-full max-h-full object-contain transition-all duration-300 ease-out"
+                          className="max-w-full max-h-full object-contain transition-all duration-300 ease-out optimize-gpu"
                           loading="lazy"
                         />
                     ) : (
@@ -140,7 +140,7 @@ export default React.memo(function ShopByBrand({ onSelectBrand, isAdmin, selecte
                 ))}
               </InfiniteSlider>
 
-              <InfiniteSlider gap={40} duration={45} reverse>
+              <InfiniteSlider gap={40} duration={70} reverse>
                 {adminBrands.slice(Math.ceil(adminBrands.length / 2)).map((brand, idx) => (
                     <div
                       key={`r2-${brand.name}-${idx}`}
@@ -151,7 +151,7 @@ export default React.memo(function ShopByBrand({ onSelectBrand, isAdmin, selecte
                         <img
                           src={brand.logo}
                           alt={brand.name}
-                          className="max-w-full max-h-full object-contain transition-all duration-300 ease-out"
+                          className="max-w-full max-h-full object-contain transition-all duration-300 ease-out optimize-gpu"
                           loading="lazy"
                         />
                     ) : (

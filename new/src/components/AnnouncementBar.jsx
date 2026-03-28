@@ -13,20 +13,21 @@ const AnnouncementBar = () => {
       <style>
         {`
           @keyframes marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-50%, 0, 0); }
           }
           .animate-marquee {
             display: flex;
             width: fit-content;
-            animation: marquee 30s linear infinite;
+            animation: marquee 40s linear infinite;
+            will-change: transform;
           }
           .animate-marquee:hover {
             animation-play-state: paused;
           }
         `}
       </style>
-      <div className="animate-marquee whitespace-nowrap">
+      <div className="animate-marquee whitespace-nowrap transform-gpu optimize-gpu">
         {/* Render offers multiple times for a truly seamless loop */}
         {[...offers, ...offers, ...offers, ...offers, ...offers, ...offers, ...offers, ...offers].map((offer, index) => (
           <span

@@ -51,6 +51,7 @@ export default function CategoryShowcase({
                      className="w-full h-full object-cover transform translate-x-12 group-hover:scale-105 transition-transform duration-[1.5s] ease-out optimize-gpu"
                      alt=""
                      loading="lazy"
+                     decoding="async"
                   />
                   <div className="absolute inset-y-0 left-0 w-64 bg-linear-to-r from-[#FAFAFA] to-transparent" />
                </div>

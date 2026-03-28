@@ -122,7 +122,7 @@ export default function SkinConcernPage({ userConcern = "acne", onConcernChange,
                                 ${activeConcern === c.key ? "ring-2 ring-black bg-white" : "bg-white"}
                             `}
                         >
-                            <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-white opacity-50 group-hover:opacity-100 transition-opacity" />
+                            <div className="absolute inset-0 bg-linear-to-br from-gray-50 to-white opacity-50 group-hover:opacity-100 transition-opacity" />
 
                             <div className="relative z-10 p-5 h-full flex flex-col justify-between">
                                 <div className={`w-10 h-10 rounded-2xl flex items-center justify-center mb-2 shadow-sm ${c.key === 'hydration' ? 'bg-blue-50 text-blue-600' :
@@ -197,7 +197,7 @@ export default function SkinConcernPage({ userConcern = "acne", onConcernChange,
                     <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                         {currentRoutine.map((step, i) => (
                             <div key={i} className="group relative bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-lg transition-all hover:-translate-y-1 overflow-hidden">
-                                <div className="absolute top-0 right-0 p-4 opacity-10 font-[900] text-6xl group-hover:opacity-20 transition-opacity transform group-hover:scale-110 duration-500 pointer-events-none">{step.step}</div>
+                                <div className="absolute top-0 right-0 p-4 opacity-10 font-black text-6xl group-hover:opacity-20 transition-opacity transform group-hover:scale-110 duration-500 pointer-events-none">{step.step}</div>
                                 <div className="relative z-10">
                                     <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-xs font-bold mb-4">{step.step}</div>
                                     <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">{step.type}</div>
@@ -215,7 +215,7 @@ export default function SkinConcernPage({ userConcern = "acne", onConcernChange,
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {TOP_PICKS.map((p, i) => (
                             <div key={p.id} className="bg-white rounded-[32px] p-4 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 group flex flex-col">
-                                <div className="relative aspect-[4/3] rounded-[24px] overflow-hidden bg-gray-50 mb-6 group-hover:scale-[0.98] transition-all duration-500">
+                                <div className="relative aspect-4/3 rounded-[24px] overflow-hidden bg-gray-50 mb-6 group-hover:scale-[0.98] transition-all duration-500">
                                     <div className="absolute top-4 left-4 z-10">
                                         {p.tag && <span className="bg-[#1a1a1a] text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg">{p.tag}</span>}
                                     </div>
@@ -254,7 +254,7 @@ export default function SkinConcernPage({ userConcern = "acne", onConcernChange,
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
                         {GRID_PRODUCTS.map(p => (
                             <div key={p.id} className="group flex flex-col">
-                                <div className="relative aspect-[3/4] rounded-[24px] overflow-hidden bg-gray-100 mb-4 shadow-sm group-hover:shadow-lg transition-all">
+                                <div className="relative aspect-3/4 rounded-[24px] overflow-hidden bg-gray-100 mb-4 shadow-sm group-hover:shadow-lg transition-all">
                                     <button className="absolute top-4 right-4 z-10 w-9 h-9 bg-white/60 backdrop-blur rounded-full flex items-center justify-center hover:bg-white hover:text-red-500 transition-colors shadow-sm">
                                         <Heart size={18} />
                                     </button>

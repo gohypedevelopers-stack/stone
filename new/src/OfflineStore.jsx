@@ -72,7 +72,7 @@ export default function OfflineStore() {
 
                {/* Right Column: Hero Card */}
                <div className="lg:col-span-7 h-full transform-gpu optimize-gpu">
-                  <div className="bg-white rounded-[56px] overflow-hidden shadow-md border border-stone-50 flex flex-col md:flex-row h-full min-h-[500px] group/hero relative border-[12px] border-white transform-gpu optimize-gpu">
+                  <div className="bg-white rounded-[56px] overflow-hidden shadow-md flex flex-col md:flex-row h-full min-h-[500px] group/hero relative border-12 border-white transform-gpu optimize-gpu">
 
                      {/* Person Image */}
                      <div className="md:w-2/5 relative h-[400px] md:h-auto overflow-hidden">
@@ -82,7 +82,7 @@ export default function OfflineStore() {
                            className="w-full h-full object-cover group-hover/hero:scale-110 transition-transform duration-[2s] ease-out transform-gpu optimize-gpu"
                            loading="lazy"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover/hero:opacity-100 transition-opacity" />
+                        <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover/hero:opacity-100 transition-opacity" />
                      </div>
 
                      {/* Store Details Content */}

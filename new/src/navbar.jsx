@@ -8,12 +8,9 @@ import favIcon from "./assets/favourite.png";
 import accountIcon from "./assets/user-account.png";
 import cartIcon from "./assets/shopping-cart.png";
 
-
-
 import AddressModal from "./components/AddressModal";
 import AnnouncementBar from "./components/AnnouncementBar";
 import { CATEGORY_IMAGES, categorySphere } from "./bycategory";
-
 
 function SearchPlaceholder({ searchTerms }) {
   const [index, setIndex] = useState(0);
@@ -37,7 +34,17 @@ function SearchPlaceholder({ searchTerms }) {
 
 import { useAuth } from "./context/AuthContext";
 
-const Navbar = memo(function Navbar({ categories, query, onQueryChange, cartCount, onToggleCart, onNavigate, wishlistCount, onToggleWishlist, onOpenAuth }) {
+const Navbar = memo(function Navbar({
+  categories,
+  query,
+  onQueryChange,
+  cartCount,
+  onToggleCart,
+  onNavigate,
+  wishlistCount,
+  onToggleWishlist,
+  onOpenAuth,
+}) {
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const { user, logout } = useAuth();
   const location = useLocation();
@@ -58,12 +65,41 @@ const Navbar = memo(function Navbar({ categories, query, onQueryChange, cartCoun
   }, [localQuery, onQueryChange, query]);
 
   const searchTerms = [
-    "B.b cream", "Blender", "Blush", "Brush", "Cleanser", "cleansing oil", "compact powders",
-    "Concealer", "Cushion foundation", "Essence", "Exfoliate", "Eye cream", "Face mists",
-    "Foundation", "Hair set", "International makeup", "International skincare", "Japanese Skincare",
-    "Korean skincare", "Lip blam", "Lipstick", "Makeup remover", "Mascara", "Moisturizer",
-    "Primer", "Razor", "Serums", "Sheet masks", "SKIN1004", "Sunscreen", "Sunspray",
-    "Sunstick", "toner", "toner pads", "Treatment mask"
+    "B.b cream",
+    "Blender",
+    "Blush",
+    "Brush",
+    "Cleanser",
+    "cleansing oil",
+    "compact powders",
+    "Concealer",
+    "Cushion foundation",
+    "Essence",
+    "Exfoliate",
+    "Eye cream",
+    "Face mists",
+    "Foundation",
+    "Hair set",
+    "International makeup",
+    "International skincare",
+    "Japanese Skincare",
+    "Korean skincare",
+    "Lip blam",
+    "Lipstick",
+    "Makeup remover",
+    "Mascara",
+    "Moisturizer",
+    "Primer",
+    "Razor",
+    "Serums",
+    "Sheet masks",
+    "SKIN1004",
+    "Sunscreen",
+    "Sunspray",
+    "Sunstick",
+    "toner",
+    "toner pads",
+    "Treatment mask",
   ];
 
   return (
@@ -73,11 +109,26 @@ const Navbar = memo(function Navbar({ categories, query, onQueryChange, cartCoun
         <div className="w-full flex items-center justify-between py-2 px-8 border-b border-stone-100">
           {/* Left Block: Logo */}
           <div className="flex-1">
-            <a className="flex items-center gap-3 leading-none w-fit" href="#" onClick={(e) => { e.preventDefault(); onNavigate('home'); }}>
-              <img className="w-12 h-12 object-contain" src={logo} alt="omwskincare logo" />
+            <a
+              className="flex items-center gap-3 leading-none w-fit"
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigate("home");
+              }}
+            >
+              <img
+                className="w-12 h-12 object-contain"
+                src={logo}
+                alt="omwskincare logo"
+              />
               <div className="flex flex-col justify-center">
-                <span className="bg-linear-to-r from-[#ff4fa3] to-[#ff77c8] bg-clip-text text-transparent font-black text-2xl tracking-tight">OMW</span>
-                <span className="text-[9px] text-stone-400 tracking-[1.5px] uppercase font-bold">skin-first essentials</span>
+                <span className="bg-linear-to-r from-[#ff4fa3] to-[#ff77c8] bg-clip-text text-transparent font-black text-2xl tracking-tight">
+                  OMW
+                </span>
+                <span className="text-[9px] text-stone-400 tracking-[1.5px] uppercase font-bold">
+                  skin-first essentials
+                </span>
               </div>
             </a>
           </div>
@@ -85,8 +136,15 @@ const Navbar = memo(function Navbar({ categories, query, onQueryChange, cartCoun
           {/* Center Block: Search Bar */}
           <div className="flex-1 max-w-xl flex justify-center px-4">
             <div className="w-full flex items-center gap-3 px-5 py-2.5 rounded-full border border-stone-200 bg-stone-50/50 hover:bg-white hover:border-stone-300 hover:shadow-sm transition-all relative">
-              <span className="w-5 h-5 grid place-items-center opacity-70" aria-hidden="true">
-                <img className="w-full h-full object-contain" src={searchIcon} alt="" />
+              <span
+                className="w-5 h-5 grid place-items-center opacity-70"
+                aria-hidden="true"
+              >
+                <img
+                  className="w-full h-full object-contain"
+                  src={searchIcon}
+                  alt=""
+                />
               </span>
               <div className="relative w-full">
                 {!localQuery && <SearchPlaceholder searchTerms={searchTerms} />}
@@ -103,30 +161,51 @@ const Navbar = memo(function Navbar({ categories, query, onQueryChange, cartCoun
 
           {/* Right Block: Actions */}
           <div className="flex items-center justify-end gap-6">
-            <a href="#" className="text-sm font-black text-stone-800 hover:text-pink-500 transition-colors" onClick={(e) => { e.preventDefault(); onNavigate('shop'); }}>
+            <a
+              href="#"
+              className="text-sm font-black text-stone-800 hover:text-pink-500 transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigate("shop");
+              }}
+            >
               Shop
             </a>
 
             <div className="flex items-center gap-4">
-              <button className="p-1 relative group" onClick={onToggleWishlist} aria-label="Wishlist">
-                <img className="w-7 h-7 object-contain group-hover:scale-110 transition-transform" src={favIcon} alt="" />
+              <button
+                className="p-1 relative group"
+                onClick={onToggleWishlist}
+                aria-label="Wishlist"
+              >
+                <img
+                  className="w-7 h-7 object-contain group-hover:scale-110 transition-transform"
+                  src={favIcon}
+                  alt=""
+                />
                 {wishlistCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold border-2 border-white">
                     {wishlistCount}
                   </span>
                 )}
               </button>
-              
+
               <div className="relative">
-                <button 
-                  className="p-1 group flex items-center gap-2" 
+                <button
+                  className="p-1 group flex items-center gap-2"
                   aria-label="Account"
-                  onClick={() => user ? setShowProfileMenu(!showProfileMenu) : onOpenAuth()}
+                  onClick={() =>
+                    user ? setShowProfileMenu(!showProfileMenu) : onOpenAuth()
+                  }
                 >
-                  <img className="w-7 h-7 object-contain group-hover:scale-110 transition-transform" src={accountIcon} alt="" />
+                  <img
+                    className="w-7 h-7 object-contain group-hover:scale-110 transition-transform"
+                    src={accountIcon}
+                    alt=""
+                  />
                   {user && (
                     <span className="text-xs font-bold text-stone-700 max-w-[80px] truncate">
-                      {user.name.split(' ')[0]}
+                      {user.name.split(" ")[0]}
                     </span>
                   )}
                 </button>
@@ -134,21 +213,41 @@ const Navbar = memo(function Navbar({ categories, query, onQueryChange, cartCoun
                 {user && showProfileMenu && (
                   <div className="absolute top-[100%] right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-stone-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                     <div className="px-4 py-2 border-b border-stone-50 mb-1">
-                      <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Signed in as</p>
-                      <p className="text-sm font-bold text-stone-800 truncate">{user.name}</p>
+                      <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">
+                        Signed in as
+                      </p>
+                      <p className="text-sm font-bold text-stone-800 truncate">
+                        {user.name}
+                      </p>
                     </div>
-                    <button onClick={() => { onNavigate('account'); setShowProfileMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 transition-colors font-medium">My Orders</button>
-                    <button onClick={() => { onNavigate('rewards'); setShowProfileMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 transition-colors font-medium">Rewards</button>
-                    <button 
+                    <button
+                      onClick={() => {
+                        onNavigate("account");
+                        setShowProfileMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 transition-colors font-medium"
+                    >
+                      My Orders
+                    </button>
+                    <button
+                      onClick={() => {
+                        onNavigate("rewards");
+                        setShowProfileMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 transition-colors font-medium"
+                    >
+                      Rewards
+                    </button>
+                    <button
                       className="w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 transition-colors font-bold mt-2 pt-2 border-t border-stone-50"
                       onClick={() => {
-                        onNavigate('admin');
+                        onNavigate("admin");
                         setShowProfileMenu(false);
                       }}
                     >
                       Admin Dashboard
                     </button>
-                    <button 
+                    <button
                       className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors font-bold mt-2 pt-2 border-t border-stone-100"
                       onClick={() => {
                         logout();
@@ -161,8 +260,16 @@ const Navbar = memo(function Navbar({ categories, query, onQueryChange, cartCoun
                 )}
               </div>
 
-              <button className="p-1 relative group" onClick={onToggleCart} aria-label="Cart">
-                <img className="w-7 h-7 object-contain group-hover:scale-110 transition-transform" src={cartIcon} alt="" />
+              <button
+                className="p-1 relative group"
+                onClick={onToggleCart}
+                aria-label="Cart"
+              >
+                <img
+                  className="w-7 h-7 object-contain group-hover:scale-110 transition-transform"
+                  src={cartIcon}
+                  alt=""
+                />
                 {cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-stone-900 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold border-2 border-white">
                     {cartCount}
@@ -174,35 +281,63 @@ const Navbar = memo(function Navbar({ categories, query, onQueryChange, cartCoun
             <div className="flex items-center gap-4 pl-4 border-l border-stone-100">
               <button
                 className="hover:scale-110 transition-transform"
-                onClick={(e) => { e.preventDefault(); setIsAddressModalOpen(true); }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsAddressModalOpen(true);
+                }}
                 title="Change Location"
               >
-                <img className="w-8 h-8 object-contain" src={locationIcon} alt="Location" />
+                <img
+                  className="w-8 h-8 object-contain"
+                  src={locationIcon}
+                  alt="Location"
+                />
               </button>
-              <img className="w-10 h-10 object-contain animate-pulse" src={discountIcon} alt="Offers" />
+              <img
+                className="w-10 h-10 object-contain animate-pulse"
+                src={discountIcon}
+                alt="Offers"
+              />
             </div>
           </div>
         </div>
 
         {location.pathname === "/" && (
-          <nav className="border-b border-stone-100 bg-white relative overflow-x-auto no-scrollbar" aria-label="Primary categories">
+          <nav
+            className="border-b border-stone-100 bg-white relative overflow-x-auto no-scrollbar"
+            aria-label="Primary categories"
+          >
             <div className="w-fit mx-auto py-6 flex gap-8 items-center px-10">
               {categories.map((c) => {
-                const isDirectLink = ["New Arrivals", "Best Sellers"].includes(c.title);
+                const isDirectLink = ["New Arrivals", "Best Sellers"].includes(
+                  c.title,
+                );
 
                 if (isDirectLink) {
-                  const targetView = c.title === "New Arrivals" ? 'new-arrivals' : 'best-sellers';
+                  const targetView =
+                    c.title === "New Arrivals"
+                      ? "new-arrivals"
+                      : "best-sellers";
                   return (
                     <div key={c.key} className="static">
                       <a
                         className="flex flex-col items-center gap-3 text-stone-900 font-extrabold text-[13px] cursor-pointer hover:text-pink-500 transition-all group"
                         href={`#${targetView}`}
-                        onClick={(e) => { e.preventDefault(); onNavigate && onNavigate(targetView); }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          onNavigate && onNavigate(targetView);
+                        }}
                       >
-                        <div className="w-[140px] h-[110px] rounded-[28px] overflow-hidden border border-stone-100 shadow-sm group-hover:shadow-xl transition-all duration-500 group-hover:-translate-y-1">
-                          <img src={c.image} alt={c.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        <div className="w-[140px] h-[110px] rounded-[28px] overflow-hidden border border-stone-100 shadow-sm group-hover:shadow-xl transition-all duration-300 group-hover:-translate-y-1 optimize-gpu">
+                          <img
+                            src={c.image}
+                            alt={c.title}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 optimize-gpu"
+                          />
                         </div>
-                        <span className="uppercase tracking-widest">{c.title}</span>
+                        <span className="uppercase tracking-widest">
+                          {c.title}
+                        </span>
                       </a>
                     </div>
                   );
@@ -213,15 +348,39 @@ const Navbar = memo(function Navbar({ categories, query, onQueryChange, cartCoun
                     <a
                       className="flex flex-col items-center gap-3 text-stone-900 font-extrabold text-[13px] cursor-pointer hover:text-pink-500 transition-all group"
                       href="#"
-                      onClick={(e) => { e.preventDefault(); onNavigate && onNavigate(`category/${c.title}`); }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onNavigate && onNavigate(`category/${c.title}`);
+                      }}
                     >
-                      <div className="w-[140px] h-[110px] rounded-[28px] overflow-hidden border border-stone-100 shadow-sm group-hover:shadow-xl transition-all duration-500 group-hover:-translate-y-1">
-                        <img src={c.image || CATEGORY_IMAGES[c.title] || categorySphere} alt={c.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                      <div className="w-[140px] h-[110px] rounded-[28px] overflow-hidden border border-stone-100 shadow-sm group-hover:shadow-xl transition-all duration-300 group-hover:-translate-y-1 optimize-gpu">
+                        <img
+                          src={
+                            c.image ||
+                            CATEGORY_IMAGES[c.title] ||
+                            categorySphere
+                          }
+                          alt={c.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 optimize-gpu"
+                        />
                       </div>
                       <div className="flex items-center gap-1.5 uppercase tracking-widest">
                         {c.title}
-                        <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg" className="group-hover:rotate-180 transition-transform duration-200">
-                          <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <svg
+                          width="10"
+                          height="6"
+                          viewBox="0 0 10 6"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="group-hover:rotate-180 transition-transform duration-200"
+                        >
+                          <path
+                            d="M1 1L5 5L9 1"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
                         </svg>
                       </div>
                     </a>
@@ -233,7 +392,10 @@ const Navbar = memo(function Navbar({ categories, query, onQueryChange, cartCoun
         )}
       </header>
 
-      <AddressModal isOpen={isAddressModalOpen} onClose={() => setIsAddressModalOpen(false)} />
+      <AddressModal
+        isOpen={isAddressModalOpen}
+        onClose={() => setIsAddressModalOpen(false)}
+      />
     </>
   );
 });

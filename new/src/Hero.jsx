@@ -19,7 +19,7 @@ const HeroSlider = React.memo(({ customSlides }) => {
       <div className="w-full px-0 sm:px-[10px]">
         <div className="relative overflow-hidden rounded-xl border border-black/6 shadow-[0_18px_40px_rgba(0,0,0,0.12)] bg-white" aria-label="Featured banner">
           <div 
-            className="flex transition-transform duration-1000 ease-in-out transform-gpu optimize-gpu"
+            className="flex transition-transform duration-1000 ease-in-out transform-gpu optimize-gpu translate-z-0"
             style={{ 
               width: `${slideCount * 100}%`,
               animation: slideCount > 1 ? `heroSlideDynamic ${slideCount * 6}s ease-in-out infinite` : 'none'
@@ -32,17 +32,16 @@ const HeroSlider = React.memo(({ customSlides }) => {
                   src={slide.imageUrl} 
                   alt={slide.title || "Banner"} 
                   loading={idx === 0 ? "eager" : "lazy"}
+                  decoding="async"
                 />
                 {(slide.title || slide.subtitle) && (
-                  <div className="absolute inset-0 bg-linear-to-r from-white/40 via-white/10 to-transparent flex flex-col items-start justify-center text-left p-12 sm:p-24">
-                     <div className="max-w-xl animate-in fade-in slide-in-from-left-8 duration-1000">
+                  <div className="absolute inset-0 bg-linear-to-r from-white/40 via-white/10 to-transparent flex flex-col items-start justify-center text-left p-12 sm:p-24 optimize-gpu">
+                     <div className="max-w-xl animate-in fade-in slide-in-from-left-8 duration-1000 optimize-gpu">
                         {slide.subtitle && <p className="text-sm sm:text-base font-bold text-indigo-900/60 mb-2 uppercase tracking-[0.3em] font-['Inter']">{slide.subtitle}</p>}
                         {slide.title && <h2 className="text-5xl sm:text-7xl font-black text-indigo-950 mb-8 leading-[1.1] drop-shadow-sm">{slide.title}</h2>}
-                        {slide.link && (
-                          <a href={slide.link} className="inline-block bg-indigo-950 text-white px-10 py-4 rounded-lg font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-indigo-950/40 hover:scale-110 active:scale-95 transition-all">
-                            Explore Now
+                          <a href={slide.link} className="inline-block bg-[#151515] text-white px-10 py-4 rounded-lg font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-black/40 hover:scale-110 active:scale-95 transition-all optimize-gpu">
+                            SHOP NOW
                           </a>
-                        )}
                      </div>
                   </div>
                 )}
@@ -75,11 +74,11 @@ const HeroSlider = React.memo(({ customSlides }) => {
             const endVisible = (i + 1) * step - (step * 0.1);
             const nextTransition = (i + 1) * step;
             return `
-              ${startVisible}% { transform: translateX(-${(i / slideCount) * 100}%); }
-              ${endVisible}% { transform: translateX(-${(i / slideCount) * 100}%); }
+              ${startVisible}% { transform: translate3d(-${(i / slideCount) * 100}%, 0, 0); }
+              ${endVisible}% { transform: translate3d(-${(i / slideCount) * 100}%, 0, 0); }
             `;
           }).join('')}
-          100% { transform: translateX(0); }
+          100% { transform: translate3d(0, 0, 0); }
         }
         @keyframes heroDotDynamic {
           ${slides.map((_, i) => {

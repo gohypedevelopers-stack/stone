@@ -35,7 +35,7 @@ const VideoCard = ({ card, onNavigate }) => {
     return (
         <div
             onClick={() => onNavigate && onNavigate("product-page")}
-            className="relative flex-shrink-0 w-[260px] md:w-[280px] h-[450px] md:h-[500px] rounded-[32px] overflow-hidden group snap-center shadow-sm hover:shadow-md transition-all duration-500 bg-gray-100 cursor-pointer transform-gpu optimize-gpu"
+            className="relative shrink-0 w-[260px] md:w-[280px] h-[450px] md:h-[500px] rounded-[32px] overflow-hidden group snap-center shadow-sm hover:shadow-md transition-all duration-500 bg-gray-100 cursor-pointer transform-gpu optimize-gpu"
         >
             <video
                 ref={videoRef}
@@ -46,14 +46,14 @@ const VideoCard = ({ card, onNavigate }) => {
                 preload="metadata"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 transform-gpu optimize-gpu"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/60 group-hover:to-black/80 transition-all duration-300" />
+            <div className="absolute inset-0 bg-linear-to-b from-black/10 via-transparent to-black/60 group-hover:to-black/80 transition-all duration-300" />
             <div className="absolute bottom-0 left-0 w-full p-5 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
                 <h3 className="text-xl font-bold text-white mb-4 leading-tight shadow-sm drop-shadow-md">
                     {card.productName}
                 </h3>
                 <button
                     onClick={(e) => { e.stopPropagation(); onNavigate && onNavigate("product-page"); }}
-                    className="w-full bg-white text-[#151515] font-bold py-3.5 rounded-[20px] flex items-center justify-center gap-2 shadow-lg hover:bg-gradient-to-r hover:from-pink-500 hover:to-purple-500 hover:text-white transition-all duration-300 active:scale-95 group/btn"
+                    className="w-full bg-white text-[#151515] font-bold py-3.5 rounded-[20px] flex items-center justify-center gap-2 shadow-lg hover:bg-linear-to-r hover:from-pink-500 hover:to-purple-500 hover:text-white transition-all duration-300 active:scale-95 group/btn"
                 >
                     <ShoppingBag size={18} className="text-[#151515] group-hover/btn:text-white transition-colors" />
                     <span className="uppercase tracking-wide text-xs">Shop Now</span>
@@ -114,7 +114,7 @@ export default React.memo(function WatchAndShop({ onNavigate }) {
     ];
 
     return (
-        <section className="section py-16 md:py-24 bg-gradient-to-b from-white to-pink-50/30 overflow-hidden">
+        <section className="section py-16 md:py-24 bg-linear-to-b from-white to-pink-50/30 overflow-hidden">
             <div className="max-w-[1440px] mx-auto px-4 md:px-6">
 
                 {/* Header */}
@@ -122,7 +122,7 @@ export default React.memo(function WatchAndShop({ onNavigate }) {
                     <div>
 
                         <h2 className="text-4xl md:text-5xl font-[800] text-[#151515] tracking-tight">
-                            Watch & <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500">Shop</span>
+                            Watch & <span className="text-transparent bg-clip-text bg-linear-to-r from-pink-500 to-purple-500">Shop</span>
                         </h2>
                     </div>
 
@@ -138,7 +138,7 @@ export default React.memo(function WatchAndShop({ onNavigate }) {
                     ))}
 
                     {/* Spacer for right padding */}
-                    <div className="w-[1px] flex-shrink-0" />
+                    <div className="w-[1px] shrink-0" />
                 </div>
 
             </div>

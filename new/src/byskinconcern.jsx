@@ -147,7 +147,7 @@ export default React.memo(function BySkinConcern({ onSelectConcern }) {
           <button
             type="button"
             role="listitem"
-            className="relative cursor-pointer appearance-none rounded-[18px] shadow-[0_10px_22px_rgba(0,0,0,0.08)] flex flex-col items-center justify-center text-center gap-[10px] text-inherit transition-all duration-180 ease-out hover:-translate-y-[4px] hover:shadow-[0_16px_30px_rgba(0,0,0,0.12),0_0_20px_rgba(255,255,255,0.9)] focus-visible:outline-2 focus-visible:outline-black/40 focus-visible:outline-offset-3 font-inherit min-h-[168px] lg:col-span-2 lg:row-span-2 lg:min-h-[196px] p-[18px] snap-start group"
+            className="relative cursor-pointer appearance-none rounded-[18px] shadow-[0_10px_22px_rgba(0,0,0,0.08)] flex flex-col items-center justify-center text-center gap-[10px] text-inherit transition-all duration-200 ease-out hover:-translate-y-[4px] hover:shadow-[0_16px_30px_rgba(0,0,0,0.12),0_0_20px_rgba(255,255,255,0.9)] focus-visible:outline-2 focus-visible:outline-black/40 focus-visible:outline-offset-3 font-inherit min-h-[168px] lg:col-span-2 lg:row-span-2 lg:min-h-[196px] p-[18px] snap-start group optimize-gpu"
             style={{ background: FEATURED.gradient }}
             onClick={() => applyFilter(FEATURED.key)}
             aria-pressed={selected === FEATURED.key}
@@ -168,14 +168,14 @@ export default React.memo(function BySkinConcern({ onSelectConcern }) {
               key={item.key}
               type="button"
               role="listitem"
-              className="relative cursor-pointer appearance-none rounded-[20px] shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-black/5 flex flex-col text-center transition-all duration-300 ease-out hover:-translate-y-[4px] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] focus-visible:outline-2 focus-visible:outline-black/40 focus-visible:outline-offset-3 font-inherit min-h-[160px] snap-start group bg-white overflow-hidden p-0 items-stretch"
+              className="relative cursor-pointer appearance-none rounded-[20px] shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-black/5 flex flex-col text-center transition-all duration-300 ease-out hover:-translate-y-[4px] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] focus-visible:outline-2 focus-visible:outline-black/40 focus-visible:outline-offset-3 font-inherit min-h-[160px] snap-start group bg-white overflow-hidden p-0 items-stretch optimize-gpu"
               onClick={() => applyFilter(item.key)}
               aria-pressed={selected === item.key}
             >
-              <div className="w-full h-[160px] overflow-hidden [&_img]:transform [&_img]:transition-transform [&_img]:duration-700 [&_img]:ease-out [&_img]:scale-110 group-hover:[&_img]:scale-100">
+              <div className="w-full h-[160px] overflow-hidden [&_img]:transform [&_img]:transition-transform [&_img]:duration-500 [&_img]:ease-out [&_img]:scale-110 group-hover:[&_img]:scale-100 optimize-gpu">
                 {ICONS[item.key]}
               </div>
-              <div className="w-full flex-1 flex flex-col items-center justify-center py-[10px] px-[6px] bg-white transform transition-transform duration-500 ease-out group-hover:scale-105 origin-center z-10 relative">
+              <div className="w-full flex-1 flex flex-col items-center justify-center py-[10px] px-[6px] bg-white transform transition-transform duration-300 ease-out group-hover:scale-105 origin-center z-10 relative optimize-gpu">
                 <div className="font-[600] text-[14px] text-[#1a1a1a] leading-tight mb-[3px] group-hover:text-black transition-colors">{item.label}</div>
                 <div className="text-[12px] font-[400] text-[#888] tracking-[0.2px] uppercase">{item.desc}</div>
               </div>

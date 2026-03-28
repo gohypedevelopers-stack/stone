@@ -1,5 +1,11 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 import Lenis from "lenis";
 import "lenis/dist/lenis.css";
 import HomePage from "./HomePage";
@@ -38,7 +44,10 @@ import { toast } from "sonner";
 import CartDrawer from "./CartDrawer";
 
 function formatINR(amount) {
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount);
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+  }).format(amount);
 }
 
 // Navigation logic handled directly in App due to Router being in main.jsx
@@ -84,25 +93,25 @@ export default function App() {
 
   useEffect(() => {
     fetch(`${API_URL}/admin/categories`)
-      .then(r => r.json())
-      .then(d => {
+      .then((r) => r.json())
+      .then((d) => {
         if (d.success) {
           // Filter out duplicate category names
-          const unique = d.data.filter((c, i, self) => 
-            i === self.findIndex(t => t.name === c.name)
+          const unique = d.data.filter(
+            (c, i, self) => i === self.findIndex((t) => t.name === c.name),
           );
           setDynamicCategories(unique);
         }
       })
-      .catch(err => console.error("Error fetching categories:", err));
+      .catch((err) => console.error("Error fetching categories:", err));
   }, []);
-  
+
   // Scroll to top on route change
   useEffect(() => {
     window.scrollTo({
       top: 0,
       left: 0,
-      behavior: 'instant' // Immediate jump for navigation
+      behavior: "instant", // Immediate jump for navigation
     });
   }, [location.pathname]);
 
@@ -112,31 +121,42 @@ export default function App() {
 
   // Cart Logic
   const cartItems = useMemo(() => {
-    return cart.map((c) => {
-      const p = PRODUCTS.find((x) => x.id === c.id) || c.productData;
-      if (!p) return null;
+    return cart
+      .map((c) => {
+        const p = PRODUCTS.find((x) => x.id === c.id) || c.productData;
+        if (!p) return null;
 
-      // Ensure price is a number for calculation
-      let price = p.price;
-      if (typeof price === 'string') {
-        // Remove currency symbols and commas
-        price = parseFloat(price.replace(/[^0-9.]/g, ''));
-      }
+        // Ensure price is a number for calculation
+        let price = p.price;
+        if (typeof price === "string") {
+          // Remove currency symbols and commas
+          price = parseFloat(price.replace(/[^0-9.]/g, ""));
+        }
 
-      return { ...p, price, qty: c.qty, line: price * c.qty };
-    }).filter(Boolean);
+        return { ...p, price, qty: c.qty, line: price * c.qty };
+      })
+      .filter(Boolean);
   }, [cart, PRODUCTS]);
 
-  const subtotal = useMemo(() => cartItems.reduce((sum, x) => sum + x.line, 0), [cartItems]);
+  const subtotal = useMemo(
+    () => cartItems.reduce((sum, x) => sum + x.line, 0),
+    [cartItems],
+  );
   const pointsEarned = useMemo(() => Math.floor(subtotal / 100), [subtotal]);
-  const remainingForFreeDelivery = useMemo(() => Math.max(0, freeDeliveryThreshold - subtotal), [subtotal, freeDeliveryThreshold]);
-  const cartCount = useMemo(() => cart.reduce((sum, item) => sum + item.qty, 0), [cart]);
+  const remainingForFreeDelivery = useMemo(
+    () => Math.max(0, freeDeliveryThreshold - subtotal),
+    [subtotal, freeDeliveryThreshold],
+  );
+  const cartCount = useMemo(
+    () => cart.reduce((sum, item) => sum + item.qty, 0),
+    [cart],
+  );
 
   const addToCart = useCallback((item) => {
     let id = item;
     let productData = null;
 
-    if (typeof item === 'object' && item !== null) {
+    if (typeof item === "object" && item !== null) {
       id = item.id;
       productData = item;
     }
@@ -144,7 +164,15 @@ export default function App() {
     setCart((prev) => {
       const found = prev.find((x) => x.id === id);
       if (found) {
-        return prev.map((x) => (x.id === id ? { ...x, qty: x.qty + 1, productData: productData || x.productData } : x));
+        return prev.map((x) =>
+          x.id === id
+            ? {
+                ...x,
+                qty: x.qty + 1,
+                productData: productData || x.productData,
+              }
+            : x,
+        );
       }
       return [...prev, { id, qty: 1, productData }];
     });
@@ -154,32 +182,39 @@ export default function App() {
     setCart((prev) =>
       prev
         .map((x) => (x.id === id ? { ...x, qty: x.qty - 1 } : x))
-        .filter((x) => x.qty > 0)
+        .filter((x) => x.qty > 0),
     );
   }, []);
 
   const incQty = useCallback((id) => {
-    setCart((prev) => prev.map((x) => (x.id === id ? { ...x, qty: x.qty + 1 } : x)));
+    setCart((prev) =>
+      prev.map((x) => (x.id === id ? { ...x, qty: x.qty + 1 } : x)),
+    );
   }, []);
 
   const updateQty = useCallback((id, newQty) => {
     if (newQty < 1) return;
-    setCart((prev) => prev.map((x) => (x.id === id ? { ...x, qty: newQty } : x)));
+    setCart((prev) =>
+      prev.map((x) => (x.id === id ? { ...x, qty: newQty } : x)),
+    );
   }, []);
 
   const removeFromCart = useCallback((id) => {
     setCart((prev) => prev.filter((x) => x.id !== id));
   }, []);
 
-  const moveToWishlist = useCallback((item) => {
-    // Add to wishlist
-    setWishlist((prev) => {
-      if (prev.some(p => p.id === item.id)) return prev;
-      return [...prev, item];
-    });
-    // Remove from cart
-    removeFromCart(item.id);
-  }, [removeFromCart]);
+  const moveToWishlist = useCallback(
+    (item) => {
+      // Add to wishlist
+      setWishlist((prev) => {
+        if (prev.some((p) => p.id === item.id)) return prev;
+        return [...prev, item];
+      });
+      // Remove from cart
+      removeFromCart(item.id);
+    },
+    [removeFromCart],
+  );
 
   // Wishlist Logic
   const toggleWishlist = useCallback((product) => {
@@ -200,16 +235,17 @@ export default function App() {
       { key: "best-sellers", title: "Best Sellers", image: imgBestSeller },
       { key: "serums", title: "Serums", image: imgSerums },
     ];
-    
-    const dynamic = dynamicCategories.slice(0, 5).map(cat => ({
+
+    const dynamic = dynamicCategories.slice(0, 5).map((cat) => ({
       key: cat.slug,
       title: cat.name,
-      image: null
+      image: null,
     }));
 
     // Deduplicate by key
-    const unique = [...base, ...dynamic].filter((item, index, self) =>
-      index === self.findIndex(t => t.key === item.key)
+    const unique = [...base, ...dynamic].filter(
+      (item, index, self) =>
+        index === self.findIndex((t) => t.key === item.key),
     );
 
     return unique;
@@ -217,33 +253,36 @@ export default function App() {
 
   const CATEGORIES = NAV_CATEGORIES;
 
-  const handleNavigate = useCallback((view) => {
-    // Map legacy view names to routes
-    const routeMap = {
-      "home": "/",
-      "shop": "/shop",
-      "new-arrivals": "/new-arrivals",
-      "best-sellers": "/best-sellers",
-      "category-page": "/category/Serums", // Default category
-      "brand-page": "/brand/Laneige", // Default brand
-      "skin-concern-page": "/concern/acne", // Default concern
-      "shop-by-offer-page": "/offer/flat-20", // Default offer
-      "cart": "/cart",
-      "account": "/account",
-      "rewards": "/rewards",
-      "admin": "/admin",
-      "all-categories": "/categories"
-    };
+  const handleNavigate = useCallback(
+    (view) => {
+      // Map legacy view names to routes
+      const routeMap = {
+        home: "/",
+        shop: "/shop",
+        "new-arrivals": "/new-arrivals",
+        "best-sellers": "/best-sellers",
+        "category-page": "/category/Serums", // Default category
+        "brand-page": "/brand/Laneige", // Default brand
+        "skin-concern-page": "/concern/acne", // Default concern
+        "shop-by-offer-page": "/offer/flat-20", // Default offer
+        cart: "/cart",
+        account: "/account",
+        rewards: "/rewards",
+        admin: "/admin",
+        "all-categories": "/categories",
+      };
 
-    if (routeMap[view]) {
-      navigate(routeMap[view]);
-    } else {
-      // Fallback for direct route names if passed
-      navigate(view.startsWith("/") ? view : "/" + view);
-    }
-  }, [navigate]);
+      if (routeMap[view]) {
+        navigate(routeMap[view]);
+      } else {
+        // Fallback for direct route names if passed
+        navigate(view.startsWith("/") ? view : "/" + view);
+      }
+    },
+    [navigate],
+  );
 
-  const isAdminPath = location.pathname.startsWith('/admin');
+  const isAdminPath = location.pathname.startsWith("/admin");
 
   return (
     <div className="relative overflow-x-hidden">
@@ -254,65 +293,173 @@ export default function App() {
             query={query}
             onQueryChange={(e) => setQuery(e.target.value)}
             cartCount={cartCount}
-            onToggleCart={() => navigate('/cart')}
+            onToggleCart={() => navigate("/cart")}
             onNavigate={handleNavigate}
             wishlistCount={wishlist.length}
             onToggleWishlist={() => setWishlistOpen(true)}
             onOpenAuth={() => setIsAuthModalOpen(true)}
           />
-          <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+          <AuthModal
+            isOpen={isAuthModalOpen}
+            onClose={() => setIsAuthModalOpen(false)}
+          />
         </>
       )}
 
       {/* Main Content Area */}
       <Routes>
-        <Route path="/" element={
-          <HomePage
-            addToCart={addToCart}
-            query={query}
-            onNavigate={handleNavigate}
-            onSelectCategory={(cat) => navigate(`/category/${cat}`)}
-            onSelectBrand={(brand) => navigate(`/brand/${brand}`)}
-            onSelectConcern={(concern) => navigate(`/concern/${concern}`)}
-            onSelectOffer={(offer) => navigate(`/offer/${offer}`)}
-            wishlist={wishlist}
-            toggleWishlist={toggleWishlist}
-            dynamicCategories={dynamicCategories}
-          />
-        } />
-        <Route path="/shop" element={<Shop dynamicCategories={dynamicCategories} addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
-        <Route path="/new-arrivals" element={<NewArrivals addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
-        <Route path="/best-sellers" element={<BestSellers addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
-        <Route path="/pre-orders" element={<PreOrderListPage wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
-        <Route path="/cart" element={
-          <CartPage
-            cartItems={cartItems}
-            updateQty={updateQty}
-            removeFromCart={removeFromCart}
-            moveToWishlist={moveToWishlist}
-            subtotal={subtotal}
-          />
-        } />
+        <Route
+          path="/"
+          element={
+            <HomePage
+              addToCart={addToCart}
+              query={query}
+              onNavigate={handleNavigate}
+              onSelectCategory={(cat) => navigate(`/category/${cat}`)}
+              onSelectBrand={(brand) => navigate(`/brand/${brand}`)}
+              onSelectConcern={(concern) => navigate(`/concern/${concern}`)}
+              onSelectOffer={(offer) => navigate(`/offer/${offer}`)}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+              dynamicCategories={dynamicCategories}
+            />
+          }
+        />
+        <Route
+          path="/shop"
+          element={
+            <Shop
+              dynamicCategories={dynamicCategories}
+              addToCart={addToCart}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+            />
+          }
+        />
+        <Route
+          path="/new-arrivals"
+          element={
+            <NewArrivals
+              addToCart={addToCart}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+            />
+          }
+        />
+        <Route
+          path="/best-sellers"
+          element={
+            <BestSellers
+              addToCart={addToCart}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+            />
+          }
+        />
+        <Route
+          path="/pre-orders"
+          element={
+            <PreOrderListPage
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+            />
+          }
+        />
+        <Route
+          path="/cart"
+          element={
+            <CartPage
+              cartItems={cartItems}
+              updateQty={updateQty}
+              removeFromCart={removeFromCart}
+              moveToWishlist={moveToWishlist}
+              subtotal={subtotal}
+            />
+          }
+        />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/account" element={<AccountPage />} />
         <Route path="/rewards" element={<RewardsPage />} />
         <Route path="/brands" element={<AllBrandsPage />} />
-        <Route path="/categories" element={<AllCategoriesPage dynamicCategories={dynamicCategories} onSelectCategory={(cat) => navigate(`/category/${cat}`)} onNavigate={handleNavigate} />} />
+        <Route
+          path="/categories"
+          element={
+            <AllCategoriesPage
+              dynamicCategories={dynamicCategories}
+              onSelectCategory={(cat) => navigate(`/category/${cat}`)}
+              onNavigate={handleNavigate}
+            />
+          }
+        />
         <Route path="/admin/*" element={<AdminDashboard />} />
 
         {/* Dynamic Routes */}
-        <Route path="/product/:id" element={<ProductPage addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
-        <Route path="/preorder/:id" element={<PreOrderProductPage addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
-        <Route path="/category/:category" element={<CategoryPageWrapper addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
-        <Route path="/brand/:brandName" element={<BrandPageWrapper addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
-        <Route path="/concern/:concern" element={<SkinConcernPageWrapper addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
-        <Route path="/offer/:offer" element={<ShopByOfferPageWrapper addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />} />
+        <Route
+          path="/product/:id"
+          element={
+            <ProductPage
+              addToCart={addToCart}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+            />
+          }
+        />
+        <Route
+          path="/preorder/:id"
+          element={
+            <PreOrderProductPage
+              addToCart={addToCart}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+            />
+          }
+        />
+        <Route
+          path="/category/:category"
+          element={
+            <CategoryPageWrapper
+              addToCart={addToCart}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+            />
+          }
+        />
+        <Route
+          path="/brand/:brandName"
+          element={
+            <BrandPageWrapper
+              addToCart={addToCart}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+            />
+          }
+        />
+        <Route
+          path="/concern/:concern"
+          element={
+            <SkinConcernPageWrapper
+              addToCart={addToCart}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+            />
+          }
+        />
+        <Route
+          path="/offer/:offer"
+          element={
+            <ShopByOfferPageWrapper
+              addToCart={addToCart}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+            />
+          }
+        />
       </Routes>
 
       {!isAdminPath && (
         <>
           {/* Persistent Cart Drawer */}
-          <CartDrawer 
+          <CartDrawer
             isOpen={cartOpen}
             onClose={() => setCartOpen(false)}
             cartItems={cartItems}
@@ -349,22 +496,53 @@ import { useParams } from "react-router-dom";
 function CategoryPageWrapper({ addToCart, wishlist, toggleWishlist }) {
   const { category } = useParams();
   const navigate = useNavigate();
-  return <CategoryPage category={category} addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} onCategoryChange={(cat) => navigate(`/category/${cat}`)} />;
+  return (
+    <CategoryPage
+      category={category}
+      addToCart={addToCart}
+      wishlist={wishlist}
+      toggleWishlist={toggleWishlist}
+      onCategoryChange={(cat) => navigate(`/category/${cat}`)}
+    />
+  );
 }
 
 function BrandPageWrapper({ addToCart, wishlist, toggleWishlist }) {
   const { brandName } = useParams();
   const navigate = useNavigate();
-  return <BrandPage brandName={brandName} addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} onBrandChange={(b) => navigate(`/brand/${b}`)} />;
+  return (
+    <BrandPage
+      brandName={brandName}
+      addToCart={addToCart}
+      wishlist={wishlist}
+      toggleWishlist={toggleWishlist}
+      onBrandChange={(b) => navigate(`/brand/${b}`)}
+    />
+  );
 }
 
 function SkinConcernPageWrapper({ addToCart, wishlist, toggleWishlist }) {
   const { concern } = useParams();
   const navigate = useNavigate();
-  return <SkinConcernPage userConcern={concern} addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} onConcernChange={(c) => navigate(`/concern/${c}`)} />;
+  return (
+    <SkinConcernPage
+      userConcern={concern}
+      addToCart={addToCart}
+      wishlist={wishlist}
+      toggleWishlist={toggleWishlist}
+      onConcernChange={(c) => navigate(`/concern/${c}`)}
+    />
+  );
 }
 
 function ShopByOfferPageWrapper({ addToCart, wishlist, toggleWishlist }) {
   const { offer } = useParams();
-  return <ShopByOfferPage initialOffer={offer} addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} />;
+  return (
+    <ShopByOfferPage
+      initialOffer={offer}
+      addToCart={addToCart}
+      wishlist={wishlist}
+      toggleWishlist={toggleWishlist}
+    />
+  );
 }
