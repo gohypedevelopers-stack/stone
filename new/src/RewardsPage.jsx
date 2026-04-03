@@ -47,7 +47,7 @@ export default function RewardsPage() {
     return (
       <div className="min-h-[70vh] flex items-center justify-center bg-stone-50/50">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="h-12 w-12 border-4 border-amber-500 border-t-transparent rounded-[2px] animate-spin"></div>
           <p className="text-stone-400 font-bold text-xs uppercase tracking-widest animate-pulse">Loading Rewards...</p>
         </div>
       </div>
@@ -57,7 +57,7 @@ export default function RewardsPage() {
   if (!user) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center bg-stone-50/50 px-6 text-center">
-        <div className="w-20 h-20 bg-white rounded-[2rem] shadow-sm border border-stone-100 flex items-center justify-center mb-6">
+        <div className="w-20 h-20 bg-white rounded-[2px] shadow-sm border border-stone-100 flex items-center justify-center mb-6">
           <Award className="h-10 w-10 text-stone-200" />
         </div>
         <h2 className="text-3xl font-black text-stone-900 mb-2 tracking-tighter">Join the OMW Club</h2>
@@ -92,12 +92,12 @@ export default function RewardsPage() {
       {/* Premium Header Section */}
       <div className="bg-white border-b border-stone-100 pt-16 pb-24 overflow-hidden relative">
         <div className="absolute top-0 right-0 w-1/3 h-full bg-linear-to-bl from-amber-50/50 to-transparent pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-linear-to-tr from-pink-50/30 to-transparent rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-linear-to-tr from-pink-50/30 to-transparent rounded-[2px] blur-3xl pointer-events-none" />
         
         <div className="max-w-6xl mx-auto px-6 relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-12">
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-700 px-3 py-1 rounded-full border border-amber-100/50 shadow-sm transition-transform hover:scale-105 cursor-default">
+              <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-700 px-3 py-1 rounded-[2px] border border-amber-100/50 shadow-sm transition-transform hover:scale-105 cursor-default">
                 <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
                 <span className="text-[9px] font-bold uppercase tracking-widest">Loyalty Member</span>
               </div>
@@ -111,10 +111,10 @@ export default function RewardsPage() {
 
             {/* Floating Points Card */}
             <div className="relative group">
-              <div className="absolute inset-0 bg-amber-500 rounded-3xl blur-2xl opacity-10 group-hover:opacity-20 transition-opacity" />
-              <div className="bg-stone-900 text-white p-8 rounded-3xl shadow-xl relative border border-white/5 min-w-[280px] transition-transform hover:-translate-y-1 duration-300">
+              <div className="absolute inset-0 bg-amber-500 rounded-[2px] blur-2xl opacity-10 group-hover:opacity-20 transition-opacity" />
+              <div className="bg-stone-900 text-white p-8 rounded-[2px] shadow-xl relative border border-white/5 min-w-[280px] transition-transform hover:-translate-y-1 duration-300">
                 <div className="flex justify-between items-start mb-8">
-                  <div className="p-2.5 bg-white/5 rounded-xl">
+                  <div className="p-2.5 bg-white/5 rounded-[2px]">
                     <Coins className="h-5 w-5 text-amber-400" />
                   </div>
                   <div className="text-right">
@@ -131,9 +131,9 @@ export default function RewardsPage() {
                     <span className="text-stone-400">Next Milestone</span>
                     <span className="text-amber-400">{nextMilestone} pts</span>
                   </div>
-                  <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-2 bg-white/5 rounded-[2px] overflow-hidden">
                     <div 
-                      className="h-full bg-linear-to-r from-amber-600 to-amber-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+                      className="h-full bg-linear-to-r from-amber-600 to-amber-400 rounded-[2px] transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(245,158,11,0.3)]"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
@@ -156,8 +156,8 @@ export default function RewardsPage() {
           </div>
 
           {transactions.length === 0 ? (
-            <div className="bg-white border border-stone-100 rounded-3xl p-12 text-center shadow-sm">
-              <div className="w-16 h-16 bg-stone-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="bg-white border border-stone-100 rounded-[2px] p-12 text-center shadow-sm">
+              <div className="w-16 h-16 bg-stone-50 rounded-[2px] flex items-center justify-center mx-auto mb-4">
                 <TrendingUp className="h-6 w-6 text-stone-200" />
               </div>
               <h3 className="text-lg font-bold text-stone-900 mb-1">No activity recorded yet</h3>
@@ -174,7 +174,7 @@ export default function RewardsPage() {
                 return (
                   <div 
                     key={tx.id} 
-                    className={`group bg-white border rounded-2xl overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 ${
+                    className={`group bg-white border rounded-[2px] overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 ${
                       isExpanded ? 'border-amber-200 ring-4 ring-amber-50/50' : 'border-stone-50 hover:border-amber-100 shadow-xs'
                     }`}
                     style={{ animationDelay: `${idx * 50}ms` }}
@@ -184,7 +184,7 @@ export default function RewardsPage() {
                       onClick={() => setExpandedTxId(isExpanded ? null : tx.id)}
                     >
                       <div className="flex items-center gap-4">
-                        <div className={`h-10 w-10 rounded-xl flex items-center justify-center transition-colors ${
+                        <div className={`h-10 w-10 rounded-[2px] flex items-center justify-center transition-colors ${
                           tx.type === 'EARNED' ? 'bg-emerald-50 text-emerald-600' : 
                           tx.type === 'REDEEMED' ? 'bg-stone-50 text-stone-600' : 'bg-blue-50 text-blue-600'
                         }`}>
@@ -195,7 +195,7 @@ export default function RewardsPage() {
                             <p className="font-bold text-stone-900 text-sm">
                               {tx.type === 'EARNED' ? 'Points Earned' : 'Points Redeemed'}
                             </p>
-                            <span className="text-[9px] bg-stone-100 text-stone-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">{tx.source}</span>
+                            <span className="text-[9px] bg-stone-100 text-stone-400 px-2 py-0.5 rounded-[2px] font-bold uppercase tracking-wider">{tx.source}</span>
                           </div>
                           <p className="text-stone-500 text-[11px] font-medium mt-0.5">{tx.note || "Loyalty rewards adjustment"}</p>
                           <p className="text-[10px] text-stone-300 font-bold mt-1 uppercase tracking-tighter">
@@ -225,18 +225,18 @@ export default function RewardsPage() {
                           <div className="flex items-center justify-between pb-2 border-b border-stone-100/50">
                             <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Purchased Items</span>
                             {details?.vendor && (
-                              <span className="text-[10px] font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">Store: {details.vendor}</span>
+                              <span className="text-[10px] font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-[2px]">Store: {details.vendor}</span>
                             )}
                           </div>
                           
                           {details?.items ? (
                             <div className="space-y-2">
                               {details.items.map((item, i) => (
-                                <div key={i} className="flex justify-between items-center bg-white p-2.5 rounded-xl border border-stone-100/50 shadow-xs">
+                                <div key={i} className="flex justify-between items-center bg-white p-2.5 rounded-[2px] border border-stone-100/50 shadow-xs">
                                   <div className="flex items-center gap-3">
-                                    <div className="h-8 w-8 bg-stone-50 rounded-lg flex items-center justify-center border border-stone-100">
+                                    <div className="h-8 w-8 bg-stone-50 rounded-[2px] flex items-center justify-center border border-stone-100">
                                       {item.product?.imageUrls?.[0] ? (
-                                        <img src={item.product.imageUrls[0]} alt="" className="h-full w-full object-cover rounded-lg" />
+                                        <img src={item.product.imageUrls[0]} alt="" className="h-full w-full object-cover rounded-[2px]" />
                                       ) : (
                                         <Star className="h-3 w-3 text-stone-300" />
                                       )}
@@ -251,7 +251,7 @@ export default function RewardsPage() {
                               ))}
                             </div>
                           ) : (
-                            <div className="py-4 text-center border-2 border-dashed border-stone-100 rounded-2xl">
+                            <div className="py-4 text-center border-2 border-dashed border-stone-100 rounded-[2px]">
                               <p className="text-[11px] font-medium text-stone-400">Detailed item list for historical purchases is unavailable.</p>
                             </div>
                           )}

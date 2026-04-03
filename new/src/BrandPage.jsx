@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Star, Heart, ShoppingBag, Eye, X, Filter, ChevronDown, Check,
     Truck, ShieldCheck, RefreshCw, Zap, Search, Sparkles, ArrowRight
@@ -14,38 +14,63 @@ import {
 // Import some logos for the switcher (reusing imports for now, in real app these come from props/data)
 import laneigeLogo from "./assets/productlogo/brands/laneige-logo-brandlogos.net_hveh22jp8.svg";
 import cosrxLogo from "./assets/productlogo/brands/l-oreal-professionnel.svg"; // Placeholder
-import innisfreeLogo from "./assets/productlogo/brands/estee-lauder-2.svg"; // Placeholder
 
-const MOCK_BRANDS = [
-    { name: "Laneige", logo: laneigeLogo, tagline: "Hydration experts from Korea" },
-    { name: "COSRX", logo: cosrxLogo, tagline: "Expecting Tomorrow" },
-    { name: "Innisfree", logo: innisfreeLogo, tagline: "Natural Benefits from JEJU" },
-    { name: "The Ordinary", logo: laneigeLogo, tagline: "Clinical Formulations with Integrity" }, // reusing placeholder
-    { name: "CeraVe", logo: laneigeLogo, tagline: "Developed with Dermatologists" },
-];
+const API_URL = "http://localhost:5000/api";
 
 export default function BrandPage({ brandName = "Laneige", onBrandChange, addToCart }) {
     const [activeFilter, setActiveFilter] = useState("All");
     const [sortOption, setSortOption] = useState("Most Popular");
     const [searchQuery, setSearchQuery] = useState("");
+    const [products, setProducts] = useState([]);
+    const [availableBrands, setAvailableBrands] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const currentBrand = MOCK_BRANDS.find(b => b.name === brandName) || {
+    useEffect(() => {
+        const fetchBrands = async () => {
+            try {
+                const r = await fetch(`${API_URL}/products/brands`);
+                const d = await r.json();
+                if (d.success) setAvailableBrands(d.data);
+            } catch (e) {
+                console.error("Error fetching brands:", e);
+            }
+        };
+        fetchBrands();
+    }, []);
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            setIsLoading(true);
+            try {
+                const r = await fetch(`${API_URL}/products?brand=${brandName}`);
+                const d = await r.json();
+                if (d.success) {
+                    const filtered = d.data.filter(p => p.showOnline !== false && p.category?.name !== "Special Offer" && !p.specialOfferType);
+                    setProducts(filtered);
+                }
+            } catch (e) {
+                console.error("Error fetching products:", e);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchProducts();
+    }, [brandName]);
+
+    const currentBrand = {
         name: brandName,
-        logo: laneigeLogo,
-        tagline: "Premium Beauty Collection"
+        logo: brandName.toLowerCase() === 'laneige' ? laneigeLogo : 
+              brandName.toLowerCase() === 'cosrx' ? cosrxLogo : null,
+        tagline: brandName.toLowerCase() === 'laneige' ? "Hydration experts from Korea" : 
+                 brandName.toLowerCase() === 'cosrx' ? "Expecting Tomorrow" : 
+                 "Premium Beauty Collection"
     };
 
-    // -- Mock Data for Products --
-    const PRODUCTS = Array.from({ length: 12 }).map((_, i) => ({
-        id: `brand-p-${i}`,
-        name: `${brandName} ${["Water Sleeping Mask", "Cream Skin Refiner", "Lip Sleeping Mask", "Glowy Makeup Serum"][i % 4]}`,
-        price: 1200 + (i * 150),
-        salePrice: i % 3 === 0 ? 1000 + (i * 150) : null,
-        rating: 4.6 + (i % 4) * 0.1,
-        reviews: 80 + i * 12,
-        image: `https://images.unsplash.com/photo-${1600000000000 + i}?auto=format&fit=crop&w=800&q=80`,
-        tag: i === 0 ? "Bestseller" : i === 2 ? "Trending" : null,
-        benefits: ["Hydrating", "Repair", "Glow", "Soothing"].slice(0, 2)
+    const PRODUCTS = products.map(p => ({
+        ...p,
+        image: p.imageUrls?.[0] || 'https://images.unsplash.com/photo-1556229010-6c3f2c9ca5f8?auto=format&fit=crop&w=400&q=80',
+        rating: p.rating || 4.5,
+        benefits: Array.isArray(p.benefits) ? p.benefits.map(b => b.text || b) : ["Premium Care", "Natural"]
     }));
 
     const TOP_PICKS = PRODUCTS.slice(0, 3);
@@ -59,8 +84,8 @@ export default function BrandPage({ brandName = "Laneige", onBrandChange, addToC
             <section className="relative pt-6 pb-6 px-6 overflow-hidden bg-white">
                 {/* Modern Minimal Background */}
                 <div className="absolute inset-0 opacity-30">
-                    <div className="absolute top-0 right-0 w-[50%] h-full bg-gradient-to-l from-blue-50 to-transparent" />
-                    <div className="absolute bottom-0 left-0 w-[50%] h-[50%] bg-gradient-to-t from-pink-50 to-transparent" />
+                    <div className="absolute top-0 right-0 w-[50%] h-full bg-linear-to-l from-blue-50 to-transparent" />
+                    <div className="absolute bottom-0 left-0 w-[50%] h-[50%] bg-linear-to-t from-pink-50 to-transparent" />
                 </div>
 
                 <div className="relative z-10 max-w-4xl mx-auto text-center">
@@ -73,8 +98,13 @@ export default function BrandPage({ brandName = "Laneige", onBrandChange, addToC
                     </div>
 
                     <div className="mb-6 flex justify-center">
-                        {/* Optional: Display Logo if available, otherwise just text */}
-                        <img src={currentBrand.logo} alt={currentBrand.name} className="h-16 object-contain opacity-90" />
+                        {currentBrand.logo ? (
+                            <img src={currentBrand.logo} alt={currentBrand.name} className="h-16 object-contain opacity-90" />
+                        ) : (
+                            <h1 className="text-5xl font-black uppercase tracking-tighter text-[#1a1a1a]">
+                                {brandName}
+                            </h1>
+                        )}
                     </div>
 
                     <p className="text-gray-500 max-w-xl mx-auto text-lg font-light leading-relaxed">
@@ -97,17 +127,17 @@ export default function BrandPage({ brandName = "Laneige", onBrandChange, addToC
                                     <ChevronDown size={14} className="text-gray-400" />
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent className="w-48 p-1 bg-white border border-gray-100 rounded-xl shadow-lg animate-in fade-in-0 zoom-in-95">
-                                    {MOCK_BRANDS.map(brand => (
+                                    {availableBrands.map(brand => (
                                         <DropdownMenuItem
-                                            key={brand.name}
-                                            onClick={() => onBrandChange && onBrandChange(brand.name)}
+                                            key={brand}
+                                            onClick={() => onBrandChange && onBrandChange(brand)}
                                             className={`
                                                 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wide cursor-pointer transition-colors
-                                                ${brand.name === brandName ? "bg-gray-100 text-black" : "text-gray-500 hover:bg-gray-50 hover:text-black"}
+                                                ${brand === brandName ? "bg-gray-100 text-black" : "text-gray-500 hover:bg-gray-50 hover:text-black"}
                                             `}
                                         >
-                                            {brand.name === brandName && <Check size={12} className="text-black" />}
-                                            <span className={brand.name !== brandName ? "pl-5" : ""}>{brand.name}</span>
+                                            {brand === brandName && <Check size={12} className="text-black" />}
+                                            <span className={brand !== brandName ? "pl-5" : ""}>{brand}</span>
                                         </DropdownMenuItem>
                                     ))}
                                 </DropdownMenuContent>
@@ -202,7 +232,7 @@ export default function BrandPage({ brandName = "Laneige", onBrandChange, addToC
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-10">
                         {GRID_PRODUCTS.map(p => (
                             <div key={p.id} className="group flex flex-col">
-                                <div className="relative aspect-[3/4] rounded-[20px] overflow-hidden bg-gray-100 mb-4 shadow-sm group-hover:shadow-lg transition-all">
+                                <div className="relative aspect-3/4 rounded-[20px] overflow-hidden bg-gray-100 mb-4 shadow-sm group-hover:shadow-lg transition-all">
                                     <button className="absolute top-3 right-3 z-10 w-8 h-8 bg-white/60 backdrop-blur rounded-full flex items-center justify-center hover:bg-white hover:text-red-500 transition-colors">
                                         <Heart size={16} />
                                     </button>

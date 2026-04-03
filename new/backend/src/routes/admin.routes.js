@@ -14,7 +14,8 @@ import {
   approveVendor,
   seedFrontendProducts,
   getAdminCategories,
-  getAdminVendorAnalytics
+  getAdminVendorAnalytics,
+  getAdminBrands
 } from "../controllers/admin.controller.js";
 import { getPointsSettings, updatePointsSettings } from "../controllers/settings.controller.js";
 import { createProduct, updateProduct, deleteProduct } from "../controllers/products.controller.js";
@@ -47,6 +48,7 @@ router.get("/customers/:id", getAdminCustomerDetail);
 router.patch("/vendors/:id/approve", approveVendor);
 router.post("/seed-products", seedFrontendProducts);
 router.get("/categories", getAdminCategories);
+router.get("/brands", getAdminBrands);
 router.get("/settings/points", getPointsSettings);
 router.put("/settings/points", updatePointsSettings);
 

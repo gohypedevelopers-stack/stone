@@ -2,13 +2,11 @@ import React, { useState, useEffect, memo } from "react";
 import { useLocation } from "react-router-dom";
 import logo from "./assets/logo.png";
 import searchIcon from "./assets/search.png";
-import locationIcon from "./assets/location.png";
-import discountIcon from "./assets/sale_16767126.gif";
+
 import favIcon from "./assets/favourite.png";
 import accountIcon from "./assets/user-account.png";
 import cartIcon from "./assets/shopping-cart.png";
 
-import AddressModal from "./components/AddressModal";
 import AnnouncementBar from "./components/AnnouncementBar";
 import { CATEGORY_IMAGES, categorySphere } from "./bycategory";
 
@@ -45,7 +43,6 @@ const Navbar = memo(function Navbar({
   onToggleWishlist,
   onOpenAuth,
 }) {
-  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const { user, logout } = useAuth();
   const location = useLocation();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -104,7 +101,8 @@ const Navbar = memo(function Navbar({
 
   return (
     <>
-      <AnnouncementBar />
+      <div className="sticky top-0 z-50 w-full bg-white">
+        <AnnouncementBar />
       <header className="header">
         <div className="w-full flex items-center justify-between py-2 px-8 border-b border-stone-100">
           {/* Left Block: Logo */}
@@ -135,7 +133,7 @@ const Navbar = memo(function Navbar({
 
           {/* Center Block: Search Bar */}
           <div className="flex-1 max-w-xl flex justify-center px-4">
-            <div className="w-full flex items-center gap-3 px-5 py-2.5 rounded-full border border-stone-200 bg-stone-50/50 hover:bg-white hover:border-stone-300 hover:shadow-sm transition-all relative">
+            <div className="w-full flex items-center gap-3 px-5 py-2.5 rounded-[2px] border border-stone-200 bg-stone-50/50 hover:bg-white hover:border-stone-300 hover:shadow-sm transition-all relative">
               <span
                 className="w-5 h-5 grid place-items-center opacity-70"
                 aria-hidden="true"
@@ -152,6 +150,11 @@ const Navbar = memo(function Navbar({
                   className="border-none outline-none w-full text-sm bg-transparent text-stone-800 placeholder-transparent relative z-10"
                   value={localQuery}
                   onChange={(e) => setLocalQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && localQuery.trim()) {
+                      onNavigate(`shop?q=${encodeURIComponent(localQuery.trim())}`);
+                    }
+                  }}
                   placeholder=""
                   aria-label="Search products"
                 />
@@ -160,7 +163,7 @@ const Navbar = memo(function Navbar({
           </div>
 
           {/* Right Block: Actions */}
-          <div className="flex items-center justify-end gap-6">
+          <div className="flex-1 flex items-center justify-end gap-6">
             <a
               href="#"
               className="text-sm font-black text-stone-800 hover:text-pink-500 transition-colors"
@@ -171,6 +174,23 @@ const Navbar = memo(function Navbar({
             >
               Shop
             </a>
+
+            {user && (
+              <button
+                className="group/pts h-[38px] flex items-center gap-2.5 pl-4 pr-1.5 bg-white border border-stone-100 rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgba(0,0,0,0.08)] hover:border-pink-100 transition-all active:scale-95"
+                onClick={() => onNavigate("rewards")}
+                title="Reward Points"
+              >
+                <span className="text-[15px] font-black text-stone-800 tabular-nums tracking-tight">
+                  ₹{(user.rewardPoints || 0).toLocaleString()}
+                </span>
+                <div className="relative w-7 h-7 bg-[#ff4fa3] rounded-[8px] flex items-center justify-center transform rotate-[-6deg] shadow-[0_3px_8px_rgba(255,79,163,0.3)] group-hover/pts:rotate-0 group-hover/pts:scale-110 transition-all duration-300">
+                  <span className="text-white text-[14px] font-black italic select-none">₹</span>
+                  {/* Glass highlight */}
+                  <div className="absolute top-0 left-0 w-full h-[40%] bg-white/20 rounded-t-[8px]" />
+                </div>
+              </button>
+            )}
 
             <div className="flex items-center gap-4">
               <button
@@ -184,9 +204,9 @@ const Navbar = memo(function Navbar({
                   alt=""
                 />
                 {wishlistCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold border-2 border-white">
+                  <div className="absolute top-1 right-1 w-4 h-4 bg-linear-to-r from-[#ff4fa3] to-[#ff77c8] text-white text-[9px] font-black rounded-[2px] flex items-center justify-center border-2 border-white pointer-events-none">
                     {wishlistCount}
-                  </span>
+                  </div>
                 )}
               </button>
 
@@ -211,7 +231,7 @@ const Navbar = memo(function Navbar({
                 </button>
 
                 {user && showProfileMenu && (
-                  <div className="absolute top-[100%] right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-stone-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="absolute top-[100%] right-0 mt-2 w-48 bg-white rounded-[2px] shadow-xl border border-stone-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                     <div className="px-4 py-2 border-b border-stone-50 mb-1">
                       <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">
                         Signed in as
@@ -220,6 +240,7 @@ const Navbar = memo(function Navbar({
                         {user.name}
                       </p>
                     </div>
+
                     <button
                       onClick={() => {
                         onNavigate("account");
@@ -228,15 +249,6 @@ const Navbar = memo(function Navbar({
                       className="w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 transition-colors font-medium"
                     >
                       My Orders
-                    </button>
-                    <button
-                      onClick={() => {
-                        onNavigate("rewards");
-                        setShowProfileMenu(false);
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 transition-colors font-medium"
-                    >
-                      Rewards
                     </button>
                     <button
                       className="w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 transition-colors font-bold mt-2 pt-2 border-t border-stone-50"
@@ -271,42 +283,22 @@ const Navbar = memo(function Navbar({
                   alt=""
                 />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-stone-900 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold border-2 border-white">
+                  <span className="absolute -top-1 -right-1 bg-stone-900 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-[2px] font-bold border-2 border-white">
                     {cartCount}
                   </span>
                 )}
               </button>
             </div>
-
-            <div className="flex items-center gap-4 pl-4 border-l border-stone-100">
-              <button
-                className="hover:scale-110 transition-transform"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setIsAddressModalOpen(true);
-                }}
-                title="Change Location"
-              >
-                <img
-                  className="w-8 h-8 object-contain"
-                  src={locationIcon}
-                  alt="Location"
-                />
-              </button>
-              <img
-                className="w-10 h-10 object-contain animate-pulse"
-                src={discountIcon}
-                alt="Offers"
-              />
-            </div>
           </div>
         </div>
+      </header>
+    </div>
 
-        {location.pathname === "/" && (
-          <nav
-            className="border-b border-stone-100 bg-white relative overflow-x-auto no-scrollbar"
-            aria-label="Primary categories"
-          >
+    {location.pathname === "/" && (
+      <nav
+        className="border-b border-stone-100 bg-white relative overflow-x-auto no-scrollbar"
+        aria-label="Primary categories"
+      >
             <div className="w-fit mx-auto py-6 flex gap-8 items-center px-10">
               {categories.map((c) => {
                 const isDirectLink = ["New Arrivals", "Best Sellers"].includes(
@@ -388,14 +380,8 @@ const Navbar = memo(function Navbar({
                 );
               })}
             </div>
-          </nav>
-        )}
-      </header>
-
-      <AddressModal
-        isOpen={isAddressModalOpen}
-        onClose={() => setIsAddressModalOpen(false)}
-      />
+      </nav>
+      )}
     </>
   );
 });

@@ -48,8 +48,8 @@ export const recordOfflinePurchase = async (req, res) => {
 
     const purchase = await prisma.offlinePurchase.create({
       data: {
-        vendorId,
-        customerId: customer?.id || null,
+        vendor: { connect: { id: vendorId } },
+        customer: customer?.id ? { connect: { id: customer?.id } } : undefined,
         mobile,
         amount: Number(amount),
         purchaseDate: purchaseDate ? new Date(purchaseDate) : new Date(),

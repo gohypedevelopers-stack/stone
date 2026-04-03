@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { PREORDER_PRODUCTS } from "./data/products";
+import { useProducts } from "./context/ProductContext";
 import { 
     Clock, Filter, ChevronDown, ChevronLeft, Heart, 
     ShieldCheck, Truck, RefreshCcw, Bell
@@ -8,33 +8,48 @@ import {
 
 export default function PreOrderListPage({ wishlist = [], toggleWishlist }) {
     const navigate = useNavigate();
+    const { preorderProducts, loading } = useProducts();
     const [activeFilter, setActiveFilter] = useState("All");
     const [sortOption, setSortOption] = useState("Release Date");
 
     const FILTERS = ["All", "Skincare", "Makeup", "Haircare", "Exclusive"];
 
     const filteredProducts = useMemo(() => {
-        let items = [...PREORDER_PRODUCTS];
+        let items = [...preorderProducts];
 
         if (activeFilter !== "All") {
             items = items.filter(p => p.category === activeFilter || p.tag === activeFilter);
         }
 
+        const parsePrice = (p) => {
+            if (typeof p === 'number') return p;
+            return parseFloat(p.replace(/[^\d.-]/g, '')) || 0;
+        };
+
         // Sort logic
         return items.sort((a, b) => {
             switch (sortOption) {
-                case "Price Low to High": return parseFloat(a.price.replace(/[^\d.-]/g, '')) - parseFloat(b.price.replace(/[^\d.-]/g, ''));
-                case "Price High to Low": return parseFloat(b.price.replace(/[^\d.-]/g, '')) - parseFloat(a.price.replace(/[^\d.-]/g, ''));
+                case "Price Low to High": return parsePrice(a.price) - parsePrice(b.price);
+                case "Price High to Low": return parsePrice(b.price) - parsePrice(a.price);
                 case "Demand": return a.stockLeft - b.stockLeft;
                 default: return 0; // Release Date / Default
             }
         });
-    }, [activeFilter, sortOption]);
+    }, [preorderProducts, activeFilter, sortOption]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-[#fffcfc]">
+                <div className="w-10 h-10 border-4 border-[#d1408e] border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p className="text-xs font-bold text-stone-400 uppercase tracking-widest animate-pulse">Loading Drops...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-[#fffcfc] font-sans pb-20">
             {/* Header Area */}
-            <div className="bg-gradient-to-br from-[#fff0f5] to-white border-b border-pink-50 pt-24 pb-12 px-6">
+            <div className="bg-linear-to-br from-[#fff0f5] to-white border-b border-pink-50 pt-24 pb-12 px-6">
                 <div className="max-w-[1400px] mx-auto">
                     <button 
                         onClick={() => navigate(-1)}
@@ -59,7 +74,7 @@ export default function PreOrderListPage({ wishlist = [], toggleWishlist }) {
                         
                         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-6">
                             <div className="flex flex-col">
-                                <span className="text-2xl font-black text-[#d1408e]">{PREORDER_PRODUCTS.length}</span>
+                                <span className="text-2xl font-black text-[#d1408e]">{preorderProducts.length}</span>
                                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active Drops</span>
                             </div>
                             <div className="w-[1px] h-10 bg-gray-100" />

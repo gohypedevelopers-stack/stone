@@ -21,9 +21,7 @@ import LimitedOfferBanner from "./LimitedOfferBanner.jsx";
 import RequestProductSection from "./RequestProductSection.jsx";
 import PreOrderSection from "./PreOrderSection.jsx";
 
-// Local assets for showcases
-import hairBanner from "./assets/category/Hair set.jpg";
-import makeupBanner from "./assets/category/International makeup.jpeg";
+
 
 import { useProducts } from "./context/ProductContext";
 
@@ -44,19 +42,8 @@ const STATIC_FALLBACK_ORDER = [
   "skin-quiz", "request-product"
 ];
 
-const HAIR_CARE_DATA = [
-  { id: "hc1", brand: "Shiseido", name: "Shiseido Fino Premium Touch Hair Mask", price: 2300, points: 69, image: "https://images.unsplash.com/photo-1526947425960-945c6e72858f?auto=format&fit=crop&w=600" },
-  { id: "hc2", brand: "Shiseido", name: "Shiseido Fino Premium Touch Hair Oil", price: 2800, points: 84, image: "https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?auto=format&fit=crop&w=600" },
-  { id: "hc3", brand: "KERASTASE", name: "Elixir Ultime L'Huile Original Hair Oil", price: 4500, points: 110, image: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=600" },
-  { id: "hc4", brand: "OLAPLEX", name: "No. 3 Hair Perfector Treatment", price: 1800, points: 45, image: "https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?auto=format&fit=crop&w=600" }
-];
+// Static data removed
 
-const MAKEUP_DATA = [
-  { id: "mu1", brand: "Rare Beauty", name: "Rare Beauty Soft Pinch Tinted Lip Oil - Serene", price: 5800, points: 174, image: "https://images.unsplash.com/photo-1625093742435-6fa192b6fb10?auto=format&fit=crop&w=600" },
-  { id: "mu2", brand: "Rare Beauty", name: "Rare Beauty Soft Pinch Tinted Lip Oil - Affection", price: 5800, points: 174, image: "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=600" },
-  { id: "mu3", brand: "Dior", name: "Dior Addict Lip Glow - 001 Pink", price: 4200, points: 120, image: "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=600" },
-  { id: "mu4", brand: "CHANEL", name: "Chanel Rouge Coco Baum - My Rose", price: 4800, points: 140, image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600" }
-];
 
 
 const HomePage = memo(function HomePage({
@@ -129,7 +116,15 @@ const HomePage = memo(function HomePage({
         return <OfferTimer key={key} offers={settings?.offers} />;
 
       case "upcoming-drops":
-        const onlineDropProducts = (settings?.products || []).filter(p => p.showOnline !== false);
+        const onlineDropProducts = (settings?.products || []).filter(p => p.showOnline !== false).map(sp => {
+           const fullProduct = PRODUCTS.find(p => p.id === sp.id);
+           return { 
+             ...sp, 
+             price: sp.price || fullProduct?.price || 0, 
+             originalPrice: sp.originalPrice || fullProduct?.originalPrice || fullProduct?.price || sp.price || 0, 
+             description: sp.description || fullProduct?.description || sp.name || '' 
+           };
+        });
         return <UpcomingDrops key={key} onNavigate={onNavigate} wishlist={wishlist} toggleWishlist={toggleWishlist} deadline={settings?.deadline} title={section.title || settings?.promoText} products={onlineDropProducts} />;
 
       case "shop-by-category":
@@ -159,17 +154,14 @@ const HomePage = memo(function HomePage({
       case "offline-store":
         return <OfflineStore key={key} />;
 
-      case "hair-care-showcase":
-        return <CategoryShowcase key={key} category="Hair Care" bannerBigText="Hair" bannerSmallText="CARE" bannerColor="from-pink-50 to-sky-50" bannerImage={hairBanner} products={HAIR_CARE_DATA} />;
 
-      case "makeup-showcase":
-        return <CategoryShowcase key={key} category="Makeup" bannerBigText="Makeup" bannerSmallText="MIX" bannerColor="from-sky-50 to-pink-50" bannerImage={makeupBanner} products={MAKEUP_DATA} />;
+
 
       case "shop-by-origin":
         return <ShopByOrigin key={key} />;
 
       case "shop-by-brand":
-        return <ShopByBrand key={key} onSelectBrand={onSelectBrand} selectedBrands={settings?.brands} title={section.title} maxItems={settings?.maxItems} bgColor={settings?.bgColor} />;
+        return <ShopByBrand key={key} onSelectBrand={onSelectBrand} title={section.title} maxItems={settings?.maxItems} bgColor={settings?.bgColor} hiddenBrands={settings?.hiddenBrands} />;
 
       case "by-skin-concern":
         return <BySkinConcern key={key} onSelectConcern={onSelectConcern} title={section.title} bgColor={settings?.bgColor} />;
@@ -187,7 +179,7 @@ const HomePage = memo(function HomePage({
         return <ByOffer key={key} onNavigate={onNavigate} onSelectOffer={onSelectOffer} title={section.title} maxItems={settings?.maxItems} bgColor={settings?.bgColor} />;
 
       case "pre-order":
-        return <PreOrderSection key={key} wishlist={wishlist} toggleWishlist={toggleWishlist} title={section.title} />;
+        return <PreOrderSection key={key} wishlist={wishlist} toggleWishlist={toggleWishlist} title={section.title} settings={settings} />;
 
       case "skin-quiz":
         return <SkinQuiz key={key} headline={settings?.headline} targetUrl={settings?.link} />;
@@ -211,7 +203,7 @@ const HomePage = memo(function HomePage({
               <h2 className="text-3xl font-black text-gray-900 mb-2">Search Results</h2>
               <p className="text-gray-500">Showing results for "{query}"</p>
             </div>
-            <div className="bg-gray-100 px-4 py-2 rounded-full text-sm font-bold text-gray-600">
+            <div className="bg-gray-100 px-4 py-2 rounded-[2px] text-sm font-bold text-gray-600">
               {filteredProducts.length} PRODUCTS FOUND
             </div>
           </div>

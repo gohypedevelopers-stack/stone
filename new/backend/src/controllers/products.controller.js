@@ -9,6 +9,62 @@ import { sendError, sendSuccess } from "../utils/http.js";
 
 const coerceBoolean = (value) => parseBoolean(value) ?? Boolean(value);
 
+export const getBrands = async (req, res) => {
+  try {
+    const DEFAULT_BRANDS = [
+      "SkinCeuticals", "La Roche-Posay", "Tatcha", "Drunk Elephant", "Glossier",
+      "Augustinus Bader", "e.l.f. Cosmetics", "NYX Professional Makeup", "Huda Beauty",
+      "Sol de Janeiro", "Laneige", "Lakmé", "Mamaearth", "Sugar Cosmetics",
+      "Nykaa Cosmetics", "Dot & Key", "Minimalist", "Dettol", "Detol", "Lifebuoy", 
+      "Savlon", "Pears", "Dove", "Nivea", "Garnier", "L'Oréal"
+    ];
+
+    // Fetch all brands from products
+    const products = await prisma.product.findMany({
+      select: { brand: true }
+    });
+    
+    // Fetch all vendors
+    const vendors = await prisma.vendor.findMany({
+      select: { businessName: true }
+    });
+
+    // Fetch homepage custom brands
+    const homepageBrandsSection = await prisma.homepageSection.findUnique({
+      where: { componentId: 'shop-by-brand' }
+    });
+    
+    let customHomepageBrands = [];
+    let hiddenHomepageBrands = [];
+    if (homepageBrandsSection && homepageBrandsSection.settings) {
+      const settings = homepageBrandsSection.settings;
+      if (Array.isArray(settings.brands)) {
+        customHomepageBrands = settings.brands.map(b => 
+          typeof b === 'string' ? b : b.name
+        ).filter(Boolean);
+      }
+      if (Array.isArray(settings.hiddenBrands)) {
+        hiddenHomepageBrands = settings.hiddenBrands;
+      }
+    }
+    
+    // Extract names and combine
+    const productBrands = products.map(p => p.brand).filter(Boolean);
+    const vendorNames = vendors.map(v => v.businessName).filter(Boolean);
+    
+    // Deduplicate and sort
+    const allBrands = Array.from(new Set(
+      [...DEFAULT_BRANDS, ...productBrands, ...vendorNames, ...customHomepageBrands]
+        .map(b => b?.trim())
+        .filter(Boolean)
+    )).filter(b => !hiddenHomepageBrands.includes(b)).sort((a, b) => a.localeCompare(b));
+      
+    return sendSuccess(res, allBrands, "Brands fetched");
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
 export const listProducts = async (req, res) => {
   try {
     const { category, brand, featured, limitedOffer, newArrival, bestSeller, trending, search } = req.query;
@@ -17,6 +73,8 @@ export const listProducts = async (req, res) => {
       include: {
         vendor: true,
         category: true,
+        linkedProduct: { select: { id: true, name: true, imageUrls: true, price: true } },
+        linkedDeals: { select: { id: true, name: true, imageUrls: true, price: true, discountPrice: true, specialOfferType: true, brand: true, stock: true, onlineStock: true, category: { select: { name: true } } } },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -99,6 +157,9 @@ export const createProduct = async (req, res) => {
       newArrival,
       bestSeller,
       trending,
+      onlineStock,
+      specialOfferType,
+      linkedProductId,
     } = req.body;
 
     if (!vendorId || !name || price === undefined) {
@@ -146,8 +207,8 @@ export const createProduct = async (req, res) => {
 
     const product = await prisma.product.create({
       data: {
-        vendorId,
-        categoryId: resolvedCategoryId,
+        vendor: { connect: { id: vendorId } },
+        category: resolvedCategoryId ? { connect: { id: resolvedCategoryId } } : undefined,
         name,
         slug: finalSlug,
         brand: brand || null,
@@ -167,10 +228,13 @@ export const createProduct = async (req, res) => {
         newArrival: coerceBoolean(newArrival),
         bestSeller: coerceBoolean(bestSeller),
         trending: coerceBoolean(trending),
+        onlineStock: Number(onlineStock || 0),
         ingredients: ingredients || null,
         whyWeLoveIt: whyWeLoveIt || null,
         benefits: benefits || null,
         faq: faq || null,
+        specialOfferType: specialOfferType || null,
+        linkedProductId: linkedProductId || null,
       },
       include: {
         vendor: true,
@@ -238,6 +302,9 @@ export const updateProduct = async (req, res) => {
       newArrival,
       bestSeller,
       trending,
+      onlineStock,
+      specialOfferType,
+      linkedProductId,
     } = req.body;
     
     let resolvedCategoryId = categoryId || undefined;
@@ -255,8 +322,8 @@ export const updateProduct = async (req, res) => {
       name,
       description,
       brand,
-      vendorId,
-      categoryId: resolvedCategoryId,
+      vendor: vendorId ? { connect: { id: vendorId } } : undefined,
+      category: resolvedCategoryId ? { connect: { id: resolvedCategoryId } } : (categoryId === null ? { disconnect: true } : undefined),
       price: price ? Number(price) : undefined,
       discountPrice: discountPrice ? Number(discountPrice) : null,
       stock: stock !== undefined ? Number(stock) : undefined,
@@ -267,12 +334,15 @@ export const updateProduct = async (req, res) => {
       newArrival: newArrival !== undefined ? Boolean(newArrival) : undefined,
       bestSeller: bestSeller !== undefined ? Boolean(bestSeller) : undefined,
       trending: trending !== undefined ? Boolean(trending) : undefined,
+      onlineStock: onlineStock !== undefined ? Number(onlineStock) : undefined,
       imageUrls: Array.isArray(imageUrls) ? imageUrls : undefined,
       tags: Array.isArray(tags) ? tags : undefined,
       ingredients,
       benefits,
       whyWeLoveIt,
       faq,
+      specialOfferType,
+      linkedProductId: linkedProductId !== undefined ? (linkedProductId || null) : undefined,
     };
 
     // Remove undefined values

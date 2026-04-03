@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from "react";
 import {
-    Star, Heart, Minus, Plus, ShoppingBag, ShieldCheck,
+    Star, Heart, Minus, Plus, ShoppingBag, ShoppingCart, ShieldCheck,
     Truck, CornerUpLeft, CreditCard, ChevronDown, ChevronUp, Share2, ArrowRight,
-    Gift, Tag, Sparkles, Clock, CheckCircle, Banknote, MapPin, X
+    Gift, Tag, Sparkles, Clock, CheckCircle, Banknote, MapPin, X, AlertCircle, Store, Copy, Play, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { getAllProducts } from "./data/products";
 import { useProducts } from "./context/ProductContext";
-import { useParams, useLocation } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 import { CATEGORY_DATA_GENERATED } from "./productData.js";
 import { PREORDER_PRODUCTS } from "./data/products";
+// --- Redesign Constants ---
+const BURGUNDY = "#5E2B3C";
+const LIGHT_BURGUNDY = "#F8EFF2";
 
 // --- Mock Data for PDP Specifics ---
 const MOCK_PDP_DATA = {
@@ -49,24 +55,38 @@ const MOCK_PDP_DATA = {
 // --- Helper Components ---
 
 const AccordionItem = ({ title, children, isOpen, onClick }) => (
-    <div className="border-b border-gray-100 last:border-none">
+    <div className="border-t border-[#d1d1d1]/30 last:border-b last:border-[#d1d1d1]/30">
         <button
             onClick={onClick}
-            className="w-full py-5 flex items-center justify-between text-left group"
+            className="w-full py-6 flex items-center justify-between text-left group transition-all"
         >
-            <span className="font-bold text-gray-900 text-lg group-hover:text-pink-500 transition-colors">{title}</span>
-            {isOpen ? <ChevronUp size={20} className="text-gray-400" /> : <ChevronDown size={20} className="text-gray-400" />}
-        </button>
-        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-[500px] opacity-100 mb-6" : "max-h-0 opacity-0"}`}>
-            <div className="text-gray-600 leading-relaxed text-sm md:text-base">
-                {children}
+            <span className="text-[12px] font-medium text-gray-900 uppercase tracking-[0.2em] group-hover:text-[#ff4fa3] transition-colors">
+                {title}
+            </span>
+            <div className={`transition-transform duration-300 ${isOpen ? "rotate-180" : "rotate-0 text-gray-300"}`}>
+                <ChevronDown size={14} strokeWidth={2} />
             </div>
-        </div>
+        </button>
+        <AnimatePresence>
+            {isOpen && (
+                <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
+                    className="overflow-hidden"
+                >
+                    <div className="pb-8 text-gray-600 leading-relaxed text-[14px]">
+                        {children}
+                    </div>
+                </motion.div>
+            )}
+        </AnimatePresence>
     </div>
 );
 
 const ReviewCard = ({ name, rating, comment, date }) => (
-    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm min-w-[300px] md:min-w-[350px]">
+    <div className="bg-white p-6 rounded-[2px] border border-gray-100 shadow-sm min-w-[300px] md:min-w-[350px]">
         <div className="flex items-center gap-1 mb-3">
             {[...Array(5)].map((_, i) => (
                 <Star key={i} size={14} className={`${i < rating ? "fill-yellow-400 text-yellow-400" : "text-gray-200"}`} />
@@ -78,20 +98,50 @@ const ReviewCard = ({ name, rating, comment, date }) => (
     </div>
 );
 
-const ProductCardMini = ({ product, onAddToCart }) => (
-    <div className="group relative min-w-[160px] md:min-w-[200px] bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-lg transition-all cursor-pointer">
-        <div className="relative aspect-square bg-gray-50 overflow-hidden">
-            <img src={product.image || "https://placehold.co/200"} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+const ProductCardMini = ({ product, onAddToCart, onClick }) => (
+    <div 
+        onClick={onClick}
+        className="group relative flex flex-col w-[160px] md:w-[220px] bg-white rounded-[2px] overflow-hidden border border-gray-100 hover:shadow-xl hover:shadow-gray-200/50 transition-all cursor-pointer h-full"
+    >
+        {/* Fixed Aspect Image */}
+        <div className="relative aspect-[4/5] bg-gray-50 overflow-hidden flex-shrink-0">
+            <img 
+                src={product.image || "https://placehold.co/200"} 
+                alt={product.name} 
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+            />
+            {product.discount && (
+                <div className="absolute top-2 left-2 bg-pink-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-[1px] tracking-tighter">
+                    -{product.discount}%
+                </div>
+            )}
         </div>
-        <div className="p-3">
-            <h4 className="font-bold text-sm truncate">{product.name}</h4>
-            <p className="text-xs text-gray-500 mb-2">{product.category}</p>
-            <div className="flex items-center justify-between">
-                <span className="font-bold text-sm">₹{product.price}</span>
+
+        <div className="p-4 flex flex-col flex-1">
+            {/* Category - Subtle */}
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">{product.category || "Treatment"}</p>
+            
+            {/* Title - Fixed height container for 2 lines */}
+            <div className="h-10 mb-3 overflow-hidden">
+                <h4 className="font-bold text-[13px] text-gray-900 leading-tight line-clamp-2 group-hover:text-pink-600 transition-colors uppercase tracking-tight">
+                    {product.name}
+                </h4>
+            </div>
+
+            {/* Price & Action - Bottom aligned */}
+            <div className="mt-auto flex items-center justify-between pt-2 border-t border-gray-50">
+                <div className="flex flex-col">
+                    <span className="text-[11px] font-bold text-gray-400 line-through">₹{Math.round(product.price * 1.2)}</span>
+                    <span className="font-black text-[15px] text-[#1a1a1a]">₹{product.price}</span>
+                </div>
                 <button
-                    onClick={() => onAddToCart && onAddToCart(product)}
-                    className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-black hover:text-white transition-colors"
-                >+
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onAddToCart && onAddToCart(product);
+                    }}
+                    className="w-9 h-9 rounded-[2px] bg-stone-50 border border-stone-100 flex items-center justify-center text-stone-600 hover:bg-stone-900 hover:text-white hover:border-black transition-all shadow-sm active:scale-90"
+                >
+                    <Plus size={16} strokeWidth={3} />
                 </button>
             </div>
         </div>
@@ -106,7 +156,7 @@ const SectionHeader = ({ title, timer }) => (
         {timer && (
             <div className="flex items-center gap-2">
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ends In</span>
-                <div className="bg-[#E11D48] text-white font-black text-xs px-3 py-1.5 rounded-md tracking-widest">
+                <div className="bg-[#E11D48] text-white font-black text-xs px-3 py-1.5 rounded-[2px] tracking-widest">
                     {timer}
                 </div>
             </div>
@@ -114,34 +164,68 @@ const SectionHeader = ({ title, timer }) => (
     </div>
 );
 
-const OfferCouponCard = ({ title, sub, code, color = "from-pink-50 to-white" }) => (
-    <div className={`relative bg-gradient-to-br ${color} rounded-[24px] border border-pink-100/50 p-6 flex flex-col justify-between h-full min-h-[160px] overflow-hidden group transition-all hover:shadow-xl hover:shadow-pink-100/20`}>
-        {/* Decorative Background Icon */}
-        <div className="absolute -right-4 -top-4 text-pink-500/5 opacity-[0.08] transform rotate-12 transition-transform group-hover:scale-125">
-             <Tag size={120} strokeWidth={1} />
+const OfferCouponCard = ({ title, sub, code }) => {
+    const handleCopy = () => {
+        navigator.clipboard.writeText(code);
+        toast.success("Coupon code copied!");
+    };
+
+    return (
+        <div className="relative group flex-1">
+            {/* Main Ticket Body */}
+            <div className="relative bg-white rounded-[4px] border-2 border-dashed border-[#ff4fa3]/20 overflow-hidden transition-all hover:border-[#ff4fa3]/40 hover:shadow-xl hover:shadow-[#ff4fa3]/5 h-full">
+                {/* Glossy Overlay */}
+                <div className="absolute inset-0 bg-linear-to-br from-[#fff0f6] to-white pointer-events-none" />
+                
+                {/* Physical Ticket Scallops */}
+                <div className="absolute -left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-white border border-[#ff4fa3]/10 z-20" />
+                <div className="absolute -right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-white border border-[#ff4fa3]/10 z-20" />
+                
+                <div className="relative p-5 flex flex-col gap-3 z-10">
+                    <div className="space-y-1">
+                        <p className="text-[9px] font-[1000] text-[#ff4fa3] tracking-[0.2em] uppercase opacity-80">Exclusive Offer</p>
+                        <p className="text-[11px] font-[1000] text-gray-900 leading-tight tracking-tight uppercase">
+                            {title}
+                        </p>
+                    </div>
+                    
+                    <div className="flex items-center justify-between gap-2 border-2 border-[#ff4fa3]/10 rounded-[4px] h-10 px-3 bg-white shadow-sm group-hover:border-[#ff4fa3]/30 transition-all">
+                        <span className="text-[11px] font-black text-[#ff4fa3] tracking-[0.25em] font-mono lowercase">
+                            {code}
+                        </span>
+                        <button onClick={handleCopy} className="text-[#ff4fa3] hover:scale-125 transition-transform p-1">
+                            <Copy size={14} strokeWidth={3} />
+                        </button>
+                    </div>
+                    
+                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none mt-1">
+                       {sub}
+                    </p>
+                </div>
+            </div>
         </div>
-        
-        <div>
-            <h3 className="text-[17px] font-[1000] text-emerald-600 mb-1 leading-tight tracking-tight">{title}</h3>
-            <p className="text-[13px] font-bold text-gray-500 leading-tight pr-10">{sub}</p>
+    );
+};
+
+const DeliveryBanner = ({ time = "7-10 Business Days" }) => (
+    <div className="flex items-center gap-5 bg-white border border-gray-100 rounded-[4px] p-5 mb-8 shadow-sm group hover:border-[#ff4fa3]/20 transition-all">
+        <div className="w-12 h-12 bg-[#ff4fa3]/5 text-[#ff4fa3] rounded-full flex items-center justify-center shrink-0 border border-[#ff4fa3]/10 group-hover:scale-110 transition-transform">
+            <Truck size={22} strokeWidth={2.5} />
         </div>
-        
-        <div className="flex items-center justify-between mt-auto pt-4 relative z-10">
-            <span className="text-[15px] font-[1000] text-gray-900 tracking-wider font-mono">{code}</span>
-            <button className="text-pink-600 font-[1000] text-sm uppercase tracking-widest hover:scale-105 transition-transform">
-                Apply
-            </button>
+        <div className="space-y-0.5">
+            <p className="text-[10px] font-[1000] text-[#ff4fa3] uppercase tracking-[0.2em] opacity-60">Shipping Information</p>
+            <p className="text-[14px] font-bold text-gray-900 leading-tight">Arrives in <span className="text-[#ff4fa3]">{time}</span></p>
         </div>
     </div>
 );
 
 const OfferGiftCard = ({ image, title, sub, status = "FREE", isLocked = true }) => (
-    <div className="relative bg-white rounded-[24px] border border-gray-100/80 p-5 flex gap-5 h-full min-h-[160px] overflow-hidden group hover:shadow-xl hover:shadow-gray-100 transition-all">
+    <div className="relative bg-white rounded-[2px] border border-gray-100/80 p-5 flex gap-5 h-full min-h-[160px] overflow-hidden group hover:shadow-xl hover:shadow-gray-100 transition-all">
         <div className="absolute inset-0 bg-gradient-to-r from-gray-50/50 to-transparent pointer-none" />
         
-        <div className="w-28 h-28 rounded-2xl overflow-hidden bg-gray-50 relative z-10 shrink-0">
+        <div className="w-28 h-28 rounded-[2px] overflow-hidden bg-gray-50 relative z-10 shrink-0">
             <img src={image} alt={title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-            <div className="absolute top-2 left-2 bg-emerald-100 text-emerald-600 text-[9px] font-black px-2 py-0.5 rounded-md border border-emerald-200 shadow-sm">
+            <div className="absolute top-2 left-2 bg-emerald-100 text-emerald-600 text-[9px] font-black px-2 py-0.5 rounded-[2px] border border-emerald-200 shadow-sm">
                 {status}
             </div>
         </div>
@@ -153,7 +237,7 @@ const OfferGiftCard = ({ image, title, sub, status = "FREE", isLocked = true }) 
             </div>
             
             <div className="flex items-center justify-between mt-4">
-               {isLocked && <div className="p-1.5 bg-gray-50 rounded-full text-gray-300"><Clock size={14} /></div>}
+               {isLocked && <div className="p-1.5 bg-gray-50 rounded-[2px] text-gray-300"><Clock size={14} /></div>}
                <button className="text-pink-600 font-black text-[11px] uppercase tracking-widest flex items-center gap-1 group-hover:gap-2 transition-all">
                    View Products <ArrowRight size={10} />
                </button>
@@ -163,7 +247,7 @@ const OfferGiftCard = ({ image, title, sub, status = "FREE", isLocked = true }) 
 );
 
 const OfferSampleCard = ({ title, sub, color = "from-emerald-50 to-white" }) => (
-    <div className={`relative bg-gradient-to-br ${color} rounded-[24px] border border-emerald-100/50 p-6 flex flex-col h-full min-h-[160px] overflow-hidden group hover:shadow-xl hover:shadow-emerald-100/20 transition-all`}>
+    <div className={`relative bg-gradient-to-br ${color} rounded-[2px] border border-emerald-100/50 p-6 flex flex-col h-full min-h-[160px] overflow-hidden group hover:shadow-xl hover:shadow-emerald-100/20 transition-all`}>
         {/* Decorative Background Icon */}
         <div className="absolute -right-6 -bottom-6 text-emerald-500/10 opacity-[0.08] transform -rotate-12 group-hover:scale-125 transition-transform">
              <Sparkles size={140} strokeWidth={1} />
@@ -189,8 +273,8 @@ const OfferSampleCard = ({ title, sub, color = "from-emerald-50 to-white" }) => 
 const LimitedGiftCard = ({ image, brand, name, unclaimed, total }) => {
     const progress = ((total - unclaimed) / total) * 100;
     return (
-        <div className="bg-white rounded-[28px] border border-gray-100 p-4 flex gap-6 items-center flex-1">
-            <div className="w-32 h-32 rounded-[20px] overflow-hidden bg-gray-50 flex-shrink-0">
+        <div className="bg-white rounded-[2px] border border-gray-100 p-4 flex gap-6 items-center flex-1">
+            <div className="w-32 h-32 rounded-[2px] overflow-hidden bg-gray-50 flex-shrink-0">
                 <img src={image} alt={name} className="w-full h-full object-cover" />
             </div>
             <div className="flex-1 space-y-3">
@@ -200,8 +284,8 @@ const LimitedGiftCard = ({ image, brand, name, unclaimed, total }) => {
                     <p className="text-xs font-medium text-gray-400">{brand}</p>
                 </div>
                 <div className="space-y-2">
-                    <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-pink-500 rounded-full" style={{ width: `${progress}%` }} />
+                    <div className="w-full h-1 bg-gray-100 rounded-[2px] overflow-hidden">
+                        <div className="h-full bg-pink-500 rounded-[2px]" style={{ width: `${progress}%` }} />
                     </div>
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{Math.round(progress)}% Claimed</p>
                 </div>
@@ -211,8 +295,8 @@ const LimitedGiftCard = ({ image, brand, name, unclaimed, total }) => {
 };
 
 const TrustFactor = ({ icon: Icon, text }) => (
-    <div className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-5 py-3 shadow-sm flex-1">
-        <div className="p-2 bg-pink-50 rounded-lg text-pink-600">
+    <div className="flex items-center gap-3 bg-white border border-gray-100 rounded-[2px] px-5 py-3 shadow-sm flex-1">
+        <div className="p-2 bg-pink-50 rounded-[2px] text-pink-600">
             <Icon size={16} />
         </div>
         <span className="text-[11px] font-black text-gray-900 uppercase tracking-wider">{text}</span>
@@ -220,40 +304,25 @@ const TrustFactor = ({ icon: Icon, text }) => (
 );
 
 const MegaDealBanner = ({ price, discount, onOpenDetails }) => (
-    <div className="bg-gradient-to-br from-[#fff5f9] to-white border border-pink-100 rounded-2xl p-4 mb-6 transition-all hover:shadow-md group relative overflow-hidden">
+    <div className="bg-[#fff9fc] border border-[#ffebf3] rounded-[4px] p-6 mb-8 transition-all hover:shadow-lg hover:shadow-pink-50/50 group relative overflow-hidden">
         {/* Subtle Background Pattern */}
-        <div className="absolute top-0 right-0 p-1 opacity-5">
-            <Sparkles size={40} />
+        <div className="absolute -right-4 -top-4 text-[#ffebf3] opacity-40 transform scale-150 rotate-12 pointer-events-none transition-transform group-hover:scale-[1.6]">
+            <Sparkles size={100} strokeWidth={1} />
         </div>
         
-        <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2.5">
-                <div className="bg-gradient-to-r from-pink-600 to-rose-500 text-white text-[9px] font-black px-2 py-0.5 rounded shadow-sm tracking-tighter uppercase transform -skew-x-12 border border-pink-400/20">
+        <div className="flex items-center justify-between mb-4 relative z-10">
+            <div className="flex items-center gap-5">
+                <div className="bg-gradient-to-r from-pink-600 to-[#E11D48] text-white text-[10px] font-black px-4 py-1.5 rounded-[2px] shadow-sm tracking-widest uppercase transform -skew-x-12 border border-white/10 ring-4 ring-pink-50">
                     MEGA DEAL
                 </div>
-                <div className="flex items-baseline gap-1">
-                    <span className="text-[11px] font-bold text-gray-600">Get at</span>
-                    <span className="text-xl font-[900] text-gray-900 tracking-tight">₹{price}</span>
+                <div className="flex items-baseline gap-2 pt-1">
+                    <span className="text-[13px] font-[900] text-gray-400 uppercase tracking-tight">Get at</span>
+                    <span className="text-2xl font-black text-[#1a1a1a] tracking-tight">₹{price}</span>
                 </div>
             </div>
-            <div className="bg-[#00b852] text-white text-[10px] font-black px-3 py-1 rounded-full shadow-sm flex items-center gap-1 border border-[#00a349]/20">
+            <div className="bg-[#00b852] text-white text-[12px] font-black px-4 py-2 rounded-[2px] shadow-xl shadow-[#00b852]/15 flex items-center gap-1.5 border border-white/5 active:scale-95 transition-transform">
                 Extra ₹{discount} Off
             </div>
-        </div>
-        
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-pink-50/50">
-            <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 tracking-tight uppercase">
-                <span>With Coupon</span>
-                <span className="text-pink-300">•</span>
-                <Banknote size={12} className="text-pink-400" />
-                <span>Bank Offer</span>
-            </div>
-            <button 
-                onClick={onOpenDetails}
-                className="text-pink-600 font-[900] text-[10px] uppercase tracking-widest flex items-center gap-1 group-hover:gap-1.5 transition-all"
-            >
-                Details <ArrowRight size={10} className="transform group-hover:translate-x-0.5 transition-transform" />
-            </button>
         </div>
     </div>
 );
@@ -262,8 +331,8 @@ const GenuineSeal = ({ onClick }) => (
     <button onClick={onClick} className="flex flex-col items-center gap-3 group cursor-pointer outline-none tap-highlight-transparent">
         <div className="relative w-20 h-20 md:w-24 md:h-24">
              {/* Seal Background */}
-             <div className="absolute inset-0 bg-sky-100 rounded-full animate-pulse-slow opacity-50 group-hover:opacity-100 transition-opacity" style={{clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)'}} />
-             <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center shadow-inner">
+             <div className="absolute inset-0 bg-sky-100 rounded-[2px] animate-pulse-slow opacity-50 group-hover:opacity-100 transition-opacity" style={{clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)'}} />
+             <div className="absolute inset-2 bg-white rounded-[2px] flex items-center justify-center shadow-inner">
                  <div className="bg-pink-500 text-white text-[9px] font-black px-3 py-1.5 rotate-[-25deg] shadow-lg flex items-center gap-1 border-2 border-white">
                     <Sparkles size={8} className="fill-white" /> ORIGINAL
                  </div>
@@ -277,13 +346,13 @@ const QualitySeal = ({ onClick }) => (
     <button onClick={onClick} className="flex flex-col items-center gap-3 group cursor-pointer outline-none tap-highlight-transparent">
         <div className="relative w-20 h-20 md:w-24 md:h-24">
              {/* Quality Seal Background */}
-             <div className="absolute inset-0 bg-sky-200 rounded-full" style={{clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)'}} />
-             <div className="absolute inset-1 bg-white rounded-full flex items-center justify-center shadow-inner">
+             <div className="absolute inset-0 bg-sky-200 rounded-[2px]" style={{clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)'}} />
+             <div className="absolute inset-1 bg-white rounded-[2px] flex items-center justify-center shadow-inner">
                  <div className="text-sky-500 transform scale-150 drop-shadow-sm">
                     <CheckCircle size={32} strokeWidth={3} className="fill-sky-50 shadow-blue-200" />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
-                       <div className="w-1.5 h-3 bg-red-400 rounded-full rotate-[-45deg] origin-top" />
-                       <div className="w-1.5 h-3 bg-red-400 rounded-full rotate-[45deg] origin-top" />
+                       <div className="w-1.5 h-3 bg-red-400 rounded-[2px] rotate-[-45deg] origin-top" />
+                       <div className="w-1.5 h-3 bg-red-400 rounded-[2px] rotate-[45deg] origin-top" />
                     </div>
                  </div>
              </div>
@@ -329,10 +398,10 @@ const QualityProcessModal = ({ isOpen, onClose }) => {
     return (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative bg-white w-full max-w-lg rounded-[40px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="relative bg-white w-full max-w-lg rounded-[2px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
                 <div className="p-8 pb-4 flex justify-between items-center border-b border-gray-50">
                     <h2 className="text-xl font-black text-[#151515] uppercase tracking-tight">Quality Check Process</h2>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-all">
+                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-[2px] transition-all">
                         <X size={20} className="text-gray-400" />
                     </button>
                 </div>
@@ -344,12 +413,12 @@ const QualityProcessModal = ({ isOpen, onClose }) => {
                     {steps.map((step, idx) => (
                         <div key={step.id} className="flex gap-6 relative z-10">
                             {/* Step Number Dot */}
-                            <div className="w-8 h-8 rounded-full bg-[#151515] text-white text-[10px] font-black flex items-center justify-center shrink-0 shadow-lg">
+                            <div className="w-8 h-8 rounded-[2px] bg-[#151515] text-white text-[10px] font-black flex items-center justify-center shrink-0 shadow-lg">
                                 {step.id}
                             </div>
                             
                             {/* Illustration Card */}
-                            <div className={`w-28 h-28 rounded-3xl ${step.color} flex items-center justify-center text-4xl shadow-inner border border-white/50 shrink-0`}>
+                            <div className={`w-28 h-28 rounded-[2px] ${step.color} flex items-center justify-center text-4xl shadow-inner border border-white/50 shrink-0`}>
                                 {step.icon}
                             </div>
                             
@@ -363,7 +432,7 @@ const QualityProcessModal = ({ isOpen, onClose }) => {
                     
                     <button 
                         onClick={onClose}
-                        className="w-full bg-[#151515] text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black transition-all shadow-xl active:scale-95 mt-4"
+                        className="w-full bg-[#151515] text-white py-5 rounded-[2px] font-black text-xs uppercase tracking-widest hover:bg-black transition-all shadow-xl active:scale-95 mt-4"
                     >
                         I Trust the Process
                     </button>
@@ -378,10 +447,10 @@ const DealDetailsModal = ({ isOpen, onClose, price, discount }) => {
     return (
         <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative bg-white w-full max-w-md rounded-[32px] overflow-hidden shadow-2xl transform transition-all animate-in fade-in slide-in-from-bottom-10 duration-300">
+            <div className="relative bg-white w-full max-w-md rounded-[2px] overflow-hidden shadow-2xl transform transition-all animate-in fade-in slide-in-from-bottom-10 duration-300">
                 {/* Header Section */}
                 <div className="p-6 pb-0 flex flex-col items-center">
-                    <button onClick={onClose} className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full transition-colors">
+                    <button onClick={onClose} className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-[2px] transition-colors">
                         <X size={20} className="text-gray-400" />
                     </button>
                     
@@ -389,7 +458,7 @@ const DealDetailsModal = ({ isOpen, onClose, price, discount }) => {
                     
                     <div className="flex items-center gap-3 mb-2">
                         <span className="text-2xl font-[900] text-gray-900">Get at ₹{price}</span>
-                        <div className="bg-[#00b852] text-white text-[10px] font-black px-3 py-1 rounded-full">
+                        <div className="bg-[#00b852] text-white text-[10px] font-black px-3 py-1 rounded-[2px]">
                             Extra ₹{discount} Off
                         </div>
                     </div>
@@ -399,7 +468,7 @@ const DealDetailsModal = ({ isOpen, onClose, price, discount }) => {
                 {/* Offer List */}
                 <div className="px-6 pb-10 space-y-4">
                     {/* Coupon Card */}
-                    <div className="p-5 rounded-2xl border border-gray-100 bg-gray-50/30 flex flex-col gap-3">
+                    <div className="p-5 rounded-[2px] border border-gray-100 bg-gray-50/30 flex flex-col gap-3">
                         <div className="flex justify-between items-start">
                             <div>
                                 <h5 className="text-sm font-[900] text-gray-900 mb-1">Coupon <span className="text-pink-600">MISSEDYOU</span></h5>
@@ -408,17 +477,17 @@ const DealDetailsModal = ({ isOpen, onClose, price, discount }) => {
                             <span className="text-sm font-[900] text-[#00b852]">₹{Math.round(discount * 0.4)} off</span>
                         </div>
                         <div className="flex items-center gap-2 text-[10px] font-bold text-[#00b852]">
-                            <CheckCircle size={14} fill="currentColor" className="text-white bg-[#00b852] rounded-full border border-[#00b852]" />
+                            <CheckCircle size={14} fill="currentColor" className="text-white bg-[#00b852] rounded-[2px] border border-[#00b852]" />
                             Coupon Unlocked! Apply Coupon in bag
                         </div>
                         <button className="text-[10px] font-black text-pink-600 uppercase tracking-widest flex items-center gap-1">Details <ChevronDown size={12} /></button>
                     </div>
 
                     {/* Bank Card */}
-                    <div className="p-5 rounded-2xl border border-gray-100 bg-gray-50/30 flex flex-col gap-3">
+                    <div className="p-5 rounded-[2px] border border-gray-100 bg-gray-50/30 flex flex-col gap-3">
                         <div className="flex justify-between items-start">
                             <div className="flex gap-3">
-                                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                                <div className="w-8 h-8 rounded-[2px] bg-blue-100 flex items-center justify-center shrink-0">
                                     <Banknote size={16} className="text-blue-600" />
                                 </div>
                                 <div>
@@ -433,7 +502,7 @@ const DealDetailsModal = ({ isOpen, onClose, price, discount }) => {
 
                     <button 
                         onClick={onClose}
-                        className="w-full bg-[#151515] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black transition-colors"
+                        className="w-full bg-[#151515] text-white py-4 rounded-[2px] font-black text-xs uppercase tracking-widest hover:bg-black transition-colors"
                     >
                         Got it!
                     </button>
@@ -444,100 +513,173 @@ const DealDetailsModal = ({ isOpen, onClose, price, discount }) => {
 };
 
 const DeliverySection = () => {
+    const { user } = useAuth();
     const [activeTab, setActiveTab] = useState("delivery");
 
+    // Dynamic Delivery Date Calculation
+    const getDeliveryDate = () => {
+        const today = new Date();
+        const deliveryDate = new Date(today);
+        deliveryDate.setDate(today.getDate() + 4); 
+        
+        return deliveryDate.toLocaleDateString('en-IN', {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short'
+        });
+    };
+
+    const userAddress = user?.addresses?.[0] 
+        ? `${user.addresses[0].postalCode} (${user.addresses[0].city})`
+        : "201306 (NOIDA)";
+
+    const TABS = [
+        { id: "delivery", label: "Standard Delivery", icon: Truck },
+        { id: "store", label: "Buy in Store", icon: Store }
+    ];
+
     return (
-        <div className="bg-white rounded-[32px] border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.02)] overflow-hidden mb-12">
-            {/* Tabs */}
-            <div className="flex border-b border-gray-100">
-                <button 
-                    onClick={() => setActiveTab("delivery")}
-                    className={`flex-1 py-4 text-sm font-black transition-all ${activeTab === "delivery" ? "text-pink-600 border-b-2 border-pink-500 bg-pink-50/30" : "text-gray-400 hover:text-gray-600"}`}
-                >
-                    Delivery details
-                </button>
-                <button 
-                    onClick={() => setActiveTab("store")}
-                    className={`flex-1 py-4 text-sm font-bold transition-all flex items-center justify-center gap-2 ${activeTab === "store" ? "text-pink-600 border-b-2 border-pink-500 bg-pink-50/30" : "text-gray-400 hover:text-gray-600"}`}
-                >
-                    <span className={`w-5 h-5 rounded-full text-[10px] flex items-center justify-center ${activeTab === "store" ? "bg-pink-600 text-white" : "bg-gray-200 text-white"}`}>2</span>
-                    Buy in Store
-                </button>
+        <div className="bg-white rounded-[2px] border border-stone-100 shadow-[0_15px_35px_rgba(0,0,0,0.03)] overflow-hidden mb-8 group/container max-w-2xl">
+            {/* Standardized Tab Bar */}
+            <div className="flex bg-stone-50/50 p-1 gap-1 border-b border-stone-100">
+                {TABS.map((tab) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`relative flex-1 py-2 px-4 rounded-[2px] flex items-center justify-center gap-2 transition-all duration-300 ${activeTab === tab.id ? "text-white" : "text-stone-400 hover:text-stone-600 hover:bg-stone-100/50"}`}
+                    >
+                        {activeTab === tab.id && (
+                            <motion.div
+                                layoutId="activeTabBg"
+                                className="absolute inset-0 bg-[#1a1a1a] rounded-[2px]"
+                                transition={{ type: "spring", bounce: 0.1, duration: 0.5 }}
+                            />
+                        )}
+                        <tab.icon size={14} className="relative z-10" />
+                        <span className="relative z-10 text-[10px] font-semibold uppercase tracking-widest">{tab.label}</span>
+                    </button>
+                ))}
             </div>
 
-            {/* Content Container */}
-            <div className="p-5">
-                {activeTab === "delivery" ? (
-                    <>
-                        <div className="flex items-center justify-between mb-5 gap-4">
-                            <div className="flex items-center gap-4">
-                                <div className="p-2 bg-green-50 rounded-full">
-                                    <CheckCircle size={20} className="text-green-600" />
+            {/* Content with Animation */}
+            <div className="p-4 md:p-6">
+                <AnimatePresence mode="wait">
+                    {activeTab === "delivery" ? (
+                        <motion.div
+                            key="delivery"
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.98 }}
+                            transition={{ duration: 0.2 }}
+                            className="space-y-6"
+                        >
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div className="flex items-center gap-4">
+                                    <div className="relative">
+                                        <div className="relative w-11 h-11 bg-pink-50 border border-pink-100 rounded-full flex items-center justify-center text-pink-600">
+                                            <CheckCircle size={20} strokeWidth={2} />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-0.5">
+                                        <h4 className="text-base font-semibold text-stone-900 tracking-tight leading-none group-hover/container:text-[#1a1a1a] transition-colors">
+                                            Delivery by <span className="text-pink-600">{getDeliveryDate()}</span>
+                                        </h4>
+                                        <div className="flex items-center gap-1.5">
+                                            <MapPin size={10} className="text-stone-300" />
+                                            <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider">{userAddress}</p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="text-left">
-                                    <h4 className="text-sm font-black text-gray-900 tracking-tight leading-none mb-1">Delivery by Sat, 28 Mar</h4>
-                                    <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">201306 (Noida)</p>
-                                </div>
+                                
+                                <button className="h-9 px-4 rounded-[2px] bg-white border border-stone-200 text-stone-900 font-semibold text-[10px] uppercase tracking-widest hover:border-pink-500 hover:text-pink-600 transition-all active:scale-95 group/btn flex items-center gap-2">
+                                    Change
+                                    <ArrowRight size={12} className="group-hover/btn:translate-x-0.5 transition-transform" />
+                                </button>
                             </div>
-                            <button className="text-pink-600 font-black text-[10px] uppercase tracking-widest border border-pink-100 rounded-lg px-4 py-1.5 hover:bg-pink-50 transition-all shrink-0">
-                                Change
-                            </button>
-                        </div>
-                        <p className="text-[9px] font-medium text-gray-400 mb-5 ml-[44px]">Delivery date may change with number of items in bag</p>
 
-                        {/* Icons Footer */}
-                        <div className="pt-4 border-t border-gray-50 flex items-center gap-8">
-                            <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 bg-gray-50 rounded-lg flex items-center justify-center border border-gray-100">
-                                    <Truck size={12} className="text-gray-500" />
-                                </div>
-                                <span className="text-[9px] font-black uppercase tracking-tight text-gray-400 leading-tight">Free delivery above ₹299</span>
-                            </div>
-                            <div className="h-4 w-px bg-gray-100" />
-                            <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 bg-gray-50 rounded-lg flex items-center justify-center border border-gray-100">
-                                    <Banknote size={12} className="text-gray-500" />
-                                </div>
-                                <span className="text-[9px] font-black uppercase tracking-tight text-gray-400">COD available</span>
-                            </div>
-                        </div>
-                    </>
-                ) : (
-                    <>
-                        <div className="flex items-center justify-between mb-5 gap-4">
-                            <div className="flex items-center gap-4">
-                                <div className="p-2 bg-pink-50 rounded-full">
-                                    <MapPin size={20} className="text-pink-600" />
-                                </div>
-                                <div className="text-left">
-                                    <h4 className="text-sm font-black text-gray-900 tracking-tight leading-none mb-1">2 Nearby Stores Available</h4>
-                                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">DLF Mall of India (1.2 km)</p>
-                                </div>
-                            </div>
-                            <button className="bg-pink-600 text-white font-black text-[10px] uppercase tracking-widest rounded-lg px-4 py-1.5 hover:bg-pink-700 shadow-sm transition-all shrink-0">
-                                Select Store
-                            </button>
-                        </div>
-                        <p className="text-[9px] font-medium text-gray-400 mb-5 ml-[44px]">Pick up in as little as 2 hours after your order.</p>
+                            <p className="text-[9px] font-semibold text-stone-300 leading-relaxed uppercase tracking-tight flex items-center gap-2">
+                                <AlertCircle size={10} className="shrink-0 text-stone-200" />
+                                Estimated time based on bag verification.
+                            </p>
 
-                        {/* Store Icons Footer */}
-                        <div className="pt-4 border-t border-gray-50 flex items-center gap-8">
-                            <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 bg-gray-50 rounded-lg flex items-center justify-center border border-gray-100">
-                                    <Clock size={12} className="text-gray-500" />
+                            {/* Trust Panel */}
+                            <div className="pt-6 border-t border-stone-50 flex items-center gap-8">
+                                <div className="flex items-center gap-2.5 group/tag">
+                                    <div className="w-8 h-8 bg-white border border-stone-100 rounded-[2px] flex items-center justify-center text-stone-400 group-hover/tag:border-stone-900 group-hover/tag:text-stone-900 transition-all">
+                                        <Truck size={14} />
+                                    </div>
+                                    <div className="space-y-px">
+                                        <p className="text-[9px] font-semibold text-stone-900 uppercase tracking-widest leading-none">Free Ship</p>
+                                        <p className="text-[9px] font-semibold text-stone-400 uppercase tracking-tighter leading-none">Above ₹299</p>
+                                    </div>
                                 </div>
-                                <span className="text-[9px] font-black uppercase tracking-tight text-gray-400 leading-tight">Ready in 2 Hours</span>
-                            </div>
-                            <div className="h-4 w-px bg-gray-100" />
-                            <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 bg-gray-50 rounded-lg flex items-center justify-center border border-gray-100">
-                                    <ShoppingBag size={12} className="text-gray-500" />
+                                <div className="w-px h-6 bg-stone-100" />
+                                <div className="flex items-center gap-2.5 group/tag">
+                                    <div className="w-8 h-8 bg-white border border-stone-100 rounded-[2px] flex items-center justify-center text-stone-400 group-hover/tag:border-stone-900 group-hover/tag:text-stone-900 transition-all">
+                                        <Banknote size={14} />
+                                    </div>
+                                    <div className="space-y-px">
+                                        <p className="text-[9px] font-semibold text-stone-900 uppercase tracking-widest leading-none">COD Active</p>
+                                        <p className="text-[9px] font-semibold text-stone-400 uppercase tracking-tighter leading-none">On delivery</p>
+                                    </div>
                                 </div>
-                                <span className="text-[9px] font-black uppercase tracking-tight text-gray-400">Reserve Online</span>
                             </div>
-                        </div>
-                    </>
-                )}
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="store"
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.98 }}
+                            transition={{ duration: 0.2 }}
+                            className="space-y-6"
+                        >
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-11 h-11 bg-stone-50 border border-stone-100 rounded-full flex items-center justify-center text-stone-900">
+                                        <Store size={20} strokeWidth={2} />
+                                    </div>
+                                    <div className="space-y-0.5">
+                                        <h4 className="text-base font-semibold text-stone-900 tracking-tight leading-none">
+                                            <span className="text-pink-600">02 Stores</span> Found
+                                        </h4>
+                                        <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider">DLF MALL OF INDIA • 1.2 KM</p>
+                                    </div>
+                                </div>
+                                <button className="h-9 px-4 rounded-[2px] bg-[#1a1a1a] text-white font-semibold text-[10px] uppercase tracking-widest hover:bg-pink-600 transition-all active:scale-95">
+                                    Select Store
+                                </button>
+                            </div>
+
+                            <p className="text-[9px] font-semibold text-stone-300 leading-relaxed uppercase tracking-tight flex items-center gap-2">
+                                <Clock size={10} className="shrink-0" />
+                                Ready for handover within 120 minutes.
+                            </p>
+
+                            <div className="pt-6 border-t border-stone-50 flex items-center gap-8">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 bg-white border border-stone-100 rounded-[2px] flex items-center justify-center text-stone-400">
+                                        <Clock size={14} />
+                                    </div>
+                                    <div className="space-y-px">
+                                        <p className="text-[9px] font-semibold text-stone-900 uppercase tracking-widest leading-none">2H Pickup</p>
+                                        <p className="text-[9px] font-semibold text-stone-400 uppercase tracking-tighter leading-none">Express service</p>
+                                    </div>
+                                </div>
+                                <div className="w-px h-6 bg-stone-100" />
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 bg-white border border-stone-100 rounded-[2px] flex items-center justify-center text-stone-400">
+                                        <ShoppingBag size={14} />
+                                    </div>
+                                    <div className="space-y-px">
+                                        <p className="text-[9px] font-semibold text-stone-900 uppercase tracking-widest leading-none">Reserve IT</p>
+                                        <p className="text-[9px] font-semibold text-stone-400 uppercase tracking-tighter leading-none">Online booking</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );
@@ -553,20 +695,20 @@ const GenuineProductModal = ({ isOpen, onClose, brand }) => {
     return (
         <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-0 md:p-4">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative bg-white w-full max-w-lg rounded-t-[40px] sm:rounded-[40px] overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-300">
+            <div className="relative bg-white w-full max-w-lg rounded-t-[40px] sm:rounded-[2px] overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-300">
                 <div className="p-8 pb-4 flex justify-between items-center border-b border-gray-50">
                     <h2 className="text-xl font-black text-[#151515] uppercase tracking-tight">Genuine Product</h2>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-all">
+                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-[2px] transition-all">
                         <X size={24} className="text-gray-900" />
                     </button>
                 </div>
                 
                 <div className="p-8 pt-10 flex gap-6 items-center">
-                    <div className="shrink-0 p-1 bg-sky-50 rounded-2xl rotate-[-5deg] shadow-sm scale-110">
+                    <div className="shrink-0 p-1 bg-sky-50 rounded-[2px] rotate-[-5deg] shadow-sm scale-110">
                         {/* Static Seal Image/SVG */}
                         <div className="relative w-20 h-20">
-                             <div className="absolute inset-0 bg-sky-100 rounded-full opacity-50" style={{clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)'}} />
-                             <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center shadow-inner">
+                             <div className="absolute inset-0 bg-sky-100 rounded-[2px] opacity-50" style={{clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)'}} />
+                             <div className="absolute inset-2 bg-white rounded-[2px] flex items-center justify-center shadow-inner">
                                  <div className="bg-pink-500 text-white text-[9px] font-black px-3 py-1.5 rotate-[-25deg] shadow-lg flex items-center gap-1 border-2 border-white">
                                     <Sparkles size={8} className="fill-white" /> ORIGINAL
                                  </div>
@@ -583,7 +725,7 @@ const GenuineProductModal = ({ isOpen, onClose, brand }) => {
                 <div className="p-8 pb-10">
                     <button 
                         onClick={onClose}
-                        className="w-full bg-[#151515] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black transition-all shadow-xl active:scale-95"
+                        className="w-full bg-[#151515] text-white py-4 rounded-[2px] font-black text-xs uppercase tracking-widest hover:bg-black transition-all shadow-xl active:scale-95"
                     >
                         Verified & Confirmed
                     </button>
@@ -597,6 +739,7 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
     const { id } = useParams();
     const { products } = useProducts();
     const location = useLocation();
+    const navigate = useNavigate();
     const decodedId = decodeURIComponent(id);
 
     // 1. Hook definitions at the top
@@ -608,6 +751,25 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
     const [showDealModal, setShowDealModal] = useState(false);
     const [showQualityModal, setShowQualityModal] = useState(false);
     const [showGenuineModal, setShowGenuineModal] = useState(false);
+    const [coupons, setCoupons] = useState([]);
+    const [couponsLoading, setCouponsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchCoupons = async () => {
+            try {
+                const resp = await fetch(`http://localhost:5000/api/coupons`);
+                const data = await resp.json();
+                if (data.success) {
+                    setCoupons(data.data);
+                }
+            } catch (err) {
+                console.error("Error fetching coupons:", err);
+            } finally {
+                setCouponsLoading(false);
+            }
+        };
+        fetchCoupons();
+    }, []);
 
     // Try to get product
     const stateProduct = location.state?.product;
@@ -632,12 +794,17 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
 
     const isWishlisted = product ? wishlist.some(item => item.id === product.id) : false;
 
-    // Calculate full product data
-    let listImages = MOCK_PDP_DATA.images;
+    // Calculate dynamic product images (Backend Only)
+    let listImages = [];
+    const isValidImage = (img) => img && typeof img === 'string' && (img.startsWith('http') || img.startsWith('/') || img.startsWith('data:') || img.includes('static') || img.includes('assets'));
+
     if (product?.imageUrls && Array.isArray(product.imageUrls) && product.imageUrls.length > 0) {
-        listImages = product.imageUrls;
-    } else if (product?.image) {
-        listImages = [product.image, ...MOCK_PDP_DATA.images];
+        listImages = product.imageUrls.filter(isValidImage);
+    } else if (product?.image && isValidImage(product.image)) {
+        listImages = [product.image];
+    } else {
+        // High-fidelity fallback if NO data exists at all
+        listImages = ["https://images.unsplash.com/photo-1556228720-1987599988d3?auto=format&fit=crop&w=1200&q=80"];
     }
 
     const fullProduct = {
@@ -678,397 +845,223 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
         }
     };
 
+    const stockStatus = 12;
+    const soldCount = 842;
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] font-sans pb-24 md:pb-10 pt-20"> {/* pt-20 for navbar clearance */}
+        <div className="min-h-screen bg-white">
+            {/* Top Product Section */}
+            <div className="max-w-7xl mx-auto px-4 md:px-8 pt-8 pb-16">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 lg:items-start">
+                    
+                    {/* Left: Enhanced Gallery with Repositioned Thumbnails */}
+                    <div className="lg:col-span-7 flex flex-col gap-6 lg:sticky lg:top-32 lg:max-h-[calc(100vh-160px)]">
+                        {/* Main Interaction Image */}
+                        <div className="relative aspect-4/5 bg-[#F9F9F9] rounded-[4px] overflow-hidden group h-full">
+                            <motion.img
+                                key={mainImage}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                src={mainImage}
+                                className="w-full h-full object-cover"
+                            />
+                            
+                            {/* Mobile Dot Indicator (Keep for quick scan) */}
+                            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 md:hidden">
+                                {fullProduct.images.map((_, idx) => (
+                                    <div 
+                                        key={idx} 
+                                        className={`w-1.5 h-1.5 rounded-full ${fullProduct.images[idx] === mainImage ? "bg-[#5E2B3C]" : "bg-white/50"}`} 
+                                    />
+                                ))}
+                            </div>
+                        </div>
 
-            <div className="max-w-[1280px] mx-auto px-4 md:px-8">
-
-                {/* --- Breadcrumbs (Simple) --- */}
-                <div className="flex items-center gap-2 text-xs text-gray-400 mb-6 font-medium tracking-wide">
-                    <span>Home</span> <span>/</span> <span>Skincare</span> <span>/</span> <span className="text-gray-900">{fullProduct.name}</span>
-                </div>
-
-                {/* --- Top Layout: Grid --- */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-10 lg:gap-16 mb-20">
-
-                    {/* 1. Left Content Area (7/12 cols) - Gallery & Exclusive Rewards */}
-                    <div className="md:col-span-7 flex flex-col gap-8">
-                        {/* Gallery Section */}
-                        <div className="flex flex-col-reverse md:flex-row gap-4">
-                            {/* Thumbnails */}
-                            <div className="flex md:flex-col gap-3 overflow-x-auto md:overflow-visible no-scrollbar w-full md:w-20 flex-shrink-0">
-                                {fullProduct.images.map((img, idx) => (
+                        {/* Horizontal Thumbnails (Only if multiple images exist) */}
+                        {Array.from(new Set(fullProduct.images)).length > 1 && (
+                            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                                {Array.from(new Set(fullProduct.images)).map((img, idx) => (
                                     <button
                                         key={idx}
                                         onClick={() => setMainImage(img)}
-                                        className={`relative w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${mainImage === img ? "border-pink-400 shadow-md ring-2 ring-pink-100" : "border-transparent hover:border-gray-200"}`}
+                                        className={`w-20 md:w-24 aspect-4/5 shrink-0 rounded-[2px] overflow-hidden border-2 transition-all ${mainImage === img ? "border-[#5E2B3C]" : "border-transparent opacity-60 hover:opacity-100"}`}
                                     >
-                                        <img src={img} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
+                                        <img src={img} alt={`thumbnail-${idx}`} className="w-full h-full object-cover" />
                                     </button>
                                 ))}
                             </div>
-
-                            {/* Main Image */}
-                            <div className="relative flex-1 bg-white rounded-[32px] overflow-hidden border border-gray-100 shadow-sm group cursor-crosshair h-[400px] md:h-[600px]">
-                                <img src={mainImage} className="w-full h-full object-cover transform md:group-hover:scale-110 transition-transform duration-700" alt={fullProduct.name} />
-                                <span className="absolute top-5 left-5 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-bold tracking-wider text-pink-600 shadow-sm">
-                                    BESTSELLER
-                                </span>
-                                <button className="absolute top-5 right-5 p-2 bg-white/50 backdrop-blur rounded-full hover:bg-white text-gray-700 transition">
-                                    <Share2 size={18} />
-                                </button>
-                            </div>
-                        </div>
+                        )}
                     </div>
 
-                    {/* 2. Purchase Panel (Right - 5/12 cols) */}
-                    <div className="md:col-span-5 relative">
-                        <div className="sticky top-24">
+                    {/* Right: Refined Purchase Panel */}
+                    <div className="lg:col-span-5 flex flex-col pt-2">
+                        {/* Brand & Stock */}
+                        <div className="flex flex-col gap-1 mb-6">
+                            <h2 className="text-[#ff4fa3] font-black text-[11px] uppercase tracking-[0.35em]">{fullProduct.brand || "Lumière"}</h2>
+                            
+                            <h1 className="text-3xl md:text-4xl font-serif text-[#1a1a1a] leading-[1.1] tracking-tight">
+                                {fullProduct.name}
+                            </h1>
+                            
+                            <p className="text-gray-400 font-medium text-xs mt-1">Authentic {fullProduct.category || "Premium"} Collection</p>
+                        </div>
 
-                            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">{fullProduct.brand}</p>
-                            <h1 className="text-3xl md:text-4xl font-[900] text-[#151515] mb-3 leading-tight tracking-tight">{fullProduct.name}</h1>
+                        <div className="flex items-center gap-4 text-[11px] font-[1000] uppercase tracking-wider mb-8">
+                            <div className="flex items-center gap-1.5 text-red-600 bg-red-50 px-3 py-1.5 rounded-full border border-red-100">
+                                <div className="w-1 h-1 bg-red-600 rounded-full animate-pulse" />
+                                {stockStatus} in stock
+                            </div>
+                            <div className="flex items-center gap-1.5 text-teal-600 bg-teal-50 px-3 py-1.5 rounded-full border border-teal-100">
+                                <Sparkles size={12} className="fill-teal-600/10" />
+                                Already {soldCount} Sold
+                            </div>
+                        </div>
 
-                            <div className="flex items-center gap-4 mb-4">
-                                <div className="flex items-center text-yellow-400 gap-0.5">
-                                    {[...Array(5)].map((_, i) => <Star key={i} size={16} fill="currentColor" />)}
-                                    <span className="ml-2 text-sm text-gray-500 font-semibold underline decoration-gray-300 underline-offset-4 cursor-pointer">(1,248 Reviews)</span>
+                        {/* Pricing & Rating */}
+                        <div className="flex items-center justify-between mb-8 pb-8 border-b border-gray-100">
+                            <div className="flex flex-col">
+                                <span className="text-3xl font-[1000] text-[#1a1a1a]">Rs. {fullProduct.price}</span>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-xs text-gray-400 line-through">Rs. {Math.round(fullProduct.price * 1.5)}</span>
+                                    <span className="text-xs font-black text-emerald-600">30% OFF</span>
                                 </div>
                             </div>
-
-                            <div className="flex items-baseline gap-3 mb-8">
-                                <span className="text-3xl font-bold text-[#151515]">₹{fullProduct.price}</span>
-                                <span className="text-lg text-gray-400 line-through">₹{Math.round(fullProduct.price * 1.3)}</span>
-                                <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-md">30% OFF</span>
-                            </div>
-
-                            {/* Shade Selector */}
-                            {fullProduct.shades && fullProduct.shades.length > 0 && (
-                                <div className="mb-8">
-                                    <span className="text-sm font-bold text-gray-900 mb-3 block">Select Shade: <span className="text-gray-500 font-normal">{selectedShade?.name}</span></span>
-                                    <div className="flex flex-wrap gap-3">
-                                        {fullProduct.shades.map(s => (
-                                            <button
-                                                key={s.name || s}
-                                                onClick={() => setSelectedShade(s)}
-                                                className={`w-10 h-10 rounded-full border-2 transition-all flex items-center justify-center relative ${selectedShade?.name === s.name || selectedShade === s ? "border-black scale-110 shadow-md" : "border-gray-100 hover:border-gray-300"}`}
-                                                style={{ backgroundColor: s.color || "#ccc" }}
-                                                aria-label={s.name || s}
-                                            >
-                                                {(selectedShade?.name === s.name || selectedShade === s) && <div className="w-1.5 h-1.5 bg-white rounded-full box-content border border-black/10 shadow-sm" />}
-                                            </button>
-                                        ))}
-                                    </div>
+                            
+                            <div className="flex flex-col items-end gap-2">
+                                <div className="flex items-center gap-3 text-xs font-bold text-gray-400 underline underline-offset-4 cursor-pointer hover:text-[#5E2B3C] transition-colors">
+                                    <Star size={14} className="fill-yellow-400 text-yellow-400" />
+                                    No reviews yet
                                 </div>
-                            )}
+                            </div>
+                        </div>
 
-                            {/* Pre-Order Info */}
-                            {product.shippingStart && (
-                                <div className="mb-6 bg-pink-50 p-4 rounded-xl border border-pink-100">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <p className="text-sm font-bold text-pink-700">Shipping Starts</p>
-                                        <p className="text-base font-bold text-[#1a1a1a]">{product.shippingStart}</p>
-                                    </div>
-                                    {product.stockLeft && product.totalStock && (
-                                        <>
-                                            <div className="flex justify-between text-[11px] font-bold text-gray-500 mb-1">
-                                                <span>Slots Available</span>
-                                                <span className="text-pink-600">{product.stockLeft} left</span>
+                        {/* Actions Row */}
+                        <div className="flex items-center gap-3 mb-10">
+                            {/* Qty Stepper */}
+                            <div className="flex items-center h-14 bg-white rounded-[4px] px-3 border border-gray-100 shadow-sm">
+                                <button onClick={() => setQty(Math.max(1, qty - 1))} className="p-2 text-gray-400 hover:text-[#ff4fa3] transition-colors"><Minus size={16} strokeWidth={3} /></button>
+                                <span className="w-12 text-center font-black text-[#1a1a1a] text-sm tabular-nums">{qty}</span>
+                                <button onClick={() => setQty(qty + 1)} className="p-2 text-gray-400 hover:text-[#ff4fa3] transition-colors"><Plus size={16} strokeWidth={3} /></button>
+                            </div>
+                            
+                            {/* Add to Cart */}
+                            <button 
+                                onClick={handleAddToCart}
+                                className="flex-1 h-14 bg-linear-to-r from-[#ff4fa3] to-[#ff1a8c] text-white font-black text-xs uppercase tracking-[0.25em] rounded-[4px] shadow-2xl shadow-[#ff4fa3]/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 relative overflow-hidden group/btn"
+                            >
+                                <div className="absolute inset-0 bg-white opacity-0 group-hover/btn:opacity-10 transition-opacity" />
+                                <ShoppingCart size={18} fill="white" className="relative z-10" />
+                                <span className="relative z-10">Add to Cart</span>
+                            </button>
+                            
+                            {/* Wishlist */}
+                            <button 
+                                onClick={() => toggleWishlist(fullProduct)}
+                                className={`w-14 h-14 rounded-[4px] flex items-center justify-center border transition-all ${isWishlisted ? "bg-red-50 border-red-100 text-red-500 shadow-inner" : "border-gray-200 text-gray-400 hover:border-red-500 hover:text-red-500"}`}
+                            >
+                                <Heart size={20} className={isWishlisted ? "fill-current" : ""} />
+                            </button>
+                        </div>
+
+                        {/* Side-by-Side Coupons */}
+                        <div className="flex gap-4 mb-8">
+                            <OfferCouponCard title="ENJOY 10% OFF ON YOUR FIRST ORDER" sub="Use this coupon at checkout" code="DELANFAMILY" />
+                            <OfferCouponCard title="FLAT 10% OFF ON DENIM EDIT" sub="Use this coupon at checkout" code="DENIM10" />
+                        </div>
+
+                        {/* Delivery Banner */}
+                        <DeliveryBanner />
+
+                        {/* Minimalist Accordion List - Moved to Right Column */}
+                        <div className="mt-10 space-y-0 border-t border-[#d1d1d1]/30">
+                            <AccordionItem 
+                                title="Description" 
+                                isOpen={openAccordions.description} 
+                                onClick={() => toggleAccordion("description")}
+                            >
+                                {fullProduct.description}
+                            </AccordionItem>
+
+                            <AccordionItem 
+                                title="How to Use" 
+                                isOpen={openAccordions.howToUse} 
+                                onClick={() => toggleAccordion("howToUse")}
+                            >
+                                <ul className="space-y-4">
+                                    {(Array.isArray(fullProduct.howToUse) ? fullProduct.howToUse : [fullProduct.howToUse]).map((step, i) => (
+                                        <li key={i} className="flex gap-4">
+                                            <span className="font-bold text-[#ff4fa3] min-w-[20px]">0{i+1}</span>
+                                            <span>{step}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </AccordionItem>
+
+                            <AccordionItem 
+                                title="Benefits" 
+                                isOpen={openAccordions.benefits} 
+                                onClick={() => toggleAccordion("benefits")}
+                            >
+                                <div className="grid grid-cols-1 gap-6">
+                                    {(Array.isArray(fullProduct.benefits) ? fullProduct.benefits : []).map((benefit, i) => (
+                                        <div key={i} className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-[#ff4fa3]/5 flex items-center justify-center text-[#ff4fa3]">
+                                                {benefit.icon || "✓"}
                                             </div>
-                                            <div className="w-full h-2 bg-white rounded-full overflow-hidden border border-pink-100">
-                                                <div
-                                                    className="h-full bg-gradient-to-r from-pink-400 to-pink-600 rounded-full"
-                                                    style={{ width: `${(product.stockLeft / product.totalStock) * 100}%` }}
-                                                />
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Stock Status */}
-                            <div className="mb-6">
-                                <div className={`inline-flex items-center gap-2 text-sm font-bold px-3 py-1.5 rounded-full ${(!product.shippingStart && product.inStock) ? "bg-green-100 text-green-700" : (!product.shippingStart && !product.inStock) ? "bg-red-100 text-red-700" : "bg-blue-50 text-blue-700"}`}>
-                                    <div className={`w-2 h-2 rounded-full ${(!product.shippingStart && product.inStock) ? "bg-green-500" : (!product.shippingStart && !product.inStock) ? "bg-red-500" : "bg-blue-500"}`} />
-                                    {product.shippingStart ? "Pre-Order Open" : (product.inStock ? "In Stock" : "Out of Stock")}
-                                </div>
-                            </div>
-
-                             {/* Mega Deal Price Banner */}
-                             <MegaDealBanner 
-                                price={Math.round(fullProduct.price * 0.85)} 
-                                discount={Math.round(fullProduct.price * 0.1)} 
-                                onOpenDetails={() => setShowDealModal(true)}
-                             />
-
-                             <DealDetailsModal 
-                                isOpen={showDealModal} 
-                                onClose={() => setShowDealModal(false)}
-                                price={Math.round(fullProduct.price * 0.85)}
-                                discount={Math.round(fullProduct.price * 0.1)}
-                             />
-
-                             {/* Actions: Qty & Add Cart */}
-                             <div className="flex gap-4 mb-10 text-center">
-                                {/* Stepper */}
-                                <div className="flex items-center bg-gray-50 rounded-full border border-gray-200 px-1 h-12">
-                                    <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-10 h-full flex items-center justify-center text-gray-500 hover:text-black hover:bg-white rounded-full transition"><Minus size={16} /></button>
-                                    <span className="w-8 text-center font-bold text-gray-900">{qty}</span>
-                                    <button onClick={() => setQty(qty + 1)} className="w-10 h-full flex items-center justify-center text-gray-500 hover:text-black hover:bg-white rounded-full transition"><Plus size={16} /></button>
-                                </div>
-
-                                {/* Add to Cart */}
-                                <button
-                                    onClick={handleAddToCart}
-                                    className="flex-1 bg-[#151515] text-white rounded-full font-bold text-sm uppercase tracking-wider hover:bg-pink-600 hover:shadow-lg hover:shadow-pink-200 shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
-                                >
-                                    <ShoppingBag size={18} />
-                                    {product.id && product.id.startsWith("po") ? "Pre-Order" : "Add to Cart"}
-                                </button>
-
-                                {/* Wishlist */}
-                                <button
-                                    onClick={() => toggleWishlist && toggleWishlist(product)}
-                                    className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all ${isWishlisted ? "border-pink-200 bg-pink-50 text-pink-500" : "border-pink-200 text-pink-400 hover:border-pink-400 hover:text-pink-900"}`}
-                                >
-                                    <Heart size={20} fill={isWishlisted ? "currentColor" : "none"} />
-                                </button>
-                            </div>
-
-                            {/* Trust Factors Grid (Circled Position) */}
-                            <div className="grid grid-cols-2 gap-3 mb-10">
-                                <TrustFactor icon={Truck} text="Free Delivery" />
-                                <TrustFactor icon={ShieldCheck} text="100% Authentic" />
-                                <TrustFactor icon={CornerUpLeft} text="Easy Returns" />
-                                <TrustFactor icon={CreditCard} text="Secure Pay" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* --- NEW: Delivery Details Section --- */}
-                <DeliverySection />
-
-                {/* --- Exclusive Offers Section (Refined High-Fidelity) --- */}
-                <div className="mb-20">
-                    <div className="flex items-center justify-between mb-8">
-                        <SectionHeader title="Exclusive Offers" />
-                        <div className="hidden md:flex items-center gap-2">
-                            <span className="text-[10px] font-black text-pink-600 bg-pink-50 px-3 py-1 rounded-full uppercase tracking-tighter shadow-sm border border-pink-100">8 AVAILABLE</span>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <OfferCouponCard 
-                            title="Save upto ₹300"
-                            sub="On your 1st order above ₹299+"
-                            code="NEW15"
-                            color="from-[#FFF0F7] to-white"
-                        />
-                        <OfferGiftCard 
-                            image="/estee_lauder_free_kit.png"
-                            title="Estee Lauder Free Kit"
-                            sub="Estee Lauder 4-Pc Kit Fall'25"
-                            status="FREE"
-                            isLocked={true}
-                        />
-                        <OfferSampleCard 
-                            title="Pick a free sample"
-                            sub="On Estee Lauder purchase above ₹999"
-                            color="from-[#E6F9F0] to-white"
-                        />
-                    </div>
-                </div>
-
-                {/* --- NEW: Limited Time Gifts Section (Full Width) --- */}
-                <div className="mb-24">
-                    <SectionHeader title="Limited Time Gifts" timer="05:06:00" />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <LimitedGiftCard 
-                            image="https://images.unsplash.com/photo-1594465919760-441fe5908ab0?auto=format&fit=crop&w=300&q=80" 
-                            brand="ESTÉE LAUDER" 
-                            name="Free Estée Lauder 4-Pc Kit Fall'25" 
-                            unclaimed={65} 
-                            total={100} 
-                        />
-                        <LimitedGiftCard 
-                            image="https://images.unsplash.com/photo-1599305090598-fe179d501227?auto=format&fit=crop&w=300&q=80" 
-                            brand="LANEIGE" 
-                            name="Laneige Mini Lip Glow (5h 7m left)" 
-                            unclaimed={40} 
-                            total={100} 
-                        />
-                    </div>
-                </div>
-
-                {/* --- Below Fold Content --- */}
-
-                {/* Modern Tabs (Desktop) / Accordion (Mobile) */}
-                <section className="mb-20">
-                    <div className="bg-white rounded-[32px] p-6 md:p-12 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100">
-
-                        {/* Desktop Tabs Header */}
-                        <div className="hidden md:flex items-center gap-10 border-b border-gray-100 mb-8 pb-1">
-                            {["description", "benefits", "ingredients", "faq"].map(tab => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setActiveTab(tab)}
-                                    className={`pb-4 text-sm font-bold uppercase tracking-wider border-b-2 transition-all ${activeTab === tab ? "border-pink-500 text-pink-500" : "border-transparent text-gray-400 hover:text-gray-900"}`}
-                                >
-                                    {tab}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Content Area */}
-                        <div className="min-h-[200px]">
-                            {/* Description */}
-                            <div className={`space-y-6 ${activeTab === "description" ? "block" : "hidden md:hidden"}`}>
-                                <div className="md:hidden">
-                                    <AccordionItem title="Description" isOpen={openAccordions.description} onClick={() => toggleAccordion("description")}>
-                                        {fullProduct.description}
-                                        <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200 inline-block">
-                                            <h5 className="font-bold text-xs uppercase mb-2 text-gray-400">Perfect For</h5>
-                                            <p className="text-sm font-semibold text-gray-800">Dryness, Dullness, Uneven Texture</p>
-                                        </div>
-                                    </AccordionItem>
-                                </div>
-                                <div className="hidden md:block">
-                                    <p className="text-lg text-gray-600 leading-8 max-w-3xl">{fullProduct.description}</p>
-                                    <div className="mt-8 p-6 bg-pink-50/30 rounded-2xl border border-pink-100 inline-block">
-                                        <h5 className="font-bold text-xs uppercase mb-2 text-pink-400">Why we love it</h5>
-                                        <p className="text-base font-semibold text-gray-800">{fullProduct.whyWeLoveIt}</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Benefits */}
-                            <div className={`${activeTab === "benefits" ? "block" : "hidden md:hidden"}`}>
-                                <div className="md:hidden">
-                                    <AccordionItem title="Key Benefits" isOpen={openAccordions.benefits} onClick={() => toggleAccordion("benefits")}>
-                                        <div className="flex flex-wrap gap-2">
-                                            {fullProduct.benefits.map((b, i) => (
-                                                <span key={i} className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-700">{b.icon} {b.text}</span>
-                                            ))}
-                                        </div>
-                                    </AccordionItem>
-                                </div>
-                                <div className="hidden md:flex gap-4">
-                                    {fullProduct.benefits.map((b, i) => (
-                                        <div key={i} className="flex-1 p-6 bg-white border border-gray-100 rounded-2xl text-center shadow-sm hover:shadow-md transition">
-                                            <div className="text-4xl mb-3">{b.icon}</div>
-                                            <h4 className="font-bold text-gray-900">{b.text}</h4>
+                                            <span className="font-medium text-gray-700">{benefit.text || benefit}</span>
                                         </div>
                                     ))}
                                 </div>
-                            </div>
+                            </AccordionItem>
 
-                            {/* Ingredients */}
-                            <div className={`${activeTab === "ingredients" ? "block" : "hidden md:hidden"}`}>
-                                <div className="md:hidden">
-                                    <AccordionItem title="Full Ingredients" isOpen={openAccordions.ingredients} onClick={() => toggleAccordion("ingredients")}>
-                                        {fullProduct.ingredients}
-                                    </AccordionItem>
-                                </div>
-                                <div className="hidden md:block bg-gray-50 p-6 rounded-2xl border border-gray-200 font-mono text-sm text-gray-600 leading-relaxed">
+                            <AccordionItem 
+                                title="Ingredients" 
+                                isOpen={openAccordions.ingredients} 
+                                onClick={() => toggleAccordion("ingredients")}
+                            >
+                                <p className="text-gray-500 italic leading-relaxed">
                                     {fullProduct.ingredients}
-                                </div>
-                            </div>
+                                </p>
+                            </AccordionItem>
 
-                            {/* FAQ */}
-                            <div className={`${activeTab === "faq" ? "block" : "hidden md:hidden"}`}>
-                                <div className="md:hidden">
-                                    <AccordionItem title="FAQ" isOpen={openAccordions.faq} onClick={() => toggleAccordion("faq")}>
-                                        <ul className="space-y-4">
-                                            {fullProduct.faq.map((f, i) => (
-                                                <li key={i}>
-                                                    <p className="font-bold text-sm text-gray-900 mb-1">{f.q}</p>
-                                                    <p className="text-gray-600 text-sm">{f.a}</p>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </AccordionItem>
-                                </div>
-                                <div className="hidden md:grid grid-cols-2 gap-8">
-                                    {fullProduct.faq.map((f, i) => (
-                                        <div key={i}>
-                                            <h4 className="font-bold text-gray-900 text-lg mb-2">{f.q}</h4>
-                                            <p className="text-gray-600">{f.a}</p>
+                            <AccordionItem 
+                                title="Info" 
+                                isOpen={openAccordions.info} 
+                                onClick={() => toggleAccordion("info")}
+                            >
+                                <div className="space-y-6">
+                                    {(Array.isArray(fullProduct.faq) ? fullProduct.faq : []).map((item, i) => (
+                                        <div key={i} className="space-y-2">
+                                            <h4 className="font-black text-gray-900 text-xs uppercase tracking-widest">Q: {item.q}</h4>
+                                            <p className="text-gray-500">{item.a}</p>
                                         </div>
                                     ))}
                                 </div>
-                            </div>
+                            </AccordionItem>
                         </div>
-
-                        {/* Always Visible Trust Seals */}
-                        <div className="mt-20 pt-16 border-t border-gray-100 flex flex-col items-center gap-12">
-                            <div className="text-center space-y-2">
-                                <h3 className="text-sm font-black text-gray-400 uppercase tracking-[0.3em]">Verified Guarantees</h3>
-                                <div className="h-1 w-12 bg-pink-500 mx-auto rounded-full" />
-                            </div>
-                             <div className="flex items-center justify-center gap-16 md:gap-40">
-                                <GenuineSeal onClick={() => setShowGenuineModal(true)} />
-                                <QualitySeal onClick={() => setShowQualityModal(true)} />
-                            </div>
-                        </div>
-
                     </div>
-                </section>
-
-                <QualityProcessModal isOpen={showQualityModal} onClose={() => setShowQualityModal(false)} />
-                <GenuineProductModal isOpen={showGenuineModal} onClose={() => setShowGenuineModal(false)} brand={fullProduct.brand} />
-
-
-                {/* --- Reviews Section --- */}
-                <section className="mb-20">
-                    <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-2xl font-[900] text-[#151515]">Reviews (142)</h2>
-                        <button className="text-pink-600 font-bold hover:underline">Write a Review</button>
-                    </div>
-
-                    {/* Horizontal Scroll Reviews */}
-                    <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar mask-linear-fade">
-                        <ReviewCard name="Ananya S." rating={5} date="2 days ago" comment="Literally the best serum I've ever used. My skin is glowing!" />
-                        <ReviewCard name="Priya M." rating={4} date="1 week ago" comment="Good hydration but takes a while to absorb. Love the packaging though." />
-                        <ReviewCard name="Sarah K." rating={5} date="3 weeks ago" comment="Holy grail status. Reordered 3 times already." />
-                        <ReviewCard name="Rahul D." rating={5} date="1 month ago" comment="My girlfriend loves this. Bought it as a gift." />
-                    </div>
-                </section>
-
-                {/* --- Recommendations --- */}
-                <section className="mb-10">
-                    <h2 className="text-2xl font-[900] text-[#151515] mb-8">Pairs Well With</h2>
-                    <div className="flex gap-4 overflow-x-auto pb-6 no-scrollbar">
-                        {products.slice(1, 5).map(p => (
-                            <ProductCardMini key={p.id} product={p} onAddToCart={addToCart} />
-                        ))}
-                    </div>
-                </section>
-
-                <section className="mb-10">
-                    <h2 className="text-2xl font-[900] text-[#151515] mb-8">You May Also Like</h2>
-                    <div className="flex gap-4 overflow-x-auto pb-6 no-scrollbar">
-                        {products.slice(2, 6).map(p => (
-                            <ProductCardMini key={p.id} product={p} onAddToCart={addToCart} />
-                        ))}
-                    </div>
-                </section>
-
-            </div>
-
-            {/* --- Sticky Mobile Bottom Bar --- */}
-            <div className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-3 z-50 flex items-center justify-between shadow-lg">
-                <div className="flex flex-col">
-                    <span className="text-xs text-gray-400 font-bold uppercase">Total</span>
-                    <span className="text-xl font-bold text-gray-900">₹{fullProduct.price}</span>
                 </div>
-                <button
-                    onClick={handleAddToCart}
-                    className="bg-black text-white px-8 py-3 rounded-full font-bold text-sm uppercase tracking-wider"
-                >
-                    Add to Cart
-                </button>
             </div>
 
+
+            {/* Recommendation Section */}
+            <div className="max-w-7xl mx-auto px-4 md:px-8 py-20 bg-white">
+                <SectionHeader title="You Might Also Love" />
+                <div className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide">
+                    {products.slice(0, 6).map(p => (
+                        <ProductCardMini 
+                            key={p.id} 
+                            product={p} 
+                            onAddToCart={addToCart} 
+                            onClick={() => navigate(`/product/${p.id}`)}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            {/* Modals */}
+            <QualityProcessModal isOpen={showQualityModal} onClose={() => setShowQualityModal(false)} />
+            <GenuineProductModal isOpen={showGenuineModal} onClose={() => setShowGenuineModal(false)} brand={fullProduct.brand} />
         </div>
     );
 }

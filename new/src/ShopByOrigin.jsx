@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, ShoppingBag, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import ProductCard from "./components/card";
@@ -54,6 +55,7 @@ const ORIGINS = [
 ];
 
 export default function ShopByOrigin() {
+   const navigate = useNavigate();
    const [activeOrigin, setActiveOrigin] = useState(ORIGINS[0]);
    const [constraints, setConstraints] = useState({ left: 0, right: 0 });
    const containerRef = useRef(null);
@@ -148,7 +150,7 @@ export default function ShopByOrigin() {
                         {activeOrigin.products.length > 0 ? (
                            activeOrigin.products.map(p => (
                               <div key={p.id} className="w-[280px] flex-none animate-in fade-in zoom-in-95 duration-700 drop-shadow-sm">
-                                 <ProductCard product={p} />
+                                 <ProductCard product={p} onClick={() => navigate(`/product/${p.id}`)} />
                               </div>
                            ))
                         ) : (

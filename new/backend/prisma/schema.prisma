@@ -6,6 +6,296 @@ datasource db {
   provider = "postgresql"
 }
 
+model Customer {
+  id                 String              @id @default(cuid())
+  name               String
+  mobile             String              @unique
+  email              String?             @unique
+  rewardPoints       Int                 @default(0)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  password           String?
+  addresses          Address[]
+  notifications      Notification[]
+  offlinePurchases   OfflinePurchase[]
+  orders             Order[]
+  rewardTransactions RewardTransaction[]
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  customerId String
+  label      String?
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  postalCode String
+  country    String   @default("India")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  orders     Order[]  @relation("OrderShippingAddress")
+
+  @@index([customerId])
+}
+
+model Vendor {
+  id               String               @id @default(cuid())
+  businessName     String
+  storeAddress     String
+  contactNumber    String
+  email            String?              @unique
+  businessCategory String
+  identityDocument String?
+  approvalStatus   VendorApprovalStatus @default(PENDING)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  checkoutQR       String?
+  notifications    Notification[]
+  offlinePurchases OfflinePurchase[]
+  orders           Order[]
+  products         Product[]
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
+}
+
+model Product {
+  id                   String                @id @default(cuid())
+  vendorId             String
+  categoryId           String?
+  name                 String
+  slug                 String                @unique
+  brand                String?
+  description          String?
+  imageUrls            String[]
+  tags                 String[]
+  price                Decimal               @db.Decimal(10, 2)
+  discountPrice        Decimal?              @db.Decimal(10, 2)
+  stock                Int                   @default(0)
+  onlineStock          Int                   @default(0)
+  status               ProductStatus         @default(ACTIVE)
+  featured             Boolean               @default(false)
+  discounted           Boolean               @default(false)
+  rewardEligible       Boolean               @default(false)
+  limitedOffer         Boolean               @default(false)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  benefits             Json?
+  faq                  Json?
+  ingredients          String?
+  whyWeLoveIt          String?
+  showOnline           Boolean               @default(true)
+  bestSeller           Boolean               @default(false)
+  newArrival           Boolean               @default(false)
+  trending             Boolean               @default(false)
+  specialOfferType     String?
+  linkedProductId      String?
+  linkedProduct        Product?              @relation("DealLink", fields: [linkedProductId], references: [id], onDelete: SetNull)
+  linkedDeals          Product[]             @relation("DealLink")
+  offlinePurchaseItems OfflinePurchaseItem[]
+  orderItems           OrderItem[]
+  category             Category?             @relation(fields: [categoryId], references: [id])
+  vendor               Vendor                @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@index([vendorId])
+  @@index([categoryId])
+  @@index([name])
+  @@index([linkedProductId])
+}
+
+model Order {
+  id                 String          @id @default(cuid())
+  orderNumber        String          @unique
+  customerId         String
+  vendorId           String
+  addressId          String?
+  type               String          @default("Online")
+  status             OrderStatus     @default(PLACED)
+  subtotal           Decimal         @db.Decimal(10, 2)
+  discountAmount     Decimal         @default(0) @db.Decimal(10, 2)
+  totalAmount        Decimal         @db.Decimal(10, 2)
+  rewardPointsUsed   Int             @default(0)
+  rewardPointsEarned Int             @default(0)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  deliveredAt        DateTime?
+  shippingAddress    Address?        @relation("OrderShippingAddress", fields: [addressId], references: [id])
+  customer           Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  vendor             Vendor          @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  items              OrderItem[]
+  trackingEvents     OrderTracking[]
+
+  @@index([customerId])
+  @@index([vendorId])
+  @@index([status])
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  productId String?
+  name      String
+  quantity  Int
+  unitPrice Decimal  @db.Decimal(10, 2)
+  lineTotal Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model OrderTracking {
+  id        String      @id @default(cuid())
+  orderId   String
+  status    OrderStatus
+  note      String?
+  createdAt DateTime    @default(now())
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+model OfflinePurchase {
+  id                 String                @id @default(cuid())
+  customerId         String?
+  vendorId           String
+  mobile             String
+  amount             Decimal               @db.Decimal(10, 2)
+  purchaseDate       DateTime              @default(now())
+  linkedAt           DateTime?
+  createdAt          DateTime              @default(now())
+  customerName       String?
+  rewardPointsEarned Int                   @default(0)
+  customer           Customer?             @relation(fields: [customerId], references: [id])
+  vendor             Vendor                @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  items              OfflinePurchaseItem[]
+
+  @@index([customerId])
+  @@index([vendorId])
+  @@index([mobile])
+}
+
+model OfflinePurchaseItem {
+  id                String          @id @default(cuid())
+  offlinePurchaseId String
+  name              String
+  quantity          Int
+  unitPrice         Decimal         @db.Decimal(10, 2)
+  createdAt         DateTime        @default(now())
+  productId         String?
+  offlinePurchase   OfflinePurchase @relation(fields: [offlinePurchaseId], references: [id], onDelete: Cascade)
+  product           Product?        @relation(fields: [productId], references: [id])
+
+  @@index([offlinePurchaseId])
+  @@index([productId])
+}
+
+model RewardTransaction {
+  id         String          @id @default(cuid())
+  customerId String
+  type       RewardEntryType
+  source     String
+  points     Int
+  note       String?
+  createdAt  DateTime        @default(now())
+  sourceId   String?
+  customer   Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@index([sourceId])
+}
+
+model Campaign {
+  id          String           @id @default(cuid())
+  title       String
+  description String?
+  status      String           @default("draft")
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  banners     HomepageBanner[]
+}
+
+model HomepageBanner {
+  id         String    @id @default(cuid())
+  title      String
+  subtitle   String?
+  imageUrl   String?
+  ctaLabel   String?
+  ctaUrl     String?
+  isActive   Boolean   @default(true)
+  sortOrder  Int       @default(0)
+  campaignId String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  campaign   Campaign? @relation(fields: [campaignId], references: [id])
+
+  @@index([campaignId])
+}
+
+model Notification {
+  id         String               @id @default(cuid())
+  audience   NotificationAudience
+  channel    NotificationChannel
+  customerId String?
+  vendorId   String?
+  title      String
+  message    String
+  isRead     Boolean              @default(false)
+  createdAt  DateTime             @default(now())
+  customer   Customer?            @relation(fields: [customerId], references: [id])
+  vendor     Vendor?              @relation(fields: [vendorId], references: [id])
+
+  @@index([vendorId])
+  @@index([audience])
+}
+
+model HomepageSection {
+  id          String   @id @default(cuid())
+  title       String
+  componentId String   @unique
+  type        String   @default("BUILT_IN")
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  settings    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model Coupon {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  discountType   String    // "PERCENTAGE" or "FIXED"
+  discountValue  Decimal   @db.Decimal(10, 2)
+  minPurchase    Decimal   @default(0) @db.Decimal(10, 2)
+  maxUsage       Int?
+  usedCount      Int       @default(0)
+  expiresAt      DateTime?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([code])
+}
+
 enum VendorApprovalStatus {
   PENDING
   APPROVED
@@ -45,270 +335,4 @@ enum NotificationChannel {
   EMAIL
   PUSH
   DASHBOARD
-}
-
-model Customer {
-  id                 String              @id @default(cuid())
-  name               String
-  mobile             String              @unique
-  email              String?             @unique
-  password           String?
-  rewardPoints       Int                 @default(0)
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  addresses          Address[]
-  orders             Order[]
-  offlinePurchases   OfflinePurchase[]
-  rewardTransactions RewardTransaction[]
-  notifications      Notification[]
-}
-
-model Address {
-  id         String   @id @default(cuid())
-  customerId String
-  label      String?
-  line1      String
-  line2      String?
-  city       String
-  state      String
-  postalCode String
-  country    String   @default("India")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  orders     Order[]  @relation("OrderShippingAddress")
-
-  @@index([customerId])
-}
-
-model Vendor {
-  id                String               @id @default(cuid())
-  businessName      String
-  storeAddress      String
-  contactNumber     String
-  email             String?              @unique
-  businessCategory  String
-  identityDocument  String?
-  approvalStatus    VendorApprovalStatus @default(PENDING)
-  createdAt         DateTime             @default(now())
-  updatedAt         DateTime             @updatedAt
-  products          Product[]
-  orders            Order[]
-  offlinePurchases  OfflinePurchase[]
-  notifications     Notification[]
-}
-
-model Category {
-  id        String    @id @default(cuid())
-  name      String    @unique
-  slug      String    @unique
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  products  Product[]
-}
-
-model Product {
-  id             String        @id @default(cuid())
-  vendorId       String
-  categoryId     String?
-  name           String
-  slug           String        @unique
-  brand          String?
-  description    String?
-  imageUrls      String[]
-  tags           String[]
-  price          Decimal       @db.Decimal(10, 2)
-  discountPrice  Decimal?      @db.Decimal(10, 2)
-  stock          Int           @default(0)
-  status         ProductStatus @default(ACTIVE)
-  featured       Boolean       @default(false)
-  newArrival     Boolean       @default(false)
-  bestSeller     Boolean       @default(false)
-  trending       Boolean       @default(false)
-  discounted     Boolean       @default(false)
-  rewardEligible Boolean       @default(false)
-  limitedOffer   Boolean       @default(false)
-  ingredients    String?
-  whyWeLoveIt    String?
-  benefits       Json?
-  faq            Json?
-  showOnline     Boolean       @default(true)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  vendor         Vendor        @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  category       Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  orderItems     OrderItem[]
-  offlinePurchaseItems OfflinePurchaseItem[]
-
-  @@index([vendorId])
-  @@index([categoryId])
-  @@index([name])
-}
-
-model Order {
-  id                 String          @id @default(cuid())
-  orderNumber        String          @unique
-  customerId         String
-  vendorId           String
-  addressId          String?
-  status             OrderStatus     @default(PLACED)
-  subtotal           Decimal         @db.Decimal(10, 2)
-  discountAmount     Decimal         @default(0) @db.Decimal(10, 2)
-  totalAmount        Decimal         @db.Decimal(10, 2)
-  rewardPointsUsed   Int             @default(0)
-  rewardPointsEarned Int             @default(0)
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
-  deliveredAt        DateTime?
-  customer           Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  vendor             Vendor          @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  shippingAddress    Address?        @relation("OrderShippingAddress", fields: [addressId], references: [id], onDelete: SetNull)
-  items              OrderItem[]
-  trackingEvents     OrderTracking[]
-
-  @@index([customerId])
-  @@index([vendorId])
-  @@index([status])
-}
-
-model OrderItem {
-  id         String   @id @default(cuid())
-  orderId     String
-  productId   String?
-  name        String
-  quantity    Int
-  unitPrice   Decimal  @db.Decimal(10, 2)
-  lineTotal   Decimal  @db.Decimal(10, 2)
-  createdAt   DateTime @default(now())
-  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
-
-  @@index([orderId])
-  @@index([productId])
-}
-
-model OrderTracking {
-  id        String      @id @default(cuid())
-  orderId    String
-  status     OrderStatus
-  note       String?
-  createdAt  DateTime   @default(now())
-  order      Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
-
-  @@index([orderId])
-}
-
-model OfflinePurchase {
-  id           String                @id @default(cuid())
-  customerId   String?
-  vendorId     String
-  customerName String?
-  mobile       String
-  amount             Decimal               @db.Decimal(10, 2)
-  rewardPointsEarned Int                   @default(0)
-  purchaseDate       DateTime              @default(now())
-  linkedAt    DateTime?
-  createdAt   DateTime              @default(now())
-  customer    Customer?             @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  vendor      Vendor                @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  items       OfflinePurchaseItem[]
-
-  @@index([customerId])
-  @@index([vendorId])
-  @@index([mobile])
-}
-
-model OfflinePurchaseItem {
-  id                String          @id @default(cuid())
-  offlinePurchaseId String
-  productId         String?
-  name              String
-  quantity          Int
-  unitPrice         Decimal         @db.Decimal(10, 2)
-  createdAt         DateTime        @default(now())
-  offlinePurchase   OfflinePurchase @relation(fields: [offlinePurchaseId], references: [id], onDelete: Cascade)
-  product           Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
-
-  @@index([offlinePurchaseId])
-  @@index([productId])
-}
-
-model RewardTransaction {
-  id         String          @id @default(cuid())
-  customerId String
-  type       RewardEntryType
-  source     String
-  sourceId   String?
-  points     Int
-  note       String?
-  createdAt  DateTime        @default(now())
-  customer   Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
-
-  @@index([customerId])
-  @@index([sourceId])
-}
-
-model Campaign {
-  id          String           @id @default(cuid())
-  title       String
-  description String?
-  status      String           @default("draft")
-  startsAt    DateTime?
-  endsAt      DateTime?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  banners     HomepageBanner[]
-}
-
-model HomepageBanner {
-  id          String    @id @default(cuid())
-  title       String
-  subtitle    String?
-  imageUrl    String?
-  ctaLabel    String?
-  ctaUrl      String?
-  isActive    Boolean   @default(true)
-  sortOrder   Int       @default(0)
-  campaignId  String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  campaign    Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
-
-  @@index([campaignId])
-}
-
-model Notification {
-  id         String               @id @default(cuid())
-  audience   NotificationAudience
-  channel    NotificationChannel
-  customerId String?
-  vendorId   String?
-  title      String
-  message    String
-  isRead     Boolean              @default(false)
-  createdAt  DateTime             @default(now())
-  customer   Customer?            @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  vendor     Vendor?              @relation(fields: [vendorId], references: [id], onDelete: SetNull)
-
-  @@index([vendorId])
-  @@index([audience])
-}
-
-model HomepageSection {
-  id          String   @id @default(cuid())
-  title       String
-  componentId String   @unique
-  type        String   @default("BUILT_IN")
-  isActive    Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  settings    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model Setting {
-  id        String   @id @default(cuid())
-  key       String   @unique
-  value     String
-  updatedAt DateTime @updatedAt
 }

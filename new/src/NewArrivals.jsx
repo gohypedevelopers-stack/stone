@@ -177,7 +177,7 @@ export default function NewArrivals({ addToCart, wishlist = [], toggleWishlist }
 
                     <div className="flex gap-6 overflow-x-auto pb-8 snap-x no-scrollbar">
                         {saleProducts.map(p => (
-                            <div key={p.id} className="min-w-[280px] snap-center bg-white rounded-[24px] p-3 shadow-sm hover:shadow-lg transition-all border border-gray-100">
+                            <div key={p.id} className="min-w-[280px] snap-center bg-white rounded-[24px] p-3 shadow-sm hover:shadow-lg transition-all border border-gray-100 cursor-pointer" onClick={() => navigate(`/product/${p.id}`)}>
                                 <div className="relative rounded-[20px] bg-gray-50 mb-3 overflow-hidden aspect-[4/5]">
                                     <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
                                     <div className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full">-30% OFF</div>

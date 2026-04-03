@@ -33,7 +33,9 @@ import {
   Upload,
   GripVertical, 
   ArrowLeft, 
-  Layout 
+  Layout,
+  Search,
+  ChevronRight
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { motion, AnimatePresence } from "framer-motion";
@@ -67,6 +69,7 @@ import { THEME } from "../theme.js";
 
 
 const API_URL = "http://localhost:5000/api";
+const SERVER_URL = "http://localhost:5000";
 
 const getSectionIcon = (id) => {
   if (id === 'hero-slider') return <ImageIcon className="h-5 w-5" />;
@@ -80,7 +83,7 @@ const getSectionIcon = (id) => {
   return <Sparkles className="h-5 w-5" />;
 };
 
-export function HomepageManager() {
+export function HomepageManager({ openComponentId }) {
   const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasUnsavedOrder, setHasUnsavedOrder] = useState(false);
@@ -93,6 +96,7 @@ export function HomepageManager() {
   const [draftSettings, setDraftSettings] = useState({});
   const [draftTitle, setDraftTitle] = useState("");
   const [allProducts, setAllProducts] = useState([]);
+  const [allBrands, setAllBrands] = useState([]);
   const [pickerSearch, setPickerSearch] = useState("");
   const [showPicker, setShowPicker] = useState(false);
 
@@ -103,12 +107,14 @@ export function HomepageManager() {
       const data = await res.json();
       if (data.success) {
         setSections(data.data);
+        return data.data;
       }
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
+    return null;
   };
 
   const fetchAllProducts = async () => {
@@ -127,10 +133,33 @@ export function HomepageManager() {
     }
   };
 
+  const fetchAllBrands = async () => {
+    try {
+      const res = await fetch(`${API_URL}/products/brands`);
+      const data = await res.json();
+      if (data.success) {
+        setAllBrands(data.data || []);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
-    fetchSections();
+    fetchSections().then((sectionsData) => {
+      if (openComponentId && sectionsData && sectionsData.length > 0) {
+        const found = sectionsData.find(s => s.componentId === openComponentId);
+        if (found) {
+          setActiveConfig(found);
+          setDraftTitle(found.title || "");
+          setDraftSettings(found.settings || {});
+          setSettingsOpen(true);
+        }
+      }
+    });
     fetchAllProducts();
-  }, []);
+    fetchAllBrands();
+  }, [openComponentId]);
 
   const handleToggleActive = async (id, currentStatus) => {
     try {
@@ -271,7 +300,10 @@ export function HomepageManager() {
       });
       const data = await res.json();
       if (data.success) {
-        const newUrl = data.data[0];
+        let newUrl = data.data[0];
+        if (newUrl.startsWith('/')) {
+          newUrl = `${SERVER_URL}${newUrl}`;
+        }
         const s = [...(draftSettings.slides || [])];
         s[idx] = { ...s[idx], imageUrl: newUrl };
         setDraftSettings({ ...draftSettings, slides: s });
@@ -300,7 +332,10 @@ export function HomepageManager() {
       });
       const data = await res.json();
       if (data.success) {
-        const newUrl = data.data[0];
+        let newUrl = data.data[0];
+        if (newUrl.startsWith('/')) {
+          newUrl = `${SERVER_URL}${newUrl}`;
+        }
         const p = [...(draftSettings.products || [])];
         p[idx] = { ...p[idx], imageUrl: newUrl };
         setDraftSettings({ ...draftSettings, products: p });
@@ -317,8 +352,10 @@ export function HomepageManager() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ settings: draftSettings, title: draftTitle })
       });
-      setSettingsOpen(false);
-      setActiveConfig(null);
+      if (!openComponentId) {
+        setSettingsOpen(false);
+        setActiveConfig(null);
+      }
       fetchSections();
     } catch (e) {
       console.error(e);
@@ -338,86 +375,35 @@ export function HomepageManager() {
     return (
       <div className="w-full bg-white relative rounded-2xl border border-zinc-200 overflow-hidden shadow-md origin-top transform-gpu" style={{ transform: 'scale(0.95)', transformOrigin: 'top center' }}>
         <div className="pointer-events-none w-full">
-          {componentId === "hero-slider" && <HeroSlider customSlides={draftSettings?.slides?.length > 0 ? draftSettings.slides : null} />}
-          {componentId === "offer-timer" && <div className="p-4 w-full"><OfferTimer offers={draftSettings?.offers} /></div>}
-          {componentId === "upcoming-drops" && <UpcomingDrops onNavigate={noop} wishlist={mockWishlist} toggleWishlist={noop} deadline={draftSettings?.deadline} title={draftTitle !== "" ? draftTitle : draftSettings?.promoText} products={draftSettings?.products} />}
-          {componentId === "shop-by-category" && <ByCategory onNavigate={noop} onSelectCategory={noop} isAdmin={true} bgColor={draftSettings?.bgColor} title={draftTitle} categories={draftSettings?.categories} maxItems={draftSettings?.maxItems || 8} />}
-
-          {componentId === "best-sellers" && (
-            <div className="py-[28px] overflow-hidden" style={{ backgroundColor: draftSettings?.bgColor || 'transparent' }}>
-              <div className="px-[10px] mb-[11px] text-left">
-                <h2 className="m-0 text-[32px] font-extrabold tracking-wide uppercase">
-                  {draftTitle || "BEST "}
-                  {!draftTitle && (
-                    <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent">
-                      SELLERS
-                    </span>
-                  )}
-                </h2>
-                {draftSettings?.subheading && <p className="text-stone-500 font-bold mt-1 tracking-widest uppercase text-xs">{draftSettings.subheading}</p>}
-              </div>
-
-              <div className="relative pt-[12px] pb-[30px] w-full px-[10px]">
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-[14px]">
-                  {(() => {
-                    const normalize = (n) => n?.toLowerCase().replace(/[^a-z0-9]/g, '').trim() || "";
-                    const deduplicate = (list) => {
-                      const map = new Map();
-                      list.forEach(p => {
-                        const key = normalize(p.name);
-                        // If we already have this product, we only replace it if the new one is 'showOnline'
-                        if (!map.has(key) || (p.showOnline && !map.get(key).showOnline)) {
-                          map.set(key, p);
-                        }
-                      });
-                      return Object.values(map.values()); // Wait, Object.values of map.values() is wrong
-                    };
-                    // Let's use a cleaner helper internally
-                    const uniqueDict = {};
-                    const source = draftSettings?.products?.length > 0 
-                      ? draftSettings.products.map(p => allProducts.find(x => x.id === p.id) || p) 
-                      : allProducts.filter(p => !p.isHidden); 
-
-                    source.forEach(p => {
-                      const normKey = normalize(p.name);
-                      if (!uniqueDict[normKey] || (p.showOnline && !uniqueDict[normKey].showOnline)) {
-                        uniqueDict[normKey] = p;
-                      }
-                    });
-                    
-                    return Object.values(uniqueDict).slice(0, draftSettings?.maxItems || 8);
-                  })().map((p, pIdx) => (
-                    <div key={`${p.id}-${pIdx}`} className="w-full">
-                      <ProductCard
-                        product={{ 
-                          ...p, 
-                          image: p.imageUrls?.[0] || 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=800&q=80',
-                          category: p.category?.name || p.tag || "Skincare",
-                          tag: p.category?.name || p.tag || "New",
-                          rating: p.rating || 4.5,
-                          inStock: true 
-                        }}
-                        onAddToCart={noop}
-                        onClick={noop}
-                        wishlist={mockWishlist}
-                        toggleWishlist={noop}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {componentId === "shop-by-brand" && <ShopByBrand isAdmin={true} selectedBrands={draftSettings?.brands} onSelectBrand={noop} title={draftTitle} maxItems={draftSettings?.maxItems || 8} bgColor={draftSettings?.bgColor} />}
-          {componentId === "by-skin-concern" && <BySkinConcern onSelectConcern={noop} title={draftTitle} bgColor={draftSettings?.bgColor} />}
-          {componentId === "new-arrivals" && <NewArrivalsSection onNavigate={noop} title={draftTitle} maxItems={draftSettings?.maxItems || 8} bgColor={draftSettings?.bgColor} />}
-          {componentId === "watch-and-shop" && <WatchAndShop onNavigate={noop} videoUrl={draftSettings?.videoUrl} includedProducts={draftSettings?.productsCsv} title={draftTitle} />}
+          {componentId === "shop-by-brand" && (() => {
+            // Compute brands list matching the editor: merge all sources, apply overrides, filter hidden
+            const savedB = (draftSettings?.brands || []).map(b => typeof b === 'string' ? { name: b, logo: '' } : b);
+            const hidden = draftSettings?.hiddenBrands || [];
+            const names = new Set([...BRANDS.map(b => b.name), ...allBrands, ...savedB.map(b => b.name)]);
+            const computed = Array.from(names)
+              .filter(n => !hidden.includes(n))
+              .map(n => savedB.find(b => b.name === n) || BRANDS.find(b => b.name === n) || { name: n, logo: '' })
+              .sort((a, b) => a.name.localeCompare(b.name));
+            return <ShopByBrand isAdmin={true} selectedBrands={computed} onSelectBrand={noop} title={draftTitle} maxItems={draftSettings?.maxItems || 12} bgColor={draftSettings?.bgColor} />;
+          })()}
+          {componentId !== "shop-by-brand" && componentId === "hero-slider" && <HeroSlider customSlides={draftSettings?.slides?.length > 0 ? draftSettings.slides : null} />}
           {componentId === "limited-offer" && <LimitedOfferBanner deadline={draftSettings?.deadline} title={draftTitle || draftSettings?.promoText} />}
           {componentId === "shop-by-offer" && <ByOffer onNavigate={noop} onSelectOffer={noop} title={draftTitle} maxItems={draftSettings?.maxItems || 8} bgColor={draftSettings?.bgColor} />}
-          {componentId === "pre-order" && <PreOrderSection wishlist={mockWishlist} toggleWishlist={noop} title={draftTitle} />}
+          {componentId === "pre-order" && <PreOrderSection wishlist={mockWishlist} toggleWishlist={noop} title={draftTitle} settings={draftSettings} />}
           {componentId === "skin-quiz" && <SkinQuiz headline={draftTitle || draftSettings?.headline} targetUrl={draftSettings?.link} />}
           {componentId === "request-product" && <RequestProductSection bgColor={draftSettings?.bgColor} title={draftTitle} />}
+          {componentId === "upcoming-drops" && (() => {
+            const dropProducts = (draftSettings?.products || []).filter(p => p.showOnline !== false).map(sp => {
+              const fullProd = allProducts.find(p => p.id === sp.id);
+              return {
+                 ...sp,
+                 price: fullProd?.price || 0,
+                 originalPrice: fullProd?.originalPrice || fullProd?.price || 0,
+                 description: fullProd?.description || ''
+              };
+            });
+            return <UpcomingDrops onNavigate={noop} title={draftTitle} products={dropProducts} />;
+          })()}
         </div>
       </div>
     );
@@ -1313,39 +1299,56 @@ export function HomepageManager() {
     }
 
     if (cid === 'shop-by-brand') {
-      // Brands stored as objects: [{name, logo}, ...] for full edit control
-      const selectedBrands = (draftSettings.brands || []).map(b => 
-        typeof b === 'string' ? (BRANDS.find(x => x.name === b) || { name: b, logo: '' }) : b
+      // ALWAYS build the full brand list from ALL sources, applying saved overrides
+      const savedBrands = (draftSettings.brands || []).map(b =>
+        typeof b === 'string' ? { name: b, logo: '' } : b
       );
 
-      const updateBrand = (idx, field, value) => {
-        const newB = [...selectedBrands];
-        newB[idx] = { ...newB[idx], [field]: value };
-        setDraftSettings({ ...draftSettings, brands: newB });
+      // Merge ALL brands: BRANDS constant + allBrands from DB + any custom saved brands
+      const hiddenBrands = draftSettings.hiddenBrands || [];
+      const allNames = new Set([...BRANDS.map(b => b.name), ...allBrands, ...savedBrands.map(b => b.name)]);
+      const brandsList = Array.from(allNames)
+        .filter(name => !hiddenBrands.includes(name))
+        .map(name => {
+          const saved = savedBrands.find(b => b.name === name);
+          if (saved) return saved;
+          const fromConst = BRANDS.find(b => b.name === name);
+          if (fromConst) return fromConst;
+          return { name, logo: '' };
+        }).sort((a, b) => a.name.localeCompare(b.name));
+
+      const filteredBrands = brandsList.filter(b => b.name.toLowerCase().includes(pickerSearch.toLowerCase()));
+
+      const updateBrand = (brandName, field, value) => {
+        // Update the saved overrides
+        const newSaved = [...savedBrands];
+        const idx = newSaved.findIndex(b => b.name === brandName);
+        if (idx > -1) {
+          newSaved[idx] = { ...newSaved[idx], [field]: value };
+        } else {
+          // Add as a new override
+          const original = BRANDS.find(b => b.name === brandName) || { name: brandName, logo: '' };
+          newSaved.push({ ...original, [field]: value });
+        }
+        setDraftSettings({ ...draftSettings, brands: newSaved });
       };
 
-      const moveBrand = (idx, dir) => {
-        const newB = [...selectedBrands];
-        if (idx + dir < 0 || idx + dir >= newB.length) return;
-        const temp = newB[idx];
-        newB[idx] = newB[idx + dir];
-        newB[idx + dir] = temp;
-        setDraftSettings({ ...draftSettings, brands: newB });
-      };
 
-      const handleBrandLogoUpload = async (e, bIdx) => {
+      const handleBrandLogoUpload = async (brandName, e) => {
         const file = e.target.files[0];
         if (!file) return;
         const formData = new FormData();
         formData.append("images", file);
-        const res = await fetch(`${API_URL}/upload`, { method: "POST", body: formData });
-        const data = await res.json();
-        if (data.success) {
-          let newUrl = data.data[0];
-          if (newUrl.startsWith("/app/")) {
-            newUrl = `http://localhost:5000/uploads/${newUrl.split('/').pop()}`;
+        try {
+          const res = await fetch(`${API_URL}/upload`, { method: "POST", body: formData });
+          const data = await res.json();
+          if (data.success) {
+            let newUrl = data.data[0];
+            if (newUrl.startsWith('/')) newUrl = `${SERVER_URL}${newUrl}`;
+            updateBrand(brandName, 'logo', newUrl);
           }
-          updateBrand(bIdx, 'logo', newUrl);
+        } catch (err) {
+          console.error("Brand logo upload failed:", err);
         }
       };
 
@@ -1354,116 +1357,110 @@ export function HomepageManager() {
           {renderCommonHeaderInput()}
 
           <div className="space-y-2">
-            <Label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Section Subheading / Description</Label>
-            <Input value={draftSettings.subheading || ''} onChange={e => setDraftSettings({ ...draftSettings, subheading: e.target.value })} className="h-12 rounded-xl bg-zinc-50/50 focus-visible:ring-emerald-500 shadow-inner font-medium text-zinc-600" placeholder="Optional brief description or subtitle" />
+            <Label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Section Subheading</Label>
+            <Input value={draftSettings.subheading || ''} onChange={e => setDraftSettings({ ...draftSettings, subheading: e.target.value })} className="h-11 rounded-xl bg-zinc-50/50 border-zinc-200 focus-visible:ring-indigo-500 font-medium text-zinc-600" placeholder="Optional brief description" />
           </div>
 
-          <div className="space-y-6">
-            <div className="flex items-center justify-between px-1">
-              <div>
-                <Label className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-950">Featured Brands</Label>
-                <p className="text-[10px] text-zinc-400 font-medium mt-1">Click brands to select/deselect. Add custom brands too.</p>
-              </div>
-              <Button 
-                onClick={() => {
-                  setDraftSettings({ ...draftSettings, brands: [...selectedBrands, { name: "New Brand", logo: "" }] });
-                }}
-                variant="outline" 
-                size="sm" 
-                className="h-8 rounded-lg border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold text-[9px] uppercase tracking-widest gap-2"
-              >
-                <Plus className="h-3 w-3" /> Custom
-              </Button>
+          {/* Search + Add */}
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1">
+              <Input 
+                placeholder="Search brands..." 
+                value={pickerSearch}
+                onChange={e => setPickerSearch(e.target.value)}
+                className="h-10 rounded-xl bg-zinc-50 border-zinc-200 pl-9 text-[11px] font-medium"
+              />
+              <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
             </div>
+            <Button 
+              onClick={() => {
+                setDraftSettings({ ...draftSettings, brands: [...brandsList, { name: "New Brand", logo: "" }] });
+              }}
+              variant="outline"
+              size="sm"
+              className="h-10 rounded-xl border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-bold text-[9px] uppercase tracking-widest gap-2 shrink-0"
+            >
+              <Plus className="h-3.5 w-3.5" /> Add Brand
+            </Button>
+          </div>
 
-            {/* Visual selectable brand grid */}
-            <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-              {BRANDS.map((brand, idx) => {
-                const isSelected = selectedBrands.some(b => b.name === brand.name);
-                return (
-                  <button
-                    key={`pick-${brand.name}-${idx}`}
-                    onClick={() => {
-                      if (isSelected) {
-                        setDraftSettings({ ...draftSettings, brands: selectedBrands.filter(b => b.name !== brand.name) });
-                      } else {
-                        setDraftSettings({ ...draftSettings, brands: [...selectedBrands, { name: brand.name, logo: brand.logo }] });
-                      }
-                    }}
-                    className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
-                      isSelected 
-                        ? 'border-emerald-500 bg-emerald-50/50 shadow-md ring-1 ring-emerald-500/20' 
-                        : 'border-zinc-100 bg-white hover:border-zinc-300 hover:bg-zinc-50'
-                    }`}
-                  >
-                    <div className="h-9 w-12 rounded-lg bg-white border border-zinc-100 overflow-hidden shrink-0 flex items-center justify-center p-1">
-                      <img src={brand.logo} alt={brand.name} className="max-w-full max-h-full object-contain" />
-                    </div>
-                    <span className={`text-[10px] font-bold truncate flex-1 ${isSelected ? 'text-emerald-700' : 'text-zinc-600'}`}>{brand.name}</span>
-                    {isSelected && <Check className="h-4 w-4 text-emerald-500 shrink-0" />}
-                  </button>
-                );
-              })}
-            </div>
+          {/* ALL BRANDS — flat editable list */}
+          <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
+            {filteredBrands.map((brand, bIdx) => (
+              <div key={`brand-${brand.name}-${bIdx}`} className="bg-white border border-zinc-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+                <div className="p-3 flex items-center gap-3">
+                  {/* Logo */}
+                  <div className="h-12 w-16 rounded-xl bg-zinc-50 border border-zinc-100 flex items-center justify-center p-1 shrink-0 overflow-hidden">
+                     {brand.logo ? (
+                       <img src={brand.logo.startsWith('/uploads') ? `${SERVER_URL}${brand.logo}` : brand.logo} className="max-w-full max-h-full object-contain" />
+                     ) : (
+                       <ImageIcon className="h-5 w-5 text-zinc-200" />
+                     )}
+                  </div>
+                  {/* Name */}
+                  <div className="flex-1 min-w-0">
+                     <h4 className="text-[11px] font-black uppercase tracking-wider text-zinc-800 truncate">{brand.name}</h4>
+                  </div>
+                  {/* Actions */}
+                  <div className="flex gap-1 shrink-0">
+                     <Button size="icon" variant="ghost" className="h-7 w-7 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg" onClick={() => {
+                        const editKey = `editing_brand_${brand.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                        const el = document.getElementById(editKey);
+                        if (el) el.classList.toggle('hidden');
+                     }}><Edit3 className="h-3 w-3" /></Button>
+                     <Button size="icon" variant="ghost" className="h-7 w-7 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-lg" onClick={() => {
+                        setDraftSettings({ ...draftSettings, hiddenBrands: [...(draftSettings.hiddenBrands || []), brand.name] });
+                     }}><Trash2 className="h-3 w-3" /></Button>
+                  </div>
 
-            {/* Selected brands count */}
-            {selectedBrands.length > 0 && (
-              <div className="flex items-center justify-between px-2 py-2 bg-emerald-50/50 rounded-xl border border-emerald-100">
-                <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">{selectedBrands.length} brand{selectedBrands.length !== 1 ? 's' : ''} selected</span>
-                <Button 
-                  onClick={() => setDraftSettings({ ...draftSettings, brands: [] })}
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-7 text-[9px] font-bold text-red-500 hover:text-red-600 hover:bg-red-50 uppercase tracking-widest"
-                >
-                  Clear All
-                </Button>
-              </div>
-            )}
-
-            {/* Custom brands editing section (only show custom ones that aren't from default BRANDS) */}
-            {selectedBrands.filter(b => !BRANDS.some(d => d.name === b.name)).length > 0 && (
-              <div className="space-y-3">
-                <Label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">Custom Brands</Label>
-                {selectedBrands.map((brand, bIdx) => {
-                  if (BRANDS.some(d => d.name === brand.name)) return null;
-                  return (
-                    <div key={`custom-${bIdx}`} className="bg-zinc-50 border border-zinc-200 rounded-2xl p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Custom Brand</span>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-zinc-400 hover:text-red-500 rounded-lg" onClick={() => {
-                          const newB = [...selectedBrands]; newB.splice(bIdx, 1);
-                          setDraftSettings({ ...draftSettings, brands: newB });
-                        }}><Trash2 className="h-3.5 w-3.5" /></Button>
-                      </div>
-                      <Input value={brand.name} onChange={e => updateBrand(bIdx, 'name', e.target.value)} className="h-10 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm" placeholder="Brand Name" />
-                      <div className="flex gap-3">
-                        <div className="h-11 w-16 rounded-xl bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 flex items-center justify-center">
-                          {brand.logo ? <img src={brand.logo} className="max-w-full max-h-full object-contain p-1" /> : <ImageIcon className="h-5 w-5 text-zinc-300" />}
+                </div>
+                
+                {/* Inline Edit Panel */}
+                <div id={`editing_brand_${brand.name.replace(/[^a-zA-Z0-9]/g, '_')}`} className="hidden px-4 pb-4 pt-1 border-t border-zinc-50 space-y-2 bg-zinc-50/30">
+                  <div className="space-y-1">
+                    <Label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">Display Name</Label>
+                    <Input 
+                      defaultValue={brand.name} 
+                      onBlur={e => updateBrand(brand.name, 'name', e.target.value)} 
+                      className="h-8 rounded-lg border-zinc-100 bg-white text-[11px] font-bold" 
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">Logo</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        defaultValue={brand.logo || ''} 
+                        onBlur={e => updateBrand(brand.name, 'logo', e.target.value)} 
+                        className="h-8 rounded-lg border-zinc-100 bg-white text-[9px] font-medium" 
+                      />
+                      <label className="cursor-pointer shrink-0">
+                        <div className="h-8 px-3 rounded-lg bg-zinc-100 text-zinc-600 border border-zinc-200 hover:bg-zinc-200 flex items-center justify-center transition-all">
+                          <Upload className="h-3 w-3" />
                         </div>
-                        <Input value={brand.logo || ''} onChange={e => updateBrand(bIdx, 'logo', e.target.value)} className="h-11 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[12px] font-medium shadow-sm flex-1" placeholder="Paste logo URL..." />
-                        <label className="cursor-pointer">
-                          <div className="h-11 px-4 flex items-center justify-center gap-2 rounded-xl bg-zinc-100 text-zinc-600 border border-zinc-200 hover:bg-zinc-200 transition-all font-bold text-[10px] uppercase tracking-widest">
-                            <Upload className="h-3.5 w-3.5" /><span>Upload</span>
-                          </div>
-                          <input type="file" className="hidden" accept="image/*" onChange={(e) => handleBrandLogoUpload(e, bIdx)} />
-                        </label>
-                      </div>
+                        <input type="file" className="hidden" accept="image/*" onChange={(e) => handleBrandLogoUpload(brand.name, e)} />
+                      </label>
                     </div>
-                  );
-                })}
+                  </div>
+                </div>
               </div>
-            )}
+            ))}
           </div>
 
           <div className="h-px bg-zinc-100 w-full" />
 
-          <div className="space-y-2">
-             <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 block ml-1">Custom Background</Label>
-             <Input value={draftSettings.bgColor || ''} onChange={e => setDraftSettings({ ...draftSettings, bgColor: e.target.value })} className="h-11 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 shadow-sm" placeholder="#FFFFFF or transparent" />
+          <div className="grid grid-cols-2 gap-4">
+             <div className="space-y-1">
+               <Label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">Section Background</Label>
+               <Input value={draftSettings.bgColor || ''} onChange={e => setDraftSettings({ ...draftSettings, bgColor: e.target.value })} className="h-10 rounded-xl bg-zinc-50/50 border-zinc-200 focus-visible:ring-indigo-500 text-[12px] font-mono" placeholder="#FFFFFF" />
+             </div>
+             <div className="space-y-1">
+               <Label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">Limit (Slider)</Label>
+               <Input type="number" value={draftSettings.maxItems || 12} onChange={e => setDraftSettings({ ...draftSettings, maxItems: Number(e.target.value) })} className="h-10 rounded-xl bg-zinc-50/50 border-zinc-200 focus-visible:ring-indigo-500 font-bold" />
+             </div>
           </div>
         </div>
       );
+
     }
 
     // Default generic configurator for Category, Brand, etc.
@@ -1486,17 +1483,56 @@ export function HomepageManager() {
     );
   };
 
-  if (loading) return (
+  if (loading && sections.length === 0) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh]">
       <div className="h-8 w-8 border-4 border-zinc-200 border-t-indigo-950 rounded-full animate-spin"></div>
       <p className="mt-4 text-sm font-medium text-zinc-500 uppercase tracking-widest">Loading Builder...</p>
     </div>
   );
 
+  if (openComponentId && activeConfig) {
+    return (
+      <div className="w-[calc(100%+6rem)] -mt-12 -mx-12 min-h-[calc(100vh-80px)] bg-white shadow-sm flex flex-col justify-start overflow-hidden">
+        {/* Standalone Header */}
+        <div className="px-8 py-5 bg-white border-b border-zinc-200 z-10 w-full shrink-0 flex items-center justify-between shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center">
+              <MonitorSmartphone className="h-6 w-6" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-black text-indigo-950 tracking-tight">
+                Editing Form & Preview // {activeConfig.componentId}
+              </h2>
+              <p className="text-xs font-bold uppercase tracking-widest text-zinc-400 mt-1">
+                See your changes applied in real-time
+              </p>
+            </div>
+          </div>
+          <Button onClick={saveSettings} className="rounded-xl h-11 px-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-indigo-600/20 transition-all hover:-translate-y-0.5">
+            Save Changes
+          </Button>
+        </div>
+
+        {/* Content Split */}
+        <div className="flex flex-col lg:flex-row flex-1 w-full items-stretch">
+          <div className="w-full lg:w-[480px] bg-white border-r border-zinc-200 flex flex-col shrink-0 relative z-10">
+            <div className="flex-1 p-8 overflow-y-auto custom-scrollbar h-[calc(100vh-160px)]">
+              {renderConfigurator()}
+            </div>
+          </div>
+          <div className="flex-1 bg-zinc-50/50 p-8 flex items-start justify-center overflow-y-auto relative hidden lg:flex min-w-[700px] h-[calc(100vh-160px)]">
+            <div className="absolute inset-x-0 top-0 text-center py-4 text-[10px] font-black uppercase text-zinc-300 tracking-[0.2em] select-none">Live Component Preview</div>
+            {renderLivePreview()}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen pb-32 animate-in fade-in duration-500 relative" style={{ background: 'linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%)' }}>
-      {/* Background Enhancement pattern layer (opacity 5%) */}
-      <div className="absolute inset-0 z-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] pointer-events-none mix-blend-multiply"></div>
+      {/* Subtle pattern overlay */}
+      <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
 
       <div className="w-full relative z-10">
       {/* Header Section */}
@@ -1620,7 +1656,7 @@ export function HomepageManager() {
       </div>
 
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <DialogContent className="!max-w-[95vw] sm:!max-w-[95vw] md:!max-w-[95vw] lg:!max-w-[95vw] !w-[95vw] p-0 rounded-[2rem] overflow-hidden border-zinc-200/60 shadow-2xl bg-zinc-100 gap-0">
+        <DialogContent className="max-w-[95vw]! sm:max-w-[95vw]! md:max-w-[95vw]! lg:max-w-[95vw]! w-[95vw]! p-0 rounded-[2rem] overflow-hidden border-zinc-200/60 shadow-2xl bg-zinc-100 gap-0">
           <DialogHeader className="px-8 py-5 bg-white border-b border-zinc-200 z-10 w-full shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">

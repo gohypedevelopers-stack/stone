@@ -15,13 +15,13 @@ const Footer = memo(function Footer({ supportPhone }) {
             Curated skincare & cosmetics across Korean,<br /> Japanese and everyday essentials.
           </p>
           <div className="flex gap-[12px] mt-[20px]">
-            <a href="#" className="flex items-center justify-center w-[38px] h-[38px] rounded-full bg-[#222] text-white text-[18px] transition-all duration-200 border border-white/5 hover:-translate-y-[3px] hover:bg-gradient-to-br hover:from-[#ff4fa3] hover:to-[#ff77c8] hover:shadow-[0_6px_16px_rgba(255,79,163,0.3)] hover:border-transparent" aria-label="Facebook">
+            <a href="#" className="flex items-center justify-center w-[38px] h-[38px] rounded-[2px] bg-[#222] text-white text-[18px] transition-all duration-200 border border-white/5 hover:-translate-y-[3px] hover:bg-gradient-to-br hover:from-[#ff4fa3] hover:to-[#ff77c8] hover:shadow-[0_6px_16px_rgba(255,79,163,0.3)] hover:border-transparent" aria-label="Facebook">
               <FaFacebookF />
             </a>
-            <a href="#" className="flex items-center justify-center w-[38px] h-[38px] rounded-full bg-[#222] text-white text-[18px] transition-all duration-200 border border-white/5 hover:-translate-y-[3px] hover:bg-gradient-to-br hover:from-[#ff4fa3] hover:to-[#ff77c8] hover:shadow-[0_6px_16px_rgba(255,79,163,0.3)] hover:border-transparent" aria-label="Instagram">
+            <a href="#" className="flex items-center justify-center w-[38px] h-[38px] rounded-[2px] bg-[#222] text-white text-[18px] transition-all duration-200 border border-white/5 hover:-translate-y-[3px] hover:bg-gradient-to-br hover:from-[#ff4fa3] hover:to-[#ff77c8] hover:shadow-[0_6px_16px_rgba(255,79,163,0.3)] hover:border-transparent" aria-label="Instagram">
               <FaInstagram />
             </a>
-            <a href="#" className="flex items-center justify-center w-[38px] h-[38px] rounded-full bg-[#222] text-white text-[18px] transition-all duration-200 border border-white/5 hover:-translate-y-[3px] hover:bg-gradient-to-br hover:from-[#ff4fa3] hover:to-[#ff77c8] hover:shadow-[0_6px_16px_rgba(255,79,163,0.3)] hover:border-transparent" aria-label="TikTok">
+            <a href="#" className="flex items-center justify-center w-[38px] h-[38px] rounded-[2px] bg-[#222] text-white text-[18px] transition-all duration-200 border border-white/5 hover:-translate-y-[3px] hover:bg-gradient-to-br hover:from-[#ff4fa3] hover:to-[#ff77c8] hover:shadow-[0_6px_16px_rgba(255,79,163,0.3)] hover:border-transparent" aria-label="TikTok">
               <FaTiktok />
             </a>
           </div>

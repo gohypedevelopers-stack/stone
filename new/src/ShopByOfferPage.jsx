@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import ProductCard from "./components/card";
 import { getAllProducts } from "./data/products";
 import { SparklesText } from "./components/ui/sparkles-text";
@@ -67,16 +68,17 @@ const FAQS = [
 ];
 
 export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart }) {
+    const navigate = useNavigate();
     const [selectedOfferId, setSelectedOfferId] = useState(initialOffer);
     const [sortBy, setSortBy] = useState("recommended"); // 'recommended' | 'price-asc' | 'price-desc'
 
-    const products = getAllProducts();
+    const allProducts = getAllProducts();
+    const products = useMemo(() => allProducts.filter(p => p.showOnline !== false && p.category?.name !== "Special Offer" && !p.specialOfferType), [allProducts]);
 
     // Mock filtering logic - in a real app, products would have offer tags
     const filteredProducts = useMemo(() => {
-        // For demo purposes, we'll randomize or check generic properties
-        // In reality, match `product.offerIds.includes(selectedOfferId)`
-        let list = [...products];
+        // Base visibility filter: hide special offers from storefront
+        let list = products.filter(p => p.showOnline !== false && p.category?.name !== "Special Offer" && !p.specialOfferType);
 
         // Simple pseudo-filter logic for variety
         if (selectedOfferId === "bogo") {
@@ -232,11 +234,11 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                                     product={{
                                         ...p,
                                         category: p.tag,
-                                        salePrice: p.salePrice, // Passing calculated sale price
+                                        salePrice: p.salePrice,
                                         inStock: true
                                     }}
                                     onAddToCart={() => addToCart(p)}
-                                // Customizing styles via props if ProductCard supports it, or relying on passed data
+                                    onClick={() => navigate(`/product/${p.id}`)}
                                 />
                             ))}
                         </div>
@@ -282,6 +284,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                                     <ProductCard
                                         product={{ ...p, category: p.tag, inStock: true }}
                                         onAddToCart={() => addToCart(p)}
+                                        onClick={() => navigate(`/product/${p.id}`)}
                                     />
                                 </div>
                             ))}
@@ -440,6 +443,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                                             inStock: true
                                         }}
                                         onAddToCart={() => addToCart(p)}
+                                        onClick={() => navigate(`/product/${p.id}`)}
                                     />
                                     {/* Visual nudge overlay */}
                                     {/* <div className="absolute inset-x-0 bottom-0 pointer-events-none p-4 opacity-0 group-hover:opacity-100 transition-opacity flex justify-center z-20">
@@ -571,6 +575,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                                             inStock: true
                                         }}
                                         onAddToCart={() => addToCart(p)}
+                                        onClick={() => navigate(`/product/${p.id}`)}
                                     />
                                 </div>
                             ))}

@@ -203,18 +203,7 @@ export default function BestSellers({ addToCart, wishlist = [], toggleWishlist }
                                 </div>
 
                                 <div className="space-y-6 mb-8">
-                                    {quickViewProduct.shades && quickViewProduct.shades.length > 0 && (
-                                        <div>
-                                            <span className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3 block">Select Shade</span>
-                                            <div className="flex flex-wrap gap-2">
-                                                {quickViewProduct.shades.map(shade => (
-                                                    <button key={shade} className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-bold hover:border-black focus:border-black focus:bg-black focus:text-white transition-all">
-                                                        {shade}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
+
 
                                     <div>
                                         <span className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 block">Key Ingredients</span>

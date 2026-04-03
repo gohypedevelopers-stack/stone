@@ -6,6 +6,7 @@ import {
   useNavigate,
   useLocation,
 } from "react-router-dom";
+import { Gift, X } from "lucide-react";
 import Lenis from "lenis";
 import "lenis/dist/lenis.css";
 import HomePage from "./HomePage";
@@ -28,8 +29,8 @@ import CartPage from "./CartPage.jsx";
 import CheckoutPage from "./CheckoutPage.jsx";
 import AccountPage from "./AccountPage.jsx";
 import RewardsPage from "./RewardsPage.jsx";
-import { useProducts } from "./context/ProductContext";
-import { AuthProvider } from "./context/AuthContext";
+import { useProducts } from "@/context/ProductContext";
+import { useAuth } from "@/context/AuthContext";
 import AuthModal from "./components/AuthModal";
 import imgNewArrival from "./assets/newarrival.jpg";
 import imgBestSeller from "./assets/bestsellerproducts.jpg";
@@ -42,6 +43,8 @@ import AdminDashboard from "./AdminDashboard";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import CartDrawer from "./CartDrawer";
+import RewardsPopup from "./components/RewardsPopup";
+import { motion, AnimatePresence } from "framer-motion";
 
 function formatINR(amount) {
   return new Intl.NumberFormat("en-IN", {
@@ -54,13 +57,21 @@ function formatINR(amount) {
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
-  const [cart, setCart] = useState([]); // {id, qty}
+  const [cart, setCart] = useState(() => {
+    const saved = localStorage.getItem("omw_cart");
+    return saved ? JSON.parse(saved) : [];
+  }); // {id, qty, productData}
   // Wishlist State
   const [wishlistOpen, setWishlistOpen] = useState(false);
-  const [wishlist, setWishlist] = useState([]); // Array of full product objects
+  const [wishlist, setWishlist] = useState(() => {
+    const saved = localStorage.getItem("omw_wishlist");
+    return saved ? JSON.parse(saved) : [];
+  }); // Array of full product objects
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isRewardsOpen, setIsRewardsOpen] = useState(false);
   const [dynamicCategories, setDynamicCategories] = useState([]);
 
   const API_URL = "http://localhost:5000/api";
@@ -105,6 +116,16 @@ export default function App() {
       })
       .catch((err) => console.error("Error fetching categories:", err));
   }, []);
+
+  // Sync Cart to localStorage
+  useEffect(() => {
+    localStorage.setItem("omw_cart", JSON.stringify(cart));
+  }, [cart]);
+
+  // Sync Wishlist to localStorage
+  useEffect(() => {
+    localStorage.setItem("omw_wishlist", JSON.stringify(wishlist));
+  }, [wishlist]);
 
   // Scroll to top on route change
   useEffect(() => {
@@ -152,35 +173,40 @@ export default function App() {
     [cart],
   );
 
-  const addToCart = useCallback((item) => {
-    let id = item;
-    let productData = null;
+  const addToCart = useCallback(
+    (item) => {
+      let id = item;
+      let productData = null;
 
-    if (typeof item === "object" && item !== null) {
-      id = item.id;
-      productData = item;
-    }
-
-    setCart((prev) => {
-      const found = prev.find((x) => x.id === id);
-      if (found) {
-        return prev.map((x) =>
-          x.id === id
-            ? {
-                ...x,
-                qty: x.qty + 1,
-                productData: productData || x.productData,
-              }
-            : x,
-        );
+      if (typeof item === "object" && item !== null) {
+        id = item.id;
+        productData = item;
       }
-      return [...prev, { id, qty: 1, productData }];
-    });
 
-    // Auto-open cart drawer and provide feedback
-    setCartOpen(true);
-    toast.success("Added to cart!");
-  }, [setCartOpen]);
+      setCart((prev) => {
+        const found = prev.find((x) => x.id === id);
+        if (found) {
+          return prev.map((x) =>
+            x.id === id
+              ? {
+                  ...x,
+                  qty: x.qty + 1,
+                  productData: productData || x.productData,
+                }
+              : x,
+          );
+        }
+        return [...prev, { id, qty: 1, productData }];
+      });
+
+      // Auto-open cart drawer (if not on cart or checkout pages) and provide feedback
+      if (location.pathname !== "/cart" && location.pathname !== "/checkout") {
+        setCartOpen(true);
+      }
+      toast.success("Added to cart!");
+    },
+    [setCartOpen, location.pathname],
+  );
 
   const decQty = useCallback((id) => {
     setCart((prev) =>
@@ -278,12 +304,15 @@ export default function App() {
 
       if (routeMap[view]) {
         navigate(routeMap[view]);
+      } else if (PRODUCTS.some((p) => String(p.id) === String(view))) {
+        // Handle direct product ID navigation
+        navigate(`/product/${view}`);
       } else {
         // Fallback for direct route names if passed
         navigate(view.startsWith("/") ? view : "/" + view);
       }
     },
-    [navigate],
+    [navigate, PRODUCTS],
   );
 
   const isAdminPath = location.pathname.startsWith("/admin");
@@ -377,11 +406,12 @@ export default function App() {
               updateQty={updateQty}
               removeFromCart={removeFromCart}
               moveToWishlist={moveToWishlist}
+              addToCart={addToCart}
               subtotal={subtotal}
             />
           }
         />
-        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/checkout" element={<CheckoutPage setCart={setCart} />} />
         <Route path="/account" element={<AccountPage />} />
         <Route path="/rewards" element={<RewardsPage />} />
         <Route path="/brands" element={<AllBrandsPage />} />
@@ -475,7 +505,10 @@ export default function App() {
             removeFromCart={removeFromCart}
             setCart={setCart}
             formatINR={formatINR}
-            onCheckout={() => toast.info("Checkout flow goes here")}
+            onCheckout={() => {
+              setCartOpen(false);
+              navigate("/cart");
+            }}
           />
 
           <WishlistDrawer
@@ -487,6 +520,62 @@ export default function App() {
           />
 
           <Footer supportPhone={supportPhone} />
+
+          {/* Floating Rewards Launcher */}
+          <button
+            onClick={() => setIsRewardsOpen(!isRewardsOpen)}
+            className={`fixed bottom-24 left-3 w-14 h-14 text-white rounded-[20px] shadow-[0_8px_30px_rgb(255,79,163,0.3)] flex items-center justify-center z-[90] hover:scale-110 active:scale-95 transition-all group ${
+              isRewardsOpen ? "bg-[#ff4fa3]" : "bg-[#ff4fa3]"
+            }`}
+            aria-label="View Rewards"
+          >
+            <AnimatePresence mode="wait">
+              {isRewardsOpen ? (
+                <motion.div
+                  key="close"
+                  initial={{ opacity: 0, rotate: -90 }}
+                  animate={{ opacity: 1, rotate: 0 }}
+                  exit={{ opacity: 0, rotate: 90 }}
+                >
+                  <X size={24} />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="gift"
+                  initial={{ opacity: 0, rotate: 90 }}
+                  animate={{ opacity: 1, rotate: 0 }}
+                  exit={{ opacity: 0, rotate: -90 }}
+                >
+                  <Gift size={28} className="translate-y-[-1px]" />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {!isRewardsOpen && (
+              <div className="absolute left-full ml-4 px-3 py-1 bg-stone-900 text-white text-[10px] font-black uppercase tracking-widest rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                My Rewards
+              </div>
+            )}
+          </button>
+
+          {/* Rewards Portal Popup */}
+          <AnimatePresence>
+            {isRewardsOpen && (
+              <RewardsPopup
+                isOpen={isRewardsOpen}
+                onClose={() => setIsRewardsOpen(false)}
+                user={user}
+                onNavigate={(view) => {
+                  if (view === "auth") {
+                    setIsAuthModalOpen(true);
+                  } else {
+                    navigate(view);
+                  }
+                  setIsRewardsOpen(false);
+                }}
+              />
+            )}
+          </AnimatePresence>
         </>
       )}
       <Toaster />

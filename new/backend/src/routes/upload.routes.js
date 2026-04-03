@@ -13,7 +13,7 @@ router.post('/', upload.array('images', 10), (req, res) => {
     }
 
     const urls = req.files.map(file => {
-      return `http://localhost:5000/uploads/${file.filename}`;
+      return `/uploads/${file.filename}`;
     });
 
     return sendSuccess(res, urls, 'Files uploaded successfully');

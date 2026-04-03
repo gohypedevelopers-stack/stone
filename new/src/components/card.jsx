@@ -9,7 +9,7 @@ import { Heart, ShoppingBag } from "lucide-react";
  * - Integrated Add to Cart
  */
 const ProductCard = React.memo(
-  ({ product, onAddToCart, wishlist = [], toggleWishlist, onNavigate }) => {
+  ({ product, onAddToCart, wishlist = [], toggleWishlist, onNavigate, onClick }) => {
     const isWishlisted = wishlist.some((item) => item.id === product.id);
 
     const handleWishlistClick = (e) => {
@@ -23,7 +23,11 @@ const ProductCard = React.memo(
     };
 
     const handleNavigate = () => {
-      onNavigate?.(product.id);
+      if (onClick) {
+        onClick();
+      } else if (onNavigate) {
+        onNavigate(product.id);
+      }
     };
 
     // Correct Pricing Logic

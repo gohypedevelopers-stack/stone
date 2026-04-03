@@ -78,7 +78,7 @@ const HeroSlider = React.memo(({ customSlides }) => {
               {slides.map((_, idx) => (
                 <span
                   key={idx}
-                  className="w-[10px] h-[10px] rounded-full bg-indigo-950/20 shadow-sm border border-white/50 animate-pulse"
+                  className="w-[10px] h-[10px] rounded-[2px] bg-indigo-950/20 shadow-sm border border-white/50 animate-pulse"
                   style={{
                     animation: `heroDotDynamic ${slideCount * 6}s infinite`,
                     animationDelay: `${idx * 6}s`,

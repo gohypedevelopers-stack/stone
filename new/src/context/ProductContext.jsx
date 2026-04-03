@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
-import { getAllProducts } from '../data/products';
+// import { getAllProducts, PREORDER_PRODUCTS } from '../data/products';
+
 
 const ProductContext = createContext();
 
@@ -15,8 +16,29 @@ const API_URL = "http://localhost:5000/api";
 
 export const ProductProvider = ({ children }) => {
   const [apiProducts, setApiProducts] = useState([]);
+  const [preorderProducts, setPreorderProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const fetchPreorders = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_URL}/homepage`);
+      const data = await res.json();
+      if (data.success) {
+        const poSection = data.data.sections.find(s => s.componentId === 'pre-order');
+        if (poSection?.settings?.preorderProducts) {
+          // Normalize: Ensure images array
+          const normalized = poSection.settings.preorderProducts.map(p => ({
+            ...p,
+            images: Array.isArray(p.images) ? p.images : ([p.image] || [])
+          }));
+          setPreorderProducts(normalized);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch pre-orders:", err);
+    }
+  }, []);
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -34,7 +56,7 @@ export const ProductProvider = ({ children }) => {
           category: p.category?.name || "Uncategorized",
           rating: p.rating || 4.5,
           reviews: p.reviews || 120,
-          inStock: p.stock > 0,
+          inStock: p.onlineStock > 0,
         }));
         setApiProducts(mapped);
       } else {
@@ -50,36 +72,29 @@ export const ProductProvider = ({ children }) => {
 
   useEffect(() => {
     fetchProducts();
-  }, [fetchProducts]);
+    fetchPreorders();
+  }, [fetchProducts, fetchPreorders]);
 
   // Merge static products with API products
-  // Universal Deduplication by normalized name
   const allProducts = useMemo(() => {
-    const normalize = (n) => n?.toLowerCase().replace(/[^a-z0-9]/g, '').trim() || "";
-    const uniqueMap = new Map();
-    
-    // Combine all sources
-    const staticProducts = getAllProducts();
-    const source = [...apiProducts, ...staticProducts];
-
-    source.forEach(p => {
-      const key = normalize(p.name);
-      // Priority: 1. Online products, 2. First seen product
-      if (!uniqueMap.has(key) || (p.showOnline && !uniqueMap.get(key).showOnline)) {
-        uniqueMap.set(key, p);
-      }
-    });
-
-    return Array.from(uniqueMap.values());
+    // Rely only on API products
+    return apiProducts;
   }, [apiProducts]);
+
+  // Dynamic Pre-orders (strictly API)
+  const finalPreorders = useMemo(() => {
+    return preorderProducts;
+  }, [preorderProducts]);
+
 
   const value = useMemo(() => ({
     products: allProducts,
     apiProducts,
+    preorderProducts: finalPreorders,
     loading,
     error,
-    refreshProducts: fetchProducts
-  }), [allProducts, apiProducts, loading, error, fetchProducts]);
+    refreshProducts: () => { fetchProducts(); fetchPreorders(); }
+  }), [allProducts, apiProducts, finalPreorders, loading, error, fetchProducts, fetchPreorders]);
 
   return (
     <ProductContext.Provider value={value}>

@@ -52,7 +52,7 @@ export default function AccountPage() {
 
   // Combine and sort by date descending
   const allOrders = [
-    ...onlineOrders.map(o => ({ ...o, type: 'Online', date: new Date(o.createdAt) })),
+    ...onlineOrders.map(o => ({ ...o, type: o.type || 'Online', date: new Date(o.createdAt) })),
     ...offlineOrders.map(o => ({ ...o, type: 'Offline', date: new Date(o.purchaseDate) }))
   ].sort((a, b) => b.date - a.date);
 

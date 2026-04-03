@@ -55,6 +55,8 @@ export const createOrder = async (req, res) => {
       customerId,
       vendorId,
       addressId,
+      address, // New: support direct address creation
+      type = "Online", // New: support explicit typing
       items = [],
       discountAmount = 0,
       rewardPointsUsed = 0,
@@ -86,15 +88,23 @@ export const createOrder = async (req, res) => {
 
     const productMap = new Map(products.map((product) => [product.id, product]));
     const resolvedItems = items.map((item) => {
-      const product = productMap.get(item.productId);
+      const product = item.productId ? productMap.get(item.productId) : null;
       const quantity = Number(item.quantity || 1);
 
       if (!product) {
-        throw new Error(`Product not found for item ${item.productId}`);
+        // Handle custom/manual/pre-order item that doesn't have a DB record
+        const unitPrice = Number(item.unitPrice || 0);
+        return {
+          product: null,
+          quantity,
+          unitPrice,
+          name: item.name || "Custom Item",
+          lineTotal: unitPrice * quantity,
+        };
       }
 
-      if (quantity > product.stock) {
-        throw new Error(`Insufficient stock for product ${product.name}`);
+      if (quantity > product.onlineStock) {
+        throw new Error(`Insufficient online stock for product ${product.name}`);
       }
 
       const unitPrice = Number(product.discountPrice || product.price);
@@ -103,6 +113,7 @@ export const createOrder = async (req, res) => {
         product,
         quantity,
         unitPrice,
+        name: product.name,
         lineTotal: unitPrice * quantity,
       };
     });
@@ -122,13 +133,32 @@ export const createOrder = async (req, res) => {
     const rewardPointsEarned = await calculateRewardPoints(totalAmount);
 
     const order = await prisma.$transaction(async (tx) => {
+      let finalAddressId = addressId;
+
+      // Handle new address creation if details provided
+      if (address && typeof address === 'object') {
+        const newAddress = await tx.address.create({
+          data: {
+            line1: address.line1,
+            line2: address.line2 || null,
+            city: address.city,
+            state: address.state,
+            postalCode: address.postalCode,
+            country: address.country || "India",
+            customer: { connect: { id: customerId } }
+          }
+        });
+        finalAddressId = newAddress.id;
+      }
+
       const createdOrder = await tx.order.create({
         data: {
           orderNumber: `OMW-${Date.now()}`,
-          customerId,
-          vendorId,
-          addressId: addressId || null,
+          customer: { connect: { id: customerId } },
+          vendor: { connect: { id: vendorId } },
+          shippingAddress: finalAddressId ? { connect: { id: finalAddressId } } : undefined,
           status: "PLACED",
+          type,
           subtotal,
           discountAmount: normalizedDiscountAmount,
           totalAmount,
@@ -136,8 +166,8 @@ export const createOrder = async (req, res) => {
           rewardPointsEarned,
           items: {
             create: resolvedItems.map((item) => ({
-              productId: item.product.id,
-              name: item.product.name,
+              productId: item.product?.id || null,
+              name: item.product?.name || item.name,
               quantity: item.quantity,
               unitPrice: item.unitPrice,
               lineTotal: item.lineTotal,
@@ -165,14 +195,16 @@ export const createOrder = async (req, res) => {
       });
 
       for (const item of resolvedItems) {
-        await tx.product.update({
-          where: { id: item.product.id },
-          data: {
-            stock: {
-              decrement: item.quantity,
+        if (item.product) {
+          await tx.product.update({
+            where: { id: item.product.id },
+            data: {
+              onlineStock: {
+                decrement: item.quantity,
+              },
             },
-          },
-        });
+          });
+        }
       }
 
       const rewardPointsDelta = rewardPointsEarned - normalizedRewardPointsUsed;

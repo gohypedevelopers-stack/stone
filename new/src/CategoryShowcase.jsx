@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import ProductCard from "./components/card";
 
@@ -10,6 +11,7 @@ export default function CategoryShowcase({
    bannerImage = "https://images.unsplash.com/photo-1522337660859-02fbefad157a?auto=format&fit=crop&w=800",
    products = []
 }) {
+   const navigate = useNavigate();
    return (
       <section className="section py-24 bg-white">
          <div className="max-w-[1440px] mx-auto px-6">
@@ -61,7 +63,7 @@ export default function CategoryShowcase({
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
                {products.map(p => (
                   <div key={p.id} className="h-full">
-                     <ProductCard product={p} />
+                     <ProductCard product={p} onClick={() => navigate(`/product/${p.id}`)} />
                   </div>
                ))}
             </div>

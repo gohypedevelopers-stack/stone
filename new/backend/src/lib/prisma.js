@@ -1,4 +1,4 @@
-import "dotenv/config";
+import "dotenv/config"; // Schema Heartbeat: Updated specialOfferType
 import { PrismaPg } from "@prisma/adapter-pg";
 import pkg from "@prisma/client";
 const { PrismaClient } = pkg;

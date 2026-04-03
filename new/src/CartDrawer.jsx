@@ -1,4 +1,5 @@
 import React, { memo } from "react";
+import { resolveImage } from "./utils/urlHelper";
 
 const CartDrawer = memo(function CartDrawer({ 
   isOpen, 
@@ -37,35 +38,39 @@ const CartDrawer = memo(function CartDrawer({
             )}
           </div>
         </div>
-        <button className="border border-line-custom bg-white h-[40px] w-[40px] rounded-[999px] grid place-items-center cursor-pointer hover:shadow-[0_8px_20px_rgba(0,0,0,0.08)]" onClick={onClose} aria-label="Close cart">✕</button>
+        <button className="border border-line-custom bg-white h-[40px] w-[40px] rounded-[2px] grid place-items-center cursor-pointer hover:shadow-[0_8px_20px_rgba(0,0,0,0.08)]" onClick={onClose} aria-label="Close cart">✕</button>
       </div>
 
       <div className="p-[14px_16px_18px] overflow-auto">
         {cartItems.length === 0 ? (
           <div className="text-muted-custom">
             <p>Your cart is empty.</p>
-            <button className="border border-line-custom bg-white rounded-[999px] h-[42px] px-[16px] inline-flex items-center justify-center gap-[10px] cursor-pointer hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] mt-4" onClick={onClose}>Continue shopping</button>
+            <button className="border border-line-custom bg-white rounded-[2px] h-[42px] px-[16px] inline-flex items-center justify-center gap-[10px] cursor-pointer hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] mt-4" onClick={onClose}>Continue shopping</button>
           </div>
         ) : (
           <>
             <ul className="list-none m-0 p-0 flex flex-col gap-[12px]">
               {cartItems.map((it) => (
-                <li key={it.id} className="grid grid-cols-[54px_1fr_auto] gap-[12px] items-center p-[10px] border border-line-custom rounded-[14px]">
-                  <div className="h-[54px] w-[54px] rounded-[12px] bg-stone-100 overflow-hidden shrink-0">
-                    <img 
-                      src={it.image} 
-                      alt={it.name} 
-                      className="w-full h-full object-cover"
-                      decoding="async"
-                    />
-                  </div>
+                <li key={it.id} className="grid grid-cols-[54px_1fr_auto] gap-[12px] items-center p-[10px] border border-line-custom rounded-[2px]">
+                    <div className="h-[54px] w-[54px] rounded-[2px] bg-stone-100 overflow-hidden shrink-0">
+                      <img 
+                        src={
+                          resolveImage(it.imageUrls?.[0]) || 
+                          resolveImage(it.image) || 
+                          "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=150&q=80"
+                        } 
+                        alt={it.name} 
+                        className="w-full h-full object-cover"
+                        decoding="async"
+                      />
+                    </div>
                   <div>
                     <div className="font-[650] text-[13px]">{it.name}</div>
                     <div className="text-[12px] text-muted-custom mt-[2px]">{formatINR(it.price)}</div>
                     <div className="flex items-center gap-[10px] mt-[6px]">
-                      <button className="h-[28px] w-[28px] rounded-[999px] border border-line-custom bg-white cursor-pointer" onClick={() => decQty(it.id)} aria-label="Decrease quantity">−</button>
+                      <button className="h-[28px] w-[28px] rounded-[2px] border border-line-custom bg-white cursor-pointer" onClick={() => decQty(it.id)} aria-label="Decrease quantity">−</button>
                       <span className="text-[13px] min-w-[16px] text-center">{it.qty}</span>
-                      <button className="h-[28px] w-[28px] rounded-[999px] border border-line-custom bg-white cursor-pointer" onClick={() => incQty(it.id)} aria-label="Increase quantity">+</button>
+                      <button className="h-[28px] w-[28px] rounded-[2px] border border-line-custom bg-white cursor-pointer" onClick={() => incQty(it.id)} aria-label="Increase quantity">+</button>
                     </div>
                   </div>
                   <div className="font-bold text-[13px]">{formatINR(it.line)}</div>
@@ -73,15 +78,15 @@ const CartDrawer = memo(function CartDrawer({
               ))}
             </ul>
 
-            <div className="my-[14px] mx-0 px-[12px] py-[12px] rounded-[14px] border border-black/6 bg-[linear-gradient(90deg,rgba(111,92,255,0.10),rgba(255,93,177,0.08),rgba(255,138,42,0.08))] text-[13px]">
+            <div className="my-[14px] mx-0 px-[12px] py-[12px] rounded-[2px] border border-black/6 bg-[linear-gradient(90deg,rgba(111,92,255,0.10),rgba(255,93,177,0.08),rgba(255,138,42,0.08))] text-[13px]">
               Earn <strong>{pointsEarned} loyalty points</strong> on this order.
               <span className="text-muted-custom"> Redeem points for discounts on your next purchase.</span>
             </div>
 
-            <button className="w-full border border-line-custom bg-white rounded-[999px] h-[42px] px-[16px] inline-flex items-center justify-center gap-[10px] cursor-pointer hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] border-transparent text-white bg-[linear-gradient(90deg,var(--brand1),var(--brand2),var(--brand3))]" onClick={onCheckout}>
+            <button className="w-full border border-line-custom bg-white rounded-[2px] h-[42px] px-[16px] inline-flex items-center justify-center gap-[10px] cursor-pointer hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] border-transparent text-white bg-[linear-gradient(90deg,var(--brand1),var(--brand2),var(--brand3))]" onClick={onCheckout}>
               Checkout
             </button>
-            <button className="w-full border border-line-custom bg-white rounded-[999px] h-[42px] px-[16px] inline-flex items-center justify-center gap-[10px] cursor-pointer hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] bg-white mt-2" onClick={() => setCart([])}>
+            <button className="w-full border border-line-custom bg-white rounded-[2px] h-[42px] px-[16px] inline-flex items-center justify-center gap-[10px] cursor-pointer hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] bg-white mt-2" onClick={() => setCart([])}>
               Clear cart
             </button>
           </>

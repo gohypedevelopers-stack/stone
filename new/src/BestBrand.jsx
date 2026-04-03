@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ChevronRight, ShoppingCart, ArrowRight } from "lucide-react";
 
 // Mock data for the Brands section
@@ -76,6 +77,7 @@ const BRANDS = [
 ];
 
 export default function BestBrand() {
+  const navigate = useNavigate();
   const [activeBrand, setActiveBrand] = useState(BRANDS[0]);
 
   return (
@@ -98,7 +100,7 @@ export default function BestBrand() {
               <button
                 key={brand.id}
                 onClick={() => setActiveBrand(brand)}
-                className={`px-10 py-3.5 rounded-full text-[11px] font-[1000] border transition-all duration-700 whitespace-nowrap uppercase tracking-[0.2em]
+                className={`px-10 py-3.5 rounded-[2px] text-[11px] font-[1000] border transition-all duration-700 whitespace-nowrap uppercase tracking-[0.2em]
                   ${
                     activeBrand.id === brand.id
                       ? "bg-[#151515] border-transparent text-white shadow-[0_15px_40px_-10px_rgba(0,0,0,0.2)]"
@@ -114,11 +116,11 @@ export default function BestBrand() {
         {/* Hero Banner Section */}
         <div className="relative mb-20 group/banner">
           <div
-            className={`w-full aspect-[21/9] rounded-[64px] overflow-hidden relative shadow-[0_30px_100px_-20px_rgba(0,0,0,0.1)] border-[12px] border-[#FAFAFA]`}
+            className="w-full aspect-21/9 rounded-[2px] overflow-hidden relative shadow-[0_30px_100px_-20px_rgba(0,0,0,0.1)] border-12 border-[#FAFAFA]"
           >
             {/* Background Image with Overlay */}
             <div
-              className={`absolute inset-0 bg-gradient-to-br ${activeBrand.bannerColor} mix-blend-multiply`}
+              className={`absolute inset-0 bg-linear-to-br ${activeBrand.bannerColor} mix-blend-multiply`}
             />
             <div className="absolute inset-0 opacity-40 mix-blend-hard-light grayscale group-hover/banner:grayscale-0 transition-all duration-1000 transform-gpu optimize-gpu">
               <img
@@ -131,7 +133,7 @@ export default function BestBrand() {
             </div>
 
             {/* Glossy Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-white/10" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-white/10" />
 
             {/* Banner Text Content */}
             <div className="absolute inset-0 flex items-center justify-between px-20">
@@ -145,24 +147,27 @@ export default function BestBrand() {
                 <p className="text-white/80 font-medium text-lg mb-10 tracking-tight">
                   {activeBrand.tagline}
                 </p>
-                <button className="flex items-center gap-4 px-10 py-5 rounded-full bg-white text-[#151515] font-[1000] text-[10px] uppercase tracking-[0.3em] hover:bg-[#151515] hover:text-white transition-all transform active:scale-95 shadow-xl">
+                <button 
+                  onClick={() => navigate(`/brand/${activeBrand.name}`)}
+                  className="flex items-center gap-4 px-10 py-5 rounded-[2px] bg-white text-[#151515] font-[1000] text-[10px] uppercase tracking-[0.3em] border border-white hover:bg-[#151515] hover:text-white transition-all transform active:scale-95 shadow-xl"
+                >
                   Discover Collection <ArrowRight size={16} />
                 </button>
               </div>
 
               {/* Floating Preview (Simplified) */}
               <div className="hidden lg:flex items-center gap-8 relative z-10">
-                <div className="w-[220px] aspect-[4/5] bg-white rounded-[40px] shadow-md skew-y-3 rotate-6 overflow-hidden border-[8px] border-white/40 transform group-hover/banner:translate-y-[-20px] transition-all duration-1000 p-2 transform-gpu optimize-gpu">
+                <div className="w-[220px] aspect-[4/5] bg-white rounded-[2px] shadow-md skew-y-3 rotate-6 overflow-hidden border-[8px] border-white/40 transform group-hover/banner:translate-y-[-20px] transition-all duration-1000 p-2 transform-gpu optimize-gpu">
                   <img
                     src={activeBrand.products[0]?.image}
-                    className="w-full h-full object-cover rounded-[32px] transform-gpu optimize-gpu"
+                    className="w-full h-full object-cover rounded-[2px] transform-gpu optimize-gpu"
                     alt=""
                     loading="lazy"
                     decoding="async"
                   />
                 </div>
-                <div className="absolute -right-20 -bottom-10 w-[180px] aspect-square bg-white rounded-full p-4 shadow-2xl group-hover/banner:rotate-12 transition-transform duration-[1.5s]">
-                  <div className="w-full h-full rounded-full border border-dashed border-stone-200 flex items-center justify-center text-center p-4">
+                <div className="absolute -right-20 -bottom-10 w-[180px] aspect-square bg-white rounded-[2px] p-4 shadow-2xl group-hover/banner:rotate-12 transition-transform duration-[1.5s]">
+                  <div className="w-full h-full rounded-[2px] border border-dashed border-stone-200 flex items-center justify-center text-center p-4">
                     <span className="text-[9px] font-[1000] text-[#151515] uppercase tracking-widest leading-tight">
                       Featured
                       <br />
@@ -178,9 +183,9 @@ export default function BestBrand() {
         {/* Product Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
           {activeBrand.products.map((product) => (
-            <div key={product.id} className="group/card cursor-pointer">
+            <div key={product.id} className="group/card cursor-pointer" onClick={() => navigate(`/product/${product.id}`)}>
               {/* Product Image */}
-              <div className="relative aspect-[4/5] bg-[#FAFAFA] rounded-[40px] overflow-hidden mb-6 border border-stone-100/50 shadow-[0_8px_30px_rgba(0,0,0,0.02)] transition-all duration-700 hover:shadow-2xl">
+              <div className="relative aspect-4/5 bg-[#FAFAFA] rounded-[2px] overflow-hidden mb-6 border border-stone-100/50 shadow-[0_8px_30px_rgba(0,0,0,0.02)] transition-all duration-700 hover:shadow-2xl">
                 <img
                   src={product.image}
                   alt={product.name}
@@ -201,7 +206,7 @@ export default function BestBrand() {
                   <span className="text-[10px] font-[1000] text-stone-400 tracking-[0.3em] uppercase">
                     {product.brand}
                   </span>
-                  <button className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-100 text-[#151515] hover:bg-[#151515] hover:text-white transition-all shadow-sm">
+                  <button className="w-10 h-10 rounded-[2px] flex items-center justify-center bg-white border border-stone-100 text-[#151515] hover:bg-[#151515] hover:text-white transition-all shadow-sm">
                     <ShoppingCart size={14} />
                   </button>
                 </div>
@@ -229,9 +234,9 @@ export default function BestBrand() {
 
           {/* Fallback Empty State */}
           {activeBrand.products.length === 0 && (
-            <div className="col-span-4 py-20 border-2 border-dashed border-stone-100 rounded-[56px] flex flex-col items-center justify-center bg-[#FAFAFA]/50 group/empty">
-              <div className="w-12 h-12 rounded-full border border-stone-200 flex items-center justify-center mb-6">
-                <div className="w-2 h-2 rounded-full bg-stone-300 animate-pulse" />
+            <div className="col-span-4 py-20 border-2 border-dashed border-stone-100 rounded-[2px] flex flex-col items-center justify-center bg-[#FAFAFA]/50 group/empty">
+              <div className="w-12 h-12 rounded-[2px] border border-stone-200 flex items-center justify-center mb-6">
+                <div className="w-2 h-2 rounded-[2px] bg-stone-300 animate-pulse" />
               </div>
               <p className="text-[10px] font-[1000] text-stone-300 uppercase tracking-[0.5em]">
                 Inventory Processing

@@ -5,12 +5,15 @@ import {
     ChevronLeft, ChevronRight, Clock, Sparkles
 } from "lucide-react";
 
-import { PREORDER_PRODUCTS } from "./data/products";
+import { useProducts } from "./context/ProductContext";
 
-export default React.memo(function PreOrderSection({ wishlist = [], toggleWishlist }) {
+export default React.memo(function PreOrderSection({ wishlist = [], toggleWishlist, title }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const scrollRef = useRef(null);
-    const navigate = useNavigate(); // Add this hook
+    const navigate = useNavigate();
+    const { preorderProducts } = useProducts();
+
+    const displayProducts = preorderProducts;
 
     const scroll = (direction) => {
         if (scrollRef.current) {
@@ -115,17 +118,17 @@ export default React.memo(function PreOrderSection({ wishlist = [], toggleWishli
                         className="flex overflow-x-auto gap-4 md:gap-6 pb-8 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory no-scrollbar cursor-grab active:cursor-grabbing"
                         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', userSelect: isDragging ? 'none' : 'auto' }}
                     >
-                        {PREORDER_PRODUCTS.map((product) => (
+                        {displayProducts.map((product) => (
                             <div
                                 key={product.id}
                                 onClick={() => navigate(`/preorder/${product.id}`)} // Navigate on click
-                                className="cursor-pointer min-w-[45%] md:min-w-[30%] lg:min-w-[20%] snap-start group relative bg-white border border-stone-100 rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(209,64,142,0.08)] hover:-translate-y-1 transition-all duration-500 flex flex-col"
+                                className="cursor-pointer w-[280px] md:w-[320px] shrink-0 snap-start group relative bg-white border border-stone-100 rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(209,64,142,0.08)] hover:-translate-y-1 transition-all duration-500 flex flex-col"
                             >
 
                                 {/* Image Area */}
-                                <div className="relative aspect-[3/4] m-2 overflow-hidden rounded-[20px] bg-white">
-                                    <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
-                                        <span className="bg-black/80 backdrop-blur text-white text-[9px] md:text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide">
+                                <div className="relative aspect-square md:aspect-[3/4] m-2 overflow-hidden rounded-[20px] bg-stone-50/50">
+                                    <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-10">
+                                        <span className="bg-black/80 backdrop-blur-sm text-white text-[9px] md:text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
                                             {product.tag}
                                         </span>
                                     </div>
@@ -143,7 +146,7 @@ export default React.memo(function PreOrderSection({ wishlist = [], toggleWishli
                                     <img
                                         src={product.image}
                                         alt={product.name}
-                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                        className="w-full h-full object-contain p-6 transition-transform duration-700 group-hover:scale-105"
                                     />
 
                                     {/* Unlock Timer Overlay */}
@@ -159,7 +162,11 @@ export default React.memo(function PreOrderSection({ wishlist = [], toggleWishli
                                 {/* Content */}
                                 <div className="px-4 pb-4 flex flex-col flex-grow">
                                     <h3 className="text-[15px] font-[800] text-[#1a1a1a] mb-1 line-clamp-1">{product.name}</h3>
-                                    <p className="text-[#1a1a1a] text-[14px] font-bold mb-3">{product.price}</p>
+                                    <p className="text-[#1a1a1a] text-[14px] font-bold mb-3">
+                                      {typeof product.price === 'number' 
+                                        ? `₹${product.price.toLocaleString("en-IN")}` 
+                                        : product.price}
+                                    </p>
 
                                     {/* Stock Bar */}
                                     <div className="mb-4 mt-auto">
@@ -170,7 +177,7 @@ export default React.memo(function PreOrderSection({ wishlist = [], toggleWishli
                                         <div className="w-full h-[4px] bg-gray-200/50 rounded-full overflow-hidden">
                                             <div
                                                 className="h-full bg-gradient-to-r from-[#ff4fa3] to-[#d1408e] rounded-full"
-                                                style={{ width: `${(product.stockLeft / product.totalStock) * 100}%` }}
+                                                style={{ width: `${Math.min(100, Math.max(0, (product.stockLeft / (product.totalStock || 1)) * 100))}%` }}
                                             />
                                         </div>
                                     </div>

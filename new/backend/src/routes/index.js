@@ -10,6 +10,7 @@ import adminRoutes from "./admin.routes.js";
 import analyticsRoutes from "./analytics.routes.js";
 import notificationsRoutes from "./notifications.routes.js";
 import uploadRoutes from "./upload.routes.js";
+import couponRoutes from "./coupon.routes.js";
 
 const router = Router();
 
@@ -32,5 +33,6 @@ router.use("/admin", adminRoutes);
 router.use("/analytics", analyticsRoutes);
 router.use("/notifications", notificationsRoutes);
 router.use("/upload", uploadRoutes);
+router.use("/coupons", couponRoutes);
 
 export default router;

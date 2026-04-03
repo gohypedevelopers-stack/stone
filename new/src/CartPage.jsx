@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import {
     ChevronLeft,
@@ -17,8 +18,15 @@ import {
     Gift,
     Truck,
     Check,
+    ChevronDown,
+    Ticket,
+    X,
+    Star,
 } from "lucide-react";
 import { getAllProducts } from "./data/products";
+import { useAuth } from "./context/AuthContext";
+import AuthModal from "./components/AuthModal";
+import { toast } from "sonner";
 
 /**
  * Redesign goals (implemented):
@@ -30,6 +38,10 @@ import { getAllProducts } from "./data/products";
  * ✅ Pre-order section looks intentional and aligned
  */
 
+import { resolveImage } from "./utils/urlHelper";
+
+const API_URL = "http://localhost:5000/api";
+
 export default function CartPage({
     cartItems = [],
     updateQty,
@@ -40,6 +52,8 @@ export default function CartPage({
     onCheckout,
 }) {
     const navigate = useNavigate();
+    const { user } = useAuth();
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
     // ---------- Promo (mock) ----------
     const PROMO_KEY = "beauty_cart_promo";
@@ -53,6 +67,75 @@ export default function CartPage({
     });
     const [promoError, setPromoError] = useState("");
     const [isApplyingPromo, setIsApplyingPromo] = useState(false);
+    const [isCouponsDrawerOpen, setIsCouponsDrawerOpen] = useState(false);
+    const [availableCoupons, setAvailableCoupons] = useState([]);
+    const [couponCode, setCouponCode] = useState("");
+    const [isDealsVisible, setIsDealsVisible] = useState(true);
+    const [activeDealTab, setActiveDealTab] = useState(1);
+    const [dbProducts, setDbProducts] = useState([]);
+    const [specialDeals, setSpecialDeals] = useState([]);
+    
+    // API CONFIG is now global
+
+    // Fetch Coupons when drawer opens
+    useEffect(() => {
+        const fetchCoupons = async () => {
+            if (!isCouponsDrawerOpen) return;
+            try {
+                const res = await fetch(`${API_URL}/coupons`);
+                const data = await res.json();
+                if (data.success) setAvailableCoupons(data.data);
+            } catch (err) {
+                console.error("Error fetching coupons:", err);
+            }
+        };
+        fetchCoupons();
+    }, [isCouponsDrawerOpen]);
+
+    // Fetch Live Products for Deals (Independent)
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                const res = await fetch(`${API_URL}/products`);
+                const data = await res.json();
+                if (data.success) {
+                    const products = data.data || [];
+                    setDbProducts(products);
+                }
+            } catch (err) {
+                console.error("Error fetching products:", err);
+            }
+        };
+        fetchProducts();
+    }, []);
+
+    // Dynamically compute deals based on cart contents
+    // Deals are globally available and show up if conditions are met
+    const cartLinkedDeals = useMemo(() => {
+        if (!dbProducts.length || !cartItems.length) return [];
+        
+        // Find all active special offer products
+        const deals = dbProducts.filter(p => {
+            const isDeal = (p.specialOfferType && p.specialOfferType !== "None") || 
+                           p.category?.name === "Special Offer" ||
+                           (typeof p.category === 'string' && p.category === "Special Offer");
+            return isDeal;
+        });
+
+        // Sort by deal number
+        deals.sort((a, b) => {
+            const nA = parseInt(a.specialOfferType?.split(" ")[1]) || 99;
+            const nB = parseInt(b.specialOfferType?.split(" ")[1]) || 99;
+            return nA - nB;
+        });
+        
+        return deals;
+    }, [dbProducts, cartItems]);
+
+    // Use cart-linked deals instead of static specialDeals
+    useEffect(() => {
+        setSpecialDeals(cartLinkedDeals);
+    }, [cartLinkedDeals]);
 
     useEffect(() => {
         try {
@@ -97,27 +180,76 @@ export default function CartPage({
         [cartItems, selectedIds]
     );
 
-    const { standardItems, preOrderItems } = useMemo(() => {
+    const { standardItems, preOrderItems, baseInventoryItems } = useMemo(() => {
         const std = [];
         const pre = [];
-        for (const item of cartItems) (isPreOrderItem(item) ? pre : std).push(item);
-        return { standardItems: std, preOrderItems: pre };
+        const base = [];
+        for (const item of cartItems) {
+            const isGift = item.category?.name === "Special Offer" || item.category === "Special Offer";
+            if (isPreOrderItem(item)) pre.push(item);
+            else std.push(item);
+            if (!isGift) base.push(item);
+        }
+        return { standardItems: std, preOrderItems: pre, baseInventoryItems: base };
     }, [cartItems]);
 
+    // Auto-remove gifts if base inventory is empty
+    useEffect(() => {
+        if (baseInventoryItems.length === 0) {
+            const giftsInCart = cartItems.filter(item => 
+                item.category?.name === "Special Offer" || item.category === "Special Offer"
+            );
+            if (giftsInCart.length > 0) {
+                giftsInCart.forEach(gift => removeFromCart(gift.id));
+            }
+        }
+    }, [baseInventoryItems.length, cartItems, removeFromCart]);
+
     // ---------- Totals ----------
+    const PLATFORM_FEE = 23;
+
+    const totalMrp = useMemo(() => {
+        return selectedItems.reduce((sum, item) => {
+            const mrp = Number(item.mrp || item.originalPrice || (Number(item.price || 0) * 1.15));
+            return sum + mrp * Number(item.qty || 1);
+        }, 0);
+    }, [selectedItems]);
+
     const effectiveSubtotal = useMemo(() => {
         return selectedItems.reduce((sum, i) => sum + Number(i.price || 0) * Number(i.qty || 1), 0);
     }, [selectedItems]);
 
+    // Calculate max potential savings from available coupons
+    const maxSavings = useMemo(() => {
+        if (!availableCoupons.length) return 0;
+        const savingsArray = availableCoupons.map(c => {
+            const val = Number(c.discountValue || 0);
+            if (c.discountType === "PERCENTAGE") {
+                // Calculate actual INR savings for percentage coupons
+                return (effectiveSubtotal * val) / 100;
+            }
+            return val;
+        });
+        return Math.max(...savingsArray);
+    }, [availableCoupons, effectiveSubtotal]);
+
     const promoDiscount = useMemo(() => {
         if (!appliedPromo) return 0;
+        // If we have a calculated discount amount from the backend, use it
+        if (appliedPromo.discountAmount) return Number(appliedPromo.discountAmount);
+        
+        // Fallback for legacy/hardcoded codes if needed
         const code = appliedPromo.code;
         if (code === "GLOW10") return Math.min(Math.round(effectiveSubtotal * 0.1), 300);
         if (code === "FLAT200") return effectiveSubtotal >= 999 ? 200 : 0;
         return 0;
     }, [appliedPromo, effectiveSubtotal]);
 
-    const discount = Math.max(0, Number(externalDiscount || 0) + promoDiscount);
+    const mrpDiscount = Math.max(0, totalMrp - effectiveSubtotal);
+    const promoAndExternalOff = Math.max(0, Number(externalDiscount || 0) + promoDiscount);
+    
+    // Total reduction shown as "Discount on MRP"
+    const totalMRPDiscount = mrpDiscount + promoAndExternalOff;
 
     const FREE_SHIP_THRESHOLD = 999;
     const baseShipping = effectiveSubtotal > 0 && effectiveSubtotal < FREE_SHIP_THRESHOLD ? 99 : 0;
@@ -128,7 +260,7 @@ export default function CartPage({
         return baseShipping;
     }, [appliedPromo, baseShipping, selectedItems.length]);
 
-    const total = Math.max(0, effectiveSubtotal - discount + shippingCost);
+    const total = Math.max(0, totalMrp - totalMRPDiscount + shippingCost + (selectedItems.length > 0 ? PLATFORM_FEE : 0));
 
     const shipProgress = useMemo(() => {
         if (effectiveSubtotal <= 0) return { pct: 0, remaining: FREE_SHIP_THRESHOLD };
@@ -150,6 +282,22 @@ export default function CartPage({
     // Recommendations
     const recommendations = useMemo(() => getAllProducts().slice(0, 6), []);
 
+    // ---------- Delivery Location ----------
+    const [pincode, setPincode] = useState(() => localStorage.getItem("cart_pincode") || "273164");
+    const [locationName, setLocationName] = useState(() => localStorage.getItem("cart_location") || "Nautanwa");
+    const [isPincodeModalOpen, setIsPincodeModalOpen] = useState(false);
+
+    useEffect(() => {
+        localStorage.setItem("cart_pincode", pincode);
+        localStorage.setItem("cart_location", locationName);
+    }, [pincode, locationName]);
+
+    const handleUpdateLocation = (newPincode, newLocation) => {
+        setPincode(newPincode);
+        setLocationName(newLocation);
+        setIsPincodeModalOpen(false);
+    };
+
     // ---------- Handlers ----------
     const handleItemClick = (item) => {
         navigate(`/product/${item.id}`, { state: { product: item } });
@@ -165,21 +313,30 @@ export default function CartPage({
         updateQty?.(item.id, q);
     };
 
-    const handleApplyPromo = async () => {
-        const code = promoCode.trim().toUpperCase();
+    const handleApplyPromo = async (codeFromDrawer) => {
+        const code = (codeFromDrawer || promoCode).trim().toUpperCase();
         setPromoError("");
         if (!code) return;
 
         setIsApplyingPromo(true);
         try {
-            await new Promise((r) => setTimeout(r, 500));
-            const allowed = new Set(["GLOW10", "FLAT200", "FREESHIP"]);
-            if (!allowed.has(code)) {
-                setPromoError("Invalid code. Try GLOW10, FLAT200, or FREESHIP.");
-                return;
+            const res = await fetch(`${API_URL}/coupons/validate`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ code, subtotal: effectiveSubtotal }),
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                setAppliedPromo(data.data); // Stores code, discountType, discountValue, discountAmount
+                setPromoCode("");
+                if (isCouponsDrawerOpen) setIsCouponsDrawerOpen(false);
+            } else {
+                setPromoError(data.message || "Invalid coupon code.");
             }
-            setAppliedPromo({ code });
-            setPromoCode("");
+        } catch (err) {
+            setPromoError("Failed to validate coupon. Please try again.");
+            console.error("Promo validation error:", err);
         } finally {
             setIsApplyingPromo(false);
         }
@@ -187,6 +344,12 @@ export default function CartPage({
 
     const handleCheckout = () => {
         if (!canCheckout) return;
+
+        if (!user) {
+            setIsAuthModalOpen(true);
+            return;
+        }
+
         const payload = {
             items: selectedItems,
             subtotal: effectiveSubtotal,
@@ -269,11 +432,14 @@ export default function CartPage({
                                         <Truck size={20} />
                                     </div>
                                     <div>
-                                        <p className="text-[13px] font-black text-stone-900">Delivery to 273164</p>
-                                        <p className="text-[11px] text-stone-500 font-bold uppercase tracking-wide">Nautanwa</p>
+                                        <p className="text-[13px] font-black text-stone-900 tracking-tight">Delivery to {pincode}</p>
+                                        <p className="text-[11px] text-stone-500 font-bold uppercase tracking-wide">{locationName}</p>
                                     </div>
                                 </div>
-                                <button className="text-pink-600 text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl hover:bg-pink-50 transition-colors border border-pink-100">
+                                <button
+                                    onClick={() => setIsPincodeModalOpen(true)}
+                                    className="text-pink-600 text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl hover:bg-pink-50 transition-colors border border-pink-100 shadow-sm"
+                                >
                                     Change
                                 </button>
                             </div>
@@ -314,38 +480,6 @@ export default function CartPage({
                                 </section>
                             )}
 
-                            {/* 3. Gifts Selection Section (New) */}
-                            {effectiveSubtotal > 1500 && (
-                                <section className="mt-4">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h3 className="text-lg font-black text-stone-900">Gifts <span className="text-pink-600 font-bold">(2/2 selected)</span></h3>
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-[#151515] bg-stone-100 px-3 py-1 rounded-full">Reward Unlocked</span>
-                                    </div>
-                                    <div className="space-y-3">
-                                        {[
-                                            { id: 'g1', name: 'Free Charlotte Tilbury Glow Toner', desc: '5ml', date: 'Delivery by Mon, 30 Mar', img: 'https://images.unsplash.com/photo-1594465919760-441fe5908ab0?auto=format&fit=crop&w=100&q=80' },
-                                            { id: 'g2', name: 'Free Pillow Talk Push Up Lashes', desc: '1.5ml', date: 'Delivery by Mon, 30 Mar', img: 'https://images.unsplash.com/photo-1512496011931-a2c388278ab0?auto=format&fit=crop&w=100&q=80' }
-                                        ].map(gift => (
-                                            <div key={gift.id} className="bg-white/40 border border-pink-50 rounded-[24px] p-4 flex gap-4 items-center group relative overflow-hidden">
-                                                <div className="w-16 h-16 rounded-xl overflow-hidden bg-stone-50 border border-stone-100 flex-shrink-0">
-                                                    <img src={gift.img} className="w-full h-full object-cover" alt="" />
-                                                </div>
-                                                <div className="flex-1">
-                                                    <h4 className="text-[13px] font-black text-stone-900 leading-tight">{gift.name}</h4>
-                                                    <p className="text-[11px] text-stone-500 font-bold mb-1">{gift.desc}</p>
-                                                    <div className="flex items-center gap-1.5 text-[10px] text-stone-400 font-bold uppercase tracking-wide">
-                                                        <Truck size={12} className="text-pink-400" /> {gift.date}
-                                                    </div>
-                                                </div>
-                                                <div className="absolute top-0 right-0 w-32 h-32 bg-pink-100/5 rounded-bl-[100px] -z-0 pointer-events-none" />
-                                                <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center text-pink-600">
-                                                    <Check size={14} />
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </section>
-                            )}
 
                             {/* Pre-order Items */}
                             {preOrderItems.length > 0 && (
@@ -380,65 +514,226 @@ export default function CartPage({
                         {/* Right column: Summary sidebar */}
                         <aside className="min-w-0">
                             <div className="lg:sticky lg:top-20 space-y-4">
-                                {/* Promo */}
-                                <div className="bg-white rounded-[24px] p-2 border border-stone-100 shadow-[0_2px_20px_rgba(0,0,0,0.02)]">
+                                {/* Promo / Coupons */}
+                                <div className="space-y-3">
                                     {appliedPromo ? (
-                                        <div className="flex items-center justify-between bg-green-50/50 p-3 rounded-[18px] border border-green-100">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700">
-                                                    <BadgePercent size={16} />
+                                        <div className="bg-white rounded-[24px] p-2 border border-stone-100 shadow-[0_2px_20px_rgba(0,0,0,0.02)]">
+                                            <div className="flex items-center justify-between bg-green-50/50 p-3 rounded-[18px] border border-green-100">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700">
+                                                        <BadgePercent size={16} />
+                                                    </div>
+                                                    <div className="leading-tight">
+                                                        <p className="text-xs font-black text-stone-900">{appliedPromo.code}</p>
+                                                        <p className="text-[10px] text-stone-500 font-semibold uppercase tracking-tight">Offer applied</p>
+                                                    </div>
                                                 </div>
-                                                <div className="leading-tight">
-                                                    <p className="text-xs font-black text-stone-900">{appliedPromo.code}</p>
-                                                    <p className="text-[10px] text-stone-500 font-semibold">Offer applied</p>
-                                                </div>
+                                                <button
+                                                    onClick={() => {
+                                                        setAppliedPromo(null);
+                                                        setPromoCode("");
+                                                        setPromoError("");
+                                                    }}
+                                                    className="text-stone-400 hover:text-red-500 p-2 transition-colors"
+                                                    title="Remove promo"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
                                             </div>
-                                            <button
-                                                onClick={() => {
-                                                    setAppliedPromo(null);
-                                                    setPromoCode("");
-                                                    setPromoError("");
-                                                }}
-                                                className="text-stone-400 hover:text-red-500 p-2"
-                                                title="Remove promo"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
+                                            <p className="text-[10px] text-green-600 font-black uppercase text-center mt-2 tracking-widest pb-1 animate-pulse">
+                                                Savings applied to your bag!
+                                            </p>
                                         </div>
                                     ) : (
-                                        <div className="flex gap-2 p-1">
-                                            <input
-                                                type="text"
-                                                placeholder="Promo Code"
-                                                value={promoCode}
-                                                onChange={(e) => setPromoCode(e.target.value)}
-                                                className="flex-1 bg-stone-50 border-none rounded-[16px] px-4 py-3 text-sm font-semibold placeholder:text-stone-400 focus:ring-2 focus:ring-pink-100 transition-all uppercase"
-                                            />
-                                            <button
-                                                onClick={handleApplyPromo}
-                                                disabled={!promoCode || isApplyingPromo}
-                                                className="bg-stone-900 text-white rounded-[16px] px-5 text-sm font-black hover:bg-stone-800 disabled:opacity-50 transition-all"
-                                            >
-                                                {isApplyingPromo ? "..." : "Apply"}
-                                            </button>
-                                        </div>
+                                        <button 
+                                            onClick={() => setIsCouponsDrawerOpen(true)}
+                                            className="w-full bg-white rounded-[24px] p-4 border border-stone-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex items-center justify-between group hover:border-pink-200 hover:shadow-[0_8px_30px_rgba(255,79,163,0.08)] transition-all duration-300 transform active:scale-[0.98]"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                {/* Golden Coin Icon */}
+                                                <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#FFD700] via-[#FFB800] to-[#E5A000] flex items-center justify-center shadow-[0_4px_10px_rgba(229,160,0,0.3)] border border-white/20 relative overflow-hidden shrink-0">
+                                                    <span className="text-white text-lg font-black italic drop-shadow-sm select-none relative z-10">₹</span>
+                                                    <div className="absolute top-0 left-0 w-full h-full bg-white/25 rounded-full scale-125 translate-x-1 -translate-y-1 blur-[3px]" />
+                                                </div>
+                                                <div className="text-left">
+                                                    <p className="text-[15px] font-black text-emerald-600 tracking-tight leading-tight">Save upto {formatINR(maxSavings || 502)}</p>
+                                                    <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wider mt-0.5">{availableCoupons.length || 3} Coupons & Offers Available</p>
+                                                </div>
+                                            </div>
+                                            <ChevronDown size={20} className="text-stone-300 group-hover:text-pink-500 transition-colors group-hover:translate-y-0.5" />
+                                        </button>
                                     )}
-                                    {promoError && <p className="text-[11px] text-red-500 font-semibold px-4 pb-2">{promoError}</p>}
                                 </div>
 
                                 {/* Summary */}
                                 <div className="bg-white/70 backdrop-blur-md rounded-[28px] p-6 border border-white shadow-[0_10px_40px_rgba(0,0,0,0.04)]">
                                     <h2 className="text-lg font-black text-stone-900 mb-6">Order Summary</h2>
-                                    <div className="space-y-3 mb-6">
-                                        <SummaryRow label="Subtotal" value={formatINR(effectiveSubtotal)} />
-                                        <SummaryRow label="Discount" value={`- ${formatINR(discount)}`} highlight={discount > 0} />
-                                        <SummaryRow label="Shipping" value={shippingCost === 0 ? "Free" : formatINR(shippingCost)} highlight={shippingCost === 0} />
-                                        <div className="h-px bg-stone-100 my-4" />
+                                    <div className="space-y-3.5 mb-6">
+                                        <SummaryRow label="Total MRP" value={formatINR(totalMrp)} />
+                                        <SummaryRow 
+                                            label="Discount on MRP" 
+                                            value={`- ${formatINR(totalMRPDiscount)}`} 
+                                            highlight={totalMRPDiscount > 0} 
+                                            color="text-emerald-500" 
+                                        />
+                                        <SummaryRow 
+                                            label="Platform Fee" 
+                                            value={formatINR(PLATFORM_FEE)} 
+                                            action="KNOW MORE"
+                                        />
+                                        <SummaryRow 
+                                            label="Shipping" 
+                                            value={shippingCost === 0 ? "FREE" : formatINR(shippingCost)} 
+                                            highlight={shippingCost === 0} 
+                                            color={shippingCost === 0 ? "text-emerald-500" : "text-stone-900"}
+                                        />
+                                        
+                                        <div className="h-[2px] border-t border-dashed border-stone-200 my-5" />
+
+                                        {/* Unlocked Deals Section — before Total Amount */}
+                                        {isDealsVisible && specialDeals.length > 0 && baseInventoryItems.length > 0 && effectiveSubtotal >= 499 && (
+                                            <div className="bg-[#F0EEFF] rounded-[20px] border border-[#DEDCFF] p-2.5 relative overflow-hidden group/deals shadow-[0_4px_20px_rgba(0,0,0,0.02)] shrink-0">
+                                                {/* Header Row: Box Icon + Tabs */}
+                                                <div className="flex items-center gap-3 mb-2.5 relative z-10">
+                                                    {/* Gift Box Icon - Slimmed */}
+                                                    <div className="w-8 h-8 shrink-0 relative bg-linear-to-br from-indigo-500/10 to-purple-500/10 rounded-lg flex items-center justify-center">
+                                                        <Gift size={16} className="text-indigo-600 drop-shadow-sm" />
+                                                        <Sparkles className="absolute -top-0.5 -right-0.5 text-yellow-400 animate-pulse" size={8} />
+                                                    </div>
+
+                                                    {/* Tabs Container */}
+                                                    <div className="flex-1 flex gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                                                        {[1, 2, 3, 4].map((slotNum) => {
+                                                            const hasProducts = specialDeals.some(p => p.specialOfferType === `Deal ${slotNum}`);
+                                                            if (!hasProducts && slotNum > 1) return null; // Only show first slot if empty, otherwise hide empty slots
+                                                            
+                                                            return (
+                                                                <button 
+                                                                    key={slotNum}
+                                                                    onClick={() => setActiveDealTab(slotNum)}
+                                                                    className={`shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${
+                                                                        activeDealTab === slotNum 
+                                                                        ? "bg-white text-indigo-600 shadow-sm ring-1 ring-indigo-100" 
+                                                                        : "text-stone-400 hover:text-indigo-400"
+                                                                    }`}
+                                                                >
+                                                                    {activeDealTab === slotNum && <Check size={8} strokeWidth={4} />}
+                                                                    {"DEAL " + slotNum}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+
+                                                    <button 
+                                                        onClick={() => setIsDealsVisible(false)}
+                                                        className="p-1.5 text-stone-400 hover:text-stone-600 hover:bg-black/5 rounded-full transition-colors shrink-0"
+                                                        title="Skip"
+                                                    >
+                                                        <X size={14} strokeWidth={3} />
+                                                    </button>
+                                                </div>
+
+                                                {/* Sub-header - Slimmed */}
+                                                <div className="flex items-center gap-1 mb-2 relative z-10 px-1">
+                                                    <p className="text-[9px] font-bold text-[#5C4DCC]/80 uppercase tracking-tight">Unlocked: Get products at special price</p>
+                                                    <Info size={9} className="text-stone-400 opacity-60" />
+                                                </div>
+
+                                                {/* Multi-Product Horizontal Carousel */}
+                                                <div className="relative z-10 -mx-1 px-1">
+                                                    <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-1 px-1">
+                                                        {(() => {
+                                                            const slotName = `Deal ${activeDealTab}`;
+                                                            const slotProducts = specialDeals.filter(p => 
+                                                                p.specialOfferType === slotName || 
+                                                                (slotName === "Deal 1" && (!p.specialOfferType || p.specialOfferType === "None")) // Fallback for uncategorized specials
+                                                            );
+
+                                                            if (slotProducts.length === 0) {
+                                                                return (
+                                                                    <div className="w-full py-4 text-center text-[10px] text-stone-400 font-bold bg-white/40 rounded-xl border border-dashed border-stone-200">
+                                                                        No deals in this slot yet
+                                                                    </div>
+                                                                );
+                                                            }
+
+                                                            return slotProducts.map((deal) => {
+                                                                const isInBag = cartItems.some(i => i.id === deal.id);
+                                                                return (
+                                                                    <div 
+                                                                        key={deal.id} 
+                                                                        className="w-[180px] bg-white rounded-xl p-2 shadow-sm border border-white flex gap-2.5 items-center shrink-0 group/card transition-all hover:shadow-md"
+                                                                    >
+                                                                        <div className="w-12 h-12 bg-stone-50 rounded-lg overflow-hidden relative shrink-0">
+                                                                            <img 
+                                                                                src={resolveImage(deal.imageUrls?.[0]) || resolveImage(deal.image)} 
+                                                                                className="w-full h-full object-cover" 
+                                                                                alt={deal.name} 
+                                                                            />
+                                                                        </div>
+                                                                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                                                            <h4 className="text-[9px] font-bold text-stone-900 leading-tight mb-0.5 line-clamp-1">
+                                                                                {deal.name}
+                                                                            </h4>
+                                                                            <div className="flex items-center gap-1.5 mb-1">
+                                                                                <span className="text-[11px] font-black text-[#00A382]">₹{deal.price}</span>
+                                                                                {deal.mrp > deal.price && (
+                                                                                    <span className="text-[8px] text-stone-400 line-through font-bold">₹{deal.mrp}</span>
+                                                                                )}
+                                                                            </div>
+                                                                            <button 
+                                                                                disabled={isInBag}
+                                                                                onClick={() => {
+                                                                                    if (!isInBag) {
+                                                                                        addToCart(deal);
+                                                                                        toast.success(`${deal.name} added!`);
+                                                                                    }
+                                                                                }}
+                                                                                className={`w-full py-1 rounded-md text-[8px] font-black uppercase tracking-wider transition-all ${
+                                                                                    isInBag 
+                                                                                    ? "bg-green-50 text-green-600 border border-green-100" 
+                                                                                    : "bg-[#FF4FA3] text-white shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+                                                                                }`}
+                                                                            >
+                                                                                {isInBag ? "In Bag" : "Add"}
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            });
+                                                        })()}
+                                                    </div>
+                                                    {/* Horizontal Scroll Fade Indicator */}
+                                                    <div className="absolute top-0 right-0 h-full w-4 bg-linear-to-l from-[#F0EEFF] to-transparent pointer-events-none" />
+                                                </div>
+
+                                                {/* Background Accent */}
+                                                <div className="absolute -bottom-4 -right-4 w-12 h-12 bg-white/30 rounded-full blur-2xl" />
+                                            </div>
+                                        )}
+                                        
                                         <div className="flex justify-between items-center">
-                                            <span className="text-stone-900 font-black text-lg">Total</span>
+                                            <span className="text-stone-900 font-black text-lg">Total Amount</span>
                                             <span className="text-stone-900 font-black text-xl">{formatINR(total)}</span>
                                         </div>
                                     </div>
+
+                                    {/* Savings Banner */}
+                                    {totalMRPDiscount > 0 && (
+                                        <div className="mb-6 bg-emerald-50/40 border border-emerald-100/50 rounded-[22px] p-3.5 flex items-center gap-3.5 group/saving overflow-hidden relative backdrop-blur-sm">
+                                            <div className="w-11 h-11 rounded-2xl bg-emerald-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-emerald-200/50 relative z-10">
+                                                <BadgePercent size={22} strokeWidth={2.5} />
+                                            </div>
+                                            <div className="flex-1 relative z-10">
+                                                <p className="text-[10px] font-black text-stone-900 tracking-tight leading-tight">
+                                                    YOU'RE SAVING <span className="text-emerald-600 underline decoration-emerald-500/30 underline-offset-4 decoration-2">{formatINR(totalMRPDiscount)}</span> ON THIS ORDER
+                                                </p>
+                                            </div>
+                                            {/* Decorative glass elements */}
+                                            <div className="absolute top-0 right-0 w-24 h-24 bg-white/40 rounded-bl-full translate-x-8 -translate-y-8 blur-md" />
+                                            <div className="absolute -bottom-4 -left-4 w-12 h-12 bg-emerald-100/30 rounded-full blur-xl" />
+                                        </div>
+                                    )}
 
                                     <button
                                         onClick={handleCheckout}
@@ -485,6 +780,35 @@ export default function CartPage({
                     </button>
                 </div>
             )}
+
+            {/* Pincode Modal */}
+            {isPincodeModalOpen && (
+                <PincodeModal 
+                  onClose={() => setIsPincodeModalOpen(false)} 
+                  onUpdate={handleUpdateLocation}
+                  currentPincode={pincode}
+                />
+            )}
+
+            {/* Auth Modal */}
+            <AuthModal
+                isOpen={isAuthModalOpen}
+                onClose={() => setIsAuthModalOpen(false)}
+            />
+
+            {/* Coupons Drawer */}
+            <CouponsDrawer 
+                isOpen={isCouponsDrawerOpen} 
+                onClose={() => setIsCouponsDrawerOpen(false)}
+                onApply={(code) => handleApplyPromo(code)}
+                promoCode={promoCode}
+                setPromoCode={setPromoCode}
+                handleApplyManual={() => handleApplyPromo()}
+                isApplying={isApplyingPromo}
+                error={promoError}
+                subtotal={effectiveSubtotal}
+                coupons={availableCoupons}
+            />
         </div>
     );
 }
@@ -517,13 +841,17 @@ function CartItem({ item, selected, onToggle, onUpdateQty, onRemove, onWishlist,
                 >
                     {!imgError ? (
                         <img
-                            src={item.image}
+                            src={
+                                resolveImage(item.imageUrls?.[0]) || 
+                                resolveImage(item.image) || 
+                                "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=150&q=80"
+                            }
                             alt={item.name}
                             onError={() => setImgError(true)}
                             className={`w-full h-full object-cover transition-opacity ${isOutOfStock ? "opacity-50" : ""}`}
                         />
                     ) : (
-                        <div className="text-stone-300 text-[10px] font-bold text-center px-1">No Image</div>
+                        <div className="text-stone-300 text-[10px] font-bold text-center px-1 uppercase tracking-tighter">No Image</div>
                     )}
 
                     {isOutOfStock && (
@@ -553,7 +881,16 @@ function CartItem({ item, selected, onToggle, onUpdateQty, onRemove, onWishlist,
                             <p className="text-xs text-stone-500 font-semibold truncate">{item.tag || "Standard Size"}</p>
                         </div>
 
-                        <p className="text-base font-black text-stone-900 whitespace-nowrap">{formatINR((item.price || 0) * (item.qty || 1))}</p>
+                        <div className="text-right flex flex-col items-end shrink-0">
+                            <p className="text-[17px] font-black text-[#151515] group-hover:text-pink-600 transition-colors tracking-tight">
+                                {formatINR((item.price || 0) * (item.qty || 1))}
+                            </p>
+                            {(item.mrp || 0) > (item.price || 0) && (
+                                <p className="text-[12px] font-bold text-stone-400 line-through decoration-stone-300">
+                                    {formatINR((item.mrp || 0) * (item.qty || 1))}
+                                </p>
+                            )}
+                        </div>
                     </div>
 
                     <div className="flex items-center justify-between mt-4 gap-3">
@@ -600,11 +937,18 @@ function CartItem({ item, selected, onToggle, onUpdateQty, onRemove, onWishlist,
     );
 }
 
-function SummaryRow({ label, value, highlight }) {
+function SummaryRow({ label, value, highlight, color, action }) {
     return (
         <div className="flex justify-between items-center text-sm">
-            <span className="text-stone-500 font-semibold">{label}</span>
-            <span className={`font-black ${highlight ? "text-pink-600" : "text-stone-900"}`}>{value}</span>
+            <div className="flex items-center gap-1.5">
+                <span className="text-stone-500 font-semibold">{label}</span>
+                {action && (
+                    <button className="text-[10px] font-black text-pink-500 hover:text-pink-600 underline underline-offset-2 uppercase tracking-tighter transition-colors">
+                        {action}
+                    </button>
+                )}
+            </div>
+            <span className={`font-black ${color ? color : (highlight ? "text-emerald-600" : "text-stone-900")}`}>{value}</span>
         </div>
     );
 }
@@ -620,10 +964,128 @@ function TrustItem({ icon: Icon, label }) {
     );
 }
 
+function PincodeModal({ onClose, onUpdate, currentPincode }) {
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
+
+  const [val, setVal] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (val.length !== 6) {
+      setError("Please enter a valid 6-digit Pincode.");
+      return;
+    }
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await fetch(`https://api.postalpincode.in/pincode/${val}`);
+      const data = await res.json();
+      if (data?.[0]?.Status === "Success") {
+        const city = data[0].PostOffice[0].District;
+        onUpdate(val, city);
+      } else {
+        setError("Pincode not found. Try another one.");
+      }
+    } catch (err) {
+      setError("Failed to fetch location. Check your internet.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDetection = () => {
+    if ("geolocation" in navigator) {
+      setLoading(true);
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          setTimeout(() => {
+            onUpdate("110001", "New Delhi");
+            setLoading(false);
+          }, 800);
+        },
+        () => {
+          setLoading(false);
+          setError("Location access denied.");
+        }
+      );
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-stone-900/40 backdrop-blur-md animate-fade-in" 
+        onClick={onClose} 
+      />
+      
+      {/* Modal */}
+      <div className="relative w-full max-w-sm bg-white rounded-[32px] p-8 shadow-2xl animate-modal-pop shadow-stone-900/10">
+        <div className="w-12 h-12 bg-pink-50 text-pink-500 rounded-2xl flex items-center justify-center mb-6">
+          <Truck size={24} />
+        </div>
+        
+        <h2 className="text-2xl font-black text-stone-900 uppercase tracking-tight mb-2">Change delivery</h2>
+        <p className="text-[11px] text-stone-500 font-bold uppercase tracking-widest mb-8">Enter your 6-digit Pincode to update shipping estimate.</p>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="relative">
+            <input 
+              autoFocus
+              type="text" 
+              maxLength={6}
+              placeholder="e.g. 110001"
+              value={val}
+              onChange={(e) => setVal(e.target.value.replace(/\D/g, ''))}
+              className="w-full h-[60px] bg-stone-50 border border-stone-200 rounded-[18px] px-6 text-xl font-black placeholder:text-stone-300 focus:outline-none focus:border-[#d1408e] transition-all"
+            />
+            {loading && (
+              <div className="absolute right-6 top-1/2 -translate-y-1/2">
+                <div className="w-5 h-5 border-2 border-stone-900 border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+          </div>
+          
+          {error && <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest px-1">{error}</p>}
+          
+          <button 
+            type="submit"
+            disabled={loading || val.length !== 6}
+            className="w-full h-[60px] bg-stone-900 text-white rounded-[18px] font-black uppercase text-xs tracking-widest hover:bg-pink-600 disabled:opacity-50 transition-all shadow-xl shadow-stone-200"
+          >
+            Update Location
+          </button>
+        </form>
+        
+        <div className="relative my-8 h-px bg-stone-100 flex items-center justify-center">
+          <span className="bg-white px-4 text-[9px] font-black text-stone-300 uppercase tracking-[0.2em]">or</span>
+        </div>
+        
+        <button 
+          onClick={handleDetection}
+          disabled={loading}
+          className="w-full h-[52px] border-2 border-stone-100 text-stone-600 rounded-[18px] font-black uppercase text-[10px] tracking-widest hover:border-stone-900 hover:text-stone-900 transition-all flex items-center justify-center gap-2"
+        >
+          <Sparkles size={14} className="text-pink-500" /> Auto-Detect My Pincode
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function RecCard({ product, onAdd }) {
     return (
         <div className="min-w-[160px] md:min-w-[200px] snap-start group pb-4">
-            <div className="aspect-[4/5] rounded-[24px] bg-stone-100 overflow-hidden relative mb-4">
+            <div className="aspect-4/5 rounded-[24px] bg-stone-100 overflow-hidden relative mb-4">
                 <img
                     src={product.image}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -666,7 +1128,7 @@ function EmptyState({ recommendations = [], onAdd }) {
                 </div>
 
                 <h2 className="text-4xl md:text-5xl font-black text-stone-900 mb-4 tracking-tight">
-                    Your bag is <span className="text-transparent bg-clip-text bg-linear-to-r from-pink-500 to-purple-600">feeling light</span>
+                    Your bag is <span className="text-transparent bg-clip-text bg-linear-to-r from-pink-50 to-purple-600">feeling light</span>
                 </h2>
                 <p className="text-stone-500 text-base md:text-lg mb-10 max-w-md mx-auto leading-relaxed font-medium">
                     It looks like you haven't added anything yet. Let's find something special just for you.
@@ -721,8 +1183,22 @@ function EmptyState({ recommendations = [], onAdd }) {
                     0% { transform: scale(0); opacity: 0; }
                     100% { transform: scale(1); opacity: 1; }
                 }
+                @keyframes modal-pop {
+                    0% { transform: scale(0.95); opacity: 0; }
+                    100% { transform: scale(1); opacity: 1; }
+                }
+                @keyframes fade-in {
+                    0% { opacity: 0; }
+                    100% { opacity: 1; }
+                }
                 .animate-float {
                     animation: float 4s ease-in-out infinite;
+                }
+                .animate-modal-pop {
+                    animation: modal-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+                }
+                .animate-fade-in {
+                    animation: fade-in 0.2s ease-out forwards;
                 }
                 .no-scrollbar::-webkit-scrollbar {
                     display: none;
@@ -743,4 +1219,183 @@ function formatINR(amount) {
         currency: "INR",
         minimumFractionDigits: 0,
     }).format(amount || 0);
+}
+
+function CouponsDrawer({ isOpen, onClose, onApply, promoCode, setPromoCode, handleApplyManual, isApplying, error, subtotal, coupons = [] }) {
+    // Prevent background scrolling when drawer is open
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "unset";
+        }
+        return () => {
+            document.body.style.overflow = "unset";
+        };
+    }, [isOpen]);
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-1000">
+            {/* Backdrop */}
+            <div 
+                className="absolute inset-0 bg-stone-900/60 backdrop-blur-md transition-opacity duration-300" 
+                onClick={onClose}
+            />
+            
+            {/* Drawer Container */}
+            <div className="absolute bottom-0 sm:top-1/2 sm:-translate-y-1/2 left-0 right-0 mx-auto w-full max-w-lg bg-[#fffcfc] rounded-t-[40px] sm:rounded-[40px] shadow-[0_32px_120px_rgba(0,0,0,0.2)] overflow-hidden animate-slide-up sm:animate-modal-pop h-[90dvh] flex flex-col">
+                {/* Header - Fixed Top */}
+                <div className="p-4 border-b border-stone-100 flex items-center justify-between bg-white z-10 shrink-0">
+                    <div className="flex items-center gap-4">
+                       <div className="w-10 h-10 rounded-xl bg-linear-to-br from-pink-50 to-pink-100/50 flex items-center justify-center text-[#ff4fa3] shadow-inner shrink-0">
+                          <Ticket size={20} strokeWidth={2.5} className="drop-shadow-sm"/>
+                       </div>
+                       <div>
+                          <h2 className="text-lg font-black text-stone-900 tracking-tight leading-none mb-1 italic uppercase">Offers & Coupons</h2>
+                          <p className="text-[8px] text-stone-400 font-black uppercase tracking-[0.2em] flex items-center gap-1.5">
+                             <Sparkles size={8} className="text-amber-400" /> Apply and save big
+                          </p>
+                       </div>
+                    </div>
+                    <button 
+                        onClick={onClose}
+                        className="w-8 h-8 rounded-full bg-stone-50 hover:bg-stone-100 flex items-center justify-center text-stone-400 hover:text-black transition-all duration-300 transform hover:rotate-90"
+                    >
+                        <X size={18} />
+                    </button>
+                </div>
+
+                {/* Content Area - Expanded Scrollable Section */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white touch-pan-y min-h-0">
+                    {/* Manual Input */}
+                    <div className="space-y-1.5">
+                        <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1 opacity-70">Have a special code?</label>
+                        <div className="flex gap-2 bg-stone-50/50 p-1 rounded-[18px] border-2 border-stone-100 focus-within:border-pink-200 focus-within:bg-white transition-all duration-500 shadow-inner group text-sm">
+                            <input
+                                type="text"
+                                placeholder="ENTER CODE"
+                                value={promoCode}
+                                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                                className="flex-1 bg-transparent border-0 px-4 py-1.5 text-sm font-black text-stone-900 placeholder:text-stone-300 focus:ring-0 focus:outline-none uppercase tracking-wider"
+                            />
+                            <button
+                                onClick={handleApplyManual}
+                                disabled={!promoCode || isApplying}
+                                className="bg-[#151515] text-white rounded-[14px] px-5 text-[9px] font-black uppercase tracking-widest hover:bg-[#ff4fa3] disabled:opacity-30 transition-all duration-300 shadow-lg active:scale-95 flex items-center gap-2"
+                            >
+                                {isApplying ? (
+                                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : "Apply"}
+                            </button>
+                        </div>
+                        {error && (
+                            <motion.p 
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="text-[10px] text-red-500 font-bold uppercase tracking-widest ml-4 bg-red-50 py-1 px-3 rounded-lg inline-block"
+                            >
+                                {error}
+                            </motion.p>
+                        )}
+                    </div>
+
+                    <div className="relative py-1 flex items-center justify-center">
+                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-stone-100" /></div>
+                        <span className="relative bg-[#fffcfc] px-6 text-[9px] font-black text-stone-300 uppercase tracking-[0.25em]">Available Coupons</span>
+                    </div>
+
+                    {/* Coupons List */}
+                    {coupons.length > 0 ? coupons.map((coupon) => {
+                        const minSpend = Number(coupon.minPurchase || 0);
+                        const isEligible = subtotal >= minSpend;
+                        const remaining = minSpend - subtotal;
+                        
+                        // Dynamic Title Generation
+                        const title = coupon.title || (
+                            coupon.discountType === "PERCENTAGE" 
+                            ? `Flat ${coupon.discountValue}% Off` 
+                            : `₹${coupon.discountValue} Instant Off`
+                        );
+
+                        const description = coupon.description || (
+                            minSpend > 0 
+                            ? `Applicable on orders above ${formatINR(minSpend)}.` 
+                            : "No minimum purchase required."
+                        );
+                        
+                        return (
+                            <div 
+                                key={coupon.code} 
+                                className={`group relative bg-white border-2 rounded-[24px] overflow-hidden transition-all duration-500 transform hover:scale-[1.01] ${
+                                    isEligible 
+                                    ? "border-stone-100 hover:border-pink-200 shadow-sm hover:shadow-[0_15px_40px_rgba(255,79,163,0.06)]" 
+                                    : "border-stone-50 opacity-70 grayscale-[0.5]"
+                                }`}
+                            >
+                                <div className="absolute top-1/2 -left-2.5 w-5 h-5 bg-[#fffcfc] border-2 border-stone-100 rounded-full -translate-y-1/2 group-hover:border-pink-200 transition-colors" />
+                                <div className="absolute top-1/2 -right-2.5 w-5 h-5 bg-[#fffcfc] border-2 border-stone-100 rounded-full -translate-y-1/2 group-hover:border-pink-200 transition-colors" />
+                                
+                                <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <div className="bg-pink-50 text-[#ff4fa3] text-[9px] font-black px-2.5 py-1 rounded-lg border border-pink-100/50 shadow-sm tracking-widest uppercase">
+                                                {coupon.code}
+                                            </div>
+                                            {!isEligible && (
+                                                <span className="flex items-center gap-1.5 text-[8px] font-extrabold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 uppercase tracking-tight">
+                                                   <Lock size={8} /> Lock
+                                                </span>
+                                            )}
+                                        </div>
+                                        
+                                        <h4 className="text-[14px] font-black text-stone-900 mb-0.5 leading-tight">{title}</h4>
+                                        <p className="text-[10px] text-stone-500 font-semibold leading-relaxed mb-2 tracking-tight">{description}</p>
+                                        
+                                        {remaining > 0 ? (
+                                            <p className="text-[8px] font-black text-[#ff4fa3] uppercase tracking-widest flex items-center gap-1.5">
+                                               Add {formatINR(remaining)} more <ChevronDown size={9} className="-rotate-90"/>
+                                            </p>
+                                        ) : (
+                                            <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1.5">
+                                               <Check size={10} strokeWidth={3}/> Unlocked
+                                            </p>
+                                        )}
+                                    </div>
+                                    
+                                    <div className="flex flex-col items-center justify-center border-l-2 border-dashed border-stone-100 pl-4 group-hover:border-pink-100 transition-colors min-w-[80px]">
+                                        <button
+                                            onClick={() => onApply(coupon.code)}
+                                            disabled={!isEligible}
+                                            className={`w-full py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all duration-300 shadow-sm transform active:scale-90 ${
+                                                isEligible 
+                                                ? "bg-[#ff4fa3] text-white hover:bg-pink-600" 
+                                                : "bg-stone-50 text-stone-300 cursor-not-allowed"
+                                            }`}
+                                        >
+                                            {isEligible ? "Apply" : "Locked"}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="absolute inset-0 bg-linear-to-br from-pink-50/0 via-pink-50/0 to-pink-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                            </div>
+                        );
+                    }) : (
+                        <div className="py-12 text-center text-stone-400 font-black uppercase text-[10px] tracking-widest">
+                            No active offers available right now
+                        </div>
+                    )}
+                </div>
+
+                {/* Footer - Fixed Bottom */}
+                <div className="p-4 border-t border-stone-100 bg-stone-50/30 text-center shrink-0">
+                    <p className="text-[9px] text-stone-400 font-extrabold uppercase tracking-[0.2em] mb-1 leading-none flex items-center justify-center gap-1.5">
+                        <Clock size={10}/> Valid for a limited time
+                    </p>
+                    <p className="text-[8px] text-stone-300 font-bold tracking-tight uppercase">T&C Apply • Max savings ₹502</p>
+                </div>
+            </div>
+        </div>
+    );
 }

@@ -36,7 +36,7 @@ const WishlistDrawer = memo(function WishlistDrawer({ open, onClose, wishlist, o
                     <h2 className="text-xl font-[900] text-[#1a1a1a]">Your Wishlist ({wishlist.length})</h2>
                     <button
                         onClick={onClose}
-                        className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
+                        className="w-10 h-10 rounded-[2px] border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
                     >
                         <X size={20} />
                     </button>
@@ -46,13 +46,13 @@ const WishlistDrawer = memo(function WishlistDrawer({ open, onClose, wishlist, o
                 <div className="flex-1 overflow-y-auto p-5">
                     {wishlist.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
-                            <div className="w-16 h-16 rounded-full bg-pink-50 flex items-center justify-center text-pink-500 mb-2">
+                            <div className="w-16 h-16 rounded-[2px] bg-pink-50 flex items-center justify-center text-pink-500 mb-2">
                                 <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" className="opacity-50"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" /></svg>
                             </div>
                             <p className="text-gray-500 font-medium">Your wishlist is empty.</p>
                             <button
                                 onClick={onClose}
-                                className="px-6 py-2.5 bg-[#1a1a1a] text-white rounded-full font-bold text-sm hover:bg-black transition-colors"
+                                className="px-6 py-2.5 bg-[#1a1a1a] text-white rounded-[2px] font-bold text-sm hover:bg-black transition-colors"
                             >
                                 Start Shopping
                             </button>
@@ -63,10 +63,10 @@ const WishlistDrawer = memo(function WishlistDrawer({ open, onClose, wishlist, o
                                 <div
                                     key={item.id}
                                     onClick={() => handleItemClick(item)}
-                                    className="flex gap-4 p-3 rounded-2xl border border-gray-100 bg-white hover:border-pink-200 transition-colors group cursor-pointer"
+                                    className="flex gap-4 p-3 rounded-[2px] border border-gray-100 bg-white hover:border-pink-200 transition-colors group cursor-pointer"
                                 >
                                     {/* Image */}
-                                    <div className="w-24 h-24 rounded-xl overflow-hidden bg-gray-50 shrink-0">
+                                    <div className="w-24 h-24 rounded-[2px] overflow-hidden bg-gray-50 shrink-0">
                                         <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                                     </div>
 
@@ -96,7 +96,7 @@ const WishlistDrawer = memo(function WishlistDrawer({ open, onClose, wishlist, o
                                                     onAddToCart(item.id);
                                                     onClose();
                                                 }}
-                                                className="w-full h-[36px] rounded-lg bg-[#1a1a1a] text-white text-[12px] font-bold uppercase tracking-wide flex items-center justify-center gap-2 hover:bg-[#d1408e] transition-colors"
+                                                className="w-full h-[36px] rounded-[2px] bg-[#1a1a1a] text-white text-[12px] font-bold uppercase tracking-wide flex items-center justify-center gap-2 hover:bg-[#d1408e] transition-colors"
                                             >
                                                 <ShoppingCart size={14} /> Add to Cart
                                             </button>

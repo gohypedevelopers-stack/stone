@@ -232,14 +232,16 @@ export const getAdminOrders = async (req, res) => {
     const [orders, offlinePurchases] = await Promise.all([
       prisma.order.findMany({
         include: {
-          customer: { select: { name: true, mobile: true } },
+          customer: { include: { addresses: true } },
           vendor: { select: { businessName: true } },
+          shippingAddress: true,
+          items: true,
         },
         orderBy: { createdAt: "desc" },
       }),
       prisma.offlinePurchase.findMany({
         include: {
-          customer: { select: { name: true, mobile: true } },
+          customer: { include: { addresses: true } },
           vendor: { select: { businessName: true } },
         },
         orderBy: { purchaseDate: "desc" },
@@ -248,28 +250,37 @@ export const getAdminOrders = async (req, res) => {
 
     // Normalize and merge
     const combined = [
-      ...orders.map(o => ({
-        id: o.id,
-        orderNumber: o.orderNumber,
-        customerName: o.customer.name,
-        vendorName: o.vendor.businessName,
-        totalAmount: o.totalAmount,
-        rewardPointsEarned: o.rewardPointsEarned || 0,
-        status: o.status,
-        createdAt: o.createdAt,
-        type: 'Online'
-      })),
-      ...offlinePurchases.map(p => ({
-        id: p.id,
-        orderNumber: `OFF-${p.id.slice(0, 8).toUpperCase()}`,
-        customerName: p.customer?.name || p.mobile,
-        vendorName: p.vendor.businessName,
-        totalAmount: p.amount,
-        rewardPointsEarned: p.rewardPointsEarned || 0,
-        status: 'COMPLETED',
-        createdAt: p.purchaseDate,
-        type: 'Offline'
-      }))
+      ...orders.map(o => {
+        const hasPreorderItems = o.items.some(item => !item.productId || item.productId.startsWith('po'));
+        const addr = o.shippingAddress || o.customer.addresses?.[0];
+        return {
+          id: o.id,
+          orderNumber: o.orderNumber,
+          customerName: o.customer.name,
+          vendorName: "ONLINE STORE",
+          totalAmount: o.totalAmount,
+          rewardPointsEarned: o.rewardPointsEarned || 0,
+          status: o.status,
+          createdAt: o.createdAt,
+          type: (o.type === 'Online' && hasPreorderItems) ? 'PreOrder' : o.type,
+          destination: addr ? `${addr.city}, ${addr.state}` : "Direct Dispatch"
+        };
+      }),
+      ...offlinePurchases.map(p => {
+        const addr = p.customer?.addresses?.[0];
+        return {
+          id: p.id,
+          orderNumber: `OFF-${p.id.slice(0, 8).toUpperCase()}`,
+          customerName: p.customer?.name || p.mobile,
+          vendorName: p.vendor.businessName,
+          totalAmount: p.amount,
+          rewardPointsEarned: p.rewardPointsEarned || 0,
+          status: 'COMPLETED',
+          createdAt: p.purchaseDate,
+          type: 'Offline',
+          destination: addr ? `${addr.city}, ${addr.state}` : "In-Store Pick"
+        };
+      })
     ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     return sendSuccess(res, combined, "Orders fetched");
@@ -431,9 +442,9 @@ export const createAdminOfflinePurchase = async (req, res) => {
       // Create Purchase Record
       const newPurchase = await tx.offlinePurchase.create({
         data: {
-          customerId: linkedCustomerId,
+          customer: linkedCustomerId ? { connect: { id: linkedCustomerId } } : undefined,
           customerName: fallbackCustomerName,
-          vendorId,
+          vendor: { connect: { id: vendorId } },
           mobile,
           amount,
           rewardPointsEarned,
@@ -495,28 +506,95 @@ export const getAdminOrderDetail = async (req, res) => {
     const { id } = req.params;
     const { type } = req.query;
 
-    if (type === 'Online') {
+    if (type === 'Online' || type === 'PreOrder') {
       const order = await prisma.order.findUnique({
         where: { id },
         include: {
-          customer: true,
+          customer: {
+            include: {
+              addresses: true
+            }
+          },
           vendor: true,
-          items: true,
+          items: {
+            include: {
+              product: true
+            }
+          },
           shippingAddress: true,
           trackingEvents: { orderBy: { createdAt: 'desc' } }
         }
       });
-      return sendSuccess(res, order, "Online order details fetched");
+
+      // Resolve product images for items with missing product links
+      if (order && order.items) {
+        for (const item of order.items) {
+          if (!item.product) {
+            // Step 1: Try the Product catalog
+            item.product = await prisma.product.findFirst({
+              where: { name: { contains: item.name, mode: 'insensitive' } }
+            });
+          }
+          if (!item.product) {
+            // Step 2: Try the PreOrder section config for the image
+            const preorderSection = await prisma.homepageSection.findUnique({
+              where: { componentId: 'pre-order' }
+            });
+            if (preorderSection?.settings?.preorderProducts) {
+              const match = preorderSection.settings.preorderProducts.find(
+                p => p.name?.toLowerCase() === item.name?.toLowerCase() ||
+                     p.name?.toLowerCase().includes(item.name?.toLowerCase()) ||
+                     item.name?.toLowerCase().includes(p.name?.toLowerCase())
+              );
+              if (match) {
+                item.product = {
+                  name: match.name,
+                  imageUrls: match.image ? [match.image] : [],
+                  price: match.price || item.unitPrice,
+                };
+              }
+            }
+          }
+        }
+      }
+
+      const normalizedOrder = {
+        ...order,
+        vendor: {
+          ...order.vendor,
+          businessName: "ONLINE STORE"
+        }
+      };
+      return sendSuccess(res, normalizedOrder, "Online order details fetched");
     } else {
       const purchase = await prisma.offlinePurchase.findUnique({
         where: { id },
         include: {
-          customer: true,
+          customer: {
+            include: {
+              addresses: true
+            }
+          },
           vendor: true,
-          items: true
+          items: {
+            include: {
+              product: true
+            }
+          }
         }
       });
       
+      // Fuzzy name resolution for offline items with missing product links
+      if (purchase && purchase.items) {
+        for (const item of purchase.items) {
+          if (!item.product) {
+            item.product = await prisma.product.findFirst({
+              where: { name: { equals: item.name, mode: 'insensitive' } }
+            });
+          }
+        }
+      }
+
       // Normalize offline purchase to look like an order for the frontend
       const normalized = {
         ...purchase,
@@ -627,8 +705,8 @@ export const seedFrontendProducts = async (req, res) => {
                             description: prod.benefits?.join(', ') || '',
                             price: parseFloat(prod.price) || 0,
                             stock: 100,
-                            categoryId: category.id,
-                            vendorId: vendor.id,
+                            category: { connect: { id: category.id } },
+                            vendor: { connect: { id: vendor.id } },
                             imageUrls: [imageUrl],
                             status: 'ACTIVE'
                         }
@@ -652,6 +730,65 @@ export const getAdminCategories = async (req, res) => {
     });
     return sendSuccess(res, categories, "Categories fetched");
   } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
+export const getAdminBrands = async (req, res) => {
+  try {
+    const DEFAULT_BRANDS = [
+      "SkinCeuticals", "La Roche-Posay", "Tatcha", "Drunk Elephant", "Glossier",
+      "Augustinus Bader", "e.l.f. Cosmetics", "NYX Professional Makeup", "Huda Beauty",
+      "Sol de Janeiro", "Laneige", "Lakmé", "Mamaearth", "Sugar Cosmetics",
+      "Nykaa Cosmetics", "Dot & Key", "Minimalist", "Dettol", "Detol", "Lifebuoy", 
+      "Savlon", "Pears", "Dove", "Nivea", "Garnier", "L'Oréal"
+    ];
+
+    // Fetch all brands from products
+    const products = await prisma.product.findMany({
+      select: { brand: true }
+    });
+    
+    // Fetch all vendors
+    const vendors = await prisma.vendor.findMany({
+      select: { businessName: true }
+    });
+
+    // Fetch homepage custom brands
+    const homepageBrandsSection = await prisma.homepageSection.findUnique({
+      where: { componentId: 'shop-by-brand' }
+    });
+    
+    let customHomepageBrands = [];
+    let hiddenHomepageBrands = [];
+    if (homepageBrandsSection && homepageBrandsSection.settings) {
+      const settings = homepageBrandsSection.settings;
+      if (Array.isArray(settings.brands)) {
+        customHomepageBrands = settings.brands.map(b => 
+          typeof b === 'string' ? b : b.name
+        ).filter(Boolean);
+      }
+      if (Array.isArray(settings.hiddenBrands)) {
+        hiddenHomepageBrands = settings.hiddenBrands;
+      }
+    }
+    
+    // Extract names and combine
+    const productBrands = products.map(p => p.brand).filter(Boolean);
+    const vendorNames = vendors.map(v => v.businessName).filter(Boolean);
+    
+    // Deduplicate and sort
+    const allBrands = Array.from(new Set(
+      [...DEFAULT_BRANDS, ...productBrands, ...vendorNames, ...customHomepageBrands]
+        .map(b => b?.trim())
+        .filter(Boolean)
+    )).filter(b => !hiddenHomepageBrands.includes(b)).sort((a, b) => a.localeCompare(b));
+    
+    console.log("ADMIN BRANDS FETCHED:", allBrands);
+      
+    return sendSuccess(res, allBrands, "Brands fetched");
+  } catch (error) {
+    console.error("ERROR FETCHING ADMIN BRANDS:", error);
     return sendError(res, error.message, 500);
   }
 };

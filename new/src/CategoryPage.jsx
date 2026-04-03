@@ -39,7 +39,9 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
             .then(r => r.json())
             .then(d => {
                 if (d.success) {
-                    const mapped = d.data.map(p => ({
+                    const mapped = d.data
+                        .filter(p => p.showOnline !== false && p.category?.name !== "Special Offer" && !p.specialOfferType)
+                        .map(p => ({
                         id: p.id,
                         name: p.name,
                         brand: p.brand || "OMW Skin",

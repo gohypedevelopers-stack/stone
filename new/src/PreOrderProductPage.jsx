@@ -5,20 +5,34 @@ import {
     CheckCircle, RefreshCcw, Info, Heart, Minus, Plus
 } from "lucide-react";
 
-import { PREORDER_PRODUCTS } from "./data/products";
+import { useProducts } from "./context/ProductContext";
 
 export default function PreOrderProductPage({ addToCart, wishlist = [], toggleWishlist }) {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { preorderProducts, loading } = useProducts();
 
-    const product = PREORDER_PRODUCTS.find(p => p.id === id);
+    const product = preorderProducts.find(p => p.id === id);
 
-    // Fallback if not found
+    // Scroll to top on mount
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="min-h-[70vh] flex flex-col items-center justify-center bg-[#fffcfc]">
+                <div className="w-10 h-10 border-4 border-[#d1408e] border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p className="text-xs font-bold text-stone-400 uppercase tracking-widest animate-pulse">Fetching Product...</p>
+            </div>
+        );
+    }
+
     if (!product) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-[#fffcfc]">
-                <p className="text-xl font-bold text-[#1a1a1a] mb-4">Product Not Found</p>
-                <button onClick={() => navigate(-1)} className="text-[#d1408e] hover:underline">Go Back</button>
+                <p className="text-xl font-black text-[#1a1a1a] mb-4">Product Not Found</p>
+                <button onClick={() => navigate(-1)} className="text-[#d1408e] hover:underline font-bold">Go Back</button>
             </div>
         );
     }
@@ -26,11 +40,6 @@ export default function PreOrderProductPage({ addToCart, wishlist = [], toggleWi
     const [qty, setQty] = useState(1);
     const [selectedImage, setSelectedImage] = useState(0);
     const [openAccordion, setOpenAccordion] = useState("description");
-
-    // Scroll to top on mount
-    useEffect(() => {
-        window.scrollTo(0, 0);
-    }, []);
 
     const toggleAccordion = (section) => {
         setOpenAccordion(openAccordion === section ? null : section);
@@ -52,11 +61,11 @@ export default function PreOrderProductPage({ addToCart, wishlist = [], toggleWi
                 <div className="flex flex-col-reverse md:flex-row gap-4 sticky top-[80px] h-fit">
                     {/* Thumbnails */}
                     <div className="flex md:flex-col gap-3 overflow-x-auto md:overflow-visible pb-2 md:pb-0 hide-scrollbar">
-                        {product.images.map((img, idx) => (
+                        {product.images?.map((img, idx) => (
                             <button
                                 key={idx}
                                 onClick={() => setSelectedImage(idx)}
-                                className={`w-[60px] h-[60px] md:w-[80px] md:h-[80px] rounded-[16px] overflow-hidden border-2 transition-all flex-shrink-0 ${selectedImage === idx ? "border-[#d1408e]" : "border-transparent"
+                                className={`w-[60px] h-[60px] md:w-[80px] md:h-[80px] rounded-[16px] overflow-hidden border-2 transition-all shrink-0 ${selectedImage === idx ? "border-[#d1408e]" : "border-transparent"
                                     }`}
                             >
                                 <img src={img} alt="" className="w-full h-full object-cover" />
@@ -65,7 +74,7 @@ export default function PreOrderProductPage({ addToCart, wishlist = [], toggleWi
                     </div>
 
                     {/* Main Image */}
-                    <div className="flex-1 aspect-[4/5] md:aspect-square bg-gray-50 rounded-[24px] overflow-hidden relative shadow-sm">
+                    <div className="flex-1 aspect-4/5 md:aspect-square bg-gray-50 rounded-[24px] overflow-hidden relative shadow-sm">
                         <img
                             src={product.images[selectedImage]}
                             alt={product.name}
@@ -84,10 +93,10 @@ export default function PreOrderProductPage({ addToCart, wishlist = [], toggleWi
                 <div className="flex flex-col">
 
                     <div className="mb-6">
-                        <span className="inline-block bg-[#d1408e]/10 text-[#d1408e] text-[11px] font-[800] px-3 py-1 rounded-full uppercase tracking-wider mb-3">
+                        <span className="inline-block bg-[#d1408e]/10 text-[#d1408e] text-[11px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider mb-3">
                             {product.tag}
                         </span>
-                        <h1 className="text-3xl md:text-4xl font-[900] text-[#1a1a1a] mb-2 leading-tight">
+                        <h1 className="text-3xl md:text-4xl font-black text-[#1a1a1a] mb-2 leading-tight">
                             {product.name}
                         </h1>
                         <div className="flex items-center gap-4 text-sm text-[#666]">
@@ -99,11 +108,11 @@ export default function PreOrderProductPage({ addToCart, wishlist = [], toggleWi
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-pink-50 to-purple-50 rounded-[24px] p-6 border border-pink-100 mb-8">
+                    <div className="bg-linear-to-br from-pink-50 to-purple-50 rounded-[24px] p-6 border border-pink-100 mb-8">
                         <div className="flex justify-between items-start mb-6">
                             <div>
                                 <p className="text-[13px] font-bold text-[#666] mb-1">Pre-Order Price</p>
-                                <div className="text-3xl font-[900] text-[#1a1a1a]">{typeof product.price === 'string' ? product.price : `₹${product.price.toLocaleString('en-IN')}`}</div>
+                                <div className="text-3xl font-black text-[#1a1a1a]">{typeof product.price === 'string' ? product.price : `₹${product.price.toLocaleString('en-IN')}`}</div>
                                 <p className="text-[11px] text-[#888] mt-1">Charged upon shipping</p>
                             </div>
                             <div className="text-right">
@@ -122,7 +131,7 @@ export default function PreOrderProductPage({ addToCart, wishlist = [], toggleWi
                             </div>
                             <div className="w-full h-[6px] bg-white rounded-full overflow-hidden">
                                 <div
-                                    className="h-full bg-gradient-to-r from-[#ff4fa3] to-[#d1408e] rounded-full"
+                                    className="h-full bg-linear-to-r from-[#ff4fa3] to-[#d1408e] rounded-full"
                                     style={{ width: `${(product.stockLeft / product.totalStock) * 100}%` }}
                                 />
                             </div>
@@ -132,7 +141,7 @@ export default function PreOrderProductPage({ addToCart, wishlist = [], toggleWi
                         <div className="flex flex-col gap-3">
                             <button
                                 onClick={() => addToCart && addToCart(product)}
-                                className="w-full h-[56px] bg-gradient-to-r from-[#1a1a1a] to-[#333] text-white rounded-[16px] font-[800] text-[15px] uppercase tracking-wide hover:shadow-lg hover:from-[#d1408e] hover:to-[#b03075] transition-all flex items-center justify-center gap-2">
+                                className="w-full h-[56px] bg-linear-to-r from-[#1a1a1a] to-[#333] text-white rounded-[16px] font-extrabold text-[15px] uppercase tracking-wide hover:shadow-lg hover:from-[#d1408e] hover:to-[#b03075] transition-all flex items-center justify-center gap-2">
                                 Pre-Order Now
                             </button>
                             <p className="text-center text-[11px] text-[#666] font-medium flex items-center justify-center gap-1.5">
@@ -168,7 +177,7 @@ export default function PreOrderProductPage({ addToCart, wishlist = [], toggleWi
                                     onClick={() => toggleAccordion(section.id)}
                                     className="w-full flex items-center justify-between py-2 text-left group"
                                 >
-                                    <span className="font-[800] text-[#1a1a1a] text-[15px] group-hover:text-[#d1408e] transition-colors">{section.title}</span>
+                                    <span className="font-extrabold text-[#1a1a1a] text-[15px] group-hover:text-[#d1408e] transition-colors">{section.title}</span>
                                     {openAccordion === section.id ? <Minus size={18} className="text-[#d1408e]" /> : <Plus size={18} className="text-[#ccc]" />}
                                 </button>
                                 {openAccordion === section.id && (
@@ -187,7 +196,7 @@ export default function PreOrderProductPage({ addToCart, wishlist = [], toggleWi
             <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 pb-6 z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
                 <button
                     onClick={() => addToCart && addToCart(product)}
-                    className="w-full h-[52px] bg-[#1a1a1a] text-white rounded-[14px] font-[800] text-[14px] uppercase tracking-wide">
+                    className="w-full h-[52px] bg-[#1a1a1a] text-white rounded-[14px] font-extrabold text-[14px] uppercase tracking-wide">
                     Pre-Order • {typeof product.price === 'string' ? product.price : `₹${product.price}`}
                 </button>
             </div>

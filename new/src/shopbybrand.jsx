@@ -76,19 +76,43 @@ export const BRANDS = [
   { name: "Minimalist", logo: minimalist },
 ];
 
-export default React.memo(function ShopByBrand({ onSelectBrand, isAdmin, selectedBrands }) {
+export default React.memo(function ShopByBrand({ onSelectBrand, isAdmin, selectedBrands, title, maxItems, bgColor, hiddenBrands }) {
   const navigate = useNavigate();
+  const [dbBrands, setDbBrands] = React.useState([]);
+  const API_URL = "http://localhost:5000/api";
+  const SERVER_URL = "http://localhost:5000";
 
-  // Resolve admin brands: use selectedBrands if provided, else default BRANDS
-  const adminBrands = (selectedBrands && selectedBrands.length > 0)
-    ? selectedBrands.map(b => typeof b === 'string' ? (BRANDS.find(x => x.name === b) || { name: b, logo: '' }) : b)
-    : BRANDS;
+  React.useEffect(() => {
+    fetch(`${API_URL}/products/brands`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setDbBrands(data.data || []);
+        }
+      })
+      .catch(err => console.error("Error fetching brands for slider:", err));
+  }, []);
+
+  const hidden = hiddenBrands || [];
+  const rawBrands = (selectedBrands && selectedBrands.length > 0)
+    ? selectedBrands.filter(b => !hidden.includes(typeof b === 'string' ? b : b.name))
+        .map(b => typeof b === 'string' ? (BRANDS.find(x => x.name === b) || { name: b, logo: '' }) : b)
+    : (dbBrands.length > 0 
+        ? dbBrands.filter(name => !hidden.includes(name)).map(name => BRANDS.find(x => x.name === name) || { name, logo: '' })
+        : BRANDS.filter(b => !hidden.includes(b.name))
+      );
+
+  const adminBrands = maxItems ? rawBrands.slice(0, maxItems) : rawBrands;
+
 
   return (
-    <section className="section pt-[50px] pb-[60px] rounded-[24px] bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.7),transparent_55%),radial-gradient(circle_at_80%_30%,rgba(255,255,255,0.6),transparent_55%),linear-gradient(180deg,rgba(235,215,255,0.55),rgba(255,225,243,0.45))]">
+    <section 
+      style={{ background: bgColor || undefined }}
+      className={`section pt-[50px] pb-[60px] rounded-[24px] ${!bgColor ? 'bg-white' : ''}`}
+    >
       <div className="w-full px-0 sm:px-[10px]">
         <div className="text-center">
-          <h2 className="m-0 text-[28px] font-bold">SHOP BY BRAND</h2>
+          <h2 className="m-0 text-[28px] font-bold uppercase">{title || "SHOP BY BRAND"}</h2>
           <p className="mt-2 text-[#7a6b86] text-base tracking-[0.2px]">Explore best-loved brands and new beauty breakthroughs</p>
         </div>
 
@@ -104,15 +128,19 @@ export default React.memo(function ShopByBrand({ onSelectBrand, isAdmin, selecte
                   <div className="h-[50px] w-[80px] flex items-center justify-center shrink-0">
                     {brand.logo ? (
                       <img
-                        src={brand.logo}
+                        src={brand.logo.startsWith('/uploads') ? `${SERVER_URL}${brand.logo}` : brand.logo}
                         alt={brand.name}
                         className="max-w-full max-h-full object-contain"
                         loading="lazy"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                        }}
                       />
-                    ) : (
-                      <div className="h-full w-full bg-zinc-100 rounded-lg flex items-center justify-center text-zinc-300 text-[10px] font-bold uppercase">No Logo</div>
-                    )}
+                    ) : null}
+                    <div className="h-full w-full bg-zinc-100 rounded-lg flex items-center justify-center text-zinc-300 text-[10px] font-bold uppercase" style={{ display: brand.logo ? 'none' : 'flex' }}>No Logo</div>
                   </div>
+
                   <span className="text-[12px] font-bold text-stone-700 tracking-wide">{brand.name}</span>
                 </div>
               ))}
@@ -128,7 +156,7 @@ export default React.memo(function ShopByBrand({ onSelectBrand, isAdmin, selecte
                     >
                       {brand.logo ? (
                         <img
-                          src={brand.logo}
+                          src={brand.logo.startsWith('/uploads') ? `${SERVER_URL}${brand.logo}` : brand.logo}
                           alt={brand.name}
                           className="max-w-full max-h-full object-contain transition-all duration-300 ease-out optimize-gpu"
                           loading="lazy"
@@ -149,7 +177,7 @@ export default React.memo(function ShopByBrand({ onSelectBrand, isAdmin, selecte
                     >
                       {brand.logo ? (
                         <img
-                          src={brand.logo}
+                          src={brand.logo.startsWith('/uploads') ? `${SERVER_URL}${brand.logo}` : brand.logo}
                           alt={brand.name}
                           className="max-w-full max-h-full object-contain transition-all duration-300 ease-out optimize-gpu"
                           loading="lazy"
