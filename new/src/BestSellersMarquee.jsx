@@ -19,16 +19,24 @@ const BestSellersMarquee = React.memo(function BestSellersMarquee({
   const isDraggingRef = useRef(false);
 
   const mappedProducts = useMemo(() => {
+    // If settings have specific products, find them in the inventory list. 
+    // This effectively filters out special offers because 'PRODUCTS' is pre-filtered by the parent.
     let list = settings?.products?.length > 0
-      ? settings.products.map(p => PRODUCTS.find(x => x.id === p.id) || p)
-      : PRODUCTS.filter(p => p.showOnline !== false && (p.bestSeller || p.featured || p.trending));
+      ? settings.products
+          .map(sp => PRODUCTS.find(p => String(p.id) === String(sp.id)))
+          .filter(Boolean) // Remove nulls (products not found in inventory list)
+      : PRODUCTS.filter(p => 
+          p.showOnline !== false && 
+          (p.bestSeller || p.featured || p.trending)
+        );
 
+    // Final fallback if nothing found for these criteria
     if (!settings?.products?.length && list.length === 0) {
       list = PRODUCTS.filter(p => p.showOnline !== false);
     }
 
     if (activeCategory !== "ALL") {
-      list = list.filter(p => p.category === activeCategory);
+      list = list.filter(p => p.category?.toLowerCase() === activeCategory.toLowerCase());
     }
 
     return list.slice(0, settings?.maxItems || 12);
@@ -144,8 +152,8 @@ const BestSellersMarquee = React.memo(function BestSellersMarquee({
           </div>
         </motion.div>
 
-        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-white via-white/80 to-transparent z-10 pointer-events-none" />
-        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none" />
+        <div className="absolute inset-y-0 left-0 w-32 bg-linear-to-r from-white via-white/80 to-transparent z-10 pointer-events-none" />
+        <div className="absolute inset-y-0 right-0 w-32 bg-linear-to-l from-white via-white/80 to-transparent z-10 pointer-events-none" />
       </div>
     </section>
   );

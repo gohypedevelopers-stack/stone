@@ -13,10 +13,19 @@ export const useProducts = () => {
 };
 
 const API_URL = "http://localhost:5000/api";
+const SERVER_URL = "http://localhost:5000";
+
+const getMediaUrl = (url) => {
+  if (!url) return "";
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) return url;
+  return `${SERVER_URL}/${url.replace(/^\//, "")}`;
+};
 
 export const ProductProvider = ({ children }) => {
   const [apiProducts, setApiProducts] = useState([]);
   const [preorderProducts, setPreorderProducts] = useState([]);
+  const [dynamicCategories, setDynamicCategories] = useState([]);
+  const [apiCoupons, setApiCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -30,7 +39,8 @@ export const ProductProvider = ({ children }) => {
           // Normalize: Ensure images array
           const normalized = poSection.settings.preorderProducts.map(p => ({
             ...p,
-            images: Array.isArray(p.images) ? p.images : ([p.image] || [])
+            image: getMediaUrl(p.image || p.imageUrl || (Array.isArray(p.images) ? p.images[0] : "")),
+            images: Array.isArray(p.images) ? p.images.map(getMediaUrl) : ([getMediaUrl(p.image)] || [])
           }));
           setPreorderProducts(normalized);
         }
@@ -51,12 +61,19 @@ export const ProductProvider = ({ children }) => {
         const mapped = result.data.map(p => ({
           ...p,
           id: p.id,
-          image: p.imageUrls?.[0] || 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=800&q=80',
+          image: p.imageUrls?.[0] 
+            ? getMediaUrl(p.imageUrls[0]) 
+            : 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=800&q=80',
+          imageUrls: Array.isArray(p.imageUrls) 
+            ? p.imageUrls.map(getMediaUrl) 
+            : [p.image ? getMediaUrl(p.image) : ""].filter(Boolean),
           tag: p.bestSeller ? "Best Seller" : p.newArrival ? "New Arrival" : p.trending ? "Trending" : p.category?.name || "New",
           category: p.category?.name || "Uncategorized",
+          brand: p.brand || "OMW Skincare",
           rating: p.rating || 4.5,
           reviews: p.reviews || 120,
           inStock: p.onlineStock > 0,
+          onlineStock: p.onlineStock || 0,
         }));
         setApiProducts(mapped);
       } else {
@@ -70,10 +87,32 @@ export const ProductProvider = ({ children }) => {
     }
   }, []);
 
+  const fetchCategories = useCallback(async () => {
+    try {
+      const resp = await fetch(`${API_URL}/admin/categories`);
+      const data = await resp.json();
+      if (data.success) setDynamicCategories(data.data);
+    } catch (err) {
+      console.error("Failed to fetch categories:", err);
+    }
+  }, []);
+
+  const fetchCoupons = useCallback(async () => {
+    try {
+      const resp = await fetch(`${API_URL}/coupons`);
+      const data = await resp.json();
+      if (data.success) setApiCoupons(data.data);
+    } catch (err) {
+      console.error("Failed to fetch coupons:", err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchProducts();
     fetchPreorders();
-  }, [fetchProducts, fetchPreorders]);
+    fetchCategories();
+    fetchCoupons();
+  }, [fetchProducts, fetchPreorders, fetchCategories, fetchCoupons]);
 
   // Merge static products with API products
   const allProducts = useMemo(() => {
@@ -91,10 +130,12 @@ export const ProductProvider = ({ children }) => {
     products: allProducts,
     apiProducts,
     preorderProducts: finalPreorders,
+    dynamicCategories,
+    apiCoupons,
     loading,
     error,
-    refreshProducts: () => { fetchProducts(); fetchPreorders(); }
-  }), [allProducts, apiProducts, finalPreorders, loading, error, fetchProducts, fetchPreorders]);
+    refreshProducts: () => { fetchProducts(); fetchPreorders(); fetchCategories(); fetchCoupons(); }
+  }), [allProducts, apiProducts, finalPreorders, dynamicCategories, apiCoupons, loading, error, fetchProducts, fetchPreorders, fetchCategories, fetchCoupons]);
 
   return (
     <ProductContext.Provider value={value}>

@@ -61,6 +61,10 @@ const HomePage = memo(function HomePage({
   const [serverData, setServerData] = useState(null);
   const [loading, setLoading] = useState(true);
   const { products: PRODUCTS } = useProducts();
+  
+  const inventoryProducts = useMemo(() => {
+    return (PRODUCTS || []).filter(p => !p.specialOfferType || p.specialOfferType === "None");
+  }, [PRODUCTS]);
 
   useEffect(() => {
     fetch(`${API_URL}/homepage`)
@@ -116,16 +120,31 @@ const HomePage = memo(function HomePage({
         return <OfferTimer key={key} offers={settings?.offers} />;
 
       case "upcoming-drops":
-        const onlineDropProducts = (settings?.products || []).filter(p => p.showOnline !== false).map(sp => {
-           const fullProduct = PRODUCTS.find(p => p.id === sp.id);
+        let onlineDropProducts = (settings?.products || []);
+        
+        // If settings don't have products, fallback to any product marked as pre-order in the catalog
+        if (onlineDropProducts.length === 0) {
+          onlineDropProducts = PRODUCTS.filter(p => p.isPreOrder);
+        }
+
+        const processedDropProducts = onlineDropProducts.filter(p => p.showOnline !== false).map(sp => {
+           // Find the full product from the catalog, ensuring ID type comparison is safe
+           const fullProduct = PRODUCTS.find(p => String(p.id) === String(sp.id)) || {};
+           
            return { 
              ...sp, 
+             id: sp.id || fullProduct.id,
+             name: sp.name || fullProduct.name,
+             // Map image from multiple possible properties (sp uses imageUrl from DB, fullProduct uses image from Context)
+             imageUrl: sp.image || sp.imageUrl || fullProduct.image || (fullProduct.imageUrls && fullProduct.imageUrls[0]) || "",
              price: sp.price || fullProduct?.price || 0, 
              originalPrice: sp.originalPrice || fullProduct?.originalPrice || fullProduct?.price || sp.price || 0, 
-             description: sp.description || fullProduct?.description || sp.name || '' 
+             description: sp.description || fullProduct?.description || sp.name || '',
+             launchDate: sp.launchDate || fullProduct.releaseDate || "Coming Soon"
            };
         });
-        return <UpcomingDrops key={key} onNavigate={onNavigate} wishlist={wishlist} toggleWishlist={toggleWishlist} deadline={settings?.deadline} title={section.title || settings?.promoText} products={onlineDropProducts} />;
+        return <UpcomingDrops key={key} onNavigate={onNavigate} wishlist={wishlist} toggleWishlist={toggleWishlist} deadline={settings?.deadline} title={section.title || settings?.promoText} products={processedDropProducts} />;
+
 
       case "shop-by-category":
         return <ByCategory key={key} onNavigate={onNavigate} onSelectCategory={onSelectCategory} bgColor={settings?.bgColor} title={section.title} categories={dynamicCategories.length > 0 ? dynamicCategories.map(c => ({ label: c.name, image: CATEGORY_IMAGES[c.name] || categorySphere })) : settings?.categories} maxItems={settings?.maxItems} />;
@@ -137,7 +156,7 @@ const HomePage = memo(function HomePage({
             sectionKey={key}
             section={section}
             settings={settings}
-            products={PRODUCTS}
+            products={inventoryProducts}
             addToCart={addToCart}
             onNavigate={onNavigate}
             wishlist={wishlist}
@@ -145,8 +164,8 @@ const HomePage = memo(function HomePage({
           />
         );
 
-      case "best-brand":
-        return <BestBrand key={key} onNavigate={onNavigate} addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist} title={section.title} bgColor={settings?.bgColor} />;
+
+
 
       case "special-combos":
         return <ComboSection key={key} addToCart={addToCart} onNavigate={onNavigate} />;
@@ -190,7 +209,7 @@ const HomePage = memo(function HomePage({
       default:
         return null; // Unknown custom block
     }
-  }, [onNavigate, addToCart, wishlist, toggleWishlist, PRODUCTS, onSelectCategory, onSelectBrand, onSelectConcern, onSelectOffer]);
+  }, [onNavigate, addToCart, wishlist, toggleWishlist, inventoryProducts, onSelectCategory, onSelectBrand, onSelectConcern, onSelectOffer]);
 
   if (loading) return null; // Avoid flicker
 

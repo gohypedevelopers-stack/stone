@@ -18,7 +18,7 @@ const HeroSlider = React.memo(({ customSlides }) => {
   const slideCount = slides.length;
 
   return (
-    <section className="pt-[18px]">
+    <section className="relative px-1 pt-4 pb-4 md:pt-6 md:pb-6 max-w-[1440px] mx-auto scroll-mt-24 md:scroll-mt-32">
       <div className="w-full px-0 sm:px-[10px]">
         <div
           className="relative overflow-hidden rounded-xl border border-black/6 shadow-[0_18px_40px_rgba(0,0,0,0.12)] bg-white"
@@ -37,7 +37,7 @@ const HeroSlider = React.memo(({ customSlides }) => {
             {slides.map((slide, idx) => (
               <div key={idx} className="relative flex-1 overflow-hidden group">
                 <img
-                  className="block w-full h-[585px] object-cover transition-transform duration-[2s] group-hover:scale-105 transform-gpu optimize-gpu"
+                  className="block w-full aspect-video md:aspect-[21/9] object-cover transition-transform duration-[2s] group-hover:scale-105 transform-gpu optimize-gpu"
                   src={slide.imageUrl}
                   alt={slide.title || "Banner"}
                   loading={idx === 0 ? "eager" : "lazy"}

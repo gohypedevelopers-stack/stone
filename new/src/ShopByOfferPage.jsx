@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import ProductCard from "./components/card";
-import { getAllProducts } from "./data/products";
+import { useProducts } from "./context/ProductContext";
 import { SparklesText } from "./components/ui/sparkles-text";
 import { ShieldCheck, RotateCcw, Lock, Clock, Flame, Tag, X, ChevronDown, Check, MousePointerClick, ShoppingBag, Gift, Wallet, TrendingUp, Filter, Package, Layers, Plus, Zap, Calendar, Siren, Stars, Hourglass, AlertCircle, Timer } from "lucide-react";
 
@@ -11,44 +11,58 @@ function formatINR(amount) {
 
 const OFFERS = [
     {
-        id: "flat-20",
-        label: "Flat 20% Off",
-        sub: "On orders above ₹999",
-        badge: "Hot",
+        id: "for-you",
+        label: "For You",
+        sub: "Curated picks for you",
+        badge: "Special",
         gradient: "linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)",
+    },
+    {
+        id: "price-crash",
+        label: "Price Crash",
+        sub: "Massive savings today",
+        badge: "Hot",
+        gradient: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+    },
+    {
+        id: "summer-specials",
+        label: "Summer Specials",
+        sub: "Stay fresh this season",
+        gradient: "linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)",
+    },
+    {
+        id: "min-60-off",
+        label: "Min 60% Off",
+        sub: "Deepest discounts ever",
+        badge: "Value",
+        gradient: "linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)",
+    },
+    {
+        id: "whats-new",
+        label: "What's New",
+        sub: "Latest arrivals",
+        badge: "New",
+        gradient: "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)",
     },
     {
         id: "bogo",
         label: "Buy 1 Get 1",
-        sub: "Select serums only",
-        badge: "Ends Today",
-        gradient: "linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%)",
-    },
-    {
-        id: "under-499",
-        label: "Under ₹499",
-        sub: "Budget friendly picks",
-        gradient: "linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)",
+        sub: "Double the beauty",
+        badge: "Limited",
+        gradient: "linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)",
     },
     {
         id: "combo-deals",
         label: "Combo Deals",
-        sub: "routine bundles",
-        badge: "Value",
-        gradient: "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)",
+        sub: "Complete routine bundles",
+        badge: "Bundle",
+        gradient: "linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)",
     },
     {
         id: "weekend-specials",
         label: "Weekend Specials",
         sub: "Flash sale live now",
-        gradient: "linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)",
-    },
-    {
-        id: "limited-time",
-        label: "Limited Time",
-        sub: "Grab before it's gone",
-        badge: "Urgent",
-        gradient: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+        gradient: "linear-gradient(135deg, #FF9A8B 0%, #FF6A88 55%, #FF99AC 100%)",
     },
 ];
 
@@ -67,55 +81,74 @@ const FAQS = [
     },
 ];
 
-export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart }) {
+export default function ShopByOfferPage({ initialOffer = "for-you", addToCart }) {
     const navigate = useNavigate();
+    const { products: allProducts } = useProducts();
     const [selectedOfferId, setSelectedOfferId] = useState(initialOffer);
-    const [sortBy, setSortBy] = useState("recommended"); // 'recommended' | 'price-asc' | 'price-desc'
+    const [sortBy, setSortBy] = useState("recommended");
 
-    const allProducts = getAllProducts();
-    const products = useMemo(() => allProducts.filter(p => p.showOnline !== false && p.category?.name !== "Special Offer" && !p.specialOfferType), [allProducts]);
+    // Map initialOffer if it doesn't match our normalized IDs (legacy support)
+    useEffect(() => {
+        const legacyMap = {
+            "flat-20": "price-crash",
+            "under-499": "min-60-off", // closest match
+        };
+        if (legacyMap[initialOffer]) {
+            setSelectedOfferId(legacyMap[initialOffer]);
+        } else {
+            setSelectedOfferId(initialOffer);
+        }
+    }, [initialOffer]);
 
-    // Mock filtering logic - in a real app, products would have offer tags
     const filteredProducts = useMemo(() => {
-        // Base visibility filter: hide special offers from storefront
-        let list = products.filter(p => p.showOnline !== false && p.category?.name !== "Special Offer" && !p.specialOfferType);
+        if (!allProducts || allProducts.length === 0) return [];
+        
+        let list = allProducts.filter(p => p.showOnline !== false);
 
-        // Simple pseudo-filter logic for variety
-        if (selectedOfferId === "bogo") {
-            list = list.filter((p) => p.category === "Serums" || p.price > 1200);
-        } else if (selectedOfferId === "under-499") {
-            list = list.filter((p) => p.price <= 499);
-        } else if (selectedOfferId === "flat-20") {
-            list = list.filter((p) => p.price > 800)
-        }
-        else {
-            // shuffle slightly or limit for other categories
-            list = list.slice(0, 12);
+        if (selectedOfferId === "for-you") {
+            list = list.filter(p => p.featured);
+        } else if (selectedOfferId === "price-crash") {
+            list = list.filter(p => p.discounted || p.discountPrice);
+        } else if (selectedOfferId === "whats-new") {
+            list = list.filter(p => p.newArrival);
+        } else if (selectedOfferId === "bogo") {
+            list = list.filter(p => p.specialOfferType?.toLowerCase() === "bogo");
+        } else if (selectedOfferId === "combo-deals") {
+            list = list.filter(p => p.specialOfferType?.toLowerCase() === "combo");
+        } else if (selectedOfferId === "summer-specials") {
+            list = list.filter(p => p.specialOfferType?.toLowerCase().includes("summer"));
+        } else if (selectedOfferId === "min-60-off") {
+            list = list.filter(p => {
+                if (p.price && p.discountPrice) {
+                    const discount = ((Number(p.price) - Number(p.discountPrice)) / Number(p.price)) * 100;
+                    return discount >= 60;
+                }
+                return p.price <= 499; // Fallback for "Budget"
+            });
+        } else if (selectedOfferId === "weekend-specials") {
+            list = list.filter(p => p.specialOfferType?.toLowerCase() === "weekend");
         }
 
+        // Sorting
         if (sortBy === "price-asc") {
-            list.sort((a, b) => a.price - b.price);
+            list.sort((a, b) => Number(a.price) - Number(b.price));
         } else if (sortBy === "price-desc") {
-            list.sort((a, b) => b.price - a.price);
+            list.sort((a, b) => Number(b.price) - Number(a.price));
         }
 
         return list;
-    }, [products, selectedOfferId, sortBy]);
+    }, [allProducts, selectedOfferId, sortBy]);
 
     const selectedOffer = OFFERS.find((o) => o.id === selectedOfferId) || OFFERS[0];
 
-    // --- Flat 20% Off Specific Layout ---
-    if (selectedOfferId === "flat-20") {
-        const flat20Products = products.map(p => ({
-            ...p,
-            salePrice: Math.floor(p.price * 0.8),
-            savings: Math.floor(p.price * 0.2)
-        }));
 
-        // Sort logics
-        const displayProducts = [...flat20Products];
-        if (sortBy === "price-asc") displayProducts.sort((a, b) => a.salePrice - b.salePrice);
-        if (sortBy === "price-desc") displayProducts.sort((a, b) => b.salePrice - a.salePrice);
+    // --- Price Crash (formerly Flat 20%) Specific Layout ---
+    if (selectedOfferId === "price-crash" || selectedOfferId === "flat-20") {
+        const displayProducts = filteredProducts.map(p => ({
+            ...p,
+            salePrice: p.discountPrice || Math.floor(Number(p.price) * 0.8),
+            savings: p.discountPrice ? (Number(p.price) - Number(p.discountPrice)) : Math.floor(Number(p.price) * 0.2)
+        }));
 
         // Mock countdown
         const [timeLeft, setTimeLeft] = useState({ h: 12, m: 30, s: 45 });
@@ -162,7 +195,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                                 Discount Applied
                             </div>
                             <span className="text-sm text-gray-500">
-                                You’re viewing <strong className="text-gray-900">{products.length}</strong> eligible products
+                                You’re viewing <strong className="text-gray-900">{displayProducts.length}</strong> eligible products
                             </span>
                         </div>
 
@@ -279,10 +312,10 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                     <section>
                         <h3 className="text-xl font-bold mb-6">Pair with These Offers</h3>
                         <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-                            {products.slice(8, 14).map(p => (
+                            {allProducts.slice(8, 14).map(p => (
                                 <div key={p.id} className="min-w-[160px] w-[160px]">
                                     <ProductCard
-                                        product={{ ...p, category: p.tag, inStock: true }}
+                                        product={p}
                                         onAddToCart={() => addToCart(p)}
                                         onClick={() => navigate(`/product/${p.id}`)}
                                     />
@@ -297,12 +330,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
 
     // --- Buy 1 Get 1 Specific Layout ---
     if (selectedOfferId === "bogo") {
-        const bogoProducts = products.filter(p => p.category === "Serums" || p.price > 1200); // Mock filter logic
-
-        // Sort
-        const displayProducts = [...bogoProducts];
-        if (sortBy === "price-asc") displayProducts.sort((a, b) => a.price - b.price);
-        if (sortBy === "price-desc") displayProducts.sort((a, b) => b.price - a.price);
+        const displayProducts = filteredProducts;
 
         return (
             <div className="min-h-screen bg-[#fffcfc] font-sans text-[#1b1b1b]">
@@ -428,7 +456,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                     {/* Main Logic: BOGO Grid */}
                     <section>
                         <h2 className="text-2xl font-bold mb-8 flex items-center gap-3">
-                            All Eligible Products <span className="bg-gray-100 text-gray-500 text-xs px-2 py-1 rounded-md">{products.length} Items</span>
+                            All Eligible Products <span className="bg-gray-100 text-gray-500 text-xs px-2 py-1 rounded-md">{displayProducts.length} Items</span>
                         </h2>
                         <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-x-4 gap-y-10">
                             {displayProducts.map((p) => (
@@ -460,14 +488,9 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
         );
     }
 
-    // --- Under 499 Specific Layout ---
-    if (selectedOfferId === "under-499") {
-        const under499Products = products.filter(p => p.price <= 499);
-
-        // Sort
-        const displayProducts = [...under499Products];
-        if (sortBy === "price-asc") displayProducts.sort((a, b) => a.price - b.price);
-        if (sortBy === "price-desc") displayProducts.sort((a, b) => b.price - a.price);
+    // --- Min 60% Off / Under 499 Specific Layout ---
+    if (selectedOfferId === "min-60-off" || selectedOfferId === "under-499") {
+        const displayProducts = filteredProducts;
 
         return (
             <div className="min-h-screen bg-[#f8f9fa] font-sans text-[#1b1b1b]">
@@ -500,7 +523,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                                 Price Filter Active
                             </div>
                             <span className="text-sm text-gray-500">
-                                Showing <strong className="text-gray-900">{under499Products.length}</strong> products priced under ₹499
+                                Showing <strong className="text-gray-900">{displayProducts.length}</strong> products
                             </span>
                         </div>
 
@@ -622,51 +645,51 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                 id: "bundle-1",
                 name: "Complete Radiance Kit",
                 description: "Vitamin C Serum + Daily Moisturizer",
-                products: [products[0], products[2]],
+                products: [allProducts[0], allProducts[2]],
                 price: 2400,
                 originalPrice: 3200,
                 savings: 800,
                 benefit: "Glow & Hydrate",
-                image: products[0].image, // Using first product image for demo
+                image: allProducts[0].image,
                 rating: 4.8
             },
             {
                 id: "bundle-2",
                 name: "Acne Defense Duo",
                 description: "Salicylic Cleanser + Spot Treatment",
-                products: [products[4], products[6]],
+                products: [allProducts[4], allProducts[6]],
                 price: 1500,
                 originalPrice: 2100,
                 savings: 600,
                 benefit: "Acne Control",
-                image: products[4] ? products[4].image : products[0].image,
+                image: allProducts[4] ? allProducts[4].image : allProducts[0].image,
                 rating: 4.7
             },
             {
                 id: "bundle-3",
                 name: "Weekend Prep Set",
                 description: "Exfoliating Mask + Night Cream",
-                products: [products[1], products[3]],
+                products: [allProducts[1], allProducts[3]],
                 price: 1800,
                 originalPrice: 2500,
                 savings: 700,
                 benefit: "Deep Repair",
-                image: products[1] ? products[1].image : products[0].image,
+                image: allProducts[1] ? allProducts[1].image : allProducts[0].image,
                 rating: 4.9
             },
             {
                 id: "bundle-4",
                 name: "Daily Essentials Trio",
                 description: "Cleanser + Toner + SPF",
-                products: [products[5], products[7], products[8]],
+                products: [allProducts[5], allProducts[7], allProducts[8]],
                 price: 2999,
                 originalPrice: 4200,
                 savings: 1201,
                 benefit: "Full Routine",
-                image: products[5] ? products[5].image : products[0].image,
+                image: allProducts[5] ? allProducts[5].image : allProducts[0].image,
                 rating: 4.6
             }
-        ].filter(b => b.products.every(p => p !== undefined)); // Safe check
+        ].filter(b => b.products.every(p => p !== undefined));
 
         return (
             <div className="min-h-screen bg-[#fffbf9] font-sans text-[#1b1b1b]">
@@ -799,9 +822,9 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
 
     // --- Weekend Specials Specific Layout ---
     if (selectedOfferId === "weekend-specials") {
-        const weekendProducts = products.slice(0, 12).map(p => ({
+        const displayProducts = filteredProducts.map(p => ({
             ...p,
-            weekendPrice: Math.floor(p.price * 0.85),
+            weekendPrice: p.discountPrice || Math.floor(Number(p.price) * 0.85),
             originalPrice: p.price
         }));
 
@@ -889,7 +912,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                             <Calendar className="text-pink-500" /> This Weekend's Headliners
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {weekendProducts.slice(0, 3).map((p) => (
+                            {displayProducts.slice(0, 3).map((p) => (
                                 <div key={p.id} className="relative group bg-white rounded-3xl p-6 border-2 border-transparent hover:border-pink-300 shadow-sm hover:shadow-[0_0_30px_rgba(236,72,153,0.3)] transition-all duration-300 overflow-hidden">
                                     {/* Glow Effect */}
                                     <div className="absolute -top-[50%] -left-[50%] w-[200%] h-[200%] bg-gradient-to-br from-transparent via-pink-100/30 to-transparent rotate-45 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
@@ -909,8 +932,8 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                                                 <span className="text-2xl font-black text-pink-600">{formatINR(p.weekendPrice)}</span>
                                             </div>
                                             <button
-                                                onClick={() => addToCart(p.id)}
-                                                className="w-full bg-gradient-to-r from-pink-500 to-purple-500 text-white py-3 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all"
+                                                onClick={() => addToCart(p)}
+                                                className="w-full bg-linear-to-r from-pink-500 to-purple-500 text-white py-3 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all"
                                             >
                                                 Grab Deal
                                             </button>
@@ -925,19 +948,13 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                     <section>
                         <h2 className="text-2xl font-bold mb-8">All Limited-Time Offers</h2>
                         <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-x-4 gap-y-10">
-                            {weekendProducts.map((p) => (
+                            {displayProducts.map((p) => (
                                 <div key={p.id} className="relative group">
                                     <ProductCard
-                                        product={{
-                                            ...p,
-                                            price: p.weekendPrice, // Use discounted price
-                                            category: p.tag,
-                                            inStock: true
-                                        }}
-                                        onAddToCart={() => addToCart(p.id)}
+                                        product={p}
+                                        onAddToCart={() => addToCart(p)}
+                                        onClick={() => navigate(`/product/${p.id}`)}
                                     />
-                                    {/* Subtle overlay hint */}
-                                    {/* <div className="absolute inset-0 border-2 border-pink-400/0 group-hover:border-pink-400/50 rounded-2xl transition-all pointer-events-none" /> */}
                                     <div className="absolute top-2 left-2 bg-pink-100 text-pink-700 text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider">
                                         -15%
                                     </div>
@@ -952,11 +969,11 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
 
     // --- Limited Time Offers Specific Layout ---
     if (selectedOfferId === "limited-time") {
-        const limitedTimeProducts = products.map(p => ({
+        const displayProducts = filteredProducts.map(p => ({
             ...p,
-            limitedPrice: Math.floor(p.price * 0.75), // Steeper discount for limited time
+            limitedPrice: p.discountPrice || Math.floor(Number(p.price) * 0.75),
             originalPrice: p.price,
-            endsIn: "4h 23m" // Mock individual timer
+            endsIn: "4h 23m"
         }));
 
         const [timeLeft, setTimeLeft] = useState({ h: 4, m: 59, s: 59 });
@@ -1026,7 +1043,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                             <Flame className="text-red-500 fill-red-500" /> Hurry Picks
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {limitedTimeProducts.slice(0, 3).map((p) => (
+                            {displayProducts.slice(0, 3).map((p) => (
                                 <div key={p.id} className="relative group bg-white rounded-3xl p-6 border border-gray-100 hover:border-red-200 shadow-sm hover:shadow-[0_0_20px_rgba(239,68,68,0.15)] transition-all duration-300">
                                     <div className="absolute top-4 left-4 z-10 bg-red-50 text-red-600 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
                                         <Clock size={10} /> {p.endsIn} left
@@ -1046,7 +1063,7 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                                                 </div>
                                             </div>
                                             <button
-                                                onClick={() => addToCart(p.id)}
+                                                onClick={() => addToCart(p)}
                                                 className="w-full bg-red-500 text-white py-3 rounded-xl text-sm font-bold shadow-lg shadow-red-500/20 hover:bg-red-600 transition-all"
                                             >
                                                 Add to Cart
@@ -1062,19 +1079,13 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                     <section>
                         <h2 className="text-2xl font-bold mb-8">Ends Soon</h2>
                         <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-x-4 gap-y-10">
-                            {limitedTimeProducts.map((p) => (
+                            {displayProducts.map((p) => (
                                 <div key={p.id} className="relative group">
                                     <ProductCard
-                                        product={{
-                                            ...p,
-                                            price: p.limitedPrice, // Use discounted price
-                                            category: p.tag,
-                                            inStock: true
-                                        }}
-                                        onAddToCart={() => addToCart(p.id)}
+                                        product={p}
+                                        onAddToCart={() => addToCart(p)}
+                                        onClick={() => navigate(`/product/${p.id}`)}
                                     />
-                                    {/* Pulse overlay */}
-                                    {/* <div className="absolute inset-0 border-2 border-red-500/0 group-hover:border-red-500/30 rounded-2xl transition-all pointer-events-none animate-pulse" /> */}
                                     <div className="absolute top-2 left-2 bg-red-100 text-red-600 text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider">
                                         Limited Time
                                     </div>
@@ -1161,21 +1172,23 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                     🔥 Top Deals Today
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {[...products].sort((a, b) => b.price - a.price).slice(0, 3).map((p, idx) => (
+                    {[...allProducts].sort((a, b) => Number(b.price) - Number(a.price)).slice(0, 3).map((p, idx) => (
                         <div key={p.id} className="flex bg-white border border-line-custom rounded-2xl overflow-hidden hover:shadow-lg transition-shadow">
                             <div className="w-[120px] bg-gray-50 flex items-center justify-center p-2">
                                 <img src={p.image} alt={p.name} className="max-h-full object-contain" />
                             </div>
                             <div className="flex-1 p-4 flex flex-col justify-center">
-                                <div className="text-xs font-bold text-red-500 mb-1">50% OFF</div>
+                                <div className="text-xs font-bold text-red-500 mb-1">
+                                    {p.discountPrice ? `${Math.round((1 - Number(p.discountPrice)/Number(p.price)) * 100)}% OFF` : "SPECIAL OFFER"}
+                                </div>
                                 <h3 className="font-bold text-sm mb-1 line-clamp-1">{p.name}</h3>
                                 <div className="text-xs text-muted-custom mb-3 line-clamp-1">{p.tag}</div>
                                 <div className="flex items-center gap-2 mb-3">
-                                    <span className="font-bold">₹{Math.floor(p.price / 2)}</span>
-                                    <span className="text-muted-custom line-through text-xs">₹{p.price}</span>
+                                    <span className="font-bold">{formatINR(p.discountPrice || p.price)}</span>
+                                    {p.discountPrice && <span className="text-muted-custom line-through text-xs">{formatINR(p.price)}</span>}
                                 </div>
                                 <button
-                                    onClick={() => addToCart(p.id)}
+                                    onClick={() => addToCart(p)}
                                     className="w-full py-2 bg-black text-white rounded-full text-xs font-medium hover:opacity-90 transition-opacity"
                                 >
                                     Add to Cart
@@ -1193,9 +1206,9 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                     {filteredProducts.map((p) => (
                         <ProductCard
                             key={p.id}
-                            product={{ ...p, category: p.tag, inStock: true }} // simple adapter
-                            onAddToCart={() => addToCart(p.id)}
-                            onClick={() => { }} // Navigate to product detail
+                            product={p}
+                            onAddToCart={() => addToCart(p)}
+                            onClick={() => navigate(`/product/${p.id}`)}
                         />
                     ))}
                 </div>
@@ -1213,11 +1226,12 @@ export default function ShopByOfferPage({ initialOffer = "flat-20", addToCart })
                     <h3 className="text-xl font-bold mb-6">You May Also Like</h3>
                     {/* Reuse a recommendation row or just random products */}
                     <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-                        {products.slice(5, 10).map(p => (
+                        {allProducts.slice(5, 10).map(p => (
                             <div key={p.id} className="min-w-[160px] w-[160px]">
                                 <ProductCard
-                                    product={{ ...p, category: p.tag, inStock: true }}
-                                    onAddToCart={() => addToCart(p.id)}
+                                    product={p}
+                                    onAddToCart={() => addToCart(p)}
+                                    onClick={() => navigate(`/product/${p.id}`)}
                                 />
                             </div>
                         ))}

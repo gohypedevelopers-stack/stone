@@ -11,6 +11,12 @@ import {
   Mail,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+const SERVER_URL = "http://localhost:5000";
+const getMediaUrl = (url) => {
+  if (!url) return "";
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) return url;
+  return `${SERVER_URL}/${url.replace(/^\//, "")}`;
+};
 import { useAuth } from "./context/AuthContext";
 import { toast } from "sonner";
 import {
@@ -124,7 +130,7 @@ export default React.memo(function UpcomingDrops({ onNavigate, title, products =
     }, 800);
   };
 
-  if (processedProducts.length === 0) return null;
+
 
   return (
     <>
@@ -178,7 +184,7 @@ export default React.memo(function UpcomingDrops({ onNavigate, title, products =
                       <div className="absolute inset-0 bg-linear-to-t from-stone-900/5 to-transparent pointer-events-none z-10" />
                       {product.image ? (
                         <img
-                          src={product.image}
+                          src={getMediaUrl(product.image)}
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 optimize-gpu"
                           loading="lazy"

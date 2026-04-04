@@ -10,6 +10,11 @@ import { Switch } from "./ui/switch";
 
 const API_URL = "http://localhost:5000/api";
 const SERVER_URL = "http://localhost:5000";
+const getMediaUrl = (url) => {
+  if (!url) return "";
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) return url;
+  return `${SERVER_URL}/${url.replace(/^\//, "")}`;
+};
 
 export default function UpcomingDropsManager() {
   const [sectionConfig, setSectionConfig] = useState(null);
@@ -280,7 +285,7 @@ export default function UpcomingDropsManager() {
               <div className="aspect-4/3 w-full bg-stone-50 border-b border-stone-100 relative group-img flex items-center justify-center p-6 overflow-hidden">
                 <div className="absolute inset-0 bg-linear-to-t from-stone-900/5 to-transparent z-0 pointer-events-none" />
                 {item.imageUrl ? (
-                  <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain rounded-[2px] relative z-10 mix-blend-multiply group-hover:scale-105 transition-transform duration-500" />
+                  <img src={getMediaUrl(item.imageUrl)} alt={item.name} className="w-full h-full object-contain rounded-[2px] relative z-10 mix-blend-multiply group-hover:scale-105 transition-transform duration-500" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center relative z-10">
                     <Package className="h-12 w-12 text-stone-300" />
@@ -331,7 +336,7 @@ export default function UpcomingDropsManager() {
                     <div className="flex gap-4 items-start">
                         <div className="w-24 h-24 rounded-[2px] border border-stone-200 bg-stone-50 shrink-0 overflow-hidden flex flex-col items-center justify-center relative group shadow-inner">
                             {editingItem.imageUrl ? (
-                                <img src={editingItem.imageUrl} className="w-full h-full object-cover" />
+                                <img src={getMediaUrl(editingItem.imageUrl)} className="w-full h-full object-cover" />
                             ) : (
                                 <div className="flex flex-col items-center gap-1">
                                     <Package className="h-6 w-6 text-stone-300" />

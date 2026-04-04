@@ -82,25 +82,25 @@ export default function ShopByOrigin() {
    }, [activeOrigin, activeOrigin.products.length]);
 
    return (
-      <section className="section py-24 bg-white">
-         <div className="max-w-[1440px] mx-auto px-6">
+      <section className="section py-16 md:py-24 bg-white scroll-mt-24 md:scroll-mt-32">
+         <div className="max-w-[1440px] mx-auto px-4 md:px-6">
 
             {/* Pills Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 px-2">
-               <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-[#ff3b8f] uppercase tracking-[0.4em] mb-3 leading-none animate-in fade-in slide-in-from-bottom-2 duration-700">CURATED ORIGINS</span>
-                  <h2 className="text-[48px] font-black text-[#151515] tracking-tighter uppercase leading-none animate-in fade-in slide-in-from-bottom-4 duration-1000">Shop By Origin</h2>
-               </div>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 md:gap-8 mb-12 md:mb-16">
+                <div className="flex flex-col">
+                   <span className="text-[9px] md:text-[10px] font-black text-[#ff3b8f] uppercase tracking-[0.4em] mb-2 md:mb-3 leading-none animate-in fade-in slide-in-from-bottom-2 duration-700">CURATED ORIGINS</span>
+                   <h2 className="text-3xl md:text-[48px] font-black text-[#151515] tracking-tighter uppercase leading-tight animate-in fade-in slide-in-from-bottom-4 duration-1000">Shop By Origin</h2>
+                </div>
                
-               <div className="flex gap-2 overflow-x-auto no-scrollbar py-2">
+               <div className="flex gap-2 overflow-x-auto no-scrollbar py-2 -mx-2 px-2 md:mx-0 md:px-0">
                   {ORIGINS.map(origin => (
                      <button
                         key={origin.id}
                         onClick={() => setActiveOrigin(origin)}
-                        className={`px-7 py-3 rounded-lg text-[11px] font-black transition-all duration-500 whitespace-nowrap border uppercase tracking-widest
+                        className={`px-6 md:px-7 py-2.5 md:py-3 rounded-lg text-[10px] md:text-[11px] font-black transition-all duration-500 whitespace-nowrap border uppercase tracking-widest
                     ${activeOrigin.id === origin.id
-                              ? "bg-[#151515] border-[#151515] text-white shadow-xl shadow-stone-200"
-                              : "bg-white border-stone-100 text-stone-400 hover:border-stone-300 hover:text-stone-900"}`}
+                               ? "bg-[#151515] border-[#151515] text-white shadow-xl shadow-stone-200"
+                               : "bg-white border-stone-100 text-stone-400 hover:border-stone-300 hover:text-stone-900"}`}
                      >
                         {origin.name}
                      </button>
@@ -109,10 +109,10 @@ export default function ShopByOrigin() {
             </div>
 
             {/* Hero + Products Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 lg:gap-16">
                {/* Left Hero Card */}
-               <div className="lg:col-span-5 group/hero cursor-pointer h-full">
-                  <div className="relative aspect-[4/5] h-full min-h-[550px] rounded-2xl overflow-hidden shadow-2xl shadow-stone-200 transition-all duration-1000 transform group-hover/hero:translate-y-[-8px]">
+               <div className="lg:col-span-5 group/hero cursor-pointer lg:h-full">
+                  <div className="relative aspect-[4/5] lg:h-full min-h-[350px] md:min-h-[550px] rounded-2xl overflow-hidden shadow-2xl shadow-stone-200 transition-all duration-1000 transform group-hover/hero:translate-y-[-8px]">
                      <img
                         src={activeOrigin.heroImage}
                         alt={activeOrigin.title}
@@ -122,11 +122,11 @@ export default function ShopByOrigin() {
                       />
                      <div className="absolute inset-0 bg-gradient-to-t from-stone-900/90 via-stone-900/20 to-transparent opacity-80" />
 
-                     <div className="absolute bottom-12 left-0 right-0 text-center text-white px-10 animate-in fade-in slide-in-from-bottom-6 duration-1000">
-                        <span className="text-[9px] font-black uppercase tracking-[0.5em] text-[#ff3b8f] mb-5 block opacity-0 group-hover/hero:opacity-100 transition-opacity duration-700">GLOBAL CHOICE</span>
-                        <h3 className="text-[48px] font-bold tracking-tight mb-5 leading-none group-hover/hero:scale-105 transition-transform duration-1000">{activeOrigin.title}</h3>
-                        <div className="w-12 h-px bg-white/30 mx-auto mb-5" />
-                        <p className="text-[11px] font-black uppercase tracking-[0.4em] text-white/60 leading-relaxed max-w-[280px] mx-auto">{activeOrigin.subtitle}</p>
+                     <div className="absolute bottom-10 md:bottom-12 left-0 right-0 text-center text-white px-6 md:px-10 animate-in fade-in slide-in-from-bottom-6 duration-1000">
+                        <span className="text-[9px] font-black uppercase tracking-[0.5em] text-[#ff3b8f] mb-4 md:mb-5 block opacity-0 group-hover/hero:opacity-100 transition-opacity duration-700">GLOBAL CHOICE</span>
+                        <h3 className="text-3xl md:text-[48px] font-bold tracking-tight mb-4 md:mb-5 leading-none group-hover/hero:scale-105 transition-transform duration-1000">{activeOrigin.title}</h3>
+                        <div className="w-10 md:w-12 h-px bg-white/30 mx-auto mb-4 md:mb-5" />
+                        <p className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.4em] text-white/60 leading-relaxed max-w-[280px] mx-auto">{activeOrigin.subtitle}</p>
                      </div>
 
                      <div className="absolute top-10 right-10 w-20 h-20 rounded-full border border-white/10 bg-white/10 flex items-center justify-center text-white/90 group-hover/hero:rotate-12 group-hover/hero:scale-110 shadow-2xl transition-all duration-700 transform-gpu optimize-gpu">

@@ -108,12 +108,12 @@ export default React.memo(function ShopByBrand({ onSelectBrand, isAdmin, selecte
   return (
     <section 
       style={{ background: bgColor || undefined }}
-      className={`section pt-[50px] pb-[60px] rounded-[24px] ${!bgColor ? 'bg-white' : ''}`}
+      className={`relative overflow-hidden scroll-mt-24 md:scroll-mt-32 ${isAdmin ? 'py-4' : 'py-16 md:py-10'} rounded-[24px] ${!bgColor ? 'bg-white' : ''}`}
     >
       <div className="w-full px-0 sm:px-[10px]">
-        <div className="text-center">
-          <h2 className="m-0 text-[28px] font-bold uppercase">{title || "SHOP BY BRAND"}</h2>
-          <p className="mt-2 text-[#7a6b86] text-base tracking-[0.2px]">Explore best-loved brands and new beauty breakthroughs</p>
+        <div className="text-center px-4">
+          <h2 className="m-0 text-[24px] md:text-[28px] font-black uppercase tracking-tight">{title || "SHOP BY BRAND"}</h2>
+          <p className="mt-2 text-[#7a6b86] text-xs md:text-base tracking-[0.2px]">Explore best-loved brands and new beauty breakthroughs</p>
         </div>
 
         <div className="mt-4 flex flex-col gap-[50px]">

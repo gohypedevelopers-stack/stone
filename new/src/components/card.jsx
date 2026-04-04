@@ -70,10 +70,10 @@ const ProductCard = React.memo(
           </button>
 
           {/* Stock Status Badge */}
-          <div className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg shadow-sm">
-            <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-[8px] font-black text-stone-900 tracking-widest uppercase">
-              IN STOCK
+          <div className={`absolute bottom-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg shadow-sm ${product.inStock ? "bg-white" : "bg-rose-50 border border-rose-100"}`}>
+            <div className={`w-1 h-1 rounded-full animate-pulse ${product.inStock ? "bg-green-500" : "bg-rose-500"}`} />
+            <span className={`text-[8px] font-black tracking-widest uppercase ${product.inStock ? "text-stone-900" : "text-rose-600"}`}>
+              {product.inStock ? "IN STOCK" : "OUT OF STOCK"}
             </span>
           </div>
         </div>
@@ -82,7 +82,15 @@ const ProductCard = React.memo(
         <div className="flex flex-col flex-grow p-4 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400">
-              {product.brand || "Digital Atelier"}
+              {(() => {
+                const brand = product.brand || "OMW Skincare";
+                if (brand === "OMW Skincare") {
+                  if (product.name?.includes(" – ")) return product.name.split(" – ")[0].trim();
+                  if (product.name?.includes(" - ")) return product.name.split(" - ")[0].trim();
+                  return product.name?.split(" ")[0].trim() || "OMW Skincare";
+                }
+                return brand;
+              })()}
             </span>
           </div>
 

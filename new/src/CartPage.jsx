@@ -353,7 +353,7 @@ export default function CartPage({
         const payload = {
             items: selectedItems,
             subtotal: effectiveSubtotal,
-            discount,
+            discount: totalMRPDiscount,
             shipping: shippingCost,
             total,
             promo: appliedPromo,
@@ -395,34 +395,96 @@ export default function CartPage({
                     <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 md:gap-10">
                         {/* Left column: Items list */}
                         <div className="flex flex-col gap-6 min-w-0">
-                            {/* 1. Free Shipping Progress (Updated Style) */}
-                            <div className="bg-[#fff1f7] border border-pink-100 rounded-[28px] p-6 shadow-sm relative overflow-hidden">
-                                <div className="flex items-center gap-4 mb-4">
-                                    <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-pink-500">
-                                        <Sparkles size={20} />
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex items-center justify-between mb-0.5">
-                                            <p className="text-[15px] font-black text-stone-900">
-                                                {shipProgress.remaining === 0
-                                                    ? "Free shipping unlocked!"
-                                                    : `Add ${formatINR(shipProgress.remaining)} for free shipping`}
-                                            </p>
-                                            <span className="text-[11px] font-bold text-pink-600 bg-white px-2 py-0.5 rounded-full border border-pink-50">
-                                                {shipProgress.pct}%
-                                            </span>
+                            {/* 1. Multi-Milestone Tiered Rewards */}
+                            <div className="bg-white border border-stone-100 rounded-[32px] p-6 shadow-[0_10px_40px_rgba(0,0,0,0.02)] relative overflow-hidden group/milestone transition-all duration-500 hover:shadow-[0_20px_60px_rgba(0,0,0,0.04)]">
+                                {/* Header Info */}
+                                <div className="flex items-center justify-between mb-10">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-11 h-11 rounded-2xl bg-pink-50 flex items-center justify-center text-pink-500 shadow-inner group-hover/milestone:rotate-6 transition-transform duration-500">
+                                            <Gift size={22} strokeWidth={2.5} />
                                         </div>
-                                        <p className="text-[11px] text-stone-500 font-semibold uppercase tracking-wider">
-                                            Free shipping above {formatINR(FREE_SHIP_THRESHOLD)}
-                                        </p>
+                                        <div className="leading-tight">
+                                            <p className="text-[17px] font-black text-stone-900 tracking-tight italic uppercase">
+                                                {(() => {
+                                                    const milestones = [599, 899, 1199];
+                                                    const next = milestones.find(m => effectiveSubtotal < m);
+                                                    if (!next) return "You have availed all offers!";
+                                                    return `Add ${formatINR(next - effectiveSubtotal)} to unlock next gift!`;
+                                                })()}
+                                            </p>
+                                            <p className="text-[9px] text-stone-400 font-black uppercase tracking-[0.2em] mt-1">Special tiered rewards active</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-[14px] font-black text-stone-900 leading-none">
+                                            {formatINR(effectiveSubtotal)}
+                                        </span >
+                                        <span className="text-[8px] text-stone-400 font-bold uppercase tracking-widest mt-1">CURRENT CART</span>
                                     </div>
                                 </div>
-                                <div className="h-[4px] w-full bg-white rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-linear-to-r from-pink-400 via-purple-400 to-indigo-500 rounded-full transition-all duration-1000 ease-out"
-                                        style={{ width: `${shipProgress.pct}%` }}
-                                    />
+
+                                {/* Progress Track with Milestones */}
+                                <div className="relative pt-8 pb-10 px-6">
+                                    {/* The Track */}
+                                    <div className="absolute top-1/2 left-6 right-6 h-[6px] -translate-y-1/2 bg-stone-100 rounded-full overflow-hidden">
+                                        <div 
+                                            className="h-full bg-linear-to-r from-pink-500 via-purple-500 to-indigo-600 transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(236,72,153,0.3)]"
+                                            style={{ width: `${Math.min(100, (effectiveSubtotal / 1199) * 100)}%` }}
+                                        />
+                                    </div>
+
+                                    {/* Milestone Nodes */}
+                                    <div className="relative flex justify-between">
+                                        {[
+                                            { threshold: 599, label: "Mini Sunscreen" },
+                                            { threshold: 899, label: "Mini Serum 5mL" },
+                                            { threshold: 1199, label: "Travel Pouch" }
+                                        ].map((milestone, i) => {
+                                            const isAchieved = effectiveSubtotal >= milestone.threshold;
+                                            return (
+                                                <div key={i} className="relative flex flex-col items-center group/node">
+                                                    {/* Amount Above */}
+                                                    <div className="absolute -top-10 whitespace-nowrap">
+                                                        <span className={`text-[10px] font-black uppercase tracking-widest ${isAchieved ? "text-stone-900" : "text-stone-300"} transition-colors duration-500`}>
+                                                            {formatINR(milestone.threshold)}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* The Node Icon */}
+                                                    <div className={`w-8 h-8 rounded-full border-4 flex items-center justify-center relative z-10 transition-all duration-700 transform ${
+                                                        isAchieved 
+                                                        ? "bg-white border-pink-500 text-pink-500 shadow-[0_0_20px_rgba(236,72,153,0.15)] scale-110" 
+                                                        : "bg-stone-50 border-stone-200 text-stone-200"
+                                                    }`}>
+                                                        {isAchieved ? (
+                                                            <Check size={14} strokeWidth={4} />
+                                                        ) : (
+                                                            <Gift size={12} strokeWidth={3} />
+                                                        )}
+
+                                                        {/* Pulse effect for achieved */}
+                                                        {isAchieved && (
+                                                            <span className="absolute inset-0 rounded-full bg-pink-500/20 animate-ping" />
+                                                        )}
+                                                    </div>
+
+                                                    {/* Reward Name Below */}
+                                                    <div className="absolute -bottom-10 whitespace-nowrap text-center">
+                                                        <p className={`text-[10px] font-bold leading-tight uppercase tracking-tight transition-all duration-500 ${
+                                                            isAchieved ? "text-stone-900 transform translate-y-1" : "text-stone-400"
+                                                        }`}>
+                                                            {milestone.label.split(' ').map((word, idx) => <span key={idx} className="block">{word}</span>)}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
+
+                                {/* Background Accents */}
+                                <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-pink-50/50 rounded-full blur-3xl group-hover/milestone:bg-pink-100/50 transition-colors" />
+                                <div className="absolute -top-10 -left-10 w-24 h-24 bg-purple-50/30 rounded-full blur-3xl" />
                             </div>
 
                             {/* 2. Pincode / Shipping Destination */}

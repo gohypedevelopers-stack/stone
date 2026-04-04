@@ -135,11 +135,11 @@ export default React.memo(function BySkinConcern({ onSelectConcern }) {
   }
 
   return (
-    <section className="mt-[50px] py-[56px]" aria-labelledby="skin-concern-title">
+    <section className="relative py-16 md:py-24 scroll-mt-24 md:scroll-mt-32" aria-labelledby="skin-concern-title">
       <div className="w-full px-0 sm:px-[10px] flex flex-col gap-[22px]">
-        <header className="text-center max-w-[640px] mx-auto">
-          <h2 id="skin-concern-title" className="m-[0_0_8px] text-[28px] font-[700] tracking-[-0.4px]">SHOP BY SKIN CONCERN</h2>
-          <p className="m-0 text-muted-custom text-[15px]">Find products tailored to your skin goals—fast.</p>
+        <header className="text-center max-w-[640px] mx-auto mb-10 md:mb-12">
+           <h2 id="skin-concern-title" className="m-[0_0_8px] text-[32px] md:text-[48px] font-black tracking-tighter uppercase leading-none">SHOP BY SKIN CONCERN</h2>
+           <p className="m-0 text-stone-500 text-xs md:text-[15px] uppercase tracking-widest font-bold">Find products tailored to your skin goals—fast.</p>
         </header>
 
         <div className="grid gap-[16px] no-scrollbar grid-flow-col grid-rows-[repeat(2,minmax(240px,1fr))] auto-cols-[180px] overflow-x-auto px-5 scroll-px-5 pb-[6px] snap-x snap-mandatory lg:grid-flow-row lg:grid-cols-[repeat(5,minmax(160px,1fr))] lg:grid-rows-none lg:overflow-visible lg:pb-0 lg:auto-cols-auto lg:px-0" role="list">

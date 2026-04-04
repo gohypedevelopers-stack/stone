@@ -737,7 +737,7 @@ const GenuineProductModal = ({ isOpen, onClose, brand }) => {
 
 export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist }) {
     const { id } = useParams();
-    const { products } = useProducts();
+    const { products, apiCoupons } = useProducts();
     const location = useLocation();
     const navigate = useNavigate();
     const decodedId = decodeURIComponent(id);
@@ -751,25 +751,6 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
     const [showDealModal, setShowDealModal] = useState(false);
     const [showQualityModal, setShowQualityModal] = useState(false);
     const [showGenuineModal, setShowGenuineModal] = useState(false);
-    const [coupons, setCoupons] = useState([]);
-    const [couponsLoading, setCouponsLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchCoupons = async () => {
-            try {
-                const resp = await fetch(`http://localhost:5000/api/coupons`);
-                const data = await resp.json();
-                if (data.success) {
-                    setCoupons(data.data);
-                }
-            } catch (err) {
-                console.error("Error fetching coupons:", err);
-            } finally {
-                setCouponsLoading(false);
-            }
-        };
-        fetchCoupons();
-    }, []);
 
     // Try to get product
     const stateProduct = location.state?.product;
@@ -795,21 +776,27 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
     const isWishlisted = product ? wishlist.some(item => item.id === product.id) : false;
 
     // Calculate dynamic product images (Backend Only)
-    let listImages = [];
-    const isValidImage = (img) => img && typeof img === 'string' && (img.startsWith('http') || img.startsWith('/') || img.startsWith('data:') || img.includes('static') || img.includes('assets'));
+    const listImages = (product?.imageUrls && Array.isArray(product.imageUrls) && product.imageUrls.length > 0)
+        ? product.imageUrls
+        : (product?.image ? [product.image] : ["https://images.unsplash.com/photo-1556228720-1987599988d3?auto=format&fit=crop&w=1200&q=80"]);
 
-    if (product?.imageUrls && Array.isArray(product.imageUrls) && product.imageUrls.length > 0) {
-        listImages = product.imageUrls.filter(isValidImage);
-    } else if (product?.image && isValidImage(product.image)) {
-        listImages = [product.image];
-    } else {
-        // High-fidelity fallback if NO data exists at all
-        listImages = ["https://images.unsplash.com/photo-1556228720-1987599988d3?auto=format&fit=crop&w=1200&q=80"];
+    // Extract brand from name if brand is default or missing
+    let displayBrand = product?.brand || "OMW Skincare";
+    if (!product?.brand || product.brand === "OMW Skincare") {
+        if (product?.name?.includes(" – ")) {
+            displayBrand = product.name.split(" – ")[0].trim();
+        } else if (product?.name?.includes(" - ")) {
+            displayBrand = product.name.split(" - ")[0].trim();
+        } else if (product?.name) {
+            // Take first word as a fallback for brand if it's missing
+            displayBrand = product.name.split(" ")[0].trim();
+        }
     }
 
     const fullProduct = {
         ...MOCK_PDP_DATA,
         ...product,
+        brand: displayBrand,
         images: listImages,
         ingredients: product?.ingredients || MOCK_PDP_DATA.ingredients,
         whyWeLoveIt: product?.whyWeLoveIt || "Instantly plumps skin by +45% and repairs barrier in 2 weeks.",
@@ -845,8 +832,8 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
         }
     };
 
-    const stockStatus = 12;
-    const soldCount = 842;
+    const stockStatus = product.onlineStock !== undefined ? product.onlineStock : (product.inStock ? 12 : 0);
+    const soldCount = product.soldCount || 842; // Fallback to 842 if not provided by API
 
     return (
         <div className="min-h-screen bg-white">
@@ -906,11 +893,18 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
                             <p className="text-gray-400 font-medium text-xs mt-1">Authentic {fullProduct.category || "Premium"} Collection</p>
                         </div>
 
-                        <div className="flex items-center gap-4 text-[11px] font-[1000] uppercase tracking-wider mb-8">
-                            <div className="flex items-center gap-1.5 text-red-600 bg-red-50 px-3 py-1.5 rounded-full border border-red-100">
-                                <div className="w-1 h-1 bg-red-600 rounded-full animate-pulse" />
-                                {stockStatus} in stock
-                            </div>
+                        <div className="flex items-center gap-4 text-[11px] font-black uppercase tracking-wider mb-8">
+                            {stockStatus > 0 ? (
+                                <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
+                                    <div className="w-1 h-1 bg-emerald-600 rounded-full animate-pulse" />
+                                    {stockStatus} in stock
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-1.5 text-rose-600 bg-rose-50 px-3 py-1.5 rounded-full border border-rose-100 uppercase font-black">
+                                    <X size={12} strokeWidth={3} />
+                                    Out of stock
+                                </div>
+                            )}
                             <div className="flex items-center gap-1.5 text-teal-600 bg-teal-50 px-3 py-1.5 rounded-full border border-teal-100">
                                 <Sparkles size={12} className="fill-teal-600/10" />
                                 Already {soldCount} Sold
@@ -963,10 +957,23 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
                             </button>
                         </div>
 
-                        {/* Side-by-Side Coupons */}
-                        <div className="flex gap-4 mb-8">
-                            <OfferCouponCard title="ENJOY 10% OFF ON YOUR FIRST ORDER" sub="Use this coupon at checkout" code="DELANFAMILY" />
-                            <OfferCouponCard title="FLAT 10% OFF ON DENIM EDIT" sub="Use this coupon at checkout" code="DENIM10" />
+                        {/* Side-by-Side Coupons - Now Dynamic */}
+                        <div className="flex gap-4 mb-10 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
+                            {apiCoupons && apiCoupons.length > 0 ? (
+                                apiCoupons.map((coupon) => (
+                                    <OfferCouponCard 
+                                        key={coupon.id}
+                                        title={`${coupon.discountType === "PERCENTAGE" ? "GET " + coupon.discountValue + "% OFF" : "FLAT Rs. " + coupon.discountValue + " OFF"}`} 
+                                        sub={coupon.minPurchase > 0 ? `On orders above Rs. ${coupon.minPurchase}` : "Use this coupon at checkout"} 
+                                        code={coupon.code} 
+                                    />
+                                ))
+                            ) : (
+                                <>
+                                    <OfferCouponCard title="ENJOY 10% OFF ON YOUR FIRST ORDER" sub="Use this coupon at checkout" code="DELANFAMILY" />
+                                    <OfferCouponCard title="FLAT 10% OFF ON DENIM EDIT" sub="Use this coupon at checkout" code="DENIM10" />
+                                </>
+                            )}
                         </div>
 
                         {/* Delivery Banner */}

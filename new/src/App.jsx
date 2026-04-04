@@ -29,6 +29,7 @@ import CartPage from "./CartPage.jsx";
 import CheckoutPage from "./CheckoutPage.jsx";
 import AccountPage from "./AccountPage.jsx";
 import RewardsPage from "./RewardsPage.jsx";
+import WishlistPage from "./WishlistPage.jsx";
 import { useProducts } from "@/context/ProductContext";
 import { useAuth } from "@/context/AuthContext";
 import AuthModal from "./components/AuthModal";
@@ -408,6 +409,16 @@ export default function App() {
               moveToWishlist={moveToWishlist}
               addToCart={addToCart}
               subtotal={subtotal}
+            />
+          }
+        />
+        <Route
+          path="/wishlist"
+          element={
+            <WishlistPage
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+              addToCart={addToCart}
             />
           }
         />

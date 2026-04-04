@@ -9,7 +9,11 @@ function formatINR(amount) {
 }
 
 export default function Shop({ addToCart, wishlist, toggleWishlist }) {
-    const { products: allProducts } = useProducts();
+    const { products: rawProducts } = useProducts();
+    const allProducts = useMemo(() => {
+        return (rawProducts || []).filter(p => !p.specialOfferType || p.specialOfferType === "None");
+    }, [rawProducts]);
+
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const query = searchParams.get("q")?.toLowerCase() || "";
@@ -63,7 +67,7 @@ export default function Shop({ addToCart, wishlist, toggleWishlist }) {
     return (
         <div className="w-full px-[12px] sm:px-[24px] md:px-[40px] pt-[12px] pb-[40px] lg:pt-[24px] lg:pb-[80px] flex flex-col md:flex-row gap-[24px] lg:gap-[48px] max-w-[1720px] mx-auto min-h-[80vh] relative">
             {/* Sidebar with Glassmorphism */}
-            <aside className="w-full md:w-[300px] flex-shrink-0 flex flex-col gap-[40px] md:sticky md:top-[110px] self-start h-fit z-30 transition-all duration-300 bg-white/40 backdrop-blur-2xl border border-white/60 p-8 rounded-[2px] shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+            <aside className="w-full md:w-[300px] shrink-0 flex flex-col gap-[40px] md:sticky md:top-[110px] self-start h-fit z-30 transition-all duration-300 bg-white/40 backdrop-blur-2xl border border-white/60 p-8 rounded-[2px] shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
                 {/* Header for Sidebar */}
                 <div className="pb-4 border-b border-stone-100 mb-2">
                     <h2 className="text-[20px] font-black tracking-tight text-[#1a1a1a] flex items-center gap-2">
@@ -122,7 +126,7 @@ export default function Shop({ addToCart, wishlist, toggleWishlist }) {
                         />
                         {/* Custom Handle */}
                         <div
-                            className="absolute h-6 w-6 bg-white border-2 border-stone-900 rounded-[2px] top-[1px] -translate-x-1/2 shadow-lg pointer-events-none transition-none flex items-center justify-center after:content-[''] after:w-1 after:h-1 after:bg-stone-900 after:rounded-[2px]"
+                            className="absolute h-6 w-6 bg-white border-2 border-stone-900 rounded-[2px] top-px -translate-x-1/2 shadow-lg pointer-events-none transition-none flex items-center justify-center after:content-[''] after:w-1 after:h-1 after:bg-stone-900 after:rounded-[2px]"
                             style={{ left: `${(localMaxPrice / 2000) * 100}%` }}
                         />
                     </div>
@@ -164,6 +168,7 @@ export default function Shop({ addToCart, wishlist, toggleWishlist }) {
 
                     {/* Enhanced Sort Dropdown */}
                     <div className="relative min-w-[200px]">
+                        <Search className="absolute left-4 top-px -translate-y-1/2 w-4 h-4 text-[#FF4FA3] pointer-events-none" />
                         <select
                             value={sortOrder}
                             onChange={(e) => setSortOrder(e.target.value)}
