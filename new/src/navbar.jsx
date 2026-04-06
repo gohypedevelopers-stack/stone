@@ -19,7 +19,7 @@ import accountIcon from "./assets/user-account.png";
 import cartIcon from "./assets/shopping-cart.png";
 
 import AnnouncementBar from "./components/AnnouncementBar";
-import { CATEGORY_IMAGES, categorySphere } from "./bycategory";
+import ByCategory, { CATEGORY_IMAGES, categorySphere } from "./bycategory";
 
 function SearchPlaceholder({ searchTerms }) {
   const [index, setIndex] = useState(0);
@@ -45,11 +45,13 @@ import { useAuth } from "./context/AuthContext";
 
 const Navbar = memo(function Navbar({
   categories,
+  dynamicCategories,
   query,
   onQueryChange,
   cartCount,
   onToggleCart,
   onNavigate,
+  onSelectCategory,
   wishlistCount,
   onOpenAuth,
 }) {
@@ -467,92 +469,50 @@ const Navbar = memo(function Navbar({
 
     {location.pathname === "/" && (
       <nav
-        className="border-b border-stone-100 bg-white relative overflow-x-auto no-scrollbar"
+        className="border-b border-stone-100 bg-white relative overflow-x-auto no-scrollbar py-3 md:py-4 scroll-smooth"
         aria-label="Primary categories"
       >
-            <div className="w-fit mx-auto py-2 md:py-3 flex gap-4 md:gap-8 items-center px-4 md:px-10">
-              {categories.map((c) => {
-                const isDirectLink = ["New Arrivals", "Best Sellers"].includes(
-                  c.title,
-                );
+        <div className="flex items-center gap-6 md:gap-12 px-4 md:px-10 w-max min-w-full justify-center">
+          {categories.map((c) => {
+            const isDirectLink = ["New Arrivals", "Best Sellers"].includes(c.title);
+            const targetView = c.title === "New Arrivals" ? "new-arrivals" : "best-sellers";
 
-                if (isDirectLink) {
-                  const targetView =
-                    c.title === "New Arrivals"
-                      ? "new-arrivals"
-                      : "best-sellers";
-                  return (
-                    <div key={c.key} className="static">
-                      <a
-                        className="flex flex-col items-center gap-3 text-stone-900 font-extrabold text-[13px] cursor-pointer hover:text-pink-500 transition-all group"
-                        href={`#${targetView}`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          onNavigate && onNavigate(targetView);
-                        }}
-                      >
-                        <div className="w-[100px] h-[80px] md:w-[140px] md:h-[110px] rounded-[20px] md:rounded-[28px] overflow-hidden border border-stone-100 shadow-sm group-hover:shadow-xl transition-all duration-300 group-hover:-translate-y-1 optimize-gpu shrink-0">
-                          <img
-                            src={c.image}
-                            alt={c.title}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 optimize-gpu"
-                          />
-                        </div>
-                        <span className="uppercase tracking-widest text-[11px] md:text-[13px]">
-                          {c.title}
-                        </span>
-                      </a>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div key={c.key} className="group static">
-                    <a
-                      className="flex flex-col items-center gap-3 text-stone-900 font-extrabold text-[13px] cursor-pointer hover:text-pink-500 transition-all group"
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        onNavigate && onNavigate(`category/${c.title}`);
-                      }}
-                    >
-                      <div className="w-[100px] h-[80px] md:w-[140px] md:h-[110px] rounded-[20px] md:rounded-[28px] overflow-hidden border border-stone-100 shadow-sm group-hover:shadow-xl transition-all duration-300 group-hover:-translate-y-1 optimize-gpu shrink-0">
-                        <img
-                          src={
-                            c.image ||
-                            CATEGORY_IMAGES[c.title] ||
-                            categorySphere
-                          }
-                          alt={c.title}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 optimize-gpu"
-                        />
-                      </div>
-                      <div className="flex items-center gap-1.5 uppercase tracking-widest text-[11px] md:text-[13px]">
-                        {c.title}
-                        <svg
-                          width="10"
-                          height="6"
-                          viewBox="0 0 10 6"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="group-hover:rotate-180 transition-transform duration-200"
-                        >
-                          <path
-                            d="M1 1L5 5L9 1"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </div>
-                    </a>
+            return (
+              <div key={c.key} className="flex-none">
+                <a
+                  className="flex flex-col items-center gap-2.5 md:gap-3 text-stone-900 cursor-pointer hover:text-pink-500 transition-all group"
+                  href={isDirectLink ? `#${targetView}` : "#"}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (isDirectLink) {
+                      onNavigate(targetView);
+                    } else {
+                      onNavigate(`category/${c.title}`);
+                    }
+                  }}
+                >
+                  <div className="w-[100px] h-[80px] md:w-[140px] md:h-[110px] rounded-[24px] md:rounded-[32px] overflow-hidden border border-stone-50 shadow-sm group-hover:shadow-lg transition-all duration-300 group-hover:-translate-y-1 optimize-gpu shrink-0">
+                    <img
+                      src={c.image || CATEGORY_IMAGES[c.title] || categorySphere}
+                      alt={c.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
                   </div>
-                );
-              })}
-            </div>
+                  <div className="flex items-center gap-1.5 font-black text-[10px] md:text-[12px] uppercase tracking-[0.05em] text-center whitespace-nowrap">
+                    {c.title}
+                    {!isDirectLink && (
+                      <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg" className="mt-0.5 opacity-60 group-hover:rotate-180 transition-transform duration-300">
+                        <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </div>
+                </a>
+              </div>
+            );
+          })}
+        </div>
       </nav>
-      )}
+    )}
     </>
   );
 });

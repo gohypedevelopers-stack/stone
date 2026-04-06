@@ -11,6 +11,7 @@ import analyticsRoutes from "./analytics.routes.js";
 import notificationsRoutes from "./notifications.routes.js";
 import uploadRoutes from "./upload.routes.js";
 import couponRoutes from "./coupon.routes.js";
+import { getPublicCategories } from "../controllers/admin.controller.js";
 
 const router = Router();
 
@@ -21,6 +22,8 @@ router.get("/health", (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+router.get("/categories", getPublicCategories);
 
 router.use("/auth", authRoutes);
 router.use("/vendors", vendorsRoutes);

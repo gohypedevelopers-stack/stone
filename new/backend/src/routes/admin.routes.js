@@ -14,6 +14,11 @@ import {
   approveVendor,
   seedFrontendProducts,
   getAdminCategories,
+  createAdminCategory,
+  updateAdminCategory,
+  deleteAdminCategory,
+  reorderAdminCategories,
+  seedAdminCategories,
   getAdminVendorAnalytics,
   getAdminBrands
 } from "../controllers/admin.controller.js";
@@ -48,6 +53,11 @@ router.get("/customers/:id", getAdminCustomerDetail);
 router.patch("/vendors/:id/approve", approveVendor);
 router.post("/seed-products", seedFrontendProducts);
 router.get("/categories", getAdminCategories);
+router.post("/categories", createAdminCategory);
+router.post("/categories/seed", seedAdminCategories);
+router.put("/categories/reorder", reorderAdminCategories);
+router.put("/categories/:id", updateAdminCategory);
+router.delete("/categories/:id", deleteAdminCategory);
 router.get("/brands", getAdminBrands);
 router.get("/settings/points", getPointsSettings);
 router.put("/settings/points", updatePointsSettings);

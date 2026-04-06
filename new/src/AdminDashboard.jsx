@@ -67,7 +67,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { HomepageManager } from "@/components/HomepageManager";
+
+import { AdminHomepageCategories } from "@/components/AdminHomepageCategories";
+import CategoryManager from "@/components/CategoryManager";
 import { VendorOfflineBilling } from "@/components/VendorOfflineBilling";
 import { AdminCouponManager } from "@/components/AdminCouponManager";
 import { PointsSettings } from "@/components/PointsSettings";
@@ -1060,8 +1062,8 @@ const AdminDashboard = () => {
               {[
                 { id: "overview", label: "Overview", icon: LayoutDashboard },
                 {
-                  id: "homepage-builder",
-                  label: "Homepage Builder",
+                  id: "homepage-categories",
+                  label: "Homepage Categories",
                   icon: LayoutTemplate,
                 },
               ].map((item) => (
@@ -1126,6 +1128,24 @@ const AdminDashboard = () => {
                           Products
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton
+                          isActive={activeView === "categories"}
+                          onClick={() => handleViewChange("categories")}
+                          className={cn(
+                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-[2px] transition-all duration-200",
+                            activeView === "categories"
+                              ? "bg-indigo-50 text-indigo-700 font-semibold"
+                              : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
+                          )}
+                        >
+                          {activeView === "categories" && (
+                            <div className="h-1.5 w-1.5 rounded-[2px] bg-indigo-600 mr-2" />
+                          )}
+                          Manage Categories
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
                           isActive={activeView === "preorder"}
@@ -1415,7 +1435,9 @@ const AdminDashboard = () => {
           </header>
 
           <main className="p-12 w-full">
-            {activeView === "homepage-builder" && <HomepageManager />}
+
+            {activeView === "homepage-categories" && <AdminHomepageCategories />}
+            {activeView === "categories" && <CategoryManager />}
             {activeView === "offline-billing" && <VendorOfflineBilling />}
             {activeView === "points" && <PointsSettings />}
             {activeView === "coupons" && <AdminCouponManager />}

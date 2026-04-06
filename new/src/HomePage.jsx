@@ -25,7 +25,7 @@ import { useProducts } from "./context/ProductContext";
 import { API_URL } from "@/utils/api";
 
 const STATIC_FALLBACK_ORDER = [
-  "hero-slider", "upcoming-drops", "shop-by-category",
+  "hero-slider", "upcoming-drops",
   "best-sellers", "best-brand", "special-combos", "offline-store", "hair-care-showcase", "makeup-showcase", "shop-by-origin", "shop-by-brand", "by-skin-concern", "new-arrivals",
   "watch-and-shop", "limited-offer", "shop-by-offer", "pre-order",
   "skin-quiz", "request-product"
@@ -84,9 +84,9 @@ const HomePage = memo(function HomePage({
           rawSections.splice(injectIdx, 0, { componentId: comp, isActive: true, settings: {} });
         }
       });
-      return rawSections;
+      return rawSections.filter(s => s.componentId !== "shop-by-category");
     }
-    return STATIC_FALLBACK_ORDER.map(id => ({ componentId: id, isActive: true, settings: {} }));
+    return STATIC_FALLBACK_ORDER.filter(id => id !== "shop-by-category").map(id => ({ componentId: id, isActive: true, settings: {} }));
   }, [serverData]);
 
   const renderSection = useCallback((section) => {
@@ -120,7 +120,9 @@ const HomePage = memo(function HomePage({
         break;
 
       case "shop-by-category":
-        content = <ByCategory onNavigate={onNavigate} onSelectCategory={onSelectCategory} bgColor={settings?.bgColor} title={section.title} categories={dynamicCategories.length > 0 ? dynamicCategories.map(c => ({ label: c.name, image: CATEGORY_IMAGES[c.name] || categorySphere })) : settings?.categories} maxItems={settings?.maxItems} />;
+        const customCategories = settings?.categories && settings.categories.length > 0 ? settings.categories : null;
+        const autoCategories = dynamicCategories.length > 0 ? dynamicCategories.map(c => ({ label: c.name, image: CATEGORY_IMAGES[c.name] || categorySphere })) : undefined;
+        content = <ByCategory onNavigate={onNavigate} onSelectCategory={onSelectCategory} bgColor={settings?.bgColor} title={section.title} categories={customCategories || autoCategories} maxItems={settings?.maxItems} />;
         break;
 
       case "best-sellers":

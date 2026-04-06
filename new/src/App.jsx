@@ -74,7 +74,7 @@ export default function App() {
   }); // Array of full product objects
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isRewardsOpen, setIsRewardsOpen] = useState(false);
-  const [dynamicCategories, setDynamicCategories] = useState([]);
+  
 
   // Global Smooth Scroll (Lenis)
   useEffect(() => {
@@ -102,19 +102,6 @@ export default function App() {
     };
   }, []);
 
-  useEffect(() => {
-    fetchJson("/admin/categories")
-      .then(({ data: d }) => {
-        if (d?.success) {
-          // Filter out duplicate category names
-          const unique = d.data.filter(
-            (c, i, self) => i === self.findIndex((t) => t.name === c.name),
-          );
-          setDynamicCategories(unique);
-        }
-      })
-      .catch((err) => console.error("Error fetching categories:", err));
-  }, []);
 
   // Sync Cart to localStorage
   useEffect(() => {
@@ -135,7 +122,7 @@ export default function App() {
     });
   }, [location.pathname]);
 
-  const { products: PRODUCTS } = useProducts();
+  const { products: PRODUCTS, dynamicCategories } = useProducts();
   const freeDeliveryThreshold = 999;
   const supportPhone = "+91 90000 00000";
 
@@ -260,19 +247,19 @@ export default function App() {
   // Categories Data
   const NAV_CATEGORIES = useMemo(() => {
     const base = [
-      { key: "new-arrivals", title: "New Arrivals", image: imgNewArrival },
-      { key: "best-sellers", title: "Best Sellers", image: imgBestSeller },
+
+
       { key: "serums", title: "Serums", image: imgSerums },
     ];
 
-    const dynamic = dynamicCategories.slice(0, 5).map((cat) => ({
+    const dynamic = dynamicCategories.map((cat) => ({
       key: cat.slug,
       title: cat.name,
       image: null,
     }));
 
     // Deduplicate by key
-    const unique = [...base, ...dynamic].filter(
+    const unique = [...base, ...dynamicCategories].filter(
       (item, index, self) =>
         index === self.findIndex((t) => t.key === item.key),
     );
@@ -321,12 +308,14 @@ export default function App() {
       {!isAdminPath && (
         <>
           <Navbar
+            dynamicCategories={dynamicCategories}
             categories={CATEGORIES}
             query={query}
             onQueryChange={(e) => setQuery(e.target.value)}
             cartCount={cartCount}
             onToggleCart={() => navigate("/cart")}
             onNavigate={handleNavigate}
+            onSelectCategory={(cat) => navigate(`/category/${cat}`)}
             wishlistCount={wishlist.length}
             onToggleWishlist={() => setWishlistOpen(true)}
             onOpenAuth={() => setIsAuthModalOpen(true)}

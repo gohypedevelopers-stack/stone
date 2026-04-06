@@ -722,13 +722,162 @@ export const seedFrontendProducts = async (req, res) => {
     }
 };
 
+export const getPublicCategories = async (req, res) => {
+  try {
+    const categories = await prisma.category.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: 'asc' },
+      select: { id: true, name: true, slug: true, imageUrl: true }
+    });
+    return sendSuccess(res, categories, "Categories fetched");
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
 export const getAdminCategories = async (req, res) => {
   try {
     const categories = await prisma.category.findMany({
-      orderBy: { name: 'asc' },
-      select: { id: true, name: true, slug: true }
+      orderBy: { sortOrder: 'asc' },
+      select: { id: true, name: true, slug: true, imageUrl: true, sortOrder: true, isActive: true }
     });
     return sendSuccess(res, categories, "Categories fetched");
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
+export const createAdminCategory = async (req, res) => {
+  try {
+    const { name, imageUrl, isActive } = req.body;
+    if (!name) return sendError(res, "Category name is required", 400);
+
+    const generateSlug = (text) => {
+      if (!text) return "";
+      return text.toString().toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^\w\-]+/g, '')
+          .replace(/\-\-+/g, '-')
+          .replace(/^-+/, '')
+          .replace(/-+$/, '');
+    };
+
+    const slug = generateSlug(name) + '-' + Math.random().toString(36).substring(2, 6);
+
+    // Get max sortOrder
+    const lastCategory = await prisma.category.findFirst({
+      orderBy: { sortOrder: 'desc' }
+    });
+    const sortOrder = lastCategory ? lastCategory.sortOrder + 1 : 0;
+
+    const category = await prisma.category.create({
+      data: { name, slug, imageUrl, isActive: isActive ?? true, sortOrder }
+    });
+    return sendSuccess(res, category, "Category created successfully", 201);
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
+export const updateAdminCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, imageUrl, isActive, sortOrder } = req.body;
+    
+    const updateData = {};
+    if (name) {
+      updateData.name = name;
+      // Note: We might NOT want to change the slug if only the image or status changes
+    }
+    if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
+    if (isActive !== undefined) updateData.isActive = isActive;
+    if (sortOrder !== undefined) updateData.sortOrder = sortOrder;
+
+    const category = await prisma.category.update({
+      where: { id },
+      data: updateData
+    });
+    return sendSuccess(res, category, "Category updated successfully");
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
+export const reorderAdminCategories = async (req, res) => {
+  try {
+    const { items } = req.body; // Array of { id, sortOrder }
+    if (!items || !Array.isArray(items)) {
+      return sendError(res, "Invalid items structure", 400);
+    }
+
+    await prisma.$transaction(
+      items.map(item => 
+        prisma.category.update({
+          where: { id: item.id },
+          data: { sortOrder: item.sortOrder }
+        })
+      )
+    );
+
+    return sendSuccess(res, null, "Categories reordered successfully");
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
+export const deleteAdminCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // First, check if there are products in this category
+    const productsCount = await prisma.product.count({ where: { categoryId: id } });
+    if (productsCount > 0) {
+      return sendError(res, `Cannot delete category: it still has ${productsCount} products. Please move or delete the products first.`, 400);
+    }
+
+    await prisma.category.delete({ where: { id } });
+    return sendSuccess(res, null, "Category deleted successfully");
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
+
+export const seedAdminCategories = async (req, res) => {
+  try {
+    const CATEGORIES = [
+      "B.b cream", "Blender", "Blush", "Brush", "Cleanser", "cleansing oil",
+      "compact powders", "Concealer", "Cushion foundation", "Essence",
+      "Exfoliate", "Eye cream", "Face mists", "Foundation", "Hair set",
+      "International makeup", "International skincare", "Japanese Skincare",
+      "Korean skincare", "Lip blam", "Lipstick", "Makeup remover",
+      "Mascara", "Moisturizer", "Primer", "Razor", "Serums", "Sheet masks",
+      "SKIN1004", "Sunscreen", "Sunspray", "Sunstick", "toner", "toner pads",
+      "Treatment mask"
+    ];
+
+    const generateSlug = (text) => {
+      if (!text) return "";
+      return text.toString().toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^\w\-]+/g, '')
+          .replace(/\-\-+/g, '-')
+          .replace(/^-+/, '')
+          .replace(/-+$/, '');
+    };
+
+    let createdCount = 0;
+    for (const name of CATEGORIES) {
+      const slug = generateSlug(name) + '-' + Math.random().toString(36).substring(2, 6);
+      await prisma.category.upsert({
+        where: { name: name },
+        update: {},
+        create: { name, slug }
+      });
+      createdCount++;
+    }
+
+    return sendSuccess(res, { count: createdCount }, "Categories seeded successfully");
   } catch (error) {
     return sendError(res, error.message, 500);
   }

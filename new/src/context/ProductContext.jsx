@@ -10,6 +10,7 @@ const ProductContext = createContext({
   preorderProducts: [],
   dynamicCategories: [],
   apiCoupons: [],
+  categories: [],
   loading: true,
   error: null,
   refreshProducts: () => {},
@@ -32,8 +33,20 @@ export const ProductProvider = ({ children }) => {
   const [apiProducts, setApiProducts] = useState([]);
   const [preorderProducts, setPreorderProducts] = useState([]);
   const [apiCoupons, setApiCoupons] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const fetchCategories = useCallback(async () => {
+    try {
+      const { data } = await fetchJson("/categories");
+      if (data.success) {
+        setCategories(data.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch categories:", err);
+    }
+  }, []);
 
 
   const fetchPreorders = useCallback(async () => {
@@ -95,14 +108,30 @@ export const ProductProvider = ({ children }) => {
   }, []);
 
   const dynamicCategories = useMemo(() => {
+    if (categories.length > 0) {
+      return categories.map(c => ({
+        id: c.id,
+        key: c.slug,
+        title: c.name,
+        name: c.name,
+        slug: c.slug,
+        image: c.imageUrl,
+        imageUrl: c.imageUrl
+      }));
+    }
+
     return Array.from(
       new Set(
         apiProducts
           .map((product) => product.category)
           .filter(Boolean),
       ),
-    ).sort((left, right) => left.localeCompare(right));
-  }, [apiProducts]);
+    ).sort((left, right) => left.localeCompare(right)).map(name => ({
+      key: name.toLowerCase().replace(/\s+/g, '-'),
+      title: name,
+      image: null
+    }));
+  }, [apiProducts, categories]);
 
 
   const fetchCoupons = useCallback(async () => {
@@ -118,7 +147,8 @@ export const ProductProvider = ({ children }) => {
     fetchProducts();
     fetchPreorders();
     fetchCoupons();
-  }, [fetchProducts, fetchPreorders, fetchCoupons]);
+    fetchCategories();
+  }, [fetchProducts, fetchPreorders, fetchCoupons, fetchCategories]);
 
 
   // Merge static products with API products
@@ -138,11 +168,12 @@ export const ProductProvider = ({ children }) => {
     apiProducts,
     preorderProducts: finalPreorders,
     dynamicCategories,
+    categories,
     apiCoupons,
     loading,
     error,
-    refreshProducts: () => { fetchProducts(); fetchPreorders(); fetchCoupons(); }
-  }), [allProducts, apiProducts, finalPreorders, dynamicCategories, apiCoupons, loading, error, fetchProducts, fetchPreorders, fetchCoupons]);
+    refreshProducts: () => { fetchProducts(); fetchPreorders(); fetchCoupons(); fetchCategories(); }
+  }), [allProducts, apiProducts, finalPreorders, dynamicCategories, categories, apiCoupons, loading, error, fetchProducts, fetchPreorders, fetchCoupons, fetchCategories]);
 
 
   return (

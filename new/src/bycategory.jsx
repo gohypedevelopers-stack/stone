@@ -1,5 +1,5 @@
 import React, { useRef, memo } from "react";
-import banner8 from "./assets/9.png";
+
 export { categorySphere };
 import categorySphere from "./assets/category-sphere.png";
 
@@ -217,18 +217,7 @@ export default React.memo(function ByCategory({ onNavigate, onSelectCategory, ti
           )}
         </div>
 
-        {/* Bottom Banner - Hidden in Admin */}
-        {!isAdmin && (
-          <div className="mt-20 md:mt-32 group relative rounded-[40px] overflow-hidden shadow-2xl">
-            <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors duration-500 z-10" />
-            <img
-              className="w-full h-[400px] md:h-[600px] object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
-              src={banner8}
-              alt="Featured skincare banner"
-              loading="lazy"
-            />
-          </div>
-        )}
+
       </div>
     </section>
   );
