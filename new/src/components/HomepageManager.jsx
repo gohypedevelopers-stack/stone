@@ -52,7 +52,6 @@ const DEFAULT_HERO_SLIDES = [
 
 // Import real frontend components for live preview
 import HeroSlider from "../Hero.jsx";
-import OfferTimer from "../OfferTimer.jsx";
 import UpcomingDrops from "../UpcomingDrops.jsx";
 import WatchAndShop from "../WatchAndShop.jsx";
 import ByCategory from "../bycategory.jsx";
@@ -73,7 +72,7 @@ const SERVER_URL = "http://localhost:5000";
 
 const getSectionIcon = (id) => {
   if (id === 'hero-slider') return <ImageIcon className="h-5 w-5" />;
-  if (id === 'offer-timer' || id === 'limited-offer') return <Timer className="h-5 w-5" />;
+  if (id === 'limited-offer') return <Timer className="h-5 w-5" />;
   if (id === 'upcoming-drops') return <Rocket className="h-5 w-5" />;
   if (id === 'shop-by-category') return <LayoutGrid className="h-5 w-5" />;
   if (id === 'best-sellers') return <Trophy className="h-5 w-5" />;
@@ -229,17 +228,6 @@ export function HomepageManager({ openComponentId }) {
     }
     if (section.componentId === 'hero-slider' && (!initialSettings.slides || initialSettings.slides.length === 0)) {
       initialSettings.slides = JSON.parse(JSON.stringify(DEFAULT_HERO_SLIDES));
-    }
-    if (section.componentId === 'offer-timer') {
-      if (!initialSettings.deadline) {
-        initialSettings.deadline = new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0];
-      }
-      if (!initialSettings.promoText) {
-        initialSettings.promoText = "Flash Sale Ends Soon!";
-      }
-      if (!initialSettings.offers) {
-        initialSettings.offers = [{ text: "20% OFF on orders over $100", code: "SAVE20" }];
-      }
     }
     if (section.componentId === 'upcoming-drops') {
       if (!initialSettings.deadline) {
@@ -577,7 +565,7 @@ export function HomepageManager({ openComponentId }) {
       );
     }
 
-    if (cid === 'offer-timer' || cid === 'limited-offer') {
+    if (cid === 'limited-offer') {
       const offers = draftSettings.offers || [];
       return (
         <div className="space-y-8">
@@ -1221,7 +1209,7 @@ export function HomepageManager({ openComponentId }) {
                       </button>
                     </div>
                     
-                    <div className="h-[4.5rem] w-[4.5rem] rounded-xl bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 shadow-inner">
+                    <div className="h-18 w-18 rounded-xl bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 shadow-inner">
                       <img src={p.imageUrl} className="h-full w-full object-cover" />
                     </div>
                     

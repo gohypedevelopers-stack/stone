@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, memo } from "react";
 import HeroSlider from "./Hero.jsx";
-import OfferTimer from "./OfferTimer.jsx";
 import UpcomingDrops from "./UpcomingDrops.jsx";
 import WatchAndShop from "./WatchAndShop.jsx";
 import BestSellersMarquee from "./BestSellersMarquee.jsx";
@@ -36,7 +35,7 @@ function formatINR(amount) {
 
 // Fallback order in case backend is unreachable
 const STATIC_FALLBACK_ORDER = [
-  "hero-slider", "offer-timer", "upcoming-drops", "shop-by-category",
+  "hero-slider", "upcoming-drops", "shop-by-category",
   "best-sellers", "best-brand", "special-combos", "offline-store", "hair-care-showcase", "makeup-showcase", "shop-by-origin", "shop-by-brand", "by-skin-concern", "new-arrivals",
   "watch-and-shop", "limited-offer", "shop-by-offer", "pre-order",
   "skin-quiz", "request-product"
@@ -116,8 +115,6 @@ const HomePage = memo(function HomePage({
       case "hero-slider":
         return <HeroSlider key={key} onNavigate={onNavigate} customSlides={settings?.slides?.length > 0 ? settings.slides : null} />;
 
-      case "offer-timer":
-        return <OfferTimer key={key} offers={settings?.offers} />;
 
       case "upcoming-drops":
         let onlineDropProducts = (settings?.products || []);

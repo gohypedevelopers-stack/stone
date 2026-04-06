@@ -104,7 +104,7 @@ const ProductCardMini = ({ product, onAddToCart, onClick }) => (
         className="group relative flex flex-col w-[160px] md:w-[220px] bg-white rounded-[2px] overflow-hidden border border-gray-100 hover:shadow-xl hover:shadow-gray-200/50 transition-all cursor-pointer h-full"
     >
         {/* Fixed Aspect Image */}
-        <div className="relative aspect-[4/5] bg-gray-50 overflow-hidden flex-shrink-0">
+        <div className="relative aspect-4/5 bg-gray-50 overflow-hidden shrink-0">
             <img 
                 src={product.image || "https://placehold.co/200"} 
                 alt={product.name} 
@@ -118,8 +118,21 @@ const ProductCardMini = ({ product, onAddToCart, onClick }) => (
         </div>
 
         <div className="p-4 flex flex-col flex-1">
-            {/* Category - Subtle */}
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">{product.category || "Treatment"}</p>
+            {/* Category & Brand - Subtle */}
+            <div className="flex flex-col mb-1.5">
+                <p className="text-[10px] font-black text-[#ff4fa3] uppercase tracking-[0.2em] leading-none mb-1">
+                    {(() => {
+                        const brand = product.brand || "OMW Skincare";
+                        if (brand === "OMW Skincare") {
+                            if (product.name?.includes(" – ")) return product.name.split(" – ")[0].trim();
+                            if (product.name?.includes(" - ")) return product.name.split(" - ")[0].trim();
+                            return product.name?.split(" ")[0].trim() || "OMW Skincare";
+                        }
+                        return brand;
+                    })()}
+                </p>
+                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none">{product.category || "Treatment"}</p>
+            </div>
             
             {/* Title - Fixed height container for 2 lines */}
             <div className="h-10 mb-3 overflow-hidden">
@@ -221,7 +234,7 @@ const DeliveryBanner = ({ time = "7-10 Business Days" }) => (
 
 const OfferGiftCard = ({ image, title, sub, status = "FREE", isLocked = true }) => (
     <div className="relative bg-white rounded-[2px] border border-gray-100/80 p-5 flex gap-5 h-full min-h-[160px] overflow-hidden group hover:shadow-xl hover:shadow-gray-100 transition-all">
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-50/50 to-transparent pointer-none" />
+        <div className="absolute inset-0 bg-linear-to-r from-gray-50/50 to-transparent pointer-none" />
         
         <div className="w-28 h-28 rounded-[2px] overflow-hidden bg-gray-50 relative z-10 shrink-0">
             <img src={image} alt={title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
@@ -247,7 +260,7 @@ const OfferGiftCard = ({ image, title, sub, status = "FREE", isLocked = true }) 
 );
 
 const OfferSampleCard = ({ title, sub, color = "from-emerald-50 to-white" }) => (
-    <div className={`relative bg-gradient-to-br ${color} rounded-[2px] border border-emerald-100/50 p-6 flex flex-col h-full min-h-[160px] overflow-hidden group hover:shadow-xl hover:shadow-emerald-100/20 transition-all`}>
+    <div className={`relative bg-linear-to-br ${color} rounded-[2px] border border-emerald-100/50 p-6 flex flex-col h-full min-h-[160px] overflow-hidden group hover:shadow-xl hover:shadow-emerald-100/20 transition-all`}>
         {/* Decorative Background Icon */}
         <div className="absolute -right-6 -bottom-6 text-emerald-500/10 opacity-[0.08] transform -rotate-12 group-hover:scale-125 transition-transform">
              <Sparkles size={140} strokeWidth={1} />
@@ -274,7 +287,7 @@ const LimitedGiftCard = ({ image, brand, name, unclaimed, total }) => {
     const progress = ((total - unclaimed) / total) * 100;
     return (
         <div className="bg-white rounded-[2px] border border-gray-100 p-4 flex gap-6 items-center flex-1">
-            <div className="w-32 h-32 rounded-[2px] overflow-hidden bg-gray-50 flex-shrink-0">
+            <div className="w-32 h-32 rounded-[2px] overflow-hidden bg-gray-50 shrink-0">
                 <img src={image} alt={name} className="w-full h-full object-cover" />
             </div>
             <div className="flex-1 space-y-3">
@@ -312,11 +325,11 @@ const MegaDealBanner = ({ price, discount, onOpenDetails }) => (
         
         <div className="flex items-center justify-between mb-4 relative z-10">
             <div className="flex items-center gap-5">
-                <div className="bg-gradient-to-r from-pink-600 to-[#E11D48] text-white text-[10px] font-black px-4 py-1.5 rounded-[2px] shadow-sm tracking-widest uppercase transform -skew-x-12 border border-white/10 ring-4 ring-pink-50">
+                <div className="bg-linear-to-r from-pink-600 to-[#E11D48] text-white text-[10px] font-black px-4 py-1.5 rounded-[2px] shadow-sm tracking-widest uppercase transform -skew-x-12 border border-white/10 ring-4 ring-pink-50">
                     MEGA DEAL
                 </div>
                 <div className="flex items-baseline gap-2 pt-1">
-                    <span className="text-[13px] font-[900] text-gray-400 uppercase tracking-tight">Get at</span>
+                    <span className="text-[13px] font-black text-gray-400 uppercase tracking-tight">Get at</span>
                     <span className="text-2xl font-black text-[#1a1a1a] tracking-tight">₹{price}</span>
                 </div>
             </div>
@@ -351,8 +364,8 @@ const QualitySeal = ({ onClick }) => (
                  <div className="text-sky-500 transform scale-150 drop-shadow-sm">
                     <CheckCircle size={32} strokeWidth={3} className="fill-sky-50 shadow-blue-200" />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
-                       <div className="w-1.5 h-3 bg-red-400 rounded-[2px] rotate-[-45deg] origin-top" />
-                       <div className="w-1.5 h-3 bg-red-400 rounded-[2px] rotate-[45deg] origin-top" />
+                       <div className="w-1.5 h-3 bg-red-400 rounded-[2px] -rotate-45 origin-top" />
+                       <div className="w-1.5 h-3 bg-red-400 rounded-[2px] rotate-45 origin-top" />
                     </div>
                  </div>
              </div>
@@ -396,7 +409,7 @@ const QualityProcessModal = ({ isOpen, onClose }) => {
     ];
 
     return (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-110 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
             <div className="relative bg-white w-full max-w-lg rounded-[2px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
                 <div className="p-8 pb-4 flex justify-between items-center border-b border-gray-50">
@@ -445,7 +458,7 @@ const QualityProcessModal = ({ isOpen, onClose }) => {
 const DealDetailsModal = ({ isOpen, onClose, price, discount }) => {
     if (!isOpen) return null;
     return (
-        <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-4">
+        <div className="fixed inset-0 z-100 flex items-end md:items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
             <div className="relative bg-white w-full max-w-md rounded-[2px] overflow-hidden shadow-2xl transform transition-all animate-in fade-in slide-in-from-bottom-10 duration-300">
                 {/* Header Section */}
@@ -457,7 +470,7 @@ const DealDetailsModal = ({ isOpen, onClose, price, discount }) => {
                     <div className="bg-pink-600 text-white text-[10px] font-black px-3 py-1 rounded shadow-sm mb-4">MEGA DEAL</div>
                     
                     <div className="flex items-center gap-3 mb-2">
-                        <span className="text-2xl font-[900] text-gray-900">Get at ₹{price}</span>
+                        <span className="text-2xl font-black text-gray-900">Get at ₹{price}</span>
                         <div className="bg-[#00b852] text-white text-[10px] font-black px-3 py-1 rounded-[2px]">
                             Extra ₹{discount} Off
                         </div>
@@ -471,10 +484,10 @@ const DealDetailsModal = ({ isOpen, onClose, price, discount }) => {
                     <div className="p-5 rounded-[2px] border border-gray-100 bg-gray-50/30 flex flex-col gap-3">
                         <div className="flex justify-between items-start">
                             <div>
-                                <h5 className="text-sm font-[900] text-gray-900 mb-1">Coupon <span className="text-pink-600">MISSEDYOU</span></h5>
+                                <h5 className="text-sm font-black text-gray-900 mb-1">Coupon <span className="text-pink-600">MISSEDYOU</span></h5>
                                 <p className="text-[11px] font-bold text-gray-400">On orders above ₹699</p>
                             </div>
-                            <span className="text-sm font-[900] text-[#00b852]">₹{Math.round(discount * 0.4)} off</span>
+                            <span className="text-sm font-black text-[#00b852]">₹{Math.round(discount * 0.4)} off</span>
                         </div>
                         <div className="flex items-center gap-2 text-[10px] font-bold text-[#00b852]">
                             <CheckCircle size={14} fill="currentColor" className="text-white bg-[#00b852] rounded-[2px] border border-[#00b852]" />
@@ -491,11 +504,11 @@ const DealDetailsModal = ({ isOpen, onClose, price, discount }) => {
                                     <Banknote size={16} className="text-blue-600" />
                                 </div>
                                 <div>
-                                    <h5 className="text-sm font-[900] text-gray-900 mb-1">Flipkart SBI CC</h5>
+                                    <h5 className="text-sm font-black text-gray-900 mb-1">Flipkart SBI CC</h5>
                                     <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Min. spend ₹100 • T&C</p>
                                 </div>
                             </div>
-                            <span className="text-sm font-[900] text-[#00b852]">₹{Math.round(discount * 0.6)} off</span>
+                            <span className="text-sm font-black text-[#00b852]">₹{Math.round(discount * 0.6)} off</span>
                         </div>
                         <button className="text-[10px] font-black text-pink-600 uppercase tracking-widest flex items-center gap-1">Details <ChevronDown size={12} /></button>
                     </div>
@@ -693,7 +706,7 @@ const DeliverySection = () => {
 const GenuineProductModal = ({ isOpen, onClose, brand }) => {
     if (!isOpen) return null;
     return (
-        <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-0 md:p-4">
+        <div className="fixed inset-0 z-110 flex items-end sm:items-center justify-center p-0 md:p-4">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
             <div className="relative bg-white w-full max-w-lg rounded-t-[40px] sm:rounded-[2px] overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-300">
                 <div className="p-8 pb-4 flex justify-between items-center border-b border-gray-50">
@@ -1052,19 +1065,26 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
 
 
             {/* Recommendation Section */}
-            <div className="max-w-7xl mx-auto px-4 md:px-8 py-20 bg-white">
-                <SectionHeader title="You Might Also Love" />
-                <div className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide">
-                    {products.slice(0, 6).map(p => (
-                        <ProductCardMini 
-                            key={p.id} 
-                            product={p} 
-                            onAddToCart={addToCart} 
-                            onClick={() => navigate(`/product/${p.id}`)}
-                        />
-                    ))}
+            {products.length > 1 && (
+                <div className="max-w-7xl mx-auto px-4 md:px-8 py-20 bg-white">
+                    <SectionHeader title="You Might Also Love" />
+                    <div className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide">
+                        {[...products]
+                            .filter(p => String(p.id) !== String(product.id))
+                            .sort(() => 0.5 - Math.random()) // Simple shuffle
+                            .slice(0, 6)
+                            .map(p => (
+                                <ProductCardMini 
+                                    key={p.id} 
+                                    product={p} 
+                                    onAddToCart={addToCart} 
+                                    onClick={() => navigate(`/product/${p.id}`)}
+                                />
+                            ))
+                        }
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Modals */}
             <QualityProcessModal isOpen={showQualityModal} onClose={() => setShowQualityModal(false)} />
