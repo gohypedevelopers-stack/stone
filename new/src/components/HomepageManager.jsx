@@ -65,10 +65,7 @@ import LimitedOfferBanner from "../LimitedOfferBanner.jsx";
 import RequestProductSection from "../RequestProductSection.jsx";
 import PreOrderSection from "../PreOrderSection.jsx";
 import { THEME } from "../theme.js";
-
-
-const API_URL = "http://localhost:5000/api";
-const SERVER_URL = "http://localhost:5000";
+import { API_URL, SERVER_URL } from "@/utils/api";
 
 const getSectionIcon = (id) => {
   if (id === 'hero-slider') return <ImageIcon className="h-5 w-5" />;
@@ -1077,7 +1074,7 @@ export function HomepageManager({ openComponentId }) {
                                 if (data.success) {
                                   let newUrl = data.data[0];
                                   if (newUrl.startsWith("/app/")) {
-                                    newUrl = `http://localhost:5000/uploads/${newUrl.split('/').pop()}`;
+                                    newUrl = `${SERVER_URL}/uploads/${newUrl.split('/').pop()}`;
                                   }
                                   const nC = [...cats]; nC[idx].image = newUrl;
                                   setDraftSettings({ ...draftSettings, categories: nC });

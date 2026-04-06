@@ -9,8 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { THEME } from "../theme";
-
-const API_URL = "http://localhost:5000/api";
+import { API_URL } from "@/utils/api";
 
 export const PointsSettings = () => {
   const [pointsPerAmount, setPointsPerAmount] = useState(2);

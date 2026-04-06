@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { 
+import {
   Trophy, 
   Star, 
   Gift, 
@@ -12,6 +12,7 @@ import {
   Award
 } from "lucide-react";
 import { toast } from "sonner";
+import { API_URL } from "@/utils/api";
 
 export default function RewardsPage() {
   const { user } = useAuth();
@@ -27,7 +28,7 @@ export default function RewardsPage() {
 
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/auth/profile?customerId=${user.id}`);
+        const res = await fetch(`${API_URL}/auth/profile?customerId=${user.id}`);
         const data = await res.json();
         if (data.success) {
           setProfile(data.data);

@@ -19,31 +19,17 @@ import ShopByOrigin from "./ShopByOrigin.jsx";
 import LimitedOfferBanner from "./LimitedOfferBanner.jsx";
 import RequestProductSection from "./RequestProductSection.jsx";
 import PreOrderSection from "./PreOrderSection.jsx";
-
-
+import LazySection from "./components/LazySection.jsx";
 
 import { useProducts } from "./context/ProductContext";
+import { API_URL } from "@/utils/api";
 
-const API_URL = "http://localhost:5000/api";
-
-function formatINR(amount) {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-  }).format(amount);
-}
-
-// Fallback order in case backend is unreachable
 const STATIC_FALLBACK_ORDER = [
   "hero-slider", "upcoming-drops", "shop-by-category",
   "best-sellers", "best-brand", "special-combos", "offline-store", "hair-care-showcase", "makeup-showcase", "shop-by-origin", "shop-by-brand", "by-skin-concern", "new-arrivals",
   "watch-and-shop", "limited-offer", "shop-by-offer", "pre-order",
   "skin-quiz", "request-product"
 ];
-
-// Static data removed
-
-
 
 const HomePage = memo(function HomePage({
   addToCart,
@@ -75,7 +61,6 @@ const HomePage = memo(function HomePage({
       })
       .catch(() => {
         console.warn("Using static layout fallback");
-        // Fallback to empty data on API error
         setServerData({ sections: [] });
       })
       .finally(() => setLoading(false));
@@ -91,7 +76,6 @@ const HomePage = memo(function HomePage({
     if (serverData && serverData.sections && serverData.sections.length > 0) {
       rawSections = serverData.sections.filter(s => s.isActive).sort((a, b) => a.sortOrder - b.sortOrder);
 
-      // Ensure new components are present if missing from dynamic server data
       ["best-brand", "special-combos", "offline-store", "hair-care-showcase", "makeup-showcase", "shop-by-origin"].forEach(comp => {
         if (!rawSections.find(s => s.componentId === comp)) {
           const prevMap = { "best-brand": "best-sellers", "special-combos": "best-brand", "offline-store": "special-combos", "hair-care-showcase": "offline-store", "makeup-showcase": "hair-care-showcase", "shop-by-origin": "makeup-showcase" };
@@ -102,37 +86,29 @@ const HomePage = memo(function HomePage({
       });
       return rawSections;
     }
-    // If serverData is null (still loading) or no active sections, use fallback
     return STATIC_FALLBACK_ORDER.map(id => ({ componentId: id, isActive: true, settings: {} }));
   }, [serverData]);
 
-
   const renderSection = useCallback((section) => {
     const { componentId, settings } = section;
-    const key = `${componentId}-${section.sortOrder || 0}`; // Use sortOrder for key if available, otherwise 0
+    const key = `${componentId}-${section.sortOrder || 0}`;
 
+    let content = null;
     switch (componentId) {
       case "hero-slider":
         return <HeroSlider key={key} onNavigate={onNavigate} customSlides={settings?.slides?.length > 0 ? settings.slides : null} />;
 
-
       case "upcoming-drops":
         let onlineDropProducts = (settings?.products || []);
-        
-        // If settings don't have products, fallback to any product marked as pre-order in the catalog
         if (onlineDropProducts.length === 0) {
           onlineDropProducts = PRODUCTS.filter(p => p.isPreOrder);
         }
-
         const processedDropProducts = onlineDropProducts.filter(p => p.showOnline !== false).map(sp => {
-           // Find the full product from the catalog, ensuring ID type comparison is safe
            const fullProduct = PRODUCTS.find(p => String(p.id) === String(sp.id)) || {};
-           
            return { 
              ...sp, 
              id: sp.id || fullProduct.id,
              name: sp.name || fullProduct.name,
-             // Map image from multiple possible properties (sp uses imageUrl from DB, fullProduct uses image from Context)
              imageUrl: sp.image || sp.imageUrl || fullProduct.image || (fullProduct.imageUrls && fullProduct.imageUrls[0]) || "",
              price: sp.price || fullProduct?.price || 0, 
              originalPrice: sp.originalPrice || fullProduct?.originalPrice || fullProduct?.price || sp.price || 0, 
@@ -140,16 +116,16 @@ const HomePage = memo(function HomePage({
              launchDate: sp.launchDate || fullProduct.releaseDate || "Coming Soon"
            };
         });
-        return <UpcomingDrops key={key} onNavigate={onNavigate} wishlist={wishlist} toggleWishlist={toggleWishlist} deadline={settings?.deadline} title={section.title || settings?.promoText} products={processedDropProducts} />;
-
+        content = <UpcomingDrops onNavigate={onNavigate} wishlist={wishlist} toggleWishlist={toggleWishlist} deadline={settings?.deadline} title={section.title || settings?.promoText} products={processedDropProducts} />;
+        break;
 
       case "shop-by-category":
-        return <ByCategory key={key} onNavigate={onNavigate} onSelectCategory={onSelectCategory} bgColor={settings?.bgColor} title={section.title} categories={dynamicCategories.length > 0 ? dynamicCategories.map(c => ({ label: c.name, image: CATEGORY_IMAGES[c.name] || categorySphere })) : settings?.categories} maxItems={settings?.maxItems} />;
+        content = <ByCategory onNavigate={onNavigate} onSelectCategory={onSelectCategory} bgColor={settings?.bgColor} title={section.title} categories={dynamicCategories.length > 0 ? dynamicCategories.map(c => ({ label: c.name, image: CATEGORY_IMAGES[c.name] || categorySphere })) : settings?.categories} maxItems={settings?.maxItems} />;
+        break;
 
       case "best-sellers":
-        return (
+        content = (
           <BestSellersMarquee
-            key={key}
             sectionKey={key}
             section={section}
             settings={settings}
@@ -160,55 +136,65 @@ const HomePage = memo(function HomePage({
             toggleWishlist={toggleWishlist}
           />
         );
-
-
-
+        break;
 
       case "special-combos":
-        return <ComboSection key={key} addToCart={addToCart} onNavigate={onNavigate} />;
+        content = <ComboSection addToCart={addToCart} onNavigate={onNavigate} />;
+        break;
 
       case "offline-store":
-        return <OfflineStore key={key} />;
-
-
-
+        content = <OfflineStore />;
+        break;
 
       case "shop-by-origin":
-        return <ShopByOrigin key={key} />;
+        content = <ShopByOrigin />;
+        break;
 
       case "shop-by-brand":
-        return <ShopByBrand key={key} onSelectBrand={onSelectBrand} title={section.title} maxItems={settings?.maxItems} bgColor={settings?.bgColor} hiddenBrands={settings?.hiddenBrands} />;
+        content = <ShopByBrand onSelectBrand={onSelectBrand} title={section.title} maxItems={settings?.maxItems} bgColor={settings?.bgColor} hiddenBrands={settings?.hiddenBrands} />;
+        break;
 
       case "by-skin-concern":
-        return <BySkinConcern key={key} onSelectConcern={onSelectConcern} title={section.title} bgColor={settings?.bgColor} />;
+        content = <BySkinConcern onSelectConcern={onSelectConcern} title={section.title} bgColor={settings?.bgColor} />;
+        break;
 
       case "new-arrivals":
-        return <NewArrivalsSection key={key} onNavigate={onNavigate} title={section.title} maxItems={settings?.maxItems} bgColor={settings?.bgColor} />;
+        content = <NewArrivalsSection onNavigate={onNavigate} title={section.title} maxItems={settings?.maxItems} bgColor={settings?.bgColor} />;
+        break;
 
       case "watch-and-shop":
-        return <WatchAndShop key={key} onNavigate={onNavigate} videoUrl={settings?.videoUrl} includedProducts={settings?.productsCsv} title={section.title} />;
+        content = <WatchAndShop onNavigate={onNavigate} videoUrl={settings?.videoUrl} includedProducts={settings?.productsCsv} title={section.title} />;
+        break;
 
       case "limited-offer":
-        return <LimitedOfferBanner key={key} deadline={settings?.deadline} title={settings?.promoText} />;
+        content = <LimitedOfferBanner deadline={settings?.deadline} title={settings?.promoText} />;
+        break;
 
       case "shop-by-offer":
-        return <ByOffer key={key} onNavigate={onNavigate} onSelectOffer={onSelectOffer} title={section.title} maxItems={settings?.maxItems} bgColor={settings?.bgColor} />;
+        content = <ByOffer onNavigate={onNavigate} onSelectOffer={onSelectOffer} title={section.title} maxItems={settings?.maxItems} bgColor={settings?.bgColor} />;
+        break;
 
       case "pre-order":
-        return <PreOrderSection key={key} wishlist={wishlist} toggleWishlist={toggleWishlist} title={section.title} settings={settings} />;
+        content = <PreOrderSection wishlist={wishlist} toggleWishlist={toggleWishlist} title={section.title} settings={settings} />;
+        break;
 
       case "skin-quiz":
-        return <SkinQuiz key={key} headline={settings?.headline} targetUrl={settings?.link} />;
+        content = <SkinQuiz headline={settings?.headline} targetUrl={settings?.link} />;
+        break;
 
       case "request-product":
-        return <RequestProductSection key={key} bgColor={settings?.bgColor} title={section.title} />;
-
-      default:
-        return null; // Unknown custom block
+        content = <RequestProductSection bgColor={settings?.bgColor} title={section.title} />;
+        break;
     }
-  }, [onNavigate, addToCart, wishlist, toggleWishlist, inventoryProducts, onSelectCategory, onSelectBrand, onSelectConcern, onSelectOffer]);
 
-  if (loading) return null; // Avoid flicker
+    return content ? (
+      <LazySection key={key} minHeight="400px">
+        {content}
+      </LazySection>
+    ) : null;
+  }, [onNavigate, addToCart, wishlist, toggleWishlist, inventoryProducts, onSelectCategory, onSelectBrand, onSelectConcern, onSelectOffer, PRODUCTS, dynamicCategories]);
+
+  if (loading) return null;
 
   return (
     <main>

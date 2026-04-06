@@ -21,6 +21,7 @@ import {
 
 import { useNavigate } from "react-router-dom";
 import { CATEGORY_DATA_GENERATED } from "./productData.js";
+import { API_URL } from "@/utils/api";
 
 export default function CategoryPage({ category = "Serums", addToCart, onCategoryChange, wishlist = [], toggleWishlist }) {
     const navigate = useNavigate();
@@ -30,8 +31,6 @@ export default function CategoryPage({ category = "Serums", addToCart, onCategor
     const itemsPerPage = 15;
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
-
-    const API_URL = "http://localhost:5000/api";
 
     useEffect(() => {
         setLoading(true);

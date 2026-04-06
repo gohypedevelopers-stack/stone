@@ -6,9 +6,8 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
 import { toast } from "sonner";
-
-const API_URL = "http://localhost:5000/api";
-const SERVER_URL = "http://localhost:5000";
+import { API_URL, SERVER_URL, fetchJson } from "../utils/api";
+import { resolveImage } from "../utils/urlHelper";
 
 export default function PreOrderManager() {
   const [products, setProducts] = useState([]);
@@ -28,24 +27,48 @@ export default function PreOrderManager() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [productsRes, sectionsRes] = await Promise.all([
-        axios.get(`${API_URL}/admin/products`),
-        axios.get(`${API_URL}/admin/homepage/sections`)
+      const productsPromise = fetchJson("/products");
+      const adminSectionsPromise = fetchJson("/admin/homepage/sections");
+      const homepagePromise = fetchJson("/homepage");
+
+      const [productsResult, adminSectionsResult, homepageResult] = await Promise.allSettled([
+        productsPromise,
+        adminSectionsPromise,
+        homepagePromise,
       ]);
-      
-      setProducts(productsRes.data.data || []);
-      
-      const sections = sectionsRes.data.data || [];
+
+      if (productsResult.status === "fulfilled" && productsResult.value.data?.success) {
+        setProducts(productsResult.value.data.data || []);
+      } else {
+        setProducts([]);
+      }
+
+      let sections = [];
+
+      if (adminSectionsResult.status === "fulfilled" && adminSectionsResult.value.data?.success) {
+        sections = adminSectionsResult.value.data.data || [];
+      } else if (homepageResult.status === "fulfilled" && homepageResult.value.data?.success) {
+        sections = homepageResult.value.data.data?.sections || [];
+      }
+
       const preorderSection = sections.find(s => s.componentId === "pre-order");
       
       if (preorderSection) {
         setSectionConfig(preorderSection);
         const list = (preorderSection.settings?.preorderProducts || []).map(item => ({
           ...item,
+          image: resolveImage(item.image || item.imageUrl || (Array.isArray(item.images) ? item.images[0] : "")) || "",
           totalStock: item.totalStock || item.totalSlots || 50,
           stockLeft: item.stockLeft ?? 50
         }));
         setPreorderList(list);
+      } else {
+        setSectionConfig(null);
+        setPreorderList([]);
+      }
+
+      if (sections.length === 0) {
+        throw new Error("Unable to load pre-order section data");
       }
     } catch (err) {
       console.error(err);
@@ -232,8 +255,8 @@ export default function PreOrderManager() {
               </div>
 
               <div className="aspect-4/5 w-full bg-stone-50 border-b border-stone-100 p-4">
-                {item.image ? (
-                  <img src={item.image} alt={item.name} className="w-full h-full object-contain rounded-[2px]" />
+                {resolveImage(item.image) ? (
+                  <img src={resolveImage(item.image)} alt={item.name} className="w-full h-full object-contain rounded-[2px]" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <Package className="h-12 w-12 text-stone-300" />
@@ -279,8 +302,8 @@ export default function PreOrderManager() {
                     <label className="text-[11px] font-black uppercase text-stone-500 tracking-wider">Visual Asset</label>
                     <div className="flex gap-4 items-start">
                         <div className="w-24 h-24 rounded-[2px] border border-stone-200 bg-stone-50 shrink-0 overflow-hidden flex flex-col items-center justify-center relative group">
-                            {editingItem.image ? (
-                                <img src={editingItem.image} className="w-full h-full object-contain" />
+                            {resolveImage(editingItem.image) ? (
+                                <img src={resolveImage(editingItem.image)} className="w-full h-full object-contain" />
                             ) : (
                                 <div className="flex flex-col items-center gap-1">
                                     <Package className="h-6 w-6 text-stone-300" />

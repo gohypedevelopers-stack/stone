@@ -37,8 +37,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { THEME } from "../theme";
-
-const API_URL = "http://localhost:5000/api";
+import { API_URL } from "@/utils/api";
 
 export const AdminCouponManager = () => {
   const [coupons, setCoupons] = useState([]);

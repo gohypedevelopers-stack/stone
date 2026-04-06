@@ -1,8 +1,20 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 // import { getAllProducts, PREORDER_PRODUCTS } from '../data/products';
+import { SERVER_URL, fetchJson } from "../utils/api";
+import { resolveImage } from "../utils/urlHelper";
 
 
-const ProductContext = createContext();
+const ProductContext = createContext({
+  products: [],
+  apiProducts: [],
+  preorderProducts: [],
+  dynamicCategories: [],
+  apiCoupons: [],
+  loading: true,
+  error: null,
+  refreshProducts: () => {},
+});
+
 
 export const useProducts = () => {
   const context = useContext(ProductContext);
@@ -12,27 +24,21 @@ export const useProducts = () => {
   return context;
 };
 
-const API_URL = "http://localhost:5000/api";
-const SERVER_URL = "http://localhost:5000";
-
 const getMediaUrl = (url) => {
-  if (!url) return "";
-  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) return url;
-  return `${SERVER_URL}/${url.replace(/^\//, "")}`;
+  return resolveImage(url) || "";
 };
 
 export const ProductProvider = ({ children }) => {
   const [apiProducts, setApiProducts] = useState([]);
   const [preorderProducts, setPreorderProducts] = useState([]);
-  const [dynamicCategories, setDynamicCategories] = useState([]);
   const [apiCoupons, setApiCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+
   const fetchPreorders = useCallback(async () => {
     try {
-      const res = await fetch(`${API_URL}/homepage`);
-      const data = await res.json();
+      const { data } = await fetchJson("/homepage");
       if (data.success) {
         const poSection = data.data.sections.find(s => s.componentId === 'pre-order');
         if (poSection?.settings?.preorderProducts) {
@@ -40,7 +46,9 @@ export const ProductProvider = ({ children }) => {
           const normalized = poSection.settings.preorderProducts.map(p => ({
             ...p,
             image: getMediaUrl(p.image || p.imageUrl || (Array.isArray(p.images) ? p.images[0] : "")),
-            images: Array.isArray(p.images) ? p.images.map(getMediaUrl) : ([getMediaUrl(p.image)] || [])
+            images: Array.isArray(p.images)
+              ? p.images.map(getMediaUrl).filter(Boolean)
+              : [getMediaUrl(p.image || p.imageUrl)].filter(Boolean)
           }));
           setPreorderProducts(normalized);
         }
@@ -53,8 +61,7 @@ export const ProductProvider = ({ children }) => {
   const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/admin/products`);
-      const result = await response.json();
+      const { data: result } = await fetchJson("/products");
       
       if (result.success) {
         // Map backend products to frontend format
@@ -87,20 +94,20 @@ export const ProductProvider = ({ children }) => {
     }
   }, []);
 
-  const fetchCategories = useCallback(async () => {
-    try {
-      const resp = await fetch(`${API_URL}/admin/categories`);
-      const data = await resp.json();
-      if (data.success) setDynamicCategories(data.data);
-    } catch (err) {
-      console.error("Failed to fetch categories:", err);
-    }
-  }, []);
+  const dynamicCategories = useMemo(() => {
+    return Array.from(
+      new Set(
+        apiProducts
+          .map((product) => product.category)
+          .filter(Boolean),
+      ),
+    ).sort((left, right) => left.localeCompare(right));
+  }, [apiProducts]);
+
 
   const fetchCoupons = useCallback(async () => {
     try {
-      const resp = await fetch(`${API_URL}/coupons`);
-      const data = await resp.json();
+      const { data } = await fetchJson("/coupons");
       if (data.success) setApiCoupons(data.data);
     } catch (err) {
       console.error("Failed to fetch coupons:", err);
@@ -110,9 +117,9 @@ export const ProductProvider = ({ children }) => {
   useEffect(() => {
     fetchProducts();
     fetchPreorders();
-    fetchCategories();
     fetchCoupons();
-  }, [fetchProducts, fetchPreorders, fetchCategories, fetchCoupons]);
+  }, [fetchProducts, fetchPreorders, fetchCoupons]);
+
 
   // Merge static products with API products
   const allProducts = useMemo(() => {
@@ -134,8 +141,9 @@ export const ProductProvider = ({ children }) => {
     apiCoupons,
     loading,
     error,
-    refreshProducts: () => { fetchProducts(); fetchPreorders(); fetchCategories(); fetchCoupons(); }
-  }), [allProducts, apiProducts, finalPreorders, dynamicCategories, apiCoupons, loading, error, fetchProducts, fetchPreorders, fetchCategories, fetchCoupons]);
+    refreshProducts: () => { fetchProducts(); fetchPreorders(); fetchCoupons(); }
+  }), [allProducts, apiProducts, finalPreorders, dynamicCategories, apiCoupons, loading, error, fetchProducts, fetchPreorders, fetchCoupons]);
+
 
   return (
     <ProductContext.Provider value={value}>

@@ -1,5 +1,6 @@
 import React from "react";
 import { Heart, ShoppingBag } from "lucide-react";
+import { resolveImage } from "../utils/urlHelper";
 
 /**
  * Modern "Digital Atelier" Product Card
@@ -34,20 +35,28 @@ const ProductCard = React.memo(
     const price = product.price || 0;
     const mrp = product.originalPrice || Math.round(price * 1.45); // Standard 45% markup for luxury
     const points = product.points || Math.round(price * 0.03);
+    const resolvedImage = resolveImage(product.image) || "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=600&q=80";
 
     return (
       <div
         onClick={handleNavigate}
-        className="group relative bg-white rounded-lg transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] cursor-pointer flex flex-col h-full overflow-hidden shadow-sm hover:shadow-md border-none transform-gpu optimize-gpu"
+        className="group relative bg-white rounded-lg transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] cursor-pointer flex flex-col h-full overflow-hidden shadow-sm hover:shadow-md border-none transform-gpu"
+        style={{ contentVisibility: "auto", containIntrinsicSize: "auto 420px" }}
       >
         {/* Image Container */}
         <div className="relative aspect-square overflow-hidden rounded-t-lg bg-[#F7F7F6]">
           <img
-            src={product.image || "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=600&q=80"}
+            src={resolvedImage}
             alt={product.name}
             draggable={false}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s] ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu optimize-gpu"
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s] ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu"
             loading="lazy"
+            decoding="async"
+            onError={(event) => {
+
+              event.currentTarget.onerror = null;
+              event.currentTarget.src = "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=600&q=80";
+            }}
           />
 
           {/* Points & Discount */}

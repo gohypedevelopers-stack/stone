@@ -37,6 +37,7 @@ import dotandkey from "./assets/productlogo/brands/Dot & Key_idmtCza6DA_1.png";
 import minimalist from "./assets/productlogo/brands/Minimalistinc_idImyDscM9_0.jpeg";
 // Placeholder/Fallback for potentially missing or misnamed files
 import unknown1 from "./assets/productlogo/brands/1713911.svg";
+import { API_URL } from "@/utils/api";
 
 export const BRANDS = [
   { name: "L'Oréal Paris", logo: loreal },
@@ -79,8 +80,6 @@ export const BRANDS = [
 export default React.memo(function ShopByBrand({ onSelectBrand, isAdmin, selectedBrands, title, maxItems, bgColor, hiddenBrands }) {
   const navigate = useNavigate();
   const [dbBrands, setDbBrands] = React.useState([]);
-  const API_URL = "http://localhost:5000/api";
-  const SERVER_URL = "http://localhost:5000";
 
   React.useEffect(() => {
     fetch(`${API_URL}/products/brands`)

@@ -46,6 +46,7 @@ import { toast } from "sonner";
 import CartDrawer from "./CartDrawer";
 import RewardsPopup from "./components/RewardsPopup";
 import { motion, AnimatePresence } from "framer-motion";
+import { API_URL, fetchJson } from "@/utils/api";
 
 function formatINR(amount) {
   return new Intl.NumberFormat("en-IN", {
@@ -75,8 +76,6 @@ export default function App() {
   const [isRewardsOpen, setIsRewardsOpen] = useState(false);
   const [dynamicCategories, setDynamicCategories] = useState([]);
 
-  const API_URL = "http://localhost:5000/api";
-
   // Global Smooth Scroll (Lenis)
   useEffect(() => {
     const lenis = new Lenis({
@@ -104,10 +103,9 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    fetch(`${API_URL}/admin/categories`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success) {
+    fetchJson("/admin/categories")
+      .then(({ data: d }) => {
+        if (d?.success) {
           // Filter out duplicate category names
           const unique = d.data.filter(
             (c, i, self) => i === self.findIndex((t) => t.name === c.name),

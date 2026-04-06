@@ -27,6 +27,7 @@ import { getAllProducts } from "./data/products";
 import { useAuth } from "./context/AuthContext";
 import AuthModal from "./components/AuthModal";
 import { toast } from "sonner";
+import { API_URL } from "@/utils/api";
 
 /**
  * Redesign goals (implemented):
@@ -39,8 +40,6 @@ import { toast } from "sonner";
  */
 
 import { resolveImage } from "./utils/urlHelper";
-
-const API_URL = "http://localhost:5000/api";
 
 export default function CartPage({
     cartItems = [],

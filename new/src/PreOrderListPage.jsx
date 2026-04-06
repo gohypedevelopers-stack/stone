@@ -5,6 +5,7 @@ import {
     Clock, Filter, ChevronDown, ChevronLeft, Heart, 
     ShieldCheck, Truck, RefreshCcw, Bell
 } from "lucide-react";
+import { resolveImage } from "./utils/urlHelper";
 
 export default function PreOrderListPage({ wishlist = [], toggleWishlist }) {
     const navigate = useNavigate();
@@ -146,7 +147,7 @@ export default function PreOrderListPage({ wishlist = [], toggleWishlist }) {
                                     <Heart size={18} fill={wishlist.some(i => i.id === p.id) ? "currentColor" : "none"} />
                                 </button>
                                 
-                                <img src={p.image} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={p.name} />
+                                <img src={resolveImage(p.image)} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={p.name} />
                                 
                                 <div className="absolute bottom-4 left-4 right-4">
                                     <div className="bg-white/95 backdrop-blur-sm p-3 rounded-2xl border border-white/50 shadow-sm">

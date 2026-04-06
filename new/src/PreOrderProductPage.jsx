@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 
 import { useProducts } from "./context/ProductContext";
+import { resolveImage } from "./utils/urlHelper";
 
 export default function PreOrderProductPage({ addToCart, wishlist = [], toggleWishlist }) {
     const { id } = useParams();
@@ -68,7 +69,7 @@ export default function PreOrderProductPage({ addToCart, wishlist = [], toggleWi
                                 className={`w-[60px] h-[60px] md:w-[80px] md:h-[80px] rounded-[16px] overflow-hidden border-2 transition-all shrink-0 ${selectedImage === idx ? "border-[#d1408e]" : "border-transparent"
                                     }`}
                             >
-                                <img src={img} alt="" className="w-full h-full object-cover" />
+                                <img src={resolveImage(img)} alt="" className="w-full h-full object-cover" />
                             </button>
                         ))}
                     </div>
@@ -76,7 +77,7 @@ export default function PreOrderProductPage({ addToCart, wishlist = [], toggleWi
                     {/* Main Image */}
                     <div className="flex-1 aspect-4/5 md:aspect-square bg-gray-50 rounded-[24px] overflow-hidden relative shadow-sm">
                         <img
-                            src={product.images[selectedImage]}
+                            src={resolveImage(product.images[selectedImage] || product.image)}
                             alt={product.name}
                             className="w-full h-full object-cover"
                         />

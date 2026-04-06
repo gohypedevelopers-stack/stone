@@ -4,6 +4,7 @@ import { ChevronLeft, CheckCircle, MapPin, CreditCard, Lock, User, AlertCircle, 
 import { useAuth } from "./context/AuthContext";
 import { toast } from "sonner";
 import AuthModal from "./components/AuthModal";
+import { API_URL } from "@/utils/api";
 
 export default function CheckoutPage({ setCart }) {
     const { state } = useLocation();
@@ -73,7 +74,7 @@ export default function CheckoutPage({ setCart }) {
                 }
             };
 
-            const res = await fetch("http://localhost:5000/api/orders", {
+            const res = await fetch(`${API_URL}/orders`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)

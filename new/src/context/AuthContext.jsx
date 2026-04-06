@@ -1,8 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { fetchJson } from "../utils/api";
 
 const AuthContext = createContext();
-
-const API_URL = "http://localhost:5000/api";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -11,8 +10,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchProfile = useCallback(async (customerId) => {
     try {
-      const response = await fetch(`${API_URL}/auth/profile?customerId=${customerId}`);
-      const data = await response.json();
+      const { data } = await fetchJson(`/auth/profile?customerId=${customerId}`);
       if (data.success) {
         setUser(data.data);
       } else {
@@ -39,12 +37,11 @@ export const AuthProvider = ({ children }) => {
   const login = async (mobile) => {
     setError(null);
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
+      const { data } = await fetchJson("/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mobile }),
       });
-      const data = await response.json();
       if (data.success) {
         localStorage.setItem("customerId", data.data.customer.id);
         setUser(data.data.customer);
@@ -62,12 +59,11 @@ export const AuthProvider = ({ children }) => {
   const register = async (name, mobile, email) => {
     setError(null);
     try {
-      const response = await fetch(`${API_URL}/auth/register`, {
+      const { data } = await fetchJson("/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, mobile, email }),
       });
-      const data = await response.json();
       if (data.success) {
         // After registration, log them in
         return await login(mobile);

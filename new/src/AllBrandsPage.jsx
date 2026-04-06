@@ -2,8 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { BRANDS } from "./shopbybrand.jsx";
 import { ChevronRight, ArrowLeft, Search } from "lucide-react";
-
-const API_URL = "http://localhost:5000/api";
+import { API_URL } from "@/utils/api";
 
 export default function AllBrandsPage() {
   const navigate = useNavigate();

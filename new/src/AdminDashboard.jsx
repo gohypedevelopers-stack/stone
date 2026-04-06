@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useDeferredValue } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -128,8 +128,7 @@ import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-
-const API_URL = "http://localhost:5000/api";
+import { API_URL, SERVER_URL } from "@/utils/api";
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -319,9 +318,24 @@ const AdminDashboard = () => {
 
   const getMediaUrl = (url) => {
     if (!url) return "";
-    if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    const baseUrl = API_URL.replace(/\/api$/, "");
-    return `${baseUrl}/${url.replace(/^\//, "")}`;
+    const normalized = String(url).trim();
+
+    if (
+      normalized.startsWith("http://localhost:5000/") ||
+      normalized.startsWith("https://localhost:5000/")
+    ) {
+      return normalized.replace(/^https?:\/\/localhost:5000/i, SERVER_URL);
+    }
+
+    if (normalized.startsWith("http://") || normalized.startsWith("https://")) {
+      return normalized;
+    }
+
+    if (normalized.startsWith("/app/")) {
+      return `${SERVER_URL}/uploads/${normalized.split("/").pop()}`;
+    }
+
+    return `${SERVER_URL}/${normalized.replace(/^\//, "")}`;
   };
 
   const handleDeleteProduct = async (id) => {
@@ -351,7 +365,9 @@ const AdminDashboard = () => {
     if (activeView !== "overview") {
       fetchDataForView(activeView);
       // Always fetch products part of the global cache for detail fallbacks
-      if (products.length === 0) fetchDataForView("inventory");
+      if (activeView !== "inventory" && products.length === 0) {
+        fetchDataForView("inventory");
+      }
 
       if (activeView === "inventory") {
         fetch(`${API_URL}/admin/vendors`)
@@ -495,6 +511,8 @@ const AdminDashboard = () => {
     if (selectedCategory === "All") return baseList;
     return baseList.filter((p) => p.category?.name === selectedCategory);
   }, [groupedProducts, selectedCategory]);
+
+  const deferredFilteredProducts = useDeferredValue(filteredProducts);
 
   const fetchCustomerDetail = async (id) => {
     setDetailLoading(true);
@@ -1568,7 +1586,7 @@ const AdminDashboard = () => {
                               />
                             </TableRow>
                           ))
-                        ) : filteredProducts.length === 0 ? (
+                        ) : deferredFilteredProducts.length === 0 ? (
                           <TableRow>
                             <TableCell
                               colSpan={8}
@@ -1578,7 +1596,7 @@ const AdminDashboard = () => {
                             </TableCell>
                           </TableRow>
                         ) : (
-                          filteredProducts.map((p) => (
+                          deferredFilteredProducts.map((p) => (
                             <TableRow
                               key={p.id}
                               className="border-stone-50 hover:bg-stone-50/30 transition-colors"
@@ -1597,7 +1615,12 @@ const AdminDashboard = () => {
                                           )[0],
                                         )}
                                         alt={p.name}
+                                        loading="lazy"
+                                        decoding="async"
                                         className="w-full h-full object-cover"
+                                        onError={(event) => {
+                                          event.currentTarget.style.display = "none";
+                                        }}
                                       />
                                     ) : (
                                       <div className="w-full h-full flex items-center justify-center text-stone-300 text-[10px] font-bold">

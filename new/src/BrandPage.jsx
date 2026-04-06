@@ -14,8 +14,7 @@ import {
 // Import some logos for the switcher (reusing imports for now, in real app these come from props/data)
 import laneigeLogo from "./assets/productlogo/brands/laneige-logo-brandlogos.net_hveh22jp8.svg";
 import cosrxLogo from "./assets/productlogo/brands/l-oreal-professionnel.svg"; // Placeholder
-
-const API_URL = "http://localhost:5000/api";
+import { API_URL } from "@/utils/api";
 
 export default function BrandPage({ brandName = "Laneige", onBrandChange, addToCart }) {
     const [activeFilter, setActiveFilter] = useState("All");

@@ -29,8 +29,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { printThermalReceipt } from "@/utils/printReceipt";
-
-const API_URL = "http://localhost:5000/api";
+import { API_URL } from "@/utils/api";
 
 export function VendorOfflineBilling() {
   const [vendors, setVendors] = useState([]);

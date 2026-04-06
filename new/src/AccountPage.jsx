@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useProducts } from "@/context/ProductContext";
 import { Package, MapPin, Store, Calendar, CreditCard, ChevronDown, ExternalLink } from "lucide-react";
+import { API_URL } from "@/utils/api";
 import { resolveImage } from "./utils/urlHelper";
 
 export default function AccountPage() {
@@ -18,7 +19,7 @@ export default function AccountPage() {
 
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/auth/profile?customerId=${user.id}`);
+        const res = await fetch(`${API_URL}/auth/profile?customerId=${user.id}`);
         const data = await res.json();
         if (data.success) {
           setProfile(data.data);

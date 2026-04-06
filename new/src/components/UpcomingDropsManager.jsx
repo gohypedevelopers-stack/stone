@@ -7,9 +7,7 @@ import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
 import { toast } from "sonner";
 import { Switch } from "./ui/switch";
-
-const API_URL = "http://localhost:5000/api";
-const SERVER_URL = "http://localhost:5000";
+import { API_URL, SERVER_URL } from "../utils/api";
 const getMediaUrl = (url) => {
   if (!url) return "";
   if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) return url;
