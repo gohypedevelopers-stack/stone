@@ -5,13 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Reorder, useDragControls } from "framer-motion";
+import { Reorder } from "framer-motion";
 import { 
   Plus, 
   Trash2, 
   Pencil, 
   Save, 
-  X, 
   Search, 
   Tag, 
   Sparkles, 
@@ -36,6 +35,26 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { CATEGORY_IMAGES, categorySphere } from "../bycategory";
+
+// Helper for initial-based placeholders
+const getInitial = (name) => {
+  if (!name) return "?";
+  return name.charAt(0).toUpperCase();
+};
+
+const getBackgroundColor = (name) => {
+  const colors = [
+    "bg-stone-100 text-stone-500",
+    "bg-indigo-50 text-indigo-500",
+    "bg-pink-50 text-pink-500",
+    "bg-amber-50 text-amber-500",
+    "bg-emerald-50 text-emerald-500",
+    "bg-sky-50 text-sky-500"
+  ];
+  const index = name ? name.length % colors.length : 0;
+  return colors[index];
+};
 
 export default function CategoryManager() {
   const [categories, setCategories] = useState([]);
@@ -187,25 +206,25 @@ export default function CategoryManager() {
     c.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (loading) return <div className="p-12 text-center text-zinc-500 font-medium italic">Synchronizing inventory system...</div>;
+  if (loading) return <div className="p-12 text-center text-stone-400 font-medium italic">Synchronizing inventory system...</div>;
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 relative max-w-5xl mx-auto">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-zinc-200">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-widest border border-indigo-100">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 relative max-w-5xl mx-auto px-4 md:px-0">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-stone-200">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-stone-100 text-stone-600 text-[9px] font-black uppercase tracking-[0.1em] border border-stone-200">
               Navigation Authority
             </span>
             {hasOrderChanged && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-widest border border-amber-100 animate-pulse">
-                Unsaved Order
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-pink-50 text-pink-600 text-[9px] font-black uppercase tracking-[0.1em] border border-pink-100 animate-pulse">
+                Unsaved Changes
               </span>
             )}
           </div>
-          <h1 className="text-4xl font-black text-zinc-900 tracking-tight">Category Manager</h1>
-          <p className="text-sm text-zinc-500 max-w-xl">
-            Take full control of storefront navigation. Reorder items, manage thumbnails, and toggle visibility.
+          <h1 className="text-3xl font-black text-stone-900 tracking-tight">Category Management</h1>
+          <p className="text-xs text-stone-500 max-w-xl font-medium">
+            Define the visual hierarchy and visibility of your storefront navigation menu.
           </p>
         </div>
         <div className="flex gap-3">
@@ -213,197 +232,214 @@ export default function CategoryManager() {
             <Button 
               onClick={handleReorder} 
               disabled={isSavingOrder}
-              className="rounded-xl h-12 px-6 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs uppercase tracking-widest gap-2 shadow-lg shadow-amber-200 transition-all active:scale-95"
+              className="rounded-xl h-11 px-5 bg-pink-500 hover:bg-pink-600 text-white font-bold text-[10px] uppercase tracking-widest gap-2 shadow-lg shadow-pink-100 transition-all active:scale-95"
             >
               {isSavingOrder ? <Sparkles className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              Save New Order
+              Apply New Hierarchy
             </Button>
           )}
-          <Button onClick={openAddDialog} className="rounded-xl h-12 px-6 bg-zinc-900 hover:bg-black text-white font-bold text-xs uppercase tracking-widest gap-2 shadow-lg transition-all active:scale-95">
+          <Button onClick={openAddDialog} className="rounded-xl h-11 px-5 bg-stone-900 hover:bg-black text-white font-bold text-[10px] uppercase tracking-widest gap-2 shadow-lg transition-all active:scale-95">
             <Plus className="h-4 w-4" /> Add Category
           </Button>
         </div>
       </header>
 
-      <div className="bg-white rounded-3xl border border-zinc-200 overflow-hidden shadow-sm">
-        <div className="p-5 border-b border-zinc-100 flex items-center justify-between gap-4 bg-zinc-50/30">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+      <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
+        <div className="p-4 border-b border-stone-100 flex items-center justify-between gap-4 bg-stone-50/10">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
             <Input 
-              placeholder="Filter by name..." 
+              placeholder="Search by name..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-11 rounded-2xl bg-white border-zinc-200 focus-visible:ring-indigo-500 font-medium"
+              className="pl-10 h-10 rounded-xl bg-white border-stone-200 focus-visible:ring-stone-950 font-medium text-sm"
             />
           </div>
-          <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hidden sm:block">
-            {categories.length} Categories Total
+          <div className="text-[9px] font-black text-stone-400 uppercase tracking-widest hidden sm:block">
+            {categories.length} Nodes Configured
           </div>
         </div>
 
-        <Table>
-          <TableHeader className="bg-zinc-50/50">
-            <TableRow className="hover:bg-transparent border-b border-zinc-100">
-              <TableHead className="w-12"></TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-6 h-12">Thumbnail</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-6 h-12 w-1/3">Category Name</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-6 h-12">Status</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-6 h-12 text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredCategories.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="h-72 text-center py-12">
-                  <div className="flex flex-col items-center justify-center space-y-4">
-                    <div className="h-20 w-20 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-300">
-                      <Tag className="h-10 w-10" />
-                    </div>
-                    <div>
-                      <p className="text-zinc-950 font-black text-lg">No Results Found</p>
-                      <p className="text-zinc-400 text-sm max-w-xs mx-auto mt-1">Adjust your search or add a new category to get started.</p>
-                    </div>
-                  </div>
-                </TableCell>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader className="bg-stone-50/50">
+              <TableRow className="hover:bg-transparent border-b border-stone-100 translate-y-px">
+                <TableHead className="w-12"></TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-widest text-stone-500 h-11 px-4">Thumbnail</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-widest text-stone-500 h-11 px-4 w-1/3">Category Name</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-widest text-stone-500 h-11 px-4">Status</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-widest text-stone-500 h-11 px-4 text-right">Actions</TableHead>
               </TableRow>
+            </TableHeader>
+            {filteredCategories.length === 0 ? (
+              <TableBody>
+                <TableRow>
+                  <TableCell colSpan={5} className="h-80 text-center py-12">
+                    <div className="flex flex-col items-center justify-center space-y-4">
+                      <div className="h-16 w-16 rounded-2xl bg-stone-50 flex items-center justify-center text-stone-200 border border-stone-100 border-dashed">
+                        <Tag className="h-8 w-8" />
+                      </div>
+                      <div>
+                        <p className="text-stone-950 font-black text-lg">Empty Inventory</p>
+                        <p className="text-stone-400 text-xs mt-1">Start by adding your first product category.</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
             ) : (
               <Reorder.Group 
                 axis="y" 
                 values={categories} 
                 onReorder={onReorder} 
                 as="tbody"
+                className="relative"
               >
-                {filteredCategories.map((cat) => (
-                  <Reorder.Item 
-                    key={cat.id} 
-                    value={cat} 
-                    as="tr"
-                    className={cn(
-                      "group hover:bg-zinc-50/80 border-b border-zinc-100 transition-colors",
-                      !cat.isActive && "opacity-60 grayscale-[0.5]"
-                    )}
-                  >
-                    <TableCell className="pl-4 py-4 w-12">
-                      <GripVertical className="h-5 w-5 text-zinc-300 group-hover:text-zinc-500 cursor-grab active:cursor-grabbing transition-colors" />
-                    </TableCell>
-                    <TableCell className="px-6 py-4">
-                      {cat.imageUrl ? (
-                        <div className="h-12 w-12 rounded-xl overflow-hidden border border-zinc-200 bg-zinc-100">
-                          <img src={cat.imageUrl} alt={cat.name} className="h-full w-full object-cover" />
-                        </div>
-                      ) : (
-                        <div className="h-12 w-12 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-300 border border-zinc-200">
-                          <ImageIcon className="h-6 w-6" />
-                        </div>
+                  {filteredCategories.map((cat) => (
+                    <Reorder.Item 
+                      key={cat.id} 
+                      value={cat} 
+                      as="tr"
+                      className={cn(
+                        "group hover:bg-stone-50/60 border-b border-stone-100 transition-all",
+                        !cat.isActive && "opacity-60 bg-stone-50/20"
                       )}
-                    </TableCell>
-                    <TableCell className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="font-black text-zinc-900 group-hover:text-indigo-600 transition-colors">{cat.name}</span>
-                        <span className="text-[10px] font-mono text-zinc-400">/{cat.slug}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <Switch 
-                          checked={cat.isActive} 
-                          onCheckedChange={() => toggleStatus(cat)}
-                        />
-                        <span className={cn(
-                          "text-[9px] font-black uppercase tracking-widest",
-                          cat.isActive ? "text-emerald-600" : "text-zinc-400"
-                        )}>
-                          {cat.isActive ? "Active" : "Hidden"}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-10 w-10 text-zinc-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl"
-                          onClick={() => openEditDialog(cat)}
-                        >
-                          <Pencil className="h-4.5 w-4.5" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-10 w-10 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-xl"
-                          onClick={() => handleDelete(cat.id)}
-                        >
-                          <Trash2 className="h-4.5 w-4.5" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </Reorder.Item>
-                ))}
-              </Reorder.Group>
-            )}
-          </TableBody>
-        </Table>
+                    >
+                      <TableCell className="pl-4 py-3 w-12 text-center">
+                        <GripVertical className="h-4 w-4 text-stone-300 group-hover:text-stone-400 cursor-grab active:cursor-grabbing mx-auto" />
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <div className="h-11 w-11 rounded-lg overflow-hidden border border-stone-200 bg-stone-100 shadow-sm ring-2 ring-white ring-offset-0 transition-transform group-hover:scale-105 flex items-center justify-center">
+                          {cat.imageUrl || CATEGORY_IMAGES[cat.name] ? (
+                            <img 
+                              src={cat.imageUrl || CATEGORY_IMAGES[cat.name] || categorySphere} 
+                              alt={cat.name} 
+                              className="h-full w-full object-cover" 
+                            />
+                          ) : (
+                            <div className={cn(
+                              "h-full w-full flex items-center justify-center font-black text-sm transition-colors",
+                              getBackgroundColor(cat.name)
+                            )}>
+                              {getInitial(cat.name)}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-stone-950 text-sm">{cat.name}</span>
+                          <span className="text-[10px] font-mono text-stone-400 tracking-tight">/{cat.slug}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <Switch 
+                            checked={cat.isActive} 
+                            onCheckedChange={() => toggleStatus(cat)}
+                            className="scale-90"
+                          />
+                          <span className={cn(
+                            "text-[10px] font-bold uppercase tracking-tight",
+                            cat.isActive ? "text-stone-900" : "text-stone-400"
+                          )}>
+                            {cat.isActive ? "Active" : "Hidden"}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-right">
+                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-lg"
+                            onClick={() => openEditDialog(cat)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-stone-400 hover:text-pink-600 hover:bg-pink-50 rounded-lg"
+                            onClick={() => handleDelete(cat.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </Reorder.Item>
+                  ))}
+                </Reorder.Group>
+              )}
+          </Table>
+        </div>
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[480px] rounded-[2.5rem] md:rounded-[3rem] p-0 overflow-hidden gap-0 border-none shadow-2xl">
-          <div className="h-32 bg-zinc-900 relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="h-20 w-20 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white">
-                {formData.imageUrl ? (
-                  <img src={formData.imageUrl} className="h-full w-full object-cover rounded-2xl" alt="Preview" />
+        <DialogContent className="sm:max-w-[440px] rounded-[2rem] p-0 overflow-hidden gap-0 border border-stone-200 shadow-2xl">
+          <div className="h-28 bg-stone-950 relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 to-transparent" />
+            <div className="absolute inset-0 flex items-center justify-center translate-y-8">
+              <div className={cn(
+                "h-20 w-20 rounded-2xl bg-white shadow-xl flex items-center justify-center border-4 border-white transition-all transform hover:scale-105 overflow-hidden",
+                !(formData.imageUrl || CATEGORY_IMAGES[formData.name]) && getBackgroundColor(formData.name)
+              )}>
+                {formData.imageUrl || CATEGORY_IMAGES[formData.name] ? (
+                  <img 
+                    src={formData.imageUrl || CATEGORY_IMAGES[formData.name] || categorySphere} 
+                    className="h-full w-full object-cover rounded-xl" 
+                    alt="Preview" 
+                  />
                 ) : (
-                  <Tag className="h-10 w-10 opacity-50" />
+                  <span className="text-3xl font-black">{getInitial(formData.name)}</span>
                 )}
               </div>
             </div>
           </div>
           
-          <div className="p-8 space-y-6">
+          <div className="p-8 pt-12 space-y-6">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-black text-zinc-900 tracking-tight">
-                {editingCategory ? "Edit Category Details" : "New Shopping Category"}
+              <DialogTitle className="text-2xl font-black text-stone-950 tracking-tight">
+                {editingCategory ? "Update Node" : "Configure New Node"}
               </DialogTitle>
-              <p className="text-xs text-zinc-500 font-medium">Define metadata and presentation for the storefront.</p>
+              <p className="text-[10px] text-stone-500 font-bold uppercase tracking-widest">Metadata Definition Interface</p>
             </DialogHeader>
 
-            <div className="space-y-5">
+            <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase tracking-[0.15em] text-zinc-400 ml-1">Category Name</Label>
+                <Label className="text-[9px] font-black uppercase tracking-widest text-stone-400 ml-1">Identifier Name</Label>
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g. Cleansers & Toners"
-                  className="h-13 rounded-2xl bg-zinc-50 border-zinc-200 focus-visible:ring-indigo-500 font-bold px-4"
+                  className="h-11 rounded-xl bg-stone-50 border-stone-200 focus-visible:ring-stone-950 font-bold px-4"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase tracking-[0.15em] text-zinc-400 ml-1">Thumbnail Image URL</Label>
+                <Label className="text-[9px] font-black uppercase tracking-widest text-stone-400 ml-1">Asset Source URL</Label>
                 <div className="relative">
-                  <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-300" />
+                  <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-300" />
                   <Input
                     value={formData.imageUrl}
                     onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                    placeholder="https://images.unsplash.com/..."
-                    className="h-13 rounded-2xl bg-zinc-50 border-zinc-200 focus-visible:ring-indigo-500 pl-11 font-medium"
+                    placeholder="https://..."
+                    className="h-11 rounded-xl bg-stone-50 border-stone-200 focus-visible:ring-stone-950 pl-11 font-medium text-sm"
                   />
                 </div>
-                <p className="text-[9px] text-zinc-400 font-bold ml-1 italic">Note: Use high-quality 400x400 source images.</p>
               </div>
 
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100/50 transition-all">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-stone-50 border border-stone-100">
                 <div className="flex items-center gap-3">
                   <div className={cn(
-                    "p-2 rounded-xl bg-white shadow-sm",
-                    formData.isActive ? "text-indigo-600" : "text-zinc-400"
+                    "p-2 rounded-lg bg-white shadow-sm border border-stone-100",
+                    formData.isActive ? "text-stone-950" : "text-stone-300"
                   )}>
-                    {formData.isActive ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+                    {formData.isActive ? <Eye className="h-4.5 w-4.5" /> : <EyeOff className="h-4.5 w-4.5" />}
                   </div>
                   <div>
-                    <Label className="text-[11px] font-black text-zinc-900 block">Show in Navigation</Label>
-                    <p className="text-[10px] text-zinc-500 font-medium">Visible to shoppers in categories.</p>
+                    <Label className="text-[10px] font-black text-stone-900 block uppercase tracking-tight">Storefront Propagation</Label>
+                    <p className="text-[9px] text-stone-400 font-bold uppercase">Visibility Status</p>
                   </div>
                 </div>
                 <Switch
@@ -413,19 +449,19 @@ export default function CategoryManager() {
               </div>
             </div>
 
-            <DialogFooter className="gap-3 sm:gap-0 pt-4">
+            <DialogFooter className="gap-2 pt-2">
               <Button 
                 variant="outline" 
                 onClick={() => setIsDialogOpen(false)} 
-                className="flex-1 h-12 rounded-2xl border-zinc-200 font-bold text-[11px] uppercase tracking-widest hover:bg-zinc-50"
+                className="flex-1 h-11 rounded-xl border-stone-200 font-bold text-[10px] uppercase tracking-widest hover:bg-stone-50"
               >
                 Cancel
               </Button>
               <Button 
                 onClick={handleSave} 
-                className="flex-1 h-12 rounded-2xl bg-zinc-950 hover:bg-black text-white font-bold text-[11px] uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
+                className="flex-1 h-11 rounded-xl bg-stone-950 hover:bg-black text-white font-bold text-[10px] uppercase tracking-widest shadow-xl transition-all"
               >
-                {editingCategory ? "Update Authority" : "Finalize Category"}
+                {editingCategory ? "Commit Sync" : "Deploy Node"}
               </Button>
             </DialogFooter>
           </div>
