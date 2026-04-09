@@ -53,6 +53,7 @@ import {
   Zap,
 } from "lucide-react";
 import { toast } from "sonner";
+import AdminLogin from "./AdminLogin";
 
 import { printThermalReceipt } from "@/utils/printReceipt";
 
@@ -132,7 +133,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { API_URL, SERVER_URL } from "@/utils/api";
 
-const AdminDashboard = () => {
+const AdminDashboardContent = () => {
   const [stats, setStats] = useState(null);
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -224,7 +225,10 @@ const AdminDashboard = () => {
   const [brands, setBrands] = useState([]);
   const [isAddingNewBrand, setIsAddingNewBrand] = useState(false);
 
-  const { logout } = useAuth();
+  const logout = () => {
+    localStorage.removeItem("adminUser");
+    window.location.reload();
+  };
 
   const handleEditProduct = (p) => {
     setEditingProductId(p.id);
@@ -5726,6 +5730,33 @@ const AdminDashboard = () => {
       </div>
     </SidebarProvider>
   );
+};
+
+const AdminDashboard = () => {
+  const [adminUser, setAdminUser] = useState(() => {
+    const saved = localStorage.getItem("adminUser");
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  useEffect(() => {
+    if (adminUser?.id) {
+      fetch(`${API_URL}/admin/auth/profile?adminId=${adminUser.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (!data.success) {
+            localStorage.removeItem("adminUser");
+            setAdminUser(null);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [adminUser]);
+
+  if (!adminUser) {
+    return <AdminLogin onLoginSuccess={setAdminUser} />;
+  }
+
+  return <AdminDashboardContent />;
 };
 
 export default AdminDashboard;

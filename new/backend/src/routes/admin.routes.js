@@ -22,11 +22,17 @@ import {
   getAdminVendorAnalytics,
   getAdminBrands
 } from "../controllers/admin.controller.js";
+import { seedAdmin, loginAdmin, getAdminProfile } from "../controllers/auth.admin.controller.js";
 import { getPointsSettings, updatePointsSettings } from "../controllers/settings.controller.js";
 import { createProduct, updateProduct, deleteProduct } from "../controllers/products.controller.js";
 import { getHomepageSections, updateHomepageSection, reorderSections } from "../controllers/homepage.controller.js";
 
 const router = Router();
+
+// Admin Authentication
+router.post("/auth/seed", seedAdmin);
+router.post("/auth/login", loginAdmin);
+router.get("/auth/profile", getAdminProfile);
 
 router.get("/dashboard", getAdminDashboard);
 
