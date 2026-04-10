@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { API_URL } from "@/utils/api";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Reorder } from "framer-motion";
+import { Reorder, AnimatePresence } from "framer-motion";
 import { 
   Plus, 
   Trash2, 
@@ -19,14 +19,6 @@ import {
   Eye,
   EyeOff
 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -45,16 +37,115 @@ const getInitial = (name) => {
 
 const getBackgroundColor = (name) => {
   const colors = [
-    "bg-stone-100 text-stone-500",
-    "bg-indigo-50 text-indigo-500",
+    "bg-stone-50 text-stone-500",
     "bg-pink-50 text-pink-500",
+    "bg-pink-100 text-pink-600",
+    "bg-purple-50 text-purple-500",
     "bg-amber-50 text-amber-500",
-    "bg-emerald-50 text-emerald-500",
     "bg-sky-50 text-sky-500"
   ];
   const index = name ? name.length % colors.length : 0;
   return colors[index];
 };
+
+// Memoized Row Component for maximum performance
+const CategoryRow = memo(({ cat, onToggleStatus, onEdit, onDelete, canDrag }) => {
+  return (
+    <Reorder.Item 
+      key={cat.id} 
+      value={cat} 
+      as="div"
+      drag={canDrag ? "y" : false}
+      dragListener={canDrag}
+      whileDrag={{ 
+        scale: 1.01, 
+        backgroundColor: "rgb(255 255 255)",
+        boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+        zIndex: 50
+      }}
+      className={cn(
+        "group flex items-center border-b border-stone-100 bg-white will-change-transform",
+        !cat.isActive && "opacity-60 bg-stone-50/20"
+      )}
+    >
+      <div className="pl-4 py-4 w-12 flex-shrink-0 text-center">
+        {canDrag ? (
+          <GripVertical className="h-4 w-4 text-stone-300 group-hover:text-stone-400 cursor-grab active:cursor-grabbing mx-auto transition-colors" />
+        ) : (
+          <div className="h-4 w-4 mx-auto" />
+        )}
+      </div>
+      
+      <div className="px-4 py-3 flex-shrink-0">
+        <div className="h-11 w-11 rounded-lg overflow-hidden border border-stone-200 bg-stone-100 shadow-sm ring-2 ring-white ring-offset-0 transition-transform group-hover:scale-105 flex items-center justify-center relative">
+          <div className="absolute inset-0 flex items-center justify-center">
+            {cat.imageUrl || CATEGORY_IMAGES[cat.name] ? (
+              <img 
+                src={cat.imageUrl || CATEGORY_IMAGES[cat.name] || categorySphere} 
+                alt={cat.name} 
+                className="h-full w-full object-cover" 
+                loading="lazy"
+              />
+            ) : (
+              <div className={cn(
+                "h-full w-full flex items-center justify-center font-black text-sm",
+                getBackgroundColor(cat.name)
+              )}>
+                {getInitial(cat.name)}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="px-4 py-3 flex-1 min-w-0">
+        <div className="flex flex-col truncate">
+          <span className="font-bold text-stone-950 text-sm truncate">{cat.name}</span>
+          <span className="text-[10px] font-mono text-stone-400 tracking-tight truncate">/{cat.slug}</span>
+        </div>
+      </div>
+
+      <div className="px-4 py-3 w-32 flex-shrink-0">
+        <div className="flex items-center gap-2.5">
+          <Switch 
+            checked={cat.isActive} 
+            onCheckedChange={() => onToggleStatus(cat)}
+            className="scale-90"
+          />
+          <span className={cn(
+            "text-[10px] font-bold uppercase tracking-tight hidden sm:inline-block",
+            cat.isActive ? "text-stone-900" : "text-stone-400"
+          )}>
+            {cat.isActive ? "Active" : "Hidden"}
+          </span>
+        </div>
+      </div>
+
+      <div className="px-4 py-3 w-32 flex-shrink-0 text-right">
+        <div className="flex justify-end gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 text-stone-400 hover:text-stone-900 hover:bg-stone-50 rounded-xl"
+            onClick={() => onEdit(cat)}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 text-stone-400 hover:text-pink-600 hover:bg-pink-50 rounded-xl"
+            onClick={() => onDelete(cat.id)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </Reorder.Item>
+  );
+});
+
+CategoryRow.displayName = "CategoryRow";
 
 export default function CategoryManager() {
   const [categories, setCategories] = useState([]);
@@ -67,21 +158,23 @@ export default function CategoryManager() {
   const [isSavingOrder, setIsSavingOrder] = useState(false);
 
   useEffect(() => {
-    fetchCategories();
+    fetchCategories(true);
   }, []);
 
-  const fetchCategories = async () => {
+  const fetchCategories = async (isInitial = false) => {
+    if (isInitial) setLoading(true);
     try {
       const res = await fetch(`${API_URL}/admin/categories`);
       const data = await res.json();
       if (data.success) {
-        setCategories(data.data);
+        const sortedData = [...data.data].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+        setCategories(sortedData);
         setHasOrderChanged(false);
       }
     } catch (error) {
       console.error("Error fetching categories:", error);
     } finally {
-      setLoading(false);
+      if (isInitial) setLoading(false);
     }
   };
 
@@ -108,7 +201,7 @@ export default function CategoryManager() {
         setFormData({ name: "", imageUrl: "", isActive: true });
         fetchCategories();
       } else {
-        toast.error(data.error || "Failed to save category");
+        toast.error(data.message || "Failed to save category");
       }
     } catch (error) {
       toast.error("An error occurred while saving.");
@@ -135,7 +228,7 @@ export default function CategoryManager() {
         toast.success("Category order updated");
         setHasOrderChanged(false);
       } else {
-        toast.error(data.error || "Failed to save order");
+        toast.error(data.message || "Failed to save order");
       }
     } catch (error) {
       toast.error("An error occurred while reordering.");
@@ -144,42 +237,77 @@ export default function CategoryManager() {
     }
   };
 
-  const toggleStatus = async (category) => {
+  const toggleStatus = useCallback(async (category) => {
+    const originalStatus = category.isActive;
+    
+    // Optimistic UI Update
+    setCategories(prev => prev.map(c => c.id === category.id ? { ...c, isActive: !originalStatus } : c));
+    
     try {
       const res = await fetch(`${API_URL}/admin/categories/${category.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: !category.isActive }),
+        body: JSON.stringify({ isActive: !originalStatus }),
       });
       const data = await res.json();
-      if (data.success) {
-        setCategories(prev => prev.map(c => c.id === category.id ? { ...c, isActive: !c.isActive } : c));
-        toast.success(`Category ${!category.isActive ? "activated" : "hidden"}`);
+      
+      if (!data.success) {
+        // Rollback on failure
+        setCategories(prev => prev.map(c => c.id === category.id ? { ...c, isActive: originalStatus } : c));
+        toast.error(data.message || "Failed to toggle status");
+      } else {
+        toast.success(`Category ${!originalStatus ? "activated" : "hidden"}`);
       }
     } catch (error) {
-      toast.error("Failed to toggle status");
+      // Rollback on network error
+      setCategories(prev => prev.map(c => c.id === category.id ? { ...c, isActive: originalStatus } : c));
+      toast.error("Connection error while toggling status");
     }
-  };
+  }, []);
 
-  const handleDelete = async (id) => {
+  const handleDelete = useCallback(async (id) => {
     if (!confirm("Are you sure you want to delete this category?")) return;
+
+    // We store the current state in case we need to rollback
+    let deletedCategory = null;
+    let originalCategories = [];
+
+    setCategories(prev => {
+      originalCategories = [...prev];
+      deletedCategory = prev.find(c => c.id === id);
+      return prev.filter(c => c.id !== id);
+    });
 
     try {
       const res = await fetch(`${API_URL}/admin/categories/${id}`, {
         method: "DELETE",
       });
       const data = await res.json();
+      
       if (data.success) {
         toast.success("Category deleted successfully");
-        fetchCategories();
       } else {
-        toast.error(data.error || "Failed to delete category");
+        // Rollback on failure (e.g., category has products)
+        setCategories(originalCategories);
+        toast.error(data.message || "Failed to delete category");
       }
     } catch (error) {
-      toast.error("An error occurred while deleting.");
+      setCategories(originalCategories);
+      toast.error("Connection error while deleting.");
       console.error(error);
     }
+  }, []);
+
+  const onReorder = (newOrder) => {
+    setCategories(newOrder);
+    setHasOrderChanged(true);
   };
+
+  const filteredCategories = useMemo(() => {
+    if (!searchQuery) return categories;
+    const lowerQuery = searchQuery.toLowerCase();
+    return categories.filter(c => c.name.toLowerCase().includes(lowerQuery));
+  }, [categories, searchQuery]);
 
   const openAddDialog = () => {
     setEditingCategory(null);
@@ -187,7 +315,7 @@ export default function CategoryManager() {
     setIsDialogOpen(true);
   };
 
-  const openEditDialog = (category) => {
+  const openEditDialog = useCallback((category) => {
     setEditingCategory(category);
     setFormData({ 
       name: category.name, 
@@ -195,21 +323,17 @@ export default function CategoryManager() {
       isActive: category.isActive ?? true 
     });
     setIsDialogOpen(true);
-  };
+  }, []);
 
-  const onReorder = (newOrder) => {
-    setCategories(newOrder);
-    setHasOrderChanged(true);
-  };
-
-  const filteredCategories = categories.filter(c => 
-    c.name.toLowerCase().includes(searchQuery.toLowerCase())
+  if (loading) return (
+    <div className="p-12 text-center">
+      <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-stone-900 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+      <div className="mt-4 text-stone-400 font-medium italic">Synchronizing inventory system...</div>
+    </div>
   );
 
-  if (loading) return <div className="p-12 text-center text-stone-400 font-medium italic">Synchronizing inventory system...</div>;
-
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 relative max-w-5xl mx-auto px-4 md:px-0">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 relative max-w-5xl mx-auto px-4 md:px-0 mb-20">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-stone-200">
         <div className="space-y-1.5">
           <div className="flex items-center gap-2 mb-1">
@@ -238,13 +362,16 @@ export default function CategoryManager() {
               Apply New Hierarchy
             </Button>
           )}
-          <Button onClick={openAddDialog} className="rounded-xl h-11 px-5 bg-stone-900 hover:bg-black text-white font-bold text-[10px] uppercase tracking-widest gap-2 shadow-lg transition-all active:scale-95">
-            <Plus className="h-4 w-4" /> Add Category
+          <Button 
+            onClick={openAddDialog} 
+            className="rounded-xl h-12 px-6 bg-stone-900 hover:bg-[#ff4fa3] text-white font-black text-[10px] uppercase tracking-widest gap-3 shadow-xl shadow-stone-200 transition-all active:scale-95"
+          >
+            <Plus className="h-5 w-5" /> Add Category
           </Button>
         </div>
       </header>
 
-      <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
+      <div className="bg-white rounded-xl border border-stone-100 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
         <div className="p-4 border-b border-stone-100 flex items-center justify-between gap-4 bg-stone-50/10">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
@@ -252,7 +379,7 @@ export default function CategoryManager() {
               placeholder="Search by name..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-10 rounded-xl bg-white border-stone-200 focus-visible:ring-stone-950 font-medium text-sm"
+              className="pl-11 h-12 rounded-xl bg-stone-50 border-stone-100 focus-visible:ring-pink-500 font-bold text-sm transition-all"
             />
           </div>
           <div className="text-[9px] font-black text-stone-400 uppercase tracking-widest hidden sm:block">
@@ -260,128 +387,58 @@ export default function CategoryManager() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-stone-50/50">
-              <TableRow className="hover:bg-transparent border-b border-stone-100 translate-y-px">
-                <TableHead className="w-12"></TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest text-stone-500 h-11 px-4">Thumbnail</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest text-stone-500 h-11 px-4 w-1/3">Category Name</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest text-stone-500 h-11 px-4">Status</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest text-stone-500 h-11 px-4 text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
+        <div className="min-w-full">
+          {/* Header Row */}
+          <div className="flex items-center bg-stone-50/50 border-b border-stone-100">
+            <div className="w-12 h-11 flex-shrink-0" />
+            <div className="px-4 h-11 flex items-center text-[10px] font-black uppercase tracking-widest text-stone-500">Thumbnail</div>
+            <div className="px-4 h-11 flex items-center text-[10px] font-black uppercase tracking-widest text-stone-500 flex-1">Category Name</div>
+            <div className="px-4 h-11 flex items-center text-[10px] font-black uppercase tracking-widest text-stone-500 w-32">Status</div>
+            <div className="px-4 h-11 flex items-center text-[10px] font-black uppercase tracking-widest text-stone-500 w-32 justify-end">Actions</div>
+          </div>
+
+          <div className="relative">
             {filteredCategories.length === 0 ? (
-              <TableBody>
-                <TableRow>
-                  <TableCell colSpan={5} className="h-80 text-center py-12">
-                    <div className="flex flex-col items-center justify-center space-y-4">
-                      <div className="h-16 w-16 rounded-2xl bg-stone-50 flex items-center justify-center text-stone-200 border border-stone-100 border-dashed">
-                        <Tag className="h-8 w-8" />
-                      </div>
-                      <div>
-                        <p className="text-stone-950 font-black text-lg">Empty Inventory</p>
-                        <p className="text-stone-400 text-xs mt-1">Start by adding your first product category.</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
+              <div className="h-80 text-center py-12 flex flex-col items-center justify-center space-y-4">
+                <div className="h-16 w-16 rounded-2xl bg-stone-50 flex items-center justify-center text-stone-200 border border-stone-100 border-dashed">
+                  <Tag className="h-8 w-8" />
+                </div>
+                <div>
+                  <p className="text-stone-950 font-black text-lg">Empty Inventory</p>
+                  <p className="text-stone-400 text-xs mt-1">Start by adding your first product category.</p>
+                </div>
+              </div>
             ) : (
               <Reorder.Group 
                 axis="y" 
                 values={categories} 
                 onReorder={onReorder} 
-                as="tbody"
+                as="div"
                 className="relative"
               >
-                  {filteredCategories.map((cat) => (
-                    <Reorder.Item 
-                      key={cat.id} 
-                      value={cat} 
-                      as="tr"
-                      className={cn(
-                        "group hover:bg-stone-50/60 border-b border-stone-100 transition-all",
-                        !cat.isActive && "opacity-60 bg-stone-50/20"
-                      )}
-                    >
-                      <TableCell className="pl-4 py-3 w-12 text-center">
-                        <GripVertical className="h-4 w-4 text-stone-300 group-hover:text-stone-400 cursor-grab active:cursor-grabbing mx-auto" />
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <div className="h-11 w-11 rounded-lg overflow-hidden border border-stone-200 bg-stone-100 shadow-sm ring-2 ring-white ring-offset-0 transition-transform group-hover:scale-105 flex items-center justify-center">
-                          {cat.imageUrl || CATEGORY_IMAGES[cat.name] ? (
-                            <img 
-                              src={cat.imageUrl || CATEGORY_IMAGES[cat.name] || categorySphere} 
-                              alt={cat.name} 
-                              className="h-full w-full object-cover" 
-                            />
-                          ) : (
-                            <div className={cn(
-                              "h-full w-full flex items-center justify-center font-black text-sm transition-colors",
-                              getBackgroundColor(cat.name)
-                            )}>
-                              {getInitial(cat.name)}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-stone-950 text-sm">{cat.name}</span>
-                          <span className="text-[10px] font-mono text-stone-400 tracking-tight">/{cat.slug}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <div className="flex items-center gap-2.5">
-                          <Switch 
-                            checked={cat.isActive} 
-                            onCheckedChange={() => toggleStatus(cat)}
-                            className="scale-90"
-                          />
-                          <span className={cn(
-                            "text-[10px] font-bold uppercase tracking-tight",
-                            cat.isActive ? "text-stone-900" : "text-stone-400"
-                          )}>
-                            {cat.isActive ? "Active" : "Hidden"}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-right">
-                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-lg"
-                            onClick={() => openEditDialog(cat)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-stone-400 hover:text-pink-600 hover:bg-pink-50 rounded-lg"
-                            onClick={() => handleDelete(cat.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </Reorder.Item>
-                  ))}
-                </Reorder.Group>
-              )}
-          </Table>
+                {filteredCategories.map((cat) => (
+                  <CategoryRow 
+                    key={cat.id} 
+                    cat={cat} 
+                    onToggleStatus={toggleStatus}
+                    onEdit={openEditDialog}
+                    onDelete={handleDelete}
+                    canDrag={!searchQuery}
+                  />
+                ))}
+              </Reorder.Group>
+            )}
+          </div>
         </div>
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[440px] rounded-[2rem] p-0 overflow-hidden gap-0 border border-stone-200 shadow-2xl">
-          <div className="h-28 bg-stone-950 relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 to-transparent" />
+        <DialogContent className="sm:max-w-[440px] rounded-xl p-0 overflow-hidden gap-0 border border-stone-100 shadow-2xl">
+          <div className="h-28 bg-stone-900 relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#ff4fa3]/20 to-transparent" />
             <div className="absolute inset-0 flex items-center justify-center translate-y-8">
               <div className={cn(
-                "h-20 w-20 rounded-2xl bg-white shadow-xl flex items-center justify-center border-4 border-white transition-all transform hover:scale-105 overflow-hidden",
+                "h-24 w-24 rounded-xl bg-white shadow-2xl flex items-center justify-center border-4 border-white transition-all transform hover:scale-105 overflow-hidden",
                 !(formData.imageUrl || CATEGORY_IMAGES[formData.name]) && getBackgroundColor(formData.name)
               )}>
                 {formData.imageUrl || CATEGORY_IMAGES[formData.name] ? (
@@ -417,14 +474,14 @@ export default function CategoryManager() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-[9px] font-black uppercase tracking-widest text-stone-400 ml-1">Asset Source URL</Label>
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 ml-1">Asset Source URL</Label>
                 <div className="relative">
                   <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-300" />
                   <Input
                     value={formData.imageUrl}
                     onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
                     placeholder="https://..."
-                    className="h-11 rounded-xl bg-stone-50 border-stone-200 focus-visible:ring-stone-950 pl-11 font-medium text-sm"
+                    className="h-12 rounded-xl bg-stone-50 border-stone-100 focus-visible:ring-pink-500 pl-11 font-bold text-sm"
                   />
                 </div>
               </div>
@@ -453,13 +510,13 @@ export default function CategoryManager() {
               <Button 
                 variant="outline" 
                 onClick={() => setIsDialogOpen(false)} 
-                className="flex-1 h-11 rounded-xl border-stone-200 font-bold text-[10px] uppercase tracking-widest hover:bg-stone-50"
+                className="flex-1 h-12 rounded-xl border-stone-100 font-black text-[10px] uppercase tracking-widest hover:bg-stone-50"
               >
                 Cancel
               </Button>
               <Button 
                 onClick={handleSave} 
-                className="flex-1 h-11 rounded-xl bg-stone-950 hover:bg-black text-white font-bold text-[10px] uppercase tracking-widest shadow-xl transition-all"
+                className="flex-1 h-12 rounded-xl bg-stone-900 hover:bg-[#ff4fa3] text-white font-black text-[10px] uppercase tracking-widest shadow-xl transition-all"
               >
                 {editingCategory ? "Commit Sync" : "Deploy Node"}
               </Button>

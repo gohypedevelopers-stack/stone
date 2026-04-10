@@ -41,10 +41,11 @@ export const THEME = {
   },
 
   gradients: {
-    brand: "bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500",
+    brand: "bg-gradient-to-r from-[#ff4fa3] via-[#6f5cff] to-[#ff8a2a]",
+    brandSolid: "bg-[#ff4fa3]",
     videoOverlay: "bg-gradient-to-b from-black/10 via-transparent to-black/60",
     heroOverlay: "bg-gradient-to-t from-black/80 via-black/20 to-transparent",
-    brandHover: "hover:bg-gradient-to-r hover:from-pink-500 hover:to-purple-500"
+    brandHover: "hover:bg-gradient-to-r hover:from-[#ff4fa3] hover:to-[#6f5cff]"
   },
 
   typography: {

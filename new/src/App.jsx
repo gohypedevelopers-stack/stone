@@ -78,6 +78,9 @@ export default function App() {
 
   // Global Smooth Scroll (Lenis)
   useEffect(() => {
+    // Disable smooth scroll for Admin for performance
+    if (location.pathname.startsWith("/admin")) return;
+
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -100,7 +103,7 @@ export default function App() {
     return () => {
       lenis.destroy();
     };
-  }, []);
+  }, [location.pathname]);
 
 
   // Sync Cart to localStorage

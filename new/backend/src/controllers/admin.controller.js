@@ -72,7 +72,8 @@ export const getAdminVendorAnalytics = async (req, res) => {
         graphData.push({
           date: d.toDateString(),
           label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-          amount: 0
+          onlineAmount: 0,
+          offlineAmount: 0
         });
       }
     } else {
@@ -83,7 +84,8 @@ export const getAdminVendorAnalytics = async (req, res) => {
           month: d.getMonth(),
           year: d.getFullYear(),
           label: d.toLocaleDateString('en-US', { month: 'short' }),
-          amount: 0
+          onlineAmount: 0,
+          offlineAmount: 0
         });
       }
     }
@@ -93,23 +95,33 @@ export const getAdminVendorAnalytics = async (req, res) => {
 
     // Gross Revenue & Product Performance & Graph Data
     let grossRevenue = 0;
+    let totalOnlineRevenue = 0;
+    let totalOfflineRevenue = 0;
     const productStatsMap = {};
     
-    const processData = (record, dateField, amountField) => {
+    const processData = (record, dateField, amountField, type) => {
       const amount = Number(record[amountField] || 0);
       const d = new Date(record[dateField]);
       
       // Totals
+      if (type === 'online') totalOnlineRevenue += amount;
+      if (type === 'offline') totalOfflineRevenue += amount;
       grossRevenue += amount;
 
       // Graph
       if (dateFormat === 'day') {
         const dateStr = d.toDateString();
         const point = graphData.find(g => g.date === dateStr);
-        if (point) point.amount += amount;
+        if (point) {
+          if (type === 'online') point.onlineAmount += amount;
+          else point.offlineAmount += amount;
+        }
       } else {
         const point = graphData.find(g => g.month === d.getMonth() && g.year === d.getFullYear());
-        if (point) point.amount += amount;
+        if (point) {
+          if (type === 'online') point.onlineAmount += amount;
+          else point.offlineAmount += amount;
+        }
       }
     };
     
@@ -139,11 +151,11 @@ export const getAdminVendorAnalytics = async (req, res) => {
     };
     
     orders.forEach(o => {
-      processData(o, 'createdAt', 'totalAmount');
+      processData(o, 'createdAt', 'totalAmount', 'online');
       processProductRevenue(o, o.items, false);
     });
     offlinePurchases.forEach(p => {
-      processData(p, 'purchaseDate', 'amount');
+      processData(p, 'purchaseDate', 'amount', 'offline');
       processProductRevenue(p, p.items, true);
     });
 
@@ -163,6 +175,8 @@ export const getAdminVendorAnalytics = async (req, res) => {
     return sendSuccess(res, {
       totalSaleUnits,
       grossRevenue,
+      totalOnlineRevenue,
+      totalOfflineRevenue,
       platformEarnings,
       productPerformance,
       graphData,
@@ -182,6 +196,11 @@ export const getAdminDashboard = async (req, res) => {
       totalOrders,
       pendingVendorApprovals,
       activeCampaigns,
+      onlineRevenueAgg,
+      offlineRevenueAgg,
+      recentOrdersRaw,
+      recentVendorsRaw,
+      lowStockProductsRaw
     ] = await Promise.all([
       prisma.customer.count(),
       prisma.vendor.count(),
@@ -193,7 +212,55 @@ export const getAdminDashboard = async (req, res) => {
       prisma.campaign.count({
         where: { status: "active" },
       }),
+      prisma.order.aggregate({ _sum: { totalAmount: true } }),
+      prisma.offlinePurchase.aggregate({ _sum: { amount: true } }),
+      prisma.order.findMany({ orderBy: { createdAt: 'desc' }, take: 4, select: { id: true, orderNumber: true, totalAmount: true, createdAt: true, type: true } }),
+      prisma.vendor.findMany({ where: { approvalStatus: "PENDING" }, orderBy: { createdAt: 'desc' }, take: 3, select: { id: true, businessName: true, createdAt: true } }),
+      prisma.product.findMany({ where: { stock: { lt: 20 } }, orderBy: { updatedAt: 'desc' }, take: 4, select: { id: true, name: true, stock: true, updatedAt: true } })
     ]);
+
+    const totalOnlineRevenue = Number(onlineRevenueAgg._sum.totalAmount || 0);
+    const totalOfflineRevenue = Number(offlineRevenueAgg._sum.amount || 0);
+    const totalEarnings = totalOnlineRevenue + totalOfflineRevenue;
+
+    // Build unified recent activity feed
+    let recentActivity = [];
+    
+    recentOrdersRaw.forEach(o => {
+      recentActivity.push({
+        id: `order-${o.id}`,
+        type: 'order',
+        title: `New ${o.type} Order #${o.orderNumber || o.id.slice(-5).toUpperCase()}`,
+        description: `Customer registered a #${o.orderNumber ? 'online' : 'offline'} purchase of ₹${Number(o.totalAmount).toLocaleString()}`,
+        time: o.createdAt,
+        iconType: 'cart'
+      });
+    });
+
+    recentVendorsRaw.forEach(v => {
+      recentActivity.push({
+        id: `vendor-${v.id}`,
+        type: 'vendor',
+        title: 'New Vendor Onboarding',
+        description: `${v.businessName} applied for enterprise access`,
+        time: v.createdAt,
+        iconType: 'user'
+      });
+    });
+
+    lowStockProductsRaw.forEach(p => {
+      recentActivity.push({
+        id: `stock-${p.id}`,
+        type: 'inventory',
+        title: 'Inventory Alert',
+        description: `SKU '${p.name}' reached low stock (${p.stock} left)`,
+        time: p.updatedAt,
+        iconType: 'alert'
+      });
+    });
+
+    // Sort descending by time
+    recentActivity.sort((a, b) => new Date(b.time) - new Date(a.time));
 
     return sendSuccess(
       res,
@@ -204,6 +271,10 @@ export const getAdminDashboard = async (req, res) => {
         totalOrders,
         pendingVendorApprovals,
         activeCampaigns,
+        totalEarnings,
+        totalOnlineRevenue,
+        totalOfflineRevenue,
+        recentActivity: recentActivity.slice(0, 10),
       },
       "Admin dashboard fetched",
     );
@@ -829,14 +900,18 @@ export const deleteAdminCategory = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // First, check if there are products in this category
-    const productsCount = await prisma.product.count({ where: { categoryId: id } });
-    if (productsCount > 0) {
-      return sendError(res, `Cannot delete category: it still has ${productsCount} products. Please move or delete the products first.`, 400);
-    }
+    // Automatically disconnect products from this category instead of blocking
+    await prisma.$transaction([
+      prisma.product.updateMany({
+        where: { categoryId: id },
+        data: { categoryId: null }
+      }),
+      prisma.category.delete({
+        where: { id }
+      })
+    ]);
 
-    await prisma.category.delete({ where: { id } });
-    return sendSuccess(res, null, "Category deleted successfully");
+    return sendSuccess(res, null, "Category deleted successfully (Products unlinked)");
   } catch (error) {
     return sendError(res, error.message, 500);
   }
