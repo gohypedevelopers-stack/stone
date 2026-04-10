@@ -160,6 +160,39 @@
   }
 }
 
+body[data-admin-dashboard="true"] {
+  background:
+    radial-gradient(circle at top left, rgba(79, 70, 229, 0.12), transparent 32%),
+    radial-gradient(circle at top right, rgba(236, 72, 153, 0.08), transparent 28%),
+    linear-gradient(180deg, #f8fafc 0%, #ffffff 55%, #f4f4f5 100%);
+  color: #111827;
+  overflow: hidden;
+}
+
+body[data-admin-dashboard="true"] #root {
+  height: 100vh;
+  text-align: left;
+}
+
+body[data-admin-dashboard="true"] [class*="rounded-"] {
+  border-radius: 0 !important;
+}
+
+body[data-admin-dashboard="true"] button,
+body[data-admin-dashboard="true"] [role="button"],
+body[data-admin-dashboard="true"] input,
+body[data-admin-dashboard="true"] select,
+body[data-admin-dashboard="true"] textarea,
+body[data-admin-dashboard="true"] [data-slot="card"],
+body[data-admin-dashboard="true"] [data-slot="dialog-content"],
+body[data-admin-dashboard="true"] [data-slot="sheet-content"],
+body[data-admin-dashboard="true"] [data-slot="dropdown-menu-content"],
+body[data-admin-dashboard="true"] [data-slot="popover-content"],
+body[data-admin-dashboard="true"] [data-slot="sidebar-inner"],
+body[data-admin-dashboard="true"] [data-slot="tabs-list"] {
+  border-radius: 0 !important;
+}
+
 /* Lenis Custom Smooth Scroll */
 html.lenis {
   height: auto;

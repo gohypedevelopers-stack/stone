@@ -358,7 +358,7 @@ export function HomepageManager({ openComponentId }) {
     const mockWishlist = [];
 
     return (
-      <div className="w-full bg-white relative rounded-2xl border border-zinc-200 overflow-hidden shadow-md origin-top transform-gpu" style={{ transform: 'scale(0.95)', transformOrigin: 'top center' }}>
+      <div className="w-full bg-white relative rounded-[2px] border border-zinc-200 overflow-hidden shadow-md origin-top transform-gpu" style={{ transform: 'scale(0.95)', transformOrigin: 'top center' }}>
         <div className="pointer-events-none w-full">
           {componentId === "shop-by-brand" && (() => {
             // Compute brands list matching the editor: merge all sources, apply overrides, filter hidden
@@ -401,7 +401,7 @@ export function HomepageManager({ openComponentId }) {
     const renderCommonHeaderInput = () => (
       <div className="space-y-3 mb-8 pb-8 border-b border-zinc-100">
         <Label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Main Section Title</Label>
-        <Input value={draftTitle} onChange={e => setDraftTitle(e.target.value)} className="h-12 rounded-xl bg-zinc-50/50 focus-visible:ring-emerald-500 shadow-inner font-bold text-lg" placeholder="e.g. Best Sellers" />
+        <Input value={draftTitle} onChange={e => setDraftTitle(e.target.value)} className="h-12 rounded-[2px] bg-zinc-50/50 focus-visible:ring-emerald-500 shadow-inner font-bold text-lg" placeholder="e.g. Best Sellers" />
         <p className="text-[10px] text-zinc-400">This updates the global title for this module block.</p>
       </div>
     );
@@ -411,19 +411,19 @@ export function HomepageManager({ openComponentId }) {
       return (
         <div className="space-y-6">
           {renderCommonHeaderInput()}
-          <div className="flex justify-between items-center bg-indigo-950/5 p-5 rounded-2xl border border-zinc-200/50">
+          <div className="flex justify-between items-center bg-indigo-950/5 p-5 rounded-[2px] border border-zinc-200/50">
             <div>
               <h3 className="text-sm font-bold text-indigo-950">Manage Slides</h3>
               <p className="text-xs text-zinc-500 mt-1">{slides.length} slide{slides.length !== 1 && 's'} configured</p>
             </div>
-            <Button size="sm" onClick={() => setDraftSettings({ ...draftSettings, slides: [...slides, { imageUrl: '', title: '', subtitle: '', link: '' }] })} className="bg-indigo-950 text-white rounded-xl shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5 px-4 gap-2 text-xs font-semibold">
+            <Button size="sm" onClick={() => setDraftSettings({ ...draftSettings, slides: [...slides, { imageUrl: '', title: '', subtitle: '', link: '' }] })} className="bg-indigo-950 text-white rounded-[2px] shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5 px-4 gap-2 text-xs font-semibold">
               <Plus className="h-4 w-4" /> Add Slide
             </Button>
           </div>
 
           <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
             {slides.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-zinc-200 rounded-3xl text-zinc-400 bg-zinc-50/50">
+              <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-zinc-200 rounded-[2px] text-zinc-400 bg-zinc-50/50">
                 <LayoutTemplate className="h-10 w-10 mb-4 opacity-20" />
                 <p className="text-sm font-medium">No slides configured yet.</p>
               </div>
@@ -432,7 +432,7 @@ export function HomepageManager({ openComponentId }) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 key={idx}
-                className="p-5 border border-zinc-200/60 rounded-2xl relative group bg-white shadow-sm hover:shadow-md hover:border-zinc-300 transition-all"
+                className="p-5 border border-zinc-200/60 rounded-[2px] relative group bg-white shadow-sm hover:shadow-md hover:border-zinc-300 transition-all"
               >
                 <div className="space-y-6">
                 <div className="flex items-center justify-between mb-4">
@@ -443,7 +443,7 @@ export function HomepageManager({ openComponentId }) {
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-9 w-9 rounded-xl text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-all border border-transparent hover:border-red-100"
+                    className="h-9 w-9 rounded-[2px] text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-all border border-transparent hover:border-red-100"
                     onClick={() => {
                       const slide = slides[idx];
                       if (slide.imageUrl) {
@@ -458,17 +458,17 @@ export function HomepageManager({ openComponentId }) {
                   </Button>
                 </div>
 
-                <div className="bg-zinc-50/50 rounded-2xl border border-zinc-100 p-6 space-y-6 shadow-sm">
+                <div className="bg-zinc-50/50 rounded-[2px] border border-zinc-100 p-6 space-y-6 shadow-sm">
                   {/* Image Section */}
                   <div className="space-y-3">
                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 block ml-1">Banner Asset</Label>
                     <div className="flex gap-5 items-start">
-                      <div className="w-32 h-20 rounded-xl bg-white border border-zinc-200 shadow-sm overflow-hidden flex items-center justify-center shrink-0 group/img relative">
+                      <div className="w-32 h-20 rounded-[2px] bg-white border border-zinc-200 shadow-sm overflow-hidden flex items-center justify-center shrink-0 group/img relative">
                         {slide.imageUrl ? (
                           <>
                             <img src={slide.imageUrl} alt="Preview" className="w-full h-full object-cover" />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
-                              <Button size="icon" variant="destructive" className="h-7 w-7 rounded-lg scale-90 group-hover/img:scale-100 transition-all" onClick={() => {
+                              <Button size="icon" variant="destructive" className="h-7 w-7 rounded-[2px] scale-90 group-hover/img:scale-100 transition-all" onClick={() => {
                                 deleteFileFromServer(slide.imageUrl);
                                 const s = [...slides]; s[idx].imageUrl = ''; setDraftSettings({ ...draftSettings, slides: s });
                               }}>
@@ -498,14 +498,14 @@ export function HomepageManager({ openComponentId }) {
                                 // I'll skip complex change-tracking for manual edits to avoid over-deleting.
                                 // Instead, I'll focus on making the 'Upload' button do the replacement correctly.
                               }}
-                              className="h-10 w-full rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm px-4" 
+                              className="h-10 w-full rounded-[2px] bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm px-4" 
                               placeholder="Paste path or URL..." 
                             />
                           </div>
                           
                           <div className="flex items-center gap-3">
                             <label className="cursor-pointer flex-1">
-                              <div className="h-10 px-4 flex items-center justify-center gap-2 rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/10 hover:bg-indigo-700 transition-all font-bold text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98]">
+                              <div className="h-10 px-4 flex items-center justify-center gap-2 rounded-[2px] bg-indigo-600 text-white shadow-lg shadow-indigo-600/10 hover:bg-indigo-700 transition-all font-bold text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98]">
                                 <Plus className="h-4 w-4" />
                                 <span>Upload New Image</span>
                               </div>
@@ -529,7 +529,7 @@ export function HomepageManager({ openComponentId }) {
                       <Input 
                         value={slide.title} 
                         onChange={e => { const s = [...slides]; s[idx].title = e.target.value; setDraftSettings({ ...draftSettings, slides: s }); }} 
-                        className="h-11 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm" 
+                        className="h-11 rounded-[2px] bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm" 
                         placeholder="e.g. Summer Sale" 
                       />
                     </div>
@@ -538,7 +538,7 @@ export function HomepageManager({ openComponentId }) {
                       <Input 
                         value={slide.subtitle} 
                         onChange={e => { const s = [...slides]; s[idx].subtitle = e.target.value; setDraftSettings({ ...draftSettings, slides: s }); }} 
-                        className="h-11 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm" 
+                        className="h-11 rounded-[2px] bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm" 
                         placeholder="e.g. Up to 50% OFF" 
                       />
                     </div>
@@ -547,7 +547,7 @@ export function HomepageManager({ openComponentId }) {
                       <Input 
                         value={slide.link} 
                         onChange={e => { const s = [...slides]; s[idx].link = e.target.value; setDraftSettings({ ...draftSettings, slides: s }); }} 
-                        className="h-11 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm" 
+                        className="h-11 rounded-[2px] bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm" 
                         placeholder="/shop/new-arrivals" 
                       />
                       <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest pl-1 mt-1">Leave empty to hide CTA button</p>
@@ -581,7 +581,7 @@ export function HomepageManager({ openComponentId }) {
                 }}
                 variant="outline" 
                 size="sm" 
-                className="h-8 rounded-lg border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold text-[9px] uppercase tracking-widest gap-2"
+                className="h-8 rounded-[2px] border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold text-[9px] uppercase tracking-widest gap-2"
               >
                 <Plus className="h-3 w-3" /> Add Promotion
               </Button>
@@ -589,7 +589,7 @@ export function HomepageManager({ openComponentId }) {
 
             <div className="space-y-4">
               {offers.map((offer, idx) => (
-                <div key={idx} className="group relative bg-zinc-50 border border-zinc-200 rounded-2xl p-5 transition-all hover:bg-white hover:shadow-md hover:border-indigo-100">
+                <div key={idx} className="group relative bg-zinc-50 border border-zinc-200 rounded-[2px] p-5 transition-all hover:bg-white hover:shadow-md hover:border-indigo-100">
                   <div className="grid grid-cols-12 gap-4">
                     <div className="col-span-12 md:col-span-7 space-y-1.5">
                       <Label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 flex items-center gap-1.5 ml-1">
@@ -602,7 +602,7 @@ export function HomepageManager({ openComponentId }) {
                           newOffers[idx].text = e.target.value;
                           setDraftSettings({ ...draftSettings, offers: newOffers });
                         }}
-                        className="h-10 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm"
+                        className="h-10 rounded-[2px] bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm"
                         placeholder="e.g. 20% OFF on orders over $100"
                       />
                     </div>
@@ -617,7 +617,7 @@ export function HomepageManager({ openComponentId }) {
                           newOffers[idx].code = e.target.value;
                           setDraftSettings({ ...draftSettings, offers: newOffers });
                         }}
-                        className="h-10 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm font-mono"
+                        className="h-10 rounded-[2px] bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm font-mono"
                         placeholder="CODE"
                       />
                     </div>
@@ -625,7 +625,7 @@ export function HomepageManager({ openComponentId }) {
                       <Button 
                         size="icon" 
                         variant="ghost" 
-                        className="h-10 w-10 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-xl"
+                        className="h-10 w-10 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-[2px]"
                         onClick={() => {
                           const newOffers = [...offers];
                           newOffers.splice(idx, 1);
@@ -646,11 +646,11 @@ export function HomepageManager({ openComponentId }) {
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 block ml-1">Countdown Deadline</Label>
-              <Input type="date" value={draftSettings.deadline || ''} onChange={e => setDraftSettings({ ...draftSettings, deadline: e.target.value })} className="h-11 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 shadow-sm" />
+              <Input type="date" value={draftSettings.deadline || ''} onChange={e => setDraftSettings({ ...draftSettings, deadline: e.target.value })} className="h-11 rounded-[2px] bg-white border-zinc-200 focus-visible:ring-indigo-500 shadow-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 block ml-1">Max Grid Items</Label>
-              <Input type="number" min="1" max="24" value={draftSettings.maxItems || 8} onChange={e => setDraftSettings({ ...draftSettings, maxItems: Number(e.target.value) })} className="h-11 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 shadow-sm" />
+              <Input type="number" min="1" max="24" value={draftSettings.maxItems || 8} onChange={e => setDraftSettings({ ...draftSettings, maxItems: Number(e.target.value) })} className="h-11 rounded-[2px] bg-white border-zinc-200 focus-visible:ring-indigo-500 shadow-sm" />
             </div>
           </div>
         </div>
@@ -701,7 +701,7 @@ export function HomepageManager({ openComponentId }) {
                   onClick={() => setShowPicker(!showPicker)}
                   variant="outline" 
                   size="sm" 
-                  className={`h-8 rounded-lg border-emerald-100 text-emerald-600 hover:bg-emerald-50 font-bold text-[9px] uppercase tracking-widest gap-2 ${showPicker ? 'bg-emerald-50 ring-2 ring-emerald-500/20' : ''}`}
+                  className={`h-8 rounded-[2px] border-emerald-100 text-emerald-600 hover:bg-emerald-50 font-bold text-[9px] uppercase tracking-widest gap-2 ${showPicker ? 'bg-emerald-50 ring-2 ring-emerald-500/20' : ''}`}
                 >
                   <LayoutGrid className="h-3 w-3" /> {showPicker ? 'Close Picker' : 'Pick from Store'}
                 </Button>
@@ -712,7 +712,7 @@ export function HomepageManager({ openComponentId }) {
                   }}
                   variant="outline" 
                   size="sm" 
-                  className="h-8 rounded-lg border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold text-[9px] uppercase tracking-widest gap-2"
+                  className="h-8 rounded-[2px] border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold text-[9px] uppercase tracking-widest gap-2"
                 >
                   <Plus className="h-3 w-3" /> Add Custom
                 </Button>
@@ -720,13 +720,13 @@ export function HomepageManager({ openComponentId }) {
             </div>
 
             {showPicker && (
-              <div className="bg-emerald-50/50 border border-emerald-100 rounded-[2rem] p-6 animate-in slide-in-from-top-2 duration-300">
+              <div className="bg-emerald-50/50 border border-emerald-100 rounded-[2px] p-6 animate-in slide-in-from-top-2 duration-300">
                 <div className="relative mb-4">
                   <Input 
                     placeholder="Search your store catalog..." 
                     value={pickerSearch}
                     onChange={e => setPickerSearch(e.target.value)}
-                    className="h-11 rounded-2xl bg-white border-emerald-200 focus-visible:ring-emerald-500 pl-10 shadow-sm"
+                    className="h-11 rounded-[2px] bg-white border-emerald-200 focus-visible:ring-emerald-500 pl-10 shadow-sm"
                   />
                   <LayoutGrid className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-400" />
                 </div>
@@ -736,9 +736,9 @@ export function HomepageManager({ openComponentId }) {
                       <button 
                         key={product.id}
                         onClick={() => addFromCatalog(product)}
-                        className="flex items-center gap-3 p-2 rounded-xl bg-white border border-emerald-100/50 hover:border-emerald-500 hover:bg-emerald-50 transition-all text-left"
+                        className="flex items-center gap-3 p-2 rounded-[2px] bg-white border border-emerald-100/50 hover:border-emerald-500 hover:bg-emerald-50 transition-all text-left"
                       >
-                        <div className="h-10 w-10 rounded-lg bg-zinc-100 overflow-hidden shrink-0 border border-emerald-50">
+                        <div className="h-10 w-10 rounded-[2px] bg-zinc-100 overflow-hidden shrink-0 border border-emerald-50">
                           <img src={product.image || product.imageUrl} className="h-full w-full object-cover" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -757,13 +757,13 @@ export function HomepageManager({ openComponentId }) {
 
             <div className="space-y-4">
               {dropProducts.length > 0 ? dropProducts.map((p, pIdx) => (
-                <div key={pIdx} className="bg-zinc-50 border border-zinc-200 rounded-2xl overflow-hidden shadow-sm transition-all hover:shadow-md">
+                <div key={pIdx} className="bg-zinc-50 border border-zinc-200 rounded-[2px] overflow-hidden shadow-sm transition-all hover:shadow-md">
                   <div className="p-4 bg-zinc-100/50 border-b border-zinc-200/50 flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Drop Item #{pIdx + 1}</span>
                     <Button 
                       size="icon" 
                       variant="ghost" 
-                      className="h-7 w-7 text-zinc-400 hover:text-red-500 rounded-lg transition-colors"
+                      className="h-7 w-7 text-zinc-400 hover:text-red-500 rounded-[2px] transition-colors"
                       onClick={() => {
                         const product = dropProducts[pIdx];
                         if (product.imageUrl) {
@@ -787,7 +787,7 @@ export function HomepageManager({ openComponentId }) {
                           newP[pIdx].name = e.target.value;
                           setDraftSettings({ ...draftSettings, products: newP });
                         }}
-                        className="h-10 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm transition-all focus:bg-white"
+                        className="h-10 rounded-[2px] bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm transition-all focus:bg-white"
                         placeholder="e.g. Sakura Silk Essence"
                       />
                     </div>
@@ -802,7 +802,7 @@ export function HomepageManager({ openComponentId }) {
                             newP[pIdx].launchDate = e.target.value;
                             setDraftSettings({ ...draftSettings, products: newP });
                           }}
-                          className="h-10 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm"
+                          className="h-10 rounded-[2px] bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm"
                           placeholder="e.g. Feb 10, 10:00 AM"
                         />
                       </div>
@@ -811,7 +811,7 @@ export function HomepageManager({ openComponentId }) {
                         <Button
                           variant="outline"
                           size="sm"
-                          className={`h-10 rounded-xl gap-2 font-bold text-[10px] uppercase tracking-widest transition-all ${
+                          className={`h-10 rounded-[2px] gap-2 font-bold text-[10px] uppercase tracking-widest transition-all ${
                             p.showOnline !== false 
                               ? 'border-emerald-100 text-emerald-600 hover:bg-emerald-50 bg-emerald-50/30' 
                               : 'border-zinc-200 text-zinc-400 hover:bg-zinc-100'
@@ -831,7 +831,7 @@ export function HomepageManager({ openComponentId }) {
                     <div className="space-y-1.5">
                       <Label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">Promotion Image</Label>
                       <div className="flex gap-3">
-                        <div className="relative group/img h-11 w-11 rounded-xl bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 shadow-inner">
+                        <div className="relative group/img h-11 w-11 rounded-[2px] bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 shadow-inner">
                           {p.imageUrl ? (
                             <img src={p.imageUrl} className="h-full w-full object-cover" />
                           ) : (
@@ -846,11 +846,11 @@ export function HomepageManager({ openComponentId }) {
                               newP[pIdx].imageUrl = e.target.value;
                               setDraftSettings({ ...draftSettings, products: newP });
                             }}
-                            className="h-11 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[12px] font-medium shadow-sm flex-1"
+                            className="h-11 rounded-[2px] bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[12px] font-medium shadow-sm flex-1"
                             placeholder="Paste image URL here..."
                           />
                           <label className="cursor-pointer">
-                            <div className="h-11 px-4 flex items-center justify-center gap-2 rounded-xl bg-zinc-100 text-zinc-600 border border-zinc-200 hover:bg-zinc-200 transition-all font-bold text-[10px] uppercase tracking-widest">
+                            <div className="h-11 px-4 flex items-center justify-center gap-2 rounded-[2px] bg-zinc-100 text-zinc-600 border border-zinc-200 hover:bg-zinc-200 transition-all font-bold text-[10px] uppercase tracking-widest">
                               <Upload className="h-3.5 w-3.5" />
                               <span>Upload</span>
                             </div>
@@ -867,7 +867,7 @@ export function HomepageManager({ openComponentId }) {
                   </div>
                 </div>
               )) : (
-                <div className="py-12 px-6 border-2 border-dashed border-zinc-100 rounded-[2rem] text-center bg-zinc-50/50">
+                <div className="py-12 px-6 border-2 border-dashed border-zinc-100 rounded-[2px] text-center bg-zinc-50/50">
                    <LayoutGrid className="h-10 w-10 text-zinc-200 mx-auto mb-4" />
                    <p className="text-[11px] font-black text-zinc-400 uppercase tracking-widest">No products in this drop yet</p>
                    <p className="text-[10px] text-zinc-400 mt-2 font-medium">Use the buttons above to start adding products</p>
@@ -880,7 +880,7 @@ export function HomepageManager({ openComponentId }) {
 
           <div className="space-y-2">
             <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 block ml-1">Global Drop Deadline</Label>
-            <Input type="date" value={draftSettings.deadline || ''} onChange={e => setDraftSettings({ ...draftSettings, deadline: e.target.value })} className="h-11 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 shadow-sm" />
+            <Input type="date" value={draftSettings.deadline || ''} onChange={e => setDraftSettings({ ...draftSettings, deadline: e.target.value })} className="h-11 rounded-[2px] bg-white border-zinc-200 focus-visible:ring-indigo-500 shadow-sm" />
           </div>
         </div>
       );
@@ -890,17 +890,17 @@ export function HomepageManager({ openComponentId }) {
       return (
         <div className="space-y-6">
           {renderCommonHeaderInput()}
-          <div className="p-4 bg-indigo-50/50 text-indigo-600 rounded-2xl border border-indigo-100 flex gap-3 text-sm">
+          <div className="p-4 bg-indigo-50/50 text-indigo-600 rounded-[2px] border border-indigo-100 flex gap-3 text-sm">
             <div className="mt-0.5"><LayoutTemplate className="h-4 w-4" /></div>
             <p>Embed a video and list the products featured inside it to create an interactive shoppable experience.</p>
           </div>
           <div className="space-y-2">
             <Label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">YouTube/Vimeo Embed URL</Label>
-            <Input value={draftSettings.videoUrl || ''} onChange={e => setDraftSettings({ ...draftSettings, videoUrl: e.target.value })} className="h-12 rounded-xl bg-zinc-50/50 focus-visible:ring-emerald-500 shadow-inner font-medium text-indigo-600" placeholder="https://youtube.com/embed/..." />
+            <Input value={draftSettings.videoUrl || ''} onChange={e => setDraftSettings({ ...draftSettings, videoUrl: e.target.value })} className="h-12 rounded-[2px] bg-zinc-50/50 focus-visible:ring-emerald-500 shadow-inner font-medium text-indigo-600" placeholder="https://youtube.com/embed/..." />
           </div>
           <div className="space-y-2">
             <Label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Featured Product IDs (Comma Separated)</Label>
-            <Input value={draftSettings.productsCsv || ''} onChange={e => setDraftSettings({ ...draftSettings, productsCsv: e.target.value })} className="h-12 rounded-xl bg-zinc-50/50 focus-visible:ring-emerald-500 shadow-inner placeholder:font-normal" placeholder="cmm..., ckm..." />
+            <Input value={draftSettings.productsCsv || ''} onChange={e => setDraftSettings({ ...draftSettings, productsCsv: e.target.value })} className="h-12 rounded-[2px] bg-zinc-50/50 focus-visible:ring-emerald-500 shadow-inner placeholder:font-normal" placeholder="cmm..., ckm..." />
           </div>
         </div>
       );
@@ -924,7 +924,7 @@ export function HomepageManager({ openComponentId }) {
                 }}
                 variant="outline" 
                 size="sm" 
-                className="h-8 rounded-lg border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold text-[9px] uppercase tracking-widest gap-2"
+                className="h-8 rounded-[2px] border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold text-[9px] uppercase tracking-widest gap-2"
               >
                 <Plus className="h-3 w-3" /> Custom
               </Button>
@@ -944,13 +944,13 @@ export function HomepageManager({ openComponentId }) {
                         setDraftSettings({ ...draftSettings, categories: [...cats, { label: cat.label, image: cat.image }] });
                       }
                     }}
-                    className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                    className={`flex items-center gap-3 p-3 rounded-[2px] border-2 transition-all text-left ${
                       isSelected 
                         ? 'border-emerald-500 bg-emerald-50/50 shadow-md ring-1 ring-emerald-500/20' 
                         : 'border-zinc-100 bg-white hover:border-zinc-300 hover:bg-zinc-50'
                     }`}
                   >
-                    <div className="h-9 w-9 rounded-lg bg-zinc-50 border border-zinc-100 overflow-hidden shrink-0 flex items-center justify-center">
+                    <div className="h-9 w-9 rounded-[2px] bg-zinc-50 border border-zinc-100 overflow-hidden shrink-0 flex items-center justify-center">
                       <img src={cat.image} alt={cat.label} className="w-full h-full object-cover" />
                     </div>
                     <span className={`text-[10px] font-bold truncate flex-1 uppercase tracking-tight ${isSelected ? 'text-emerald-700' : 'text-zinc-600'}`}>{cat.label}</span>
@@ -962,7 +962,7 @@ export function HomepageManager({ openComponentId }) {
 
             {/* Selected categories count and clear all */}
             {cats.length > 0 && (
-              <div className="flex items-center justify-between px-2 py-2 bg-emerald-50/50 rounded-xl border border-emerald-100">
+              <div className="flex items-center justify-between px-2 py-2 bg-emerald-50/50 rounded-[2px] border border-emerald-100">
                 <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">{cats.length === 1 ? '1 category' : `${cats.length} categories`} selected</span>
                 <Button 
                   onClick={() => setDraftSettings({ ...draftSettings, categories: [] })}
@@ -978,7 +978,7 @@ export function HomepageManager({ openComponentId }) {
             {/* Reordering and Editing List */}
             <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
               {cats.length === 0 ? (
-                <div className="py-12 px-6 border-2 border-dashed border-zinc-100 rounded-[2rem] text-center bg-zinc-50/50">
+                <div className="py-12 px-6 border-2 border-dashed border-zinc-100 rounded-[2px] text-center bg-zinc-50/50">
                    <LayoutGrid className="h-10 w-10 text-zinc-200 mx-auto mb-4" />
                    <p className="text-[11px] font-black text-zinc-400 uppercase tracking-widest mb-4">No categories selected</p>
                    <Button
@@ -990,11 +990,11 @@ export function HomepageManager({ openComponentId }) {
                    </Button>
                 </div>
               ) : cats.map((cat, idx) => (
-                <div key={idx} className="bg-zinc-50 border border-zinc-200 rounded-2xl overflow-hidden shadow-sm transition-all hover:shadow-md">
+                <div key={idx} className="bg-zinc-50 border border-zinc-200 rounded-[2px] overflow-hidden shadow-sm transition-all hover:shadow-md">
                   <div className="p-4 bg-zinc-100/50 border-b border-zinc-200/50 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Category #{idx + 1}</span>
-                       <div className="flex bg-white rounded-md border border-zinc-200 overflow-hidden ml-2 shadow-sm">
+                       <div className="flex bg-white rounded-[2px] border border-zinc-200 overflow-hidden ml-2 shadow-sm">
                         <button className="h-6 w-7 flex items-center justify-center hover:bg-zinc-50 text-zinc-400 hover:text-indigo-600 transition-colors" disabled={idx === 0} onClick={() => {
                            const n = [...cats]; [n[idx], n[idx-1]] = [n[idx-1], n[idx]]; 
                            setDraftSettings({...draftSettings, categories: n});
@@ -1012,7 +1012,7 @@ export function HomepageManager({ openComponentId }) {
                     <Button 
                       size="icon" 
                       variant="ghost" 
-                      className="h-7 w-7 text-zinc-400 hover:text-red-500 rounded-lg transition-colors"
+                      className="h-7 w-7 text-zinc-400 hover:text-red-500 rounded-[2px] transition-colors"
                       onClick={() => {
                         const nC = [...cats]; nC.splice(idx, 1);
                         setDraftSettings({ ...draftSettings, categories: nC });
@@ -1030,7 +1030,7 @@ export function HomepageManager({ openComponentId }) {
                           const nC = [...cats]; nC[idx].label = e.target.value;
                           setDraftSettings({ ...draftSettings, categories: nC });
                         }}
-                        className="h-10 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm transition-all focus:bg-white"
+                        className="h-10 rounded-[2px] bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm transition-all focus:bg-white"
                         placeholder="e.g. Skincare"
                       />
                     </div>
@@ -1038,7 +1038,7 @@ export function HomepageManager({ openComponentId }) {
                     <div className="space-y-1.5">
                       <Label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">Category Image</Label>
                       <div className="flex gap-3">
-                        <div className="relative group/img h-11 w-11 rounded-xl bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 shadow-inner flex items-center justify-center">
+                        <div className="relative group/img h-11 w-11 rounded-[2px] bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 shadow-inner flex items-center justify-center">
                           {cat.image ? (
                             <img src={cat.image} className="h-full w-full object-cover" />
                           ) : (
@@ -1052,11 +1052,11 @@ export function HomepageManager({ openComponentId }) {
                               const nC = [...cats]; nC[idx].image = e.target.value;
                               setDraftSettings({ ...draftSettings, categories: nC });
                             }}
-                            className="h-11 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[12px] font-medium shadow-sm flex-1"
+                            className="h-11 rounded-[2px] bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[12px] font-medium shadow-sm flex-1"
                             placeholder="Paste image URL here..."
                           />
                           <label className="cursor-pointer">
-                            <div className="h-11 px-4 flex items-center justify-center gap-2 rounded-xl bg-zinc-100 text-zinc-600 border border-zinc-200 hover:bg-zinc-200 transition-all font-bold text-[10px] uppercase tracking-widest">
+                            <div className="h-11 px-4 flex items-center justify-center gap-2 rounded-[2px] bg-zinc-100 text-zinc-600 border border-zinc-200 hover:bg-zinc-200 transition-all font-bold text-[10px] uppercase tracking-widest">
                               <Upload className="h-3.5 w-3.5" />
                               <span>Upload</span>
                             </div>
@@ -1136,7 +1136,7 @@ export function HomepageManager({ openComponentId }) {
 
           <div className="space-y-2">
             <Label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Section Subheading / Description</Label>
-            <Input value={draftSettings.subheading || ''} onChange={e => setDraftSettings({ ...draftSettings, subheading: e.target.value })} className="h-12 rounded-xl bg-zinc-50/50 focus-visible:ring-emerald-500 shadow-inner font-medium text-zinc-600" placeholder="Optional brief description or subtitle" />
+            <Input value={draftSettings.subheading || ''} onChange={e => setDraftSettings({ ...draftSettings, subheading: e.target.value })} className="h-12 rounded-[2px] bg-zinc-50/50 focus-visible:ring-emerald-500 shadow-inner font-medium text-zinc-600" placeholder="Optional brief description or subtitle" />
           </div>
 
           <div className="space-y-6">
@@ -1150,7 +1150,7 @@ export function HomepageManager({ openComponentId }) {
                   onClick={() => setShowPicker(!showPicker)}
                   variant="outline" 
                   size="sm" 
-                  className={`h-8 rounded-lg border-emerald-100 text-emerald-600 hover:bg-emerald-50 font-bold text-[9px] uppercase tracking-widest gap-2 ${showPicker ? 'bg-emerald-50 ring-2 ring-emerald-500/20' : ''}`}
+                  className={`h-8 rounded-[2px] border-emerald-100 text-emerald-600 hover:bg-emerald-50 font-bold text-[9px] uppercase tracking-widest gap-2 ${showPicker ? 'bg-emerald-50 ring-2 ring-emerald-500/20' : ''}`}
                 >
                   <LayoutGrid className="h-3 w-3" /> {showPicker ? 'Close Picker' : 'Pick from Store'}
                 </Button>
@@ -1158,13 +1158,13 @@ export function HomepageManager({ openComponentId }) {
             </div>
 
             {showPicker && (
-              <div className="bg-emerald-50/50 border border-emerald-100 rounded-[2rem] p-6 animate-in slide-in-from-top-2 duration-300">
+              <div className="bg-emerald-50/50 border border-emerald-100 rounded-[2px] p-6 animate-in slide-in-from-top-2 duration-300">
                 <div className="relative mb-4">
                   <Input 
                     placeholder="Search your store catalog..." 
                     value={pickerSearch}
                     onChange={e => setPickerSearch(e.target.value)}
-                    className="h-11 rounded-2xl bg-white border-emerald-200 focus-visible:ring-emerald-500 pl-10 shadow-sm"
+                    className="h-11 rounded-[2px] bg-white border-emerald-200 focus-visible:ring-emerald-500 pl-10 shadow-sm"
                   />
                   <LayoutGrid className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-400" />
                 </div>
@@ -1174,9 +1174,9 @@ export function HomepageManager({ openComponentId }) {
                       <button 
                         key={product.id}
                         onClick={() => addFromCatalog(product)}
-                        className="flex items-center gap-3 p-2 rounded-xl bg-white border border-emerald-100/50 hover:border-emerald-500 hover:bg-emerald-50 transition-all text-left"
+                        className="flex items-center gap-3 p-2 rounded-[2px] bg-white border border-emerald-100/50 hover:border-emerald-500 hover:bg-emerald-50 transition-all text-left"
                       >
-                        <div className="h-10 w-10 rounded-lg bg-zinc-100 overflow-hidden shrink-0 border border-emerald-50">
+                        <div className="h-10 w-10 rounded-[2px] bg-zinc-100 overflow-hidden shrink-0 border border-emerald-50">
                           <img src={product.image || product.imageUrls?.[0]} className="h-full w-full object-cover" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1195,18 +1195,18 @@ export function HomepageManager({ openComponentId }) {
 
             <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
               {selectedProducts.length > 0 ? selectedProducts.map((p, pIdx) => (
-                <div key={`${p.id}-${pIdx}`} className="bg-zinc-50 border border-zinc-200 rounded-2xl p-4 transition-all hover:bg-white hover:shadow-md hover:border-indigo-100">
+                <div key={`${p.id}-${pIdx}`} className="bg-zinc-50 border border-zinc-200 rounded-[2px] p-4 transition-all hover:bg-white hover:shadow-md hover:border-indigo-100">
                   <div className="flex items-center gap-4">
                     <div className="flex flex-col gap-1">
-                      <button className="h-6 w-6 flex items-center justify-center rounded-md hover:bg-zinc-200 text-zinc-400 hover:text-indigo-600 transition-colors" disabled={pIdx === 0} onClick={() => moveProduct(pIdx, -1)}>
+                      <button className="h-6 w-6 flex items-center justify-center rounded-[2px] hover:bg-zinc-200 text-zinc-400 hover:text-indigo-600 transition-colors" disabled={pIdx === 0} onClick={() => moveProduct(pIdx, -1)}>
                         <ArrowUp className="h-3 w-3" />
                       </button>
-                      <button className="h-6 w-6 flex items-center justify-center rounded-md hover:bg-zinc-200 text-zinc-400 hover:text-indigo-600 transition-colors" disabled={pIdx === selectedProducts.length - 1} onClick={() => moveProduct(pIdx, 1)}>
+                      <button className="h-6 w-6 flex items-center justify-center rounded-[2px] hover:bg-zinc-200 text-zinc-400 hover:text-indigo-600 transition-colors" disabled={pIdx === selectedProducts.length - 1} onClick={() => moveProduct(pIdx, 1)}>
                         <ArrowDown className="h-3 w-3" />
                       </button>
                     </div>
                     
-                    <div className="h-18 w-18 rounded-xl bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 shadow-inner">
+                    <div className="h-18 w-18 rounded-[2px] bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 shadow-inner">
                       <img src={p.imageUrl} className="h-full w-full object-cover" />
                     </div>
                     
@@ -1218,7 +1218,7 @@ export function HomepageManager({ openComponentId }) {
                           newP[pIdx].name = e.target.value;
                           setDraftSettings({ ...draftSettings, products: newP });
                         }}
-                        className="h-10 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm transition-all focus:bg-white"
+                        className="h-10 rounded-[2px] bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm transition-all focus:bg-white"
                         placeholder="Product Name"
                       />
                     </div>
@@ -1227,7 +1227,7 @@ export function HomepageManager({ openComponentId }) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className={`h-9 w-9 rounded-xl transition-all ${
+                        className={`h-9 w-9 rounded-[2px] transition-all ${
                           p.showOnline !== false 
                             ? 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50' 
                             : 'text-zinc-300 hover:text-zinc-500 hover:bg-zinc-100'
@@ -1246,7 +1246,7 @@ export function HomepageManager({ openComponentId }) {
                     <Button 
                       size="icon" 
                       variant="ghost" 
-                      className="h-10 w-10 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-xl"
+                      className="h-10 w-10 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-[2px]"
                       onClick={() => {
                         const newP = [...selectedProducts];
                         newP.splice(pIdx, 1);
@@ -1258,7 +1258,7 @@ export function HomepageManager({ openComponentId }) {
                   </div>
                 </div>
               )) : (
-                <div className="py-12 px-6 border-2 border-dashed border-zinc-100 rounded-[2rem] text-center bg-zinc-50/50">
+                <div className="py-12 px-6 border-2 border-dashed border-zinc-100 rounded-[2px] text-center bg-zinc-50/50">
                    <LayoutGrid className="h-10 w-10 text-zinc-200 mx-auto mb-4" />
                    <p className="text-[11px] font-black text-zinc-400 uppercase tracking-widest">Automatic Mode</p>
                    <p className="text-[10px] text-zinc-400 mt-2 font-medium">Currently automatically fetching all available products.</p>
@@ -1272,11 +1272,11 @@ export function HomepageManager({ openComponentId }) {
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 block ml-1">Max Products Shown</Label>
-              <Input type="number" min="1" max="24" value={draftSettings.maxItems || 12} onChange={e => setDraftSettings({ ...draftSettings, maxItems: Number(e.target.value) })} className="h-11 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 shadow-sm" />
+              <Input type="number" min="1" max="24" value={draftSettings.maxItems || 12} onChange={e => setDraftSettings({ ...draftSettings, maxItems: Number(e.target.value) })} className="h-11 rounded-[2px] bg-white border-zinc-200 focus-visible:ring-indigo-500 shadow-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 block ml-1">Custom Background</Label>
-              <Input value={draftSettings.bgColor || ''} onChange={e => setDraftSettings({ ...draftSettings, bgColor: e.target.value })} className="h-11 rounded-xl bg-white border-zinc-200 focus-visible:ring-indigo-500 shadow-sm" placeholder="#FFFFFF or transparent" />
+              <Input value={draftSettings.bgColor || ''} onChange={e => setDraftSettings({ ...draftSettings, bgColor: e.target.value })} className="h-11 rounded-[2px] bg-white border-zinc-200 focus-visible:ring-indigo-500 shadow-sm" placeholder="#FFFFFF or transparent" />
             </div>
           </div>
         </div>
@@ -1343,7 +1343,7 @@ export function HomepageManager({ openComponentId }) {
 
           <div className="space-y-2">
             <Label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Section Subheading</Label>
-            <Input value={draftSettings.subheading || ''} onChange={e => setDraftSettings({ ...draftSettings, subheading: e.target.value })} className="h-11 rounded-xl bg-zinc-50/50 border-zinc-200 focus-visible:ring-indigo-500 font-medium text-zinc-600" placeholder="Optional brief description" />
+            <Input value={draftSettings.subheading || ''} onChange={e => setDraftSettings({ ...draftSettings, subheading: e.target.value })} className="h-11 rounded-[2px] bg-zinc-50/50 border-zinc-200 focus-visible:ring-indigo-500 font-medium text-zinc-600" placeholder="Optional brief description" />
           </div>
 
           {/* Search + Add */}
@@ -1353,7 +1353,7 @@ export function HomepageManager({ openComponentId }) {
                 placeholder="Search brands..." 
                 value={pickerSearch}
                 onChange={e => setPickerSearch(e.target.value)}
-                className="h-10 rounded-xl bg-zinc-50 border-zinc-200 pl-9 text-[11px] font-medium"
+                className="h-10 rounded-[2px] bg-zinc-50 border-zinc-200 pl-9 text-[11px] font-medium"
               />
               <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
             </div>
@@ -1363,7 +1363,7 @@ export function HomepageManager({ openComponentId }) {
               }}
               variant="outline"
               size="sm"
-              className="h-10 rounded-xl border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-bold text-[9px] uppercase tracking-widest gap-2 shrink-0"
+              className="h-10 rounded-[2px] border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-bold text-[9px] uppercase tracking-widest gap-2 shrink-0"
             >
               <Plus className="h-3.5 w-3.5" /> Add Brand
             </Button>
@@ -1372,10 +1372,10 @@ export function HomepageManager({ openComponentId }) {
           {/* ALL BRANDS — flat editable list */}
           <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
             {filteredBrands.map((brand, bIdx) => (
-              <div key={`brand-${brand.name}-${bIdx}`} className="bg-white border border-zinc-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+              <div key={`brand-${brand.name}-${bIdx}`} className="bg-white border border-zinc-100 rounded-[2px] overflow-hidden shadow-sm hover:shadow-md transition-all">
                 <div className="p-3 flex items-center gap-3">
                   {/* Logo */}
-                  <div className="h-12 w-16 rounded-xl bg-zinc-50 border border-zinc-100 flex items-center justify-center p-1 shrink-0 overflow-hidden">
+                  <div className="h-12 w-16 rounded-[2px] bg-zinc-50 border border-zinc-100 flex items-center justify-center p-1 shrink-0 overflow-hidden">
                      {brand.logo ? (
                        <img src={brand.logo.startsWith('/uploads') ? `${SERVER_URL}${brand.logo}` : brand.logo} className="max-w-full max-h-full object-contain" />
                      ) : (
@@ -1388,12 +1388,12 @@ export function HomepageManager({ openComponentId }) {
                   </div>
                   {/* Actions */}
                   <div className="flex gap-1 shrink-0">
-                     <Button size="icon" variant="ghost" className="h-7 w-7 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg" onClick={() => {
+                     <Button size="icon" variant="ghost" className="h-7 w-7 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-[2px]" onClick={() => {
                         const editKey = `editing_brand_${brand.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
                         const el = document.getElementById(editKey);
                         if (el) el.classList.toggle('hidden');
                      }}><Edit3 className="h-3 w-3" /></Button>
-                     <Button size="icon" variant="ghost" className="h-7 w-7 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-lg" onClick={() => {
+                     <Button size="icon" variant="ghost" className="h-7 w-7 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-[2px]" onClick={() => {
                         setDraftSettings({ ...draftSettings, hiddenBrands: [...(draftSettings.hiddenBrands || []), brand.name] });
                      }}><Trash2 className="h-3 w-3" /></Button>
                   </div>
@@ -1407,7 +1407,7 @@ export function HomepageManager({ openComponentId }) {
                     <Input 
                       defaultValue={brand.name} 
                       onBlur={e => updateBrand(brand.name, 'name', e.target.value)} 
-                      className="h-8 rounded-lg border-zinc-100 bg-white text-[11px] font-bold" 
+                      className="h-8 rounded-[2px] border-zinc-100 bg-white text-[11px] font-bold" 
                     />
                   </div>
                   <div className="space-y-1">
@@ -1416,10 +1416,10 @@ export function HomepageManager({ openComponentId }) {
                       <Input 
                         defaultValue={brand.logo || ''} 
                         onBlur={e => updateBrand(brand.name, 'logo', e.target.value)} 
-                        className="h-8 rounded-lg border-zinc-100 bg-white text-[9px] font-medium" 
+                        className="h-8 rounded-[2px] border-zinc-100 bg-white text-[9px] font-medium" 
                       />
                       <label className="cursor-pointer shrink-0">
-                        <div className="h-8 px-3 rounded-lg bg-zinc-100 text-zinc-600 border border-zinc-200 hover:bg-zinc-200 flex items-center justify-center transition-all">
+                        <div className="h-8 px-3 rounded-[2px] bg-zinc-100 text-zinc-600 border border-zinc-200 hover:bg-zinc-200 flex items-center justify-center transition-all">
                           <Upload className="h-3 w-3" />
                         </div>
                         <input type="file" className="hidden" accept="image/*" onChange={(e) => handleBrandLogoUpload(brand.name, e)} />
@@ -1436,11 +1436,11 @@ export function HomepageManager({ openComponentId }) {
           <div className="grid grid-cols-2 gap-4">
              <div className="space-y-1">
                <Label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">Section Background</Label>
-               <Input value={draftSettings.bgColor || ''} onChange={e => setDraftSettings({ ...draftSettings, bgColor: e.target.value })} className="h-10 rounded-xl bg-zinc-50/50 border-zinc-200 focus-visible:ring-indigo-500 text-[12px] font-mono" placeholder="#FFFFFF" />
+               <Input value={draftSettings.bgColor || ''} onChange={e => setDraftSettings({ ...draftSettings, bgColor: e.target.value })} className="h-10 rounded-[2px] bg-zinc-50/50 border-zinc-200 focus-visible:ring-indigo-500 text-[12px] font-mono" placeholder="#FFFFFF" />
              </div>
              <div className="space-y-1">
                <Label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">Limit (Slider)</Label>
-               <Input type="number" value={draftSettings.maxItems || 12} onChange={e => setDraftSettings({ ...draftSettings, maxItems: Number(e.target.value) })} className="h-10 rounded-xl bg-zinc-50/50 border-zinc-200 focus-visible:ring-indigo-500 font-bold" />
+               <Input type="number" value={draftSettings.maxItems || 12} onChange={e => setDraftSettings({ ...draftSettings, maxItems: Number(e.target.value) })} className="h-10 rounded-[2px] bg-zinc-50/50 border-zinc-200 focus-visible:ring-indigo-500 font-bold" />
              </div>
           </div>
         </div>
@@ -1454,15 +1454,15 @@ export function HomepageManager({ openComponentId }) {
         {renderCommonHeaderInput()}
         <div className="space-y-2">
           <Label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Section Subheading / Description</Label>
-          <Input value={draftSettings.subheading || ''} onChange={e => setDraftSettings({ ...draftSettings, subheading: e.target.value })} className="h-12 rounded-xl bg-zinc-50/50 focus-visible:ring-emerald-500 shadow-inner font-medium text-zinc-600" placeholder="Optional brief description or subtitle" />
+          <Input value={draftSettings.subheading || ''} onChange={e => setDraftSettings({ ...draftSettings, subheading: e.target.value })} className="h-12 rounded-[2px] bg-zinc-50/50 focus-visible:ring-emerald-500 shadow-inner font-medium text-zinc-600" placeholder="Optional brief description or subtitle" />
         </div>
         <div className="space-y-2">
           <Label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Max Products Shown</Label>
-          <Input type="number" min="1" max="100" value={draftSettings.maxItems || 12} onChange={e => setDraftSettings({ ...draftSettings, maxItems: Number(e.target.value) })} className="h-12 rounded-xl bg-zinc-50/50 focus-visible:ring-emerald-500 shadow-inner font-medium" />
+          <Input type="number" min="1" max="100" value={draftSettings.maxItems || 12} onChange={e => setDraftSettings({ ...draftSettings, maxItems: Number(e.target.value) })} className="h-12 rounded-[2px] bg-zinc-50/50 focus-visible:ring-emerald-500 shadow-inner font-medium" />
         </div>
         <div className="space-y-2">
           <Label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Custom Background (HEX or tailwind class)</Label>
-          <Input value={draftSettings.bgColor || ''} onChange={e => setDraftSettings({ ...draftSettings, bgColor: e.target.value })} className="h-12 rounded-xl bg-zinc-50/50 focus-visible:ring-emerald-500 shadow-inner font-medium font-mono" placeholder="#FFFFFF or transparent" />
+          <Input value={draftSettings.bgColor || ''} onChange={e => setDraftSettings({ ...draftSettings, bgColor: e.target.value })} className="h-12 rounded-[2px] bg-zinc-50/50 focus-visible:ring-emerald-500 shadow-inner font-medium font-mono" placeholder="#FFFFFF or transparent" />
         </div>
       </div>
     );
@@ -1470,7 +1470,7 @@ export function HomepageManager({ openComponentId }) {
 
   if (loading && sections.length === 0) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh]">
-      <div className="h-8 w-8 border-4 border-zinc-200 border-t-indigo-950 rounded-full animate-spin"></div>
+      <div className="h-8 w-8 border-4 border-zinc-200 border-t-indigo-950 rounded-[2px] animate-spin"></div>
       <p className="mt-4 text-sm font-medium text-zinc-500 uppercase tracking-widest">Loading Builder...</p>
     </div>
   );
@@ -1481,7 +1481,7 @@ export function HomepageManager({ openComponentId }) {
         {/* Standalone Header */}
         <div className="px-8 py-5 bg-white border-b border-zinc-200 z-10 w-full shrink-0 flex items-center justify-between shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center">
+            <div className="h-12 w-12 rounded-[2px] bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center">
               <MonitorSmartphone className="h-6 w-6" />
             </div>
             <div>
@@ -1493,7 +1493,7 @@ export function HomepageManager({ openComponentId }) {
               </p>
             </div>
           </div>
-          <Button onClick={saveSettings} className="rounded-xl h-11 px-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-indigo-600/20 transition-all hover:-translate-y-0.5">
+          <Button onClick={saveSettings} className="rounded-[2px] h-11 px-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-indigo-600/20 transition-all hover:-translate-y-0.5">
             Save Changes
           </Button>
         </div>
@@ -1524,7 +1524,7 @@ export function HomepageManager({ openComponentId }) {
       <div className="sticky top-0 z-20 bg-[#f9fafb]/80 backdrop-blur-3xl border-b border-stone-200/50 pb-8 pt-10 mb-12 px-8 md:px-12 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 w-full">
           <div>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-stone-100/80 text-stone-600 text-[9px] font-black uppercase tracking-[0.2em] mb-6 shadow-sm border border-stone-200/50">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-[2px] bg-stone-100/80 text-stone-600 text-[9px] font-black uppercase tracking-[0.2em] mb-6 shadow-sm border border-stone-200/50">
               <LayoutDashboard className="h-3.5 w-3.5 text-indigo-950" /> SITE ARCHITECTURE
             </div>
             <h1 className={`${THEME.typography.headings.h1} uppercase leading-none mb-4 bg-clip-text text-transparent ${THEME.gradients.brand} pb-1`}>
@@ -1544,7 +1544,7 @@ export function HomepageManager({ openComponentId }) {
               >
                 <Button
                   onClick={handleSaveOrder}
-                  className="rounded-[1.25rem] h-14 px-8 shadow-2xl shadow-indigo-950/30 bg-indigo-950 hover:bg-[#1a0b2e] border border-indigo-900 text-white font-black uppercase text-[10px] tracking-widest transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
+                  className="rounded-[2px] h-14 px-8 shadow-2xl shadow-indigo-950/30 bg-indigo-950 hover:bg-[#1a0b2e] border border-indigo-900 text-white font-black uppercase text-[10px] tracking-widest transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
                 >
                   <Save className="h-4 w-4" /> Commit Layout
                 </Button>
@@ -1570,7 +1570,7 @@ export function HomepageManager({ openComponentId }) {
               delay: idx * 0.15
             }}
           >
-           <div className={`group relative bg-white border border-stone-100 rounded-[18px] transition-all duration-300 ease-out overflow-hidden
+           <div className={`group relative bg-white border border-stone-100 rounded-[2px] transition-all duration-300 ease-out overflow-hidden
               ${section.isActive ? 'shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_30px_rgba(0,0,0,0.1)] hover:-translate-y-1' : 'opacity-[0.85] bg-stone-50/50 shadow-sm'}
             `}>
               {/* Left highlight border (Active state feedback) */}
@@ -1581,7 +1581,7 @@ export function HomepageManager({ openComponentId }) {
                 {/* Left Side: Drag, Icon, Title, Tag */}
                 <div className="flex flex-1 items-center gap-5 min-w-0">
                   {/* Drag handles (Up/Down) */}
-                  <div className="flex flex-col bg-white rounded-[10px] overflow-hidden shrink-0 border border-stone-200/60 shadow-sm">
+                  <div className="flex flex-col bg-white rounded-[2px] overflow-hidden shrink-0 border border-stone-200/60 shadow-sm">
                     <button className="h-7 w-8 flex items-center justify-center hover:bg-stone-100 text-stone-400 hover:text-purple-900 transition-colors" onClick={() => moveSection(idx, -1)} disabled={idx === 0}>
                       <ArrowUp className="h-[14px] w-[14px]" />
                     </button>
@@ -1592,7 +1592,7 @@ export function HomepageManager({ openComponentId }) {
                   </div>
 
                   {/* Type Icon */}
-                  <div className={`h-12 w-12 rounded-full flex items-center justify-center shrink-0 transition-all ${section.isActive ? 'bg-indigo-50 text-indigo-600' : 'bg-stone-100 text-stone-400'}`}>
+                  <div className={`h-12 w-12 rounded-[2px] flex items-center justify-center shrink-0 transition-all ${section.isActive ? 'bg-indigo-50 text-indigo-600' : 'bg-stone-100 text-stone-400'}`}>
                     {getSectionIcon(section.componentId)}
                   </div>
 
@@ -1607,8 +1607,8 @@ export function HomepageManager({ openComponentId }) {
                         {section.componentId}
                       </span>
                       {/* Active Status Badge */}
-                      <div className="flex items-center gap-1.5 bg-stone-100/60 px-2 py-0.5 rounded-full border border-stone-200/50">
-                        <span className={`h-1.5 w-1.5 rounded-full ${section.isActive ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-stone-300'}`}></span>
+                      <div className="flex items-center gap-1.5 bg-stone-100/60 px-2 py-0.5 rounded-[2px] border border-stone-200/50">
+                        <span className={`h-1.5 w-1.5 rounded-[2px] ${section.isActive ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-stone-300'}`}></span>
                         <span className="text-[10px] uppercase tracking-wider font-bold text-stone-500">{section.isActive ? 'Active' : 'Disabled'}</span>
                       </div>
                     </div>
@@ -1620,7 +1620,7 @@ export function HomepageManager({ openComponentId }) {
                   <Button
                     onClick={() => openSettings(section)}
                     variant="ghost"
-                    className="rounded-full h-10 px-5 bg-stone-100 hover:bg-stone-200 text-purple-900 font-semibold text-[13px] shadow-sm transition-all hover:scale-105 active:scale-95 border border-stone-200/50"
+                    className="rounded-[2px] h-10 px-5 bg-stone-100 hover:bg-stone-200 text-purple-900 font-semibold text-[13px] shadow-sm transition-all hover:scale-105 active:scale-95 border border-stone-200/50"
                   >
                     Configure
                   </Button>
@@ -1641,11 +1641,11 @@ export function HomepageManager({ openComponentId }) {
       </div>
 
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <DialogContent className="max-w-[95vw]! sm:max-w-[95vw]! md:max-w-[95vw]! lg:max-w-[95vw]! w-[95vw]! p-0 rounded-[2rem] overflow-hidden border-zinc-200/60 shadow-2xl bg-zinc-100 gap-0">
+        <DialogContent className="max-w-[95vw]! sm:max-w-[95vw]! md:max-w-[95vw]! lg:max-w-[95vw]! w-[95vw]! p-0 rounded-[2px] overflow-hidden border-zinc-200/60 shadow-2xl bg-zinc-100 gap-0">
           <DialogHeader className="px-8 py-5 bg-white border-b border-zinc-200 z-10 w-full shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center">
+                <div className="h-12 w-12 rounded-[2px] bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center">
                   <MonitorSmartphone className="h-6 w-6" />
                 </div>
                 <div>
@@ -1658,10 +1658,10 @@ export function HomepageManager({ openComponentId }) {
                 </div>
               </div>
               <div className="flex gap-3">
-                <Button variant="ghost" onClick={() => setSettingsOpen(false)} className="rounded-xl h-11 px-6 font-bold uppercase tracking-widest text-[10px] bg-zinc-100 hover:bg-zinc-200 transition-colors">
+                <Button variant="ghost" onClick={() => setSettingsOpen(false)} className="rounded-[2px] h-11 px-6 font-bold uppercase tracking-widest text-[10px] bg-zinc-100 hover:bg-zinc-200 transition-colors">
                   Cancel
                 </Button>
-                <Button onClick={saveSettings} className="rounded-xl h-11 px-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-indigo-600/20 transition-all hover:-translate-y-0.5">
+                <Button onClick={saveSettings} className="rounded-[2px] h-11 px-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-indigo-600/20 transition-all hover:-translate-y-0.5">
                   Publish Changes Let's Go
                 </Button>
               </div>
@@ -1675,17 +1675,17 @@ export function HomepageManager({ openComponentId }) {
                 {renderConfigurator()}
               </div>
               <div className="p-6 bg-zinc-50 border-t border-zinc-200 flex gap-3">
-                <Button variant="ghost" onClick={() => setSettingsOpen(false)} className="flex-1 rounded-xl h-12 font-bold uppercase tracking-widest text-[10px] bg-white border border-zinc-200 hover:bg-zinc-100 transition-colors">
+                <Button variant="ghost" onClick={() => setSettingsOpen(false)} className="flex-1 rounded-[2px] h-12 font-bold uppercase tracking-widest text-[10px] bg-white border border-zinc-200 hover:bg-zinc-100 transition-colors">
                   Cancel
                 </Button>
-                <Button onClick={saveSettings} className="flex-2 rounded-xl h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-indigo-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                <Button onClick={saveSettings} className="flex-2 rounded-[2px] h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-indigo-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
                   <Save className="h-3.5 w-3.5 mr-2" /> Save Changes
                 </Button>
               </div>
             </div>
 
             {/* Split Screen Right: Live Preview Rendering Area */}
-            <div className="flex-1 bg-zinc-50/50 p-8 flex items-start justify-center overflow-y-auto relative hidden lg:flex rounded-br-[2rem] min-w-[700px]">
+            <div className="flex-1 bg-zinc-50/50 p-8 flex items-start justify-center overflow-y-auto relative hidden lg:flex rounded-[2px] min-w-[700px]">
               <div className="absolute inset-x-0 top-0 text-center py-4 text-[10px] font-black uppercase text-zinc-300 tracking-[0.2em] select-none">Live Component Preview</div>
               {renderLivePreview()}
             </div>

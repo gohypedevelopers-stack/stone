@@ -45,9 +45,9 @@ export default function AdminLogin({ onLoginSuccess }) {
     <div className="min-h-screen relative flex items-center justify-center overflow-hidden bg-black selection:bg-pink-500/30">
       {/* Dynamic Background Elements */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600/20 blur-[120px] animate-pulse" style={{ animationDuration: '8s' }} />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-pink-600/20 blur-[140px] animate-pulse" style={{ animationDuration: '10s' }} />
-        <div className="absolute top-[40%] left-[60%] w-[30%] h-[30%] rounded-full bg-purple-600/20 blur-[100px] animate-pulse" style={{ animationDuration: '7s' }} />
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-[2px] bg-blue-600/20 blur-[120px] animate-pulse" style={{ animationDuration: '8s' }} />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-[2px] bg-pink-600/20 blur-[140px] animate-pulse" style={{ animationDuration: '10s' }} />
+        <div className="absolute top-[40%] left-[60%] w-[30%] h-[30%] rounded-[2px] bg-purple-600/20 blur-[100px] animate-pulse" style={{ animationDuration: '7s' }} />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
       </div>
 
@@ -57,7 +57,7 @@ export default function AdminLogin({ onLoginSuccess }) {
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         className="w-full max-w-[420px] p-8 relative z-10"
       >
-        <div className="backdrop-blur-2xl bg-white/5 border border-white/10 p-10 rounded-[2rem] shadow-[0_0_80px_rgba(0,0,0,0.8)] relative overflow-hidden">
+        <div className="backdrop-blur-2xl bg-white/5 border border-white/10 p-10 rounded-[2px] shadow-[0_0_80px_rgba(0,0,0,0.8)] relative overflow-hidden">
           
           {/* Edge Highlights */}
           <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
@@ -68,7 +68,7 @@ export default function AdminLogin({ onLoginSuccess }) {
               initial={{ scale: 0.8, rotate: -15 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.2 }}
-              className="w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center mb-5 shadow-[0_0_30px_rgba(236,72,153,0.4)]"
+              className="w-16 h-16 rounded-[2px] bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center mb-5 shadow-[0_0_30px_rgba(236,72,153,0.4)]"
             >
               <ShieldCheck className="text-white w-8 h-8" />
             </motion.div>
@@ -87,7 +87,7 @@ export default function AdminLogin({ onLoginSuccess }) {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 text-white placeholder-stone-600 rounded-xl pl-11 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-transparent transition-all backdrop-blur-md"
+                  className="w-full bg-white/5 border border-white/10 text-white placeholder-stone-600 rounded-[2px] pl-11 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-transparent transition-all backdrop-blur-md"
                   placeholder="admin@omw.com"
                   required
                 />
@@ -104,7 +104,7 @@ export default function AdminLogin({ onLoginSuccess }) {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 text-white placeholder-stone-600 rounded-xl pl-11 pr-12 py-3.5 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all backdrop-blur-md"
+                  className="w-full bg-white/5 border border-white/10 text-white placeholder-stone-600 rounded-[2px] pl-11 pr-12 py-3.5 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all backdrop-blur-md"
                   placeholder="••••••••"
                   required
                 />
@@ -123,10 +123,10 @@ export default function AdminLogin({ onLoginSuccess }) {
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={isLoading}
-              className="w-full mt-8 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-xl py-4 flex items-center justify-center gap-2 hover:shadow-[0_0_30px_rgba(236,72,153,0.5)] transition-all disabled:opacity-70 disabled:pointer-events-none"
+              className="w-full mt-8 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-[2px] py-4 flex items-center justify-center gap-2 hover:shadow-[0_0_30px_rgba(236,72,153,0.5)] transition-all disabled:opacity-70 disabled:pointer-events-none"
             >
               {isLoading ? (
-                <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-[2px] animate-spin" />
               ) : (
                 <>
                   <span>Authenticate Access</span>

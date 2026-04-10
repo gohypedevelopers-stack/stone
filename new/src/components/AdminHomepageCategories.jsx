@@ -86,7 +86,7 @@ export function AdminHomepageCategories() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 relative max-w-4xl">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-zinc-200">
         <div>
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-100 text-violet-700 text-[10px] font-black uppercase tracking-widest mb-4 border border-violet-200">
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-[2px] bg-violet-100 text-violet-700 text-[10px] font-black uppercase tracking-widest mb-4 border border-violet-200">
             Storefront
           </span>
           <h1 className="text-3xl font-black text-zinc-900 tracking-tight">Homepage Categories</h1>
@@ -94,7 +94,7 @@ export function AdminHomepageCategories() {
             Add or change the category bubbles displayed on the main homepage.
           </p>
         </div>
-        <Button onClick={handleSave} className="rounded-xl h-12 px-6 bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs uppercase tracking-widest gap-2 shadow-lg shadow-violet-600/20">
+        <Button onClick={handleSave} className="rounded-[2px] h-12 px-6 bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs uppercase tracking-widest gap-2 shadow-lg shadow-violet-600/20">
           <Save className="h-4 w-4" /> Save Changes
         </Button>
       </header>
@@ -106,7 +106,7 @@ export function AdminHomepageCategories() {
                 onClick={() => setCategories([...categories, { label: "New Item", image: "" }])}
                 variant="outline" 
                 size="sm" 
-                className="h-9 rounded-xl border-violet-200 text-violet-700 hover:bg-violet-50 font-bold text-[10px] uppercase tracking-widest gap-2"
+                className="h-9 rounded-[2px] border-violet-200 text-violet-700 hover:bg-violet-50 font-bold text-[10px] uppercase tracking-widest gap-2"
             >
                 <Plus className="h-3.5 w-3.5" /> Add Category Bubble
             </Button>
@@ -114,24 +114,24 @@ export function AdminHomepageCategories() {
 
         <div className="space-y-4">
             {categories.length === 0 && (
-                <div className="py-12 bg-zinc-50 rounded-2xl border-2 border-dashed border-zinc-200 text-center text-zinc-500 font-medium text-sm">
+                <div className="py-12 bg-zinc-50 rounded-[2px] border-2 border-dashed border-zinc-200 text-center text-zinc-500 font-medium text-sm">
                     No categories added yet.
                 </div>
             )}
             
             {categories.map((cat, idx) => (
-                <div key={idx} className="bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm flex items-stretch hover:shadow-md transition-shadow">
+                <div key={idx} className="bg-white border border-zinc-200 rounded-[2px] overflow-hidden shadow-sm flex items-stretch hover:shadow-md transition-shadow">
                     {/* Reorder Anchors */}
                     <div className="flex flex-col bg-zinc-50 border-r border-zinc-200 p-2 justify-center gap-2">
                         <button 
-                            className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-white text-zinc-400 hover:text-violet-600 shadow-sm border border-transparent hover:border-zinc-200 transition-all disabled:opacity-30" 
+                            className="h-8 w-8 flex items-center justify-center rounded-[2px] hover:bg-white text-zinc-400 hover:text-violet-600 shadow-sm border border-transparent hover:border-zinc-200 transition-all disabled:opacity-30" 
                             disabled={idx === 0} 
                             onClick={() => { const n = [...categories]; [n[idx], n[idx-1]] = [n[idx-1], n[idx]]; setCategories(n); }}
                         >
                             <ArrowUp className="h-4 w-4" />
                         </button>
                         <button 
-                            className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-white text-zinc-400 hover:text-violet-600 shadow-sm border border-transparent hover:border-zinc-200 transition-all disabled:opacity-30" 
+                            className="h-8 w-8 flex items-center justify-center rounded-[2px] hover:bg-white text-zinc-400 hover:text-violet-600 shadow-sm border border-transparent hover:border-zinc-200 transition-all disabled:opacity-30" 
                             disabled={idx === categories.length - 1} 
                             onClick={() => { const n = [...categories]; [n[idx], n[idx+1]] = [n[idx+1], n[idx]]; setCategories(n); }}
                         >
@@ -147,7 +147,7 @@ export function AdminHomepageCategories() {
                                 onChange={e => {
                                     const nC = [...categories]; nC[idx].label = e.target.value; setCategories(nC);
                                 }}
-                                className="h-10 rounded-xl bg-zinc-50 border-zinc-200 focus-visible:ring-violet-500 font-bold"
+                                className="h-10 rounded-[2px] bg-zinc-50 border-zinc-200 focus-visible:ring-violet-500 font-bold"
                                 placeholder="e.g. New Arrivals"
                             />
                         </div>
@@ -155,7 +155,7 @@ export function AdminHomepageCategories() {
                         <div className="flex-1 space-y-2 w-full">
                             <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">Image URL</Label>
                             <div className="flex gap-3">
-                                <div className="h-10 w-12 rounded-lg bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 flex items-center justify-center">
+                                <div className="h-10 w-12 rounded-[2px] bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 flex items-center justify-center">
                                     {cat.image ? (
                                         <img src={cat.image} className="h-full w-full object-cover" />
                                     ) : (
@@ -168,11 +168,11 @@ export function AdminHomepageCategories() {
                                         onChange={e => {
                                             const nC = [...categories]; nC[idx].image = e.target.value; setCategories(nC);
                                         }}
-                                        className="h-10 rounded-xl bg-zinc-50 border-zinc-200 focus-visible:ring-violet-500 text-xs px-3 font-medium"
+                                        className="h-10 rounded-[2px] bg-zinc-50 border-zinc-200 focus-visible:ring-violet-500 text-xs px-3 font-medium"
                                         placeholder="Paste URL..."
                                     />
                                     <label className="cursor-pointer shrink-0">
-                                        <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-zinc-100 text-zinc-500 border border-zinc-200 hover:bg-zinc-200 hover:text-zinc-800 transition-colors">
+                                        <div className="h-10 w-10 flex items-center justify-center rounded-[2px] bg-zinc-100 text-zinc-500 border border-zinc-200 hover:bg-zinc-200 hover:text-zinc-800 transition-colors">
                                             <Upload className="h-4 w-4" />
                                         </div>
                                         <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, idx)} />
@@ -186,7 +186,7 @@ export function AdminHomepageCategories() {
                             <Button 
                                 size="icon" 
                                 variant="ghost" 
-                                className="h-10 w-10 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                                className="h-10 w-10 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-[2px] transition-all"
                                 onClick={() => {
                                     const nC = [...categories]; nC.splice(idx, 1); setCategories(nC);
                                 }}

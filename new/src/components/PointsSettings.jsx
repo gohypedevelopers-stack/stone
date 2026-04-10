@@ -79,7 +79,7 @@ export const PointsSettings = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-32">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-stone-200 border-t-indigo-950" />
+        <div className="h-10 w-10 animate-spin rounded-[2px] border-4 border-stone-200 border-t-indigo-950" />
       </div>
     );
   }
@@ -90,7 +90,7 @@ export const PointsSettings = () => {
       <header className="flex items-end justify-between">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/25">
+            <div className="h-10 w-10 rounded-[2px] bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/25">
               <Crown className="h-5 w-5 text-white" />
             </div>
             <h1 className={`${THEME.typography.headings.h1} bg-clip-text text-transparent ${THEME.gradients.brand} pb-1`}>
@@ -106,7 +106,7 @@ export const PointsSettings = () => {
             <Button
               variant="ghost"
               onClick={handleReset}
-              className="rounded-xl h-11 px-5 text-stone-500 hover:text-stone-800 font-semibold text-xs gap-2"
+              className="rounded-[2px] h-11 px-5 text-stone-500 hover:text-stone-800 font-semibold text-xs gap-2"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               Reset
@@ -115,7 +115,7 @@ export const PointsSettings = () => {
           <Button
             onClick={handleSave}
             disabled={saving || !hasChanges}
-            className="bg-indigo-950 text-white rounded-xl h-11 px-8 font-bold text-xs flex items-center gap-2.5 shadow-xl shadow-indigo-950/20 hover:bg-[#1a0b2e] transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:hover:scale-100"
+            className="bg-indigo-950 text-white rounded-[2px] h-11 px-8 font-bold text-xs flex items-center gap-2.5 shadow-xl shadow-indigo-950/20 hover:bg-[#1a0b2e] transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:hover:scale-100"
           >
             <Save className="h-3.5 w-3.5" />
             {saving ? "Saving..." : "Save Changes"}
@@ -124,7 +124,7 @@ export const PointsSettings = () => {
       </header>
 
       {/* Live Rate Banner */}
-      <div className="relative rounded-[1.5rem] overflow-hidden">
+      <div className="relative rounded-[2px] overflow-hidden">
         {/* Animated gradient background */}
         <div className="absolute inset-0 bg-gradient-to-r from-indigo-950 via-violet-900 to-indigo-950 bg-[length:200%_100%]" 
           style={{ animation: "shimmer 8s ease-in-out infinite" }} 
@@ -132,12 +132,12 @@ export const PointsSettings = () => {
         {/* Noise texture overlay */}
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E\")" }} />
         {/* Decorative circles */}
-        <div className="absolute -top-20 -right-20 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl" />
+        <div className="absolute -top-20 -right-20 w-64 h-64 bg-violet-500/10 rounded-[2px] blur-3xl" />
+        <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-amber-500/10 rounded-[2px] blur-3xl" />
 
         <div className="relative z-10 p-8 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <div className="h-16 w-16 rounded-2xl bg-white/[0.08] backdrop-blur-xl flex items-center justify-center border border-white/[0.08] shadow-2xl">
+            <div className="h-16 w-16 rounded-[2px] bg-white/[0.08] backdrop-blur-xl flex items-center justify-center border border-white/[0.08] shadow-2xl">
               <Coins className="h-8 w-8 text-amber-300" />
             </div>
             <div>
@@ -171,10 +171,10 @@ export const PointsSettings = () => {
       {/* Config Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Points Per Amount */}
-        <Card className="border border-stone-200/60 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 group bg-white">
+        <Card className="border border-stone-200/60 rounded-[2px] shadow-sm hover:shadow-lg transition-all duration-300 group bg-white">
           <CardContent className="p-7">
             <div className="flex items-center gap-3 mb-6">
-              <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md shadow-amber-500/20 group-hover:shadow-lg group-hover:shadow-amber-500/30 transition-shadow">
+              <div className="h-11 w-11 rounded-[2px] bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md shadow-amber-500/20 group-hover:shadow-lg group-hover:shadow-amber-500/30 transition-shadow">
                 <Gift className="h-5 w-5 text-white" />
               </div>
               <div>
@@ -188,7 +188,7 @@ export const PointsSettings = () => {
               <button
                 onClick={() => setPointsPerAmount(Math.max(0, pointsPerAmount - 1))}
                 disabled={pointsPerAmount <= 0}
-                className="h-14 w-14 rounded-xl border-2 border-stone-200 flex items-center justify-center hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600 transition-all disabled:opacity-30 disabled:pointer-events-none active:scale-90"
+                className="h-14 w-14 rounded-[2px] border-2 border-stone-200 flex items-center justify-center hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600 transition-all disabled:opacity-30 disabled:pointer-events-none active:scale-90"
               >
                 <Minus className="h-5 w-5" />
               </button>
@@ -199,13 +199,13 @@ export const PointsSettings = () => {
                   min="0"
                   value={pointsPerAmount}
                   onChange={(e) => setPointsPerAmount(Math.max(0, Number(e.target.value)))}
-                  className="text-center text-4xl font-black h-14 rounded-xl border-2 border-stone-200 focus-visible:ring-0 focus-visible:border-indigo-400 bg-stone-50/50 shadow-none transition-colors"
+                  className="text-center text-4xl font-black h-14 rounded-[2px] border-2 border-stone-200 focus-visible:ring-0 focus-visible:border-indigo-400 bg-stone-50/50 shadow-none transition-colors"
                 />
               </div>
 
               <button
                 onClick={() => setPointsPerAmount(pointsPerAmount + 1)}
-                className="h-14 w-14 rounded-xl border-2 border-stone-200 flex items-center justify-center hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600 transition-all active:scale-90"
+                className="h-14 w-14 rounded-[2px] border-2 border-stone-200 flex items-center justify-center hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600 transition-all active:scale-90"
               >
                 <Plus className="h-5 w-5" />
               </button>
@@ -217,7 +217,7 @@ export const PointsSettings = () => {
                 <button
                   key={val}
                   onClick={() => setPointsPerAmount(val)}
-                  className={`py-2.5 rounded-xl text-xs font-bold transition-all duration-200 ${
+                  className={`py-2.5 rounded-[2px] text-xs font-bold transition-all duration-200 ${
                     pointsPerAmount === val
                       ? "bg-indigo-950 text-white shadow-lg shadow-indigo-950/25 scale-[1.02]"
                       : "bg-stone-100/80 text-stone-500 hover:bg-stone-200/80 hover:text-stone-700"
@@ -231,10 +231,10 @@ export const PointsSettings = () => {
         </Card>
 
         {/* Amount Threshold */}
-        <Card className="border border-stone-200/60 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 group bg-white">
+        <Card className="border border-stone-200/60 rounded-[2px] shadow-sm hover:shadow-lg transition-all duration-300 group bg-white">
           <CardContent className="p-7">
             <div className="flex items-center gap-3 mb-6">
-              <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-md shadow-emerald-500/20 group-hover:shadow-lg group-hover:shadow-emerald-500/30 transition-shadow">
+              <div className="h-11 w-11 rounded-[2px] bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-md shadow-emerald-500/20 group-hover:shadow-lg group-hover:shadow-emerald-500/30 transition-shadow">
                 <Zap className="h-5 w-5 text-white" />
               </div>
               <div>
@@ -248,7 +248,7 @@ export const PointsSettings = () => {
               <button
                 onClick={() => setAmountThreshold(Math.max(1, amountThreshold - 50))}
                 disabled={amountThreshold <= 1}
-                className="h-14 w-14 rounded-xl border-2 border-stone-200 flex items-center justify-center hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600 transition-all disabled:opacity-30 disabled:pointer-events-none active:scale-90"
+                className="h-14 w-14 rounded-[2px] border-2 border-stone-200 flex items-center justify-center hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600 transition-all disabled:opacity-30 disabled:pointer-events-none active:scale-90"
               >
                 <Minus className="h-5 w-5" />
               </button>
@@ -260,13 +260,13 @@ export const PointsSettings = () => {
                   min="1"
                   value={amountThreshold}
                   onChange={(e) => setAmountThreshold(Math.max(1, Number(e.target.value)))}
-                  className="text-center text-4xl font-black h-14 rounded-xl border-2 border-stone-200 focus-visible:ring-0 focus-visible:border-indigo-400 bg-stone-50/50 pl-10 shadow-none transition-colors"
+                  className="text-center text-4xl font-black h-14 rounded-[2px] border-2 border-stone-200 focus-visible:ring-0 focus-visible:border-indigo-400 bg-stone-50/50 pl-10 shadow-none transition-colors"
                 />
               </div>
 
               <button
                 onClick={() => setAmountThreshold(amountThreshold + 50)}
-                className="h-14 w-14 rounded-xl border-2 border-stone-200 flex items-center justify-center hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600 transition-all active:scale-90"
+                className="h-14 w-14 rounded-[2px] border-2 border-stone-200 flex items-center justify-center hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600 transition-all active:scale-90"
               >
                 <Plus className="h-5 w-5" />
               </button>
@@ -278,7 +278,7 @@ export const PointsSettings = () => {
                 <button
                   key={val}
                   onClick={() => setAmountThreshold(val)}
-                  className={`py-2.5 rounded-xl text-xs font-bold transition-all duration-200 ${
+                  className={`py-2.5 rounded-[2px] text-xs font-bold transition-all duration-200 ${
                     amountThreshold === val
                       ? "bg-indigo-950 text-white shadow-lg shadow-indigo-950/25 scale-[1.02]"
                       : "bg-stone-100/80 text-stone-500 hover:bg-stone-200/80 hover:text-stone-700"
@@ -293,7 +293,7 @@ export const PointsSettings = () => {
       </div>
 
       {/* How It Works */}
-      <div className="bg-stone-50/80 border border-stone-200/60 rounded-2xl p-6">
+      <div className="bg-stone-50/80 border border-stone-200/60 rounded-[2px] p-6">
         <div className="flex items-center gap-2.5 mb-4">
           <Info className="h-4 w-4 text-indigo-600" />
           <h4 className="text-xs font-black text-indigo-950 uppercase tracking-wider">How It Works</h4>
@@ -306,7 +306,7 @@ export const PointsSettings = () => {
             { icon: "💰", label: "Points redeemable at checkout", color: "bg-purple-50 border-purple-100" },
           ].map((step, i) => (
             <div key={i} className="flex items-center flex-1">
-              <div className={`flex items-center gap-2.5 ${step.color} border rounded-xl px-4 py-3 flex-1`}>
+              <div className={`flex items-center gap-2.5 ${step.color} border rounded-[2px] px-4 py-3 flex-1`}>
                 <span className="text-lg">{step.icon}</span>
                 <span className="text-[11px] font-semibold text-stone-600 leading-tight">{step.label}</span>
               </div>
@@ -317,11 +317,11 @@ export const PointsSettings = () => {
       </div>
 
       {/* Earnings Preview */}
-      <Card className="border border-stone-200/60 rounded-2xl overflow-hidden shadow-sm bg-white">
+      <Card className="border border-stone-200/60 rounded-[2px] overflow-hidden shadow-sm bg-white">
         <CardHeader className="px-7 py-5 border-b border-stone-100 bg-stone-50/30">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-md shadow-violet-500/20">
+              <div className="h-9 w-9 rounded-[2px] bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-md shadow-violet-500/20">
                 <Sparkles className="h-4 w-4 text-white" />
               </div>
               <div>
@@ -329,7 +329,7 @@ export const PointsSettings = () => {
                 <CardDescription className="text-[11px] text-stone-400 mt-0.5">Preview points at different purchase amounts</CardDescription>
               </div>
             </div>
-            <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold text-[10px] rounded-lg px-3 py-1 border">
+            <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold text-[10px] rounded-[2px] px-3 py-1 border">
               Live Preview
             </Badge>
           </div>

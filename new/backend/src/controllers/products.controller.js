@@ -67,9 +67,12 @@ export const getBrands = async (req, res) => {
 
 export const listProducts = async (req, res) => {
   try {
-    const { category, brand, featured, limitedOffer, newArrival, bestSeller, trending, search } = req.query;
+    const { category, brand, featured, limitedOffer, newArrival, bestSeller, trending, search, vendorId } = req.query;
+
+    const where = vendorId ? { vendorId: String(vendorId) } : undefined;
 
     let products = await prisma.product.findMany({
+      where,
       include: {
         vendor: true,
         category: true,

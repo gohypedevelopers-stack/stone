@@ -206,7 +206,7 @@ export function VendorOfflineBilling() {
   if (successBill) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] animate-in zoom-in duration-500">
-        <div className="h-20 w-20 bg-stone-100 text-stone-900 rounded-full flex items-center justify-center mb-6">
+        <div className="h-20 w-20 bg-stone-100 text-stone-900 rounded-[2px] flex items-center justify-center mb-6">
           <CheckCircle2 className="h-10 w-10" />
         </div>
         <h2 className="text-2xl font-bold text-stone-900 tracking-tight mb-2">Offline Bill Processed Successfully</h2>
@@ -214,7 +214,7 @@ export function VendorOfflineBilling() {
           Bill Reference: <span className="font-bold text-stone-900 ml-1">OFF-{successBill.id.slice(0,8).toUpperCase()}</span>
         </p>
         
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200 max-w-md w-full text-center space-y-4">
+        <div className="bg-white p-6 rounded-[2px] shadow-sm border border-stone-200 max-w-md w-full text-center space-y-4">
            <h3 className="font-bold text-md uppercase tracking-wide text-stone-800 border-b border-stone-100 pb-4 mb-4">Receipt Summary</h3>
            <div className="flex justify-between text-sm">
              <span className="text-stone-500">Total Items</span>
@@ -239,13 +239,13 @@ export function VendorOfflineBilling() {
         <div className="flex items-center gap-4 mt-8">
           <Button 
             onClick={() => printThermalReceipt(successBill)} 
-            className="bg-white text-stone-900 border border-stone-200 rounded-lg h-10 px-6 font-medium text-sm hover:bg-stone-50"
+            className="bg-white text-stone-900 border border-stone-200 rounded-[2px] h-10 px-6 font-medium text-sm hover:bg-stone-50"
           >
             <span className="flex items-center gap-2"><Printer className="h-4 w-4" /> Print Copy</span>
           </Button>
           <Button 
             onClick={() => setSuccessBill(null)} 
-            className="bg-stone-900 text-white rounded-lg h-10 px-8 font-medium text-sm hover:bg-stone-800"
+            className="bg-stone-900 text-white rounded-[2px] h-10 px-8 font-medium text-sm hover:bg-stone-800"
           >
             New Transaction
           </Button>
@@ -266,15 +266,15 @@ export function VendorOfflineBilling() {
       </header>
 
       {/* Vendor Details Section */}
-      <div className="bg-stone-100/60 p-2 rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-2 border border-stone-200/60 shadow-inner">
+      <div className="bg-stone-100/60 p-2 rounded-[2px] grid grid-cols-1 md:grid-cols-2 gap-2 border border-stone-200/60 shadow-inner">
         {/* Vendor Selector */}
-        <div className="bg-white rounded-xl border border-stone-200 p-5 shadow-sm flex flex-col justify-center">
+        <div className="bg-white rounded-[2px] border border-stone-200 p-5 shadow-sm flex flex-col justify-center">
           <Label className="text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-2 block">Operating Vendor</Label>
           <Select value={selectedVendorId} onValueChange={setSelectedVendorId}>
-            <SelectTrigger className="h-11 rounded-lg border-stone-200 bg-stone-50 focus:ring-stone-900 font-semibold text-stone-800 focus:bg-white transition-colors">
+            <SelectTrigger className="h-11 rounded-[2px] border-stone-200 bg-stone-50 focus:ring-stone-900 font-semibold text-stone-800 focus:bg-white transition-colors">
               <SelectValue placeholder="Search or select a vendor..." />
             </SelectTrigger>
-            <SelectContent className="rounded-lg border-stone-200">
+            <SelectContent className="rounded-[2px] border-stone-200">
               {vendors.map(v => (
                 <SelectItem key={v.id} value={v.id} className="cursor-pointer font-medium py-2 focus:bg-stone-50">
                   {v.businessName}
@@ -285,12 +285,12 @@ export function VendorOfflineBilling() {
         </div>
 
         {/* Location Display */}
-        <div className="bg-white rounded-xl border border-stone-200 p-5 shadow-sm flex flex-col justify-center">
+        <div className="bg-white rounded-[2px] border border-stone-200 p-5 shadow-sm flex flex-col justify-center">
           <Label className="text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-2 block">Terminal Location</Label>
-          <div className="flex-1 rounded-lg border border-stone-100 bg-stone-50 px-4 flex items-center gap-3 w-full h-11">
+          <div className="flex-1 rounded-[2px] border border-stone-100 bg-stone-50 px-4 flex items-center gap-3 w-full h-11">
             {selectedVendor ? (
               <>
-                <div className="bg-white shadow-sm border border-stone-200 p-1.5 rounded flex items-center justify-center shrink-0">
+                <div className="bg-white shadow-sm border border-stone-200 p-1.5 rounded-[2px] flex items-center justify-center shrink-0">
                   <MapPin className="h-3.5 w-3.5 text-stone-600" />
                 </div>
                 <span className="font-semibold text-sm text-stone-800 truncate">{selectedVendor.storeAddress || 'No physical address logged.'}</span>
@@ -307,7 +307,7 @@ export function VendorOfflineBilling() {
         
         {/* Left Side: Product Selector */}
         <div className="lg:col-span-8 space-y-6">
-          <Card className="border border-stone-200 shadow-sm rounded-xl overflow-hidden bg-white h-[800px] flex flex-col">
+          <Card className="border border-stone-200 shadow-sm rounded-[2px] overflow-hidden bg-white h-[800px] flex flex-col">
             <CardHeader className="bg-stone-50 border-b border-stone-100 flex flex-row items-center justify-between pb-4">
               <div>
                 <CardTitle className="text-lg font-bold text-stone-900 tracking-tight flex items-center gap-2">
@@ -320,7 +320,7 @@ export function VendorOfflineBilling() {
                   placeholder="Search products..." 
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-10 h-10 rounded-lg bg-white border border-stone-200 shadow-sm"
+                  className="pl-10 h-10 rounded-[2px] bg-white border border-stone-200 shadow-sm"
                 />
               </div>
             </CardHeader>
@@ -338,14 +338,14 @@ export function VendorOfflineBilling() {
                       animate={{ opacity: 1, scale: 1 }}
                       key={p.id}
                       onClick={() => addToCart(p)}
-                      className={`group cursor-pointer bg-stone-50 border border-stone-200 rounded-xl p-4 transition-all flex flex-col relative ${p.stock <= 0 ? 'opacity-50 grayscale hover:border-rose-300' : 'hover:border-stone-400 hover:shadow-md'}`}
+                      className={`group cursor-pointer bg-stone-50 border border-stone-200 rounded-[2px] p-4 transition-all flex flex-col relative ${p.stock <= 0 ? 'opacity-50 grayscale hover:border-rose-300' : 'hover:border-stone-400 hover:shadow-md'}`}
                     >
                       {p.stock <= 0 && (
-                        <div className="absolute top-2 right-2 bg-rose-500 text-white text-[10px] font-bold uppercase px-2 py-1 rounded-md z-10 shadow-sm">
+                        <div className="absolute top-2 right-2 bg-rose-500 text-white text-[10px] font-bold uppercase px-2 py-1 rounded-[2px] z-10 shadow-sm">
                           Out of Stock
                         </div>
                       )}
-                      <div className="aspect-square bg-white rounded-lg mb-3 overflow-hidden border border-stone-100 relative">
+                      <div className="aspect-square bg-white rounded-[2px] mb-3 overflow-hidden border border-stone-100 relative">
                         {p.imageUrls && p.imageUrls[0] ? (
                           <img src={p.imageUrls[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                         ) : (
@@ -354,7 +354,7 @@ export function VendorOfflineBilling() {
                           </div>
                         )}
                         <div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/5 flex items-center justify-center transition-colors">
-                          <Plus className="opacity-0 group-hover:opacity-100 h-8 w-8 text-stone-900 bg-white rounded-full p-2 shadow-sm transition-all scale-75 group-hover:scale-100" />
+                          <Plus className="opacity-0 group-hover:opacity-100 h-8 w-8 text-stone-900 bg-white rounded-[2px] p-2 shadow-sm transition-all scale-75 group-hover:scale-100" />
                         </div>
                       </div>
                       <div className="flex flex-col flex-1">
@@ -362,7 +362,7 @@ export function VendorOfflineBilling() {
                         <div className="mt-auto pt-2 flex items-center justify-between gap-1">
                           <span className="font-bold text-stone-900 block text-base">&#8377;{Number(p.discountPrice || p.price).toLocaleString('en-IN')}</span>
                           {calcPoints(Number(p.discountPrice || p.price)) > 0 && (
-                            <span className="flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200/60 rounded-lg px-2 py-0.5 text-[10px] font-bold whitespace-nowrap">
+                            <span className="flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200/60 rounded-[2px] px-2 py-0.5 text-[10px] font-bold whitespace-nowrap">
                               <Coins className="h-3 w-3" />
                               +{calcPoints(Number(p.discountPrice || p.price))} pts
                             </span>
@@ -379,10 +379,10 @@ export function VendorOfflineBilling() {
 
         {/* Right Side: Electronic Ledger / Cart */}
         <div className="lg:col-span-4">
-          <Card className="border border-stone-200 shadow-sm rounded-xl overflow-hidden bg-white flex flex-col">
+          <Card className="border border-stone-200 shadow-sm rounded-[2px] overflow-hidden bg-white flex flex-col">
             <CardHeader className="bg-stone-50 border-b border-stone-200 pb-4 pt-4 z-10">
               <CardTitle className="text-lg font-bold text-stone-900 flex items-center gap-2">
-                <div className="h-8 w-8 flex items-center justify-center rounded-lg bg-stone-200">
+                <div className="h-8 w-8 flex items-center justify-center rounded-[2px] bg-stone-200">
                   <ShoppingCart className="h-4 w-4 text-stone-700" /> 
                 </div>
                 <span>Active Ledger</span>
@@ -405,15 +405,15 @@ export function VendorOfflineBilling() {
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, scale: 0.95 }}
                           key={item.id}
-                          className="flex flex-col gap-3 bg-white p-3.5 rounded-xl border border-stone-200 shadow-sm"
+                          className="flex flex-col gap-3 bg-white p-3.5 rounded-[2px] border border-stone-200 shadow-sm"
                         >
                           <div className="flex items-start gap-3">
                             {item.imageUrls && item.imageUrls[0] ? (
-                              <div className="h-12 w-12 rounded-lg border border-stone-100 overflow-hidden shrink-0 bg-stone-50">
+                              <div className="h-12 w-12 rounded-[2px] border border-stone-100 overflow-hidden shrink-0 bg-stone-50">
                                 <img src={item.imageUrls[0]} alt={item.name} className="h-full w-full object-cover" />
                               </div>
                             ) : (
-                              <div className="h-12 w-12 rounded-lg border border-stone-100 flex items-center justify-center shrink-0 bg-stone-50 text-stone-300">
+                              <div className="h-12 w-12 rounded-[2px] border border-stone-100 flex items-center justify-center shrink-0 bg-stone-50 text-stone-300">
                                 <Store className="h-5 w-5" />
                               </div>
                             )}
@@ -427,12 +427,12 @@ export function VendorOfflineBilling() {
                           </div>
                           
                           <div className="flex items-center justify-between pt-2 mt-1 border-t border-stone-100">
-                            <div className="flex items-center gap-1 bg-stone-50 rounded-lg p-1 border border-stone-200">
-                              <Button size="icon" variant="ghost" className="h-6 w-6 rounded-md text-stone-600 hover:text-stone-900 bg-white shadow-sm border border-stone-100" onClick={() => updateQuantity(item.id, -1)}>
+                            <div className="flex items-center gap-1 bg-stone-50 rounded-[2px] p-1 border border-stone-200">
+                              <Button size="icon" variant="ghost" className="h-6 w-6 rounded-[2px] text-stone-600 hover:text-stone-900 bg-white shadow-sm border border-stone-100" onClick={() => updateQuantity(item.id, -1)}>
                                 <Minus className="h-3 w-3" />
                               </Button>
                               <span className="font-semibold text-xs w-6 text-center text-stone-800">{item.quantity}</span>
-                              <Button size="icon" variant="ghost" className="h-6 w-6 rounded-md text-stone-600 hover:text-stone-900 bg-white shadow-sm border border-stone-100" onClick={() => updateQuantity(item.id, 1)}>
+                              <Button size="icon" variant="ghost" className="h-6 w-6 rounded-[2px] text-stone-600 hover:text-stone-900 bg-white shadow-sm border border-stone-100" onClick={() => updateQuantity(item.id, 1)}>
                                 <Plus className="h-3 w-3" />
                               </Button>
                             </div>
@@ -489,7 +489,7 @@ export function VendorOfflineBilling() {
                         placeholder="e.g. Aditi..." 
                         value={customerName}
                         onChange={e => setCustomerName(e.target.value)}
-                        className="h-10 border-stone-200 rounded-lg focus-visible:ring-stone-900 px-3"
+                        className="h-10 border-stone-200 rounded-[2px] focus-visible:ring-stone-900 px-3"
                       />
                     </div>
                     <div className="space-y-1.5 flex-1">
@@ -498,15 +498,15 @@ export function VendorOfflineBilling() {
                         placeholder="e.g. 987654..." 
                         value={customerMobile}
                         onChange={e => setCustomerMobile(e.target.value)}
-                        className="h-10 border-stone-200 rounded-lg focus-visible:ring-stone-900 px-3"
+                        className="h-10 border-stone-200 rounded-[2px] focus-visible:ring-stone-900 px-3"
                       />
                       {lookedUpCustomer && (
-                        <div className="flex items-center gap-2 mt-1.5 bg-emerald-50 border border-emerald-200/60 rounded-lg px-3 py-2">
+                        <div className="flex items-center gap-2 mt-1.5 bg-emerald-50 border border-emerald-200/60 rounded-[2px] px-3 py-2">
                           <div className="flex-1">
                             <p className="text-[11px] font-bold text-emerald-800">{lookedUpCustomer.name}</p>
                             <p className="text-[10px] text-emerald-600 font-medium">Existing customer</p>
                           </div>
-                          <div className="flex items-center gap-1 bg-amber-50 border border-amber-200/60 rounded-lg px-2.5 py-1">
+                          <div className="flex items-center gap-1 bg-amber-50 border border-amber-200/60 rounded-[2px] px-2.5 py-1">
                             <Coins className="h-3.5 w-3.5 text-amber-600" />
                             <span className="text-sm font-bold text-amber-700">{lookedUpCustomer.rewardPoints}</span>
                             <span className="text-[9px] font-bold text-amber-500 uppercase">pts</span>
@@ -516,12 +516,12 @@ export function VendorOfflineBilling() {
                     </div>
                   </div>
                   <Button 
-                    className="w-full h-12 rounded-lg bg-stone-900 hover:bg-stone-800 text-white font-semibold shadow-none disabled:opacity-50 transition-colors shrink-0 mt-2"
+                    className="w-full h-12 rounded-[2px] bg-stone-900 hover:bg-stone-800 text-white font-semibold shadow-none disabled:opacity-50 transition-colors shrink-0 mt-2"
                     disabled={cart.length === 0 || !customerMobile || isSubmitting}
                     onClick={handleCheckout}
                   >
                     {isSubmitting ? (
-                      <span className="flex items-center gap-2"><div className="h-4 w-4 border-2 border-white border-t-transparent animate-spin rounded-full"></div> Processing</span>
+                      <span className="flex items-center gap-2"><div className="h-4 w-4 border-2 border-white border-t-transparent animate-spin rounded-[2px]"></div> Processing</span>
                     ) : (
                       <span className="flex items-center gap-2 text-white">Complete Transaction <CheckCircle2 className="h-4 w-4 ml-1" /></span>
                     )}

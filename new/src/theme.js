@@ -73,11 +73,11 @@ export const THEME = {
   borders: {
     // Rounding used universally across dashboard and storefront
     radius: {
-      sm: "rounded-lg",
-      md: "rounded-xl",
-      lg: "rounded-[1.25rem]",
-      xl: "rounded-[1.5rem]",
-      pill: "rounded-full"
+      sm: "rounded-[2px]",
+      md: "rounded-[2px]",
+      lg: "rounded-[2px]",
+      xl: "rounded-[2px]",
+      pill: "rounded-[2px]"
     },
 
     // Standard Line strokes
