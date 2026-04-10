@@ -52,6 +52,8 @@ model Address {
 model Vendor {
   id               String               @id @default(cuid())
   businessName     String
+  ownerName        String?
+  password         String?
   storeAddress     String
   contactNumber    String
   email            String?              @unique

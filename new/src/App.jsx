@@ -30,6 +30,7 @@ import CheckoutPage from "./CheckoutPage.jsx";
 import AccountPage from "./AccountPage.jsx";
 import RewardsPage from "./RewardsPage.jsx";
 import WishlistPage from "./WishlistPage.jsx";
+import VendorDashboard from "./pages/VendorDashboard.jsx";
 import { useProducts } from "@/context/ProductContext";
 import { useAuth } from "@/context/AuthContext";
 import AuthModal from "./components/AuthModal";
@@ -288,6 +289,7 @@ export default function App() {
         account: "/account",
         rewards: "/rewards",
         admin: "/admin",
+        "vendor-dashboard": "/vendor-dashboard",
         "all-categories": "/categories",
       };
 
@@ -304,11 +306,13 @@ export default function App() {
     [navigate, PRODUCTS],
   );
 
-  const isAdminPath = location.pathname.startsWith("/admin");
+  const isDashboardPath =
+    location.pathname.startsWith("/admin") ||
+    location.pathname.startsWith("/vendor-dashboard");
 
   return (
     <div className="relative min-h-screen">
-      {!isAdminPath && (
+      {!isDashboardPath && (
         <>
           <Navbar
             dynamicCategories={dynamicCategories}
@@ -332,6 +336,7 @@ export default function App() {
 
       {/* Main Content Area */}
       <Routes>
+        <Route path="/vendor-dashboard" element={<VendorDashboard />} />
         <Route
           path="/"
           element={
@@ -491,7 +496,7 @@ export default function App() {
         />
       </Routes>
 
-      {!isAdminPath && (
+      {!isDashboardPath && (
         <>
           {/* Persistent Cart Drawer */}
           <CartDrawer

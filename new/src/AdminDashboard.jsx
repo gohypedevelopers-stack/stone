@@ -863,48 +863,49 @@ const AdminDashboardContent = () => {
     navigate(view === "overview" ? "/admin" : `/admin/${view}`);
   };
 
-  const StatCard = ({ title, value, icon: Icon, colorClass, description, trend, trendValue }) => {
+  const StatCard = ({ title, value, icon: Icon, colorClass, description }) => {
     return (
       <Card
         className={cn(
-          "relative overflow-hidden group border-none transition-all duration-500 ease-out hover:-translate-y-1 rounded-xl bg-white flex flex-col p-5",
-          "shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_25px_rgba(0,0,0,0.06)]",
+          "relative overflow-hidden group border border-[#151515]/5 transition-all duration-500 ease-out hover:-translate-y-1 rounded-[2px] cursor-pointer flex flex-col",
+          "shadow-sm hover:shadow-[0_20px_40px_rgba(154,107,255,0.12)] bg-white",
         )}
       >
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex flex-col">
-            <span className="text-stone-400 font-bold text-[10px] uppercase tracking-[0.2em] mb-1">
-              {title}
-            </span>
-            <div className="text-2xl font-black leading-none tracking-tight text-stone-900 tabular-nums">
-              {value}
-            </div>
-          </div>
+        {/* Animated Gradient Accent Line */}
+        <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-pink-500 via-[#9a6bff] to-indigo-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-left z-20" />
+        
+        {/* Soft glowing ambient orb in the top right corner */}
+        <div
+          className={cn(
+            "absolute -top-10 -right-10 w-32 h-32 rounded-full blur-[40px] opacity-0 group-hover:opacity-20 transition-all duration-700 ease-in-out bg-[#9a6bff]"
+          )}
+        />
+
+        <CardHeader className="flex flex-row items-center justify-between pb-2 pt-6 px-6 relative z-20">
+          <CardTitle className="text-[#151515]/40 font-black text-[10px] uppercase tracking-[0.2em] leading-tight flex items-center gap-2">
+            <div className="h-1.5 w-1.5 rounded-[2px] bg-stone-200 group-hover:bg-[#9a6bff] transition-colors duration-500" />
+            {title}
+          </CardTitle>
           <div
             className={cn(
-              "h-10 w-10 rounded-xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 border border-white shadow-sm flex items-center justify-center relative z-10",
-              colorClass,
+              "p-2 rounded-[2px] transition-all duration-500 group-hover:scale-110 group-hover:rotate-[15deg] group-hover:bg-[#9a6bff]/10",
+              "text-[#151515]/20 group-hover:text-[#9a6bff]"
             )}
           >
             <Icon className="h-5 w-5" strokeWidth={2.5} />
           </div>
-        </div>
+        </CardHeader>
 
-        <div className="flex items-center gap-2 relative z-20">
-          {trendValue && (
-            <div className={cn(
-              "flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider",
-              trend === "up" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
-            )}>
-              {trend === "up" ? "▲" : "▼"} {trendValue}
-            </div>
-          )}
+        <CardContent className="px-6 pb-6 pt-1 relative z-20">
+          <div className="text-[36px] font-black leading-none tracking-tighter text-[#151515] transition-all duration-500 group-hover:text-[#9a6bff] group-hover:translate-x-1">
+            {value}
+          </div>
           {description && (
-            <p className="text-[9px] text-stone-400 font-bold uppercase tracking-widest truncate max-w-[120px]">
+            <p className="text-[9px] text-[#151515]/40 font-bold leading-tight mt-2 uppercase tracking-widest truncate transition-all duration-500 group-hover:opacity-80">
               {description}
             </p>
           )}
-        </div>
+        </CardContent>
       </Card>
     );
   };
@@ -1076,7 +1077,8 @@ const AdminDashboardContent = () => {
         {/* Hover Interaction Circles */}
         {rawData.map((d, i) => {
           const x = rawData.length > 1 ? (i / (rawData.length - 1)) * 100 : 50;
-          const yE = 100 - ((d.onlineAmount || 0) / maxAmt) * 100;
+          const yOnline = 100 - ((d.onlineAmount || 0) / maxAmt) * 100;
+          const yOffline = 100 - ((d.offlineAmount || 0) / maxAmt) * 100;
 
           return (
             <div
@@ -1086,10 +1088,16 @@ const AdminDashboardContent = () => {
               style={{ left: `${x}%` }}
             >
                {hoverIndex === i && (
+                 <>
                   <div 
                     className="absolute w-2.5 h-2.5 rounded-full bg-white border-[3px] shadow-lg z-20 -ml-[5px]"
-                    style={{ left: "50%", top: `${yE}%`, borderColor: COLORS.earnings }}
+                    style={{ left: "50%", top: `${yOnline}%`, borderColor: COLORS.earnings }}
                   />
+                  <div 
+                    className="absolute w-2.5 h-2.5 rounded-full bg-white border-[3px] shadow-lg z-20 -ml-[5px]"
+                    style={{ left: "50%", top: `${yOffline}%`, borderColor: COLORS.expenses }}
+                  />
+                 </>
                )}
             </div>
           );
@@ -1105,12 +1113,34 @@ const AdminDashboardContent = () => {
               transform: "translate(-50%, -120%)"
             }}
           >
-            <div className="bg-[#1e293b] text-white rounded-xl py-3 px-6 shadow-2xl relative min-w-[140px] text-center border border-white/10">
-               <div className="text-sm font-black tracking-tight mb-0.5">
-                  {formatMoney(rawData[hoverIndex].onlineAmount + rawData[hoverIndex].offlineAmount)}
+            <div className="bg-[#0f172a] text-white rounded-xl py-4 px-5 shadow-2xl relative min-w-[180px] border border-white/10 backdrop-blur-md">
+               <div className="flex flex-col gap-2">
+                 <div className="flex items-center justify-between gap-4">
+                   <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: COLORS.earnings }} />
+                      <span className="text-[10px] font-black text-stone-400 uppercase tracking-wider">Online</span>
+                   </div>
+                   <span className="text-xs font-black tabular-nums">{formatMoney(rawData[hoverIndex].onlineAmount)}</span>
+                 </div>
+                 
+                 <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: COLORS.expenses }} />
+                      <span className="text-[10px] font-black text-stone-400 uppercase tracking-wider">Offline</span>
+                   </div>
+                   <span className="text-xs font-black tabular-nums">{formatMoney(rawData[hoverIndex].offlineAmount)}</span>
+                 </div>
+
+                 <div className="h-px bg-white/10 my-1" />
+
+                 <div className="flex items-center justify-between gap-4">
+                   <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Aggregate</span>
+                   <span className="text-sm font-black text-[#9a6bff] tabular-nums">
+                      {formatMoney((rawData[hoverIndex].onlineAmount || 0) + (rawData[hoverIndex].offlineAmount || 0))}
+                   </span>
+                 </div>
                </div>
-               <div className="text-[9px] font-bold text-stone-400 uppercase tracking-[0.2em]">Total Revenue</div>
-               <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 border-x-[6px] border-t-[6px] border-x-transparent border-t-[#1e293b]" />
+               <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 border-x-[6px] border-t-[6px] border-x-transparent border-t-[#0f172a]" />
             </div>
           </div>
         )}
@@ -1127,33 +1157,26 @@ const AdminDashboardContent = () => {
 
   return (
     <SidebarProvider>
-      <div
-        className={`flex min-h-screen w-full ${THEME.colors.background.secondary} bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]`}
-      >
-        <Sidebar className="border-r border-stone-100 bg-white">
-          <SidebarHeader className="h-[85px] pt-8 px-8 border-b border-stone-100 flex-shrink-0 bg-white flex flex-col justify-center">
-            <div className="flex items-center gap-3.5 group cursor-pointer">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-pink-500 text-white transition-transform group-hover:scale-105">
-                <Sparkles className="h-4.5 w-4.5" />
+      <div className="flex h-svh w-full overflow-hidden bg-transparent text-stone-900">
+        <Sidebar className="border-r border-stone-200/60 bg-white/90 backdrop-blur-xl shadow-[18px_0_60px_rgba(15,23,42,0.04)]">
+          <SidebarHeader className="p-6 pb-5 border-b border-stone-100">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-[2px] bg-gradient-to-br from-pink-500 via-[#9a6bff] to-indigo-500 text-white font-black text-lg shadow-lg shadow-[#9a6bff]/30">
+                <span className="text-transparent bg-clip-text bg-white">O</span>
               </div>
               <div className="flex flex-col">
-                <div className="flex items-center gap-1">
-                  <span className="font-['Inter'] font-black text-stone-900 text-[15px] tracking-tight">
-                    OMW
-                  </span>
-                  <span className="font-['Inter'] font-medium text-stone-400 text-[15px] tracking-tight">
-                    Dashboard
-                  </span>
-                </div>
-                <span className="font-['Inter'] text-[7px] text-pink-400 font-bold uppercase tracking-[0.2em] mt-0.5">
-                  SKIN-FIRST OS
+                <span className="font-['Inter'] font-black text-[#151515] leading-tight text-[15px] tracking-tighter">
+                  OMW Dashboard
+                </span>
+                <span className="font-['Inter'] text-[9px] text-[#9a6bff] font-bold uppercase tracking-[0.2em]">
+                  Platform Hub
                 </span>
               </div>
             </div>
           </SidebarHeader>
 
-          <SidebarContent className="px-3 pt-4 overflow-y-auto flex-1 h-full scrollbar-thin scrollbar-thumb-stone-200">
-            <SidebarMenu className="mt-2 gap-1 pb-10">
+          <SidebarContent className="px-3 py-3" data-lenis-prevent-wheel>
+            <SidebarMenu className="mt-2 gap-1">
               {[
                 { id: "overview", label: "Overview", icon: LayoutDashboard },
               ].map((item) => (
@@ -1442,65 +1465,91 @@ const AdminDashboardContent = () => {
           </SidebarFooter>
         </Sidebar>
 
-        <div className="flex-1 flex flex-col relative overflow-hidden z-0 bg-stone-50">
-          <header className="h-[90px] bg-white border-b border-stone-100 px-10 flex items-center justify-between sticky top-0 z-50">
-            {/* Left: Enhanced Search Bar (Image Reference Style) */}
-            <div className="flex flex-1 max-w-xl relative group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400 group-focus-within:text-pink-500 transition-colors" />
-              <Input
-                placeholder="Search analytics, modules or users..."
-                className="w-full bg-stone-50 border-stone-100 focus-visible:ring-pink-500 focus-visible:bg-white pl-12 h-12 rounded-lg transition-all shadow-none placeholder:text-stone-400 font-bold text-sm"
-              />
+        <div className="flex-1 min-w-0 min-h-0 h-full flex flex-col relative overflow-y-auto overflow-x-hidden z-0 bg-transparent" data-lenis-prevent data-lenis-prevent-wheel>
+          <header className="h-[72px] bg-white/50 backdrop-blur-3xl px-6 lg:px-8 flex items-center justify-between sticky top-0 z-50 border-b border-[#151515]/5 shadow-[0_10px_40px_rgba(154,107,255,0.03)] transition-all">
+            {/* Left: Status & Sidebar Trigger */}
+            <div className="flex items-center gap-6">
+              <SidebarTrigger className="lg:hidden text-[#151515] hover:text-[#9a6bff] transition-colors" />
+              <div className="hidden md:block">
+                <div className="text-[9px] font-black text-[#9a6bff] uppercase tracking-[0.3em] opacity-80 mb-0.5">
+                  Live System Clock
+                </div>
+                <div className="text-[13px] font-black text-[#151515] tracking-tight">
+                  {new Date().toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </div>
+              </div>
             </div>
 
-            {/* Right: Actions & High-end Profile */}
-            <div className="flex items-center gap-5">
-              <div className="flex items-center gap-2">
+            {/* Middle: Search Bar (Hidden on mobile) */}
+            <div className="hidden md:flex flex-1 max-w-lg mx-6 relative group">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Search className="h-[14px] w-[14px] text-stone-400 group-focus-within:text-[#9a6bff] transition-colors" />
+              </div>
+              <Input
+                placeholder="Global search protocol..."
+                className="w-full bg-white/60 border border-[#151515]/10 focus-visible:ring-1 focus-visible:ring-[#9a6bff]/40 focus-visible:bg-white pl-10 h-10 rounded-[2px] transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] placeholder:text-stone-400 placeholder:text-[11px] placeholder:font-black placeholder:uppercase placeholder:tracking-widest font-bold text-xs"
+              />
+              <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
+                <span className="text-[9px] font-black uppercase text-stone-400 tracking-widest bg-stone-100 px-2 py-1 rounded-[2px]">CMD+K</span>
+              </div>
+            </div>
+
+            {/* Right: Actions & Notifications */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1 bg-white border border-[#151515]/5 rounded-[2px] p-1 shadow-sm">
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-11 w-11 rounded-lg text-stone-500 hover:text-pink-600 hover:bg-pink-50 transition-all relative group"
+                  className="h-8 w-8 rounded-[2px] text-stone-400 hover:text-[#9a6bff] hover:bg-[#9a6bff]/10 transition-all relative group"
                 >
-                  <Bell className="h-[22px] w-[22px] transition-transform group-hover:rotate-12" />
-                  <span className="absolute top-3 right-3 h-2.5 w-2.5 rounded-full bg-rose-500 border-2 border-white shadow-sm animate-pulse"></span>
+                  <Bell className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                  <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-pink-500 shadow-[0_0_8px_rgba(236,72,153,0.8)]"></span>
                 </Button>
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-11 w-11 rounded-lg text-stone-500 hover:text-purple-600 hover:bg-purple-50 transition-all group"
+                  className="h-8 w-8 rounded-[2px] text-stone-400 hover:text-[#9a6bff] hover:bg-[#9a6bff]/10 transition-all group"
                 >
-                  <Settings className="h-[22px] w-[22px] transition-transform group-hover:rotate-90" />
+                  <Settings className="h-4 w-4 group-hover:scale-110 transition-transform group-hover:rotate-45" />
                 </Button>
               </div>
+
+              <div className="h-6 w-px bg-[#151515]/10 hidden sm:block"></div>
+
+              <Button className="hidden sm:flex bg-[#151515] text-white hover:bg-[#111] rounded-[2px] px-6 h-10 text-[10px] uppercase font-black tracking-[0.2em] shadow-lg shadow-black/10 hover:shadow-xl hover:-translate-y-0.5 transition-all">
+                Export Data
+              </Button>
             </div>
           </header>
 
-          <main className="p-12 w-full">
-
-
-            {activeView === "categories" && <CategoryManager />}
-            {activeView === "offline-billing" && <VendorOfflineBilling />}
-            {activeView === "points" && <PointsSettings />}
-            {activeView === "coupons" && <AdminCouponManager />}
-            {activeView === "overview" && (
-              <div className="space-y-10 animate-in fade-in slide-in-from-bottom-5">
-                <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <h1 className="text-3xl font-black text-stone-900 tracking-tight">
-                      Admin Overview
+          <main className="flex-1 min-h-0 w-full px-6 py-8 lg:px-8 xl:px-10">
+            <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-10">
+              {activeView === "homepage-categories" && <AdminHomepageCategories />}
+              {activeView === "categories" && <CategoryManager />}
+              {activeView === "offline-billing" && <VendorOfflineBilling />}
+              {activeView === "points" && <PointsSettings />}
+              {activeView === "coupons" && <AdminCouponManager />}
+              {activeView === "overview" && (
+                <div className="space-y-10 animate-in fade-in slide-in-from-bottom-5">
+                <header className="relative overflow-hidden rounded-[2px] bg-[#151515] p-10 md:p-14 shadow-2xl">
+                  {/* Subtle Brand Gradient Glow Background */}
+                  <div className="absolute -top-40 -right-40 w-[500px] h-[500px] bg-gradient-to-br from-pink-500 via-[#9a6bff] to-indigo-500 rounded-full blur-[100px] opacity-20 pointer-events-none" />
+                  
+                  <div className="relative z-10 max-w-2xl">
+                    <h1 className="text-[42px] font-black tracking-tighter leading-none mb-4 text-white">
+                      Enterprise <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#9a6bff] to-pink-500">Overview</span>
                     </h1>
-                    <p className="text-stone-500 font-bold uppercase tracking-[0.15em] text-[10px] mt-1">
-                      Platform analytics & Performance report
+                    <p className="text-[#9a6bff] opacity-80 text-sm font-bold uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
+                       <Sparkles className="h-4 w-4" /> Operations Hub
                     </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Button variant="outline" className="rounded-lg border-stone-200 font-bold text-xs h-10 px-6 hover:bg-stone-50 transition-all">
-                      <Download className="h-4 w-4 mr-2" />
-                      Export Data
-                    </Button>
-                    <Button className="rounded-lg bg-stone-900 text-white font-bold text-xs h-10 px-6 hover:bg-stone-800 transition-all shadow-lg shadow-stone-900/10">
-                      Share Report
-                    </Button>
+                    <p className="text-stone-400 font-medium text-sm md:text-base max-w-md leading-relaxed mt-4">
+                      Holistic view of marketplace performance, vendor networking, and platform scale across all touchpoints.
+                    </p>
                   </div>
                 </header>
 
@@ -1510,8 +1559,8 @@ const AdminDashboardContent = () => {
                     title="Gross Revenue"
                     value={formatMoney(stats?.totalEarnings || 0)}
                     icon={DollarSign}
-                    colorClass="bg-pink-50 text-pink-600"
-                    description="Total sales this period"
+                    colorClass="bg-[#9a6bff]/10 text-[#9a6bff]"
+                    description="Aggregate cross-channel revenue"
                     trend="up"
                     trendValue="+12.5%"
                   />
@@ -1547,7 +1596,7 @@ const AdminDashboardContent = () => {
                 {/* Main Content Area - Grid for Chart & Activity */}
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                   {/* Revenue Report Chart Section */}
-                  <Card className="xl:col-span-2 border-none shadow-[0_2px_15px_rgba(0,0,0,0.02)] p-8 rounded-xl bg-white flex flex-col">
+                  <Card className="xl:col-span-2 border border-[#151515]/5 shadow-sm hover:shadow-[0_20px_40px_rgba(154,107,255,0.12)] transition-all duration-500 ease-out p-8 rounded-[2px] bg-white flex flex-col">
                     <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
                       <div className="flex flex-col gap-1">
                         <h2 className="text-2xl font-black text-stone-900 tracking-tight">Revenue Report</h2>
@@ -1580,7 +1629,7 @@ const AdminDashboardContent = () => {
                         <select 
                           value={selectedTimeRange}
                           onChange={(e) => setSelectedTimeRange(e.target.value)}
-                          className="appearance-none bg-white border border-stone-200 rounded-xl px-5 py-2.5 pr-10 text-[11px] font-black uppercase tracking-widest text-stone-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 shadow-sm cursor-pointer transition-all hover:bg-stone-50"
+                          className="appearance-none bg-white border border-[#151515]/10 rounded-[2px] px-5 py-2.5 pr-10 text-[11px] font-black uppercase tracking-widest text-[#151515] focus:outline-none focus:ring-1 focus:ring-[#9a6bff]/40 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] cursor-pointer transition-all hover:bg-stone-50"
                         >
                           <option value="7d">7 Days</option>
                           <option value="1m">1 Month</option>
@@ -1593,10 +1642,10 @@ const AdminDashboardContent = () => {
                   </Card>
 
                   {/* Recent Activity Feed */}
-                  <Card className="border-none shadow-[0_2px_15px_rgba(0,0,0,0.02)] p-8 rounded-xl bg-white flex flex-col">
+                  <Card className="border border-[#151515]/5 shadow-sm hover:shadow-[0_20px_40px_rgba(154,107,255,0.12)] transition-all duration-500 ease-out p-8 rounded-[2px] bg-white flex flex-col">
                     <div className="flex items-center justify-between mb-8">
-                      <h2 className="text-xl font-black text-stone-900">Recent Activity</h2>
-                      <Button variant="link" className="text-pink-600 font-bold text-[11px] uppercase tracking-wider p-0 h-auto">View All</Button>
+                      <h2 className="text-xl font-black text-[#151515]">Recent Activity</h2>
+                      <Button variant="link" className="text-[#9a6bff] hover:text-[#7b51db] transition-colors font-bold text-[11px] uppercase tracking-wider p-0 h-auto">View All</Button>
                     </div>
                     
                     <ScrollArea className="h-[340px] pr-4 -mr-4">
@@ -1607,8 +1656,8 @@ const AdminDashboardContent = () => {
                           const iconMap = {
                             cart: { icon: ShoppingCart, color: "text-blue-500", bg: "bg-blue-50" },
                             alert: { icon: AlertCircle, color: "text-amber-500", bg: "bg-amber-50" },
-                            user: { icon: UserPlus, color: "text-purple-500", bg: "bg-purple-50" },
-                            activity: { icon: Activity, color: "text-pink-500", bg: "bg-pink-50" }
+                            user: { icon: UserPlus, color: "text-[#9a6bff]", bg: "bg-[#9a6bff]/10" },
+                            activity: { icon: Activity, color: "text-[#9a6bff]", bg: "bg-[#9a6bff]/10" }
                           };
                           const iconObj = iconMap[act.iconType] || iconMap.activity;
                           
@@ -1621,7 +1670,7 @@ const AdminDashboardContent = () => {
                               <iconObj.icon className="h-3 w-3" />
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-[13px] font-black text-stone-900 group-hover:text-pink-600 transition-colors">{act.title}</span>
+                              <span className="text-[13px] font-black text-stone-900 group-hover:text-[#9a6bff] transition-colors">{act.title}</span>
                               <p className="text-[11px] text-stone-400 font-medium leading-relaxed mt-1">{act.description}</p>
                               <span className="text-[9px] font-bold text-stone-300 uppercase tracking-widest mt-2">{timeStr}</span>
                             </div>
@@ -1635,13 +1684,13 @@ const AdminDashboardContent = () => {
 
                 {/* Bottom Row - Best Selling Table */}
                 <div className="grid grid-cols-1 xl:grid-cols-1 gap-8">
-                  <Card className="border-none shadow-[0_2px_15px_rgba(0,0,0,0.02)] p-8 rounded-xl bg-white overflow-hidden">
+                  <Card className="border border-[#151515]/5 shadow-sm hover:shadow-[0_20px_40px_rgba(154,107,255,0.12)] transition-all duration-500 ease-out p-8 bg-white overflow-hidden rounded-[2px]">
                     <div className="flex items-center justify-between mb-10">
                       <div>
-                        <h2 className="text-xl font-black text-stone-900">Best Selling Products</h2>
+                        <h2 className="text-xl font-black text-[#151515]">Best Selling Products</h2>
                         <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1 block">Top performing SKUs from current catalog</span>
                       </div>
-                      <Button variant="outline" className="rounded-lg border-stone-200 font-bold text-xs h-10 px-6">View Full Catalog</Button>
+                      <Button variant="outline" className="rounded-[2px] border-[#151515]/10 font-bold text-xs h-10 px-6 transition-all hover:border-[#151515]/30">View Full Catalog</Button>
                     </div>
 
                     <div className="overflow-x-auto pb-2">
@@ -1673,14 +1722,14 @@ const AdminDashboardContent = () => {
                               <TableRow key={prod._id || prod.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors group">
                                 <TableCell className="py-6">
                                   <div className="flex items-center gap-4">
-                                    <div className="h-14 w-14 rounded-xl bg-stone-100 overflow-hidden shadow-sm flex items-center justify-center p-1 border border-stone-200/40 relative">
+                                    <div className="h-14 w-14 rounded-[2px] bg-stone-100 overflow-hidden shadow-sm flex items-center justify-center p-1 border border-stone-200/40 relative">
                                       {prod.images?.[0] || prod.imageUrls?.[0] ? (
                                         <img src={prod.images?.[0] || prod.imageUrls?.[0]} alt="" className="h-full w-full object-cover rounded-[1px] group-hover:scale-110 transition-transform duration-500" />
                                       ) : (
                                         <ImageIcon className="h-6 w-6 text-stone-300" />
                                       )}
                                       {prod.bestSeller && (
-                                        <div className="absolute top-0 right-0 h-4 w-4 bg-amber-500 rounded-bl-[4px] flex items-center justify-center shadow-sm">
+                                        <div className="absolute top-0 right-0 h-4 w-4 bg-amber-500 rounded-bl-[2px] flex items-center justify-center shadow-sm">
                                           <Star className="h-2 w-2 text-white fill-current" />
                                         </div>
                                       )}
@@ -1692,7 +1741,7 @@ const AdminDashboardContent = () => {
                                   </div>
                                 </TableCell>
                                 <TableCell>
-                                  <Badge className="bg-stone-100 text-stone-600 hover:bg-stone-200 border-none rounded-lg font-black text-[10px] py-1 px-3 uppercase tracking-wider">
+                                  <Badge className="bg-[#151515]/5 text-[#151515]/70 hover:bg-[#151515]/10 border-none rounded-[2px] font-black text-[10px] py-1 px-3 uppercase tracking-wider">
                                     {prod.categoryName || prod.category?.name || "General"}
                                   </Badge>
                                 </TableCell>
@@ -1709,13 +1758,13 @@ const AdminDashboardContent = () => {
                                       <span>{prod.stock || 0} in stock</span>
                                       <span>{stockPercent}%</span>
                                     </div>
-                                    <div className="h-1.5 w-full bg-stone-100 rounded-full overflow-hidden">
-                                      <div className="h-full bg-pink-500 rounded-full transition-all duration-1000" style={{ width: `${stockPercent}%` }}></div>
+                                    <div className="h-1.5 w-full bg-stone-100 rounded-[2px] overflow-hidden">
+                                      <div className="h-full bg-[#9a6bff] rounded-[2px] transition-all duration-1000" style={{ width: `${stockPercent}%` }}></div>
                                     </div>
                                   </div>
                                 </TableCell>
                                 <TableCell className="text-right">
-                                  <Button size="icon" variant="ghost" className="h-9 w-9 text-stone-400 hover:text-pink-600 hover:bg-pink-50 rounded-lg">
+                                  <Button size="icon" variant="ghost" className="h-9 w-9 text-stone-400 hover:text-[#9a6bff] hover:bg-[#9a6bff]/10 rounded-[2px] transition-colors">
                                     <Eye className="h-4 w-4" />
                                   </Button>
                                 </TableCell>
@@ -1729,25 +1778,29 @@ const AdminDashboardContent = () => {
                 </div>
 
                 {stats?.pendingVendorApprovals > 0 && (
-                  <Card className="bg-gradient-to-r from-stone-900 via-[#1a0b2e] to-stone-900 text-white border-none p-10 rounded-xl flex flex-col md:flex-row items-center justify-between shadow-2xl shadow-stone-900/20 relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none"></div>
-                    <div className="absolute -top-24 -right-24 w-64 h-64 bg-pink-500/10 rounded-full blur-[100px] group-hover:scale-110 transition-transform duration-1000"></div>
-                    <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-                      <div className="h-16 w-16 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center text-pink-400 border border-white/20 shadow-xl">
-                        <ShieldCheck className="h-8 w-8" />
+                  <Card className="bg-[#151515] text-white border border-[#9a6bff]/20 p-8 rounded-[2px] flex flex-col lg:flex-row lg:items-center justify-between gap-6 shadow-[0_20px_40px_rgba(154,107,255,0.15)] relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-pink-500 to-[#9a6bff]" />
+                    <div className="flex items-start lg:items-center gap-6 z-10 relative pl-4">
+                      <div className="h-14 w-14 rounded-[2px] bg-[#9a6bff]/10 flex items-center justify-center text-pink-500 shadow-inner group-hover:scale-110 transition-transform">
+                        <AlertCircle className="h-7 w-7" />
                       </div>
-                      <div className="text-center md:text-left">
-                        <h3 className="text-2xl font-black tracking-tight leading-none mb-2">
-                          Enterprise Authorization Required
+                      <div>
+                        <h3 className="text-xl font-black tracking-tight flex items-center gap-3">
+                          Critical Approvals Required
+                          <span className="flex h-2 w-2 relative">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-pink-500"></span>
+                          </span>
                         </h3>
-                        <p className="text-stone-400 font-bold uppercase tracking-[0.15em] text-[11px] max-w-lg">
-                          You have {stats.pendingVendorApprovals} vendor profiles awaiting identity verification and fulfillment clearance. High priority task.
+                        <p className="text-stone-400 text-xs md:text-sm mt-1.5 font-medium">
+                          <strong className="text-white">{stats.pendingVendorApprovals}</strong> vendor profiles are
+                          awaiting enterprise authorization to join the network.
                         </p>
                       </div>
                     </div>
                     <Button
                       onClick={() => handleViewChange("vendors")}
-                      className="mt-6 md:mt-0 bg-white text-stone-900 font-black px-12 h-14 rounded-xl hover:bg-pink-500 hover:text-white transition-all shadow-xl active:scale-95 group relative overflow-hidden"
+                      className="bg-gradient-to-r from-[#9a6bff] to-pink-500 text-white font-black px-10 h-12 rounded-[2px] shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95 shrink-0 uppercase tracking-widest text-[10px]"
                     >
                       <span className="relative z-10">Authorize Now</span>
                     </Button>
@@ -1794,8 +1847,8 @@ const AdminDashboardContent = () => {
                             </option>
                           ))}
                         </select>
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none bg-stone-100 group-hover:bg-pink-100 rounded-md p-1 transition-colors">
-                          <ChevronRight className="h-3 w-3 text-stone-500 group-hover:text-pink-600 rotate-90 transition-transform" />
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none bg-stone-100 group-hover:bg-indigo-100 rounded-[2px] p-1 transition-colors">
+                          <ChevronRight className="h-3 w-3 text-stone-500 group-hover:text-indigo-600 rotate-90 transition-transform" />
                         </div>
                       </div>
                     </div>
@@ -1899,7 +1952,7 @@ const AdminDashboardContent = () => {
                                       </p>
                                       {p.specialOfferType &&
                                         p.specialOfferType !== "None" && (
-                                          <Badge className="h-4 px-2 text-[7px] font-black uppercase tracking-tighter bg-pink-500 text-white border-none rounded-full shrink-0">
+                                          <Badge className="h-4 px-2 text-[7px] font-black uppercase tracking-tighter bg-indigo-950 text-white border-none rounded-[2px] shrink-0">
                                             {p.specialOfferType}
                                           </Badge>
                                         )}
@@ -2071,9 +2124,9 @@ const AdminDashboardContent = () => {
                       order values.
                     </p>
                   </div>
-                  <div className="flex items-center gap-3 bg-pink-50/50 p-2 rounded-xl border border-pink-100/50">
-                    <div className="h-2 w-2 rounded-full bg-pink-500 animate-pulse" />
-                    <span className="text-[10px] font-black text-pink-900 uppercase tracking-widest">
+                  <div className="flex items-center gap-3 bg-indigo-50/50 p-2 rounded-[2px] border border-indigo-100/50">
+                    <div className="h-2 w-2 rounded-[2px] bg-emerald-500 animate-pulse" />
+                    <span className="text-[10px] font-bold text-indigo-900 uppercase tracking-widest">
                       Live in Checkout
                     </span>
                   </div>
@@ -2155,7 +2208,7 @@ const AdminDashboardContent = () => {
                                         });
                                         setIsQuickAddOpen(true);
                                       }}
-                                      className="h-9 px-5 rounded-xl bg-white shadow-lg text-pink-600 hover:bg-pink-600 hover:text-white font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105"
+                                      className="h-8 px-4 rounded-[2px] bg-white shadow-lg text-indigo-600 hover:bg-indigo-600 hover:text-white font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105"
                                     >
                                       Edit Deal
                                     </Button>
@@ -2166,7 +2219,7 @@ const AdminDashboardContent = () => {
                                           specialOfferType: "None",
                                         })
                                       }
-                                      className="h-9 w-9 p-0 rounded-xl shadow-lg font-black bg-white text-rose-500 hover:bg-rose-500 hover:text-white transition-all hover:scale-105"
+                                      className="h-8 w-8 p-0 rounded-[2px] shadow-lg font-black bg-white text-rose-500 hover:bg-rose-500 hover:text-white transition-all hover:scale-105"
                                     >
                                       <Trash2 size={14} strokeWidth={3} />
                                     </Button>
@@ -2228,8 +2281,8 @@ const AdminDashboardContent = () => {
                   })}
                 </div>
 
-                <div className="bg-stone-50/80 border border-stone-100 rounded-xl p-6 flex items-start gap-4 shrink-0">
-                  <div className="h-8 w-8 rounded-full bg-pink-100 flex items-center justify-center text-pink-600 shrink-0">
+                <div className="bg-stone-50/80 border border-stone-100 rounded-[2px] p-6 flex items-start gap-4 shrink-0">
+                  <div className="h-8 w-8 rounded-[2px] bg-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
                     <Info className="h-4 w-4" />
                   </div>
                   <div className="space-y-1">
@@ -2268,7 +2321,7 @@ const AdminDashboardContent = () => {
                   className="space-y-6"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <TabsList className="bg-stone-50 p-1.5 rounded-[1.25rem] border border-stone-100 gap-2 h-auto w-fit">
+                    <TabsList className="bg-stone-50 p-1.5 rounded-[2px] border border-stone-100 gap-2 h-auto w-fit">
                       <TabsTrigger
                         value="online"
                         className="rounded-xl px-10 h-10 data-[state=active]:bg-stone-900 data-[state=active]:text-white font-black text-[10px] uppercase tracking-widest transition-all"
@@ -2290,9 +2343,9 @@ const AdminDashboardContent = () => {
                     </TabsList>
 
                     {selectedOrderTab === "offline" && (
-                      <div className="group flex items-center bg-stone-50/80 hover:bg-white transition-all duration-300 rounded-[1.25rem] border border-stone-200/60 hover:border-indigo-200 hover:shadow-xl hover:shadow-pink-500/5 px-2 py-1.5 w-fit cursor-pointer animate-in fade-in slide-in-from-right-2">
-                        <div className="flex items-center justify-center h-8 w-8 rounded-xl bg-white group-hover:bg-pink-50 transition-colors shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] border border-stone-100 mr-3">
-                          <Filter className="h-[14px] w-[14px] text-stone-400 group-hover:text-pink-600 transition-colors" />
+                      <div className="group flex items-center bg-stone-50/80 hover:bg-white transition-all duration-300 rounded-[2px] border border-stone-200/60 hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/5 px-2 py-1.5 w-fit cursor-pointer animate-in fade-in slide-in-from-right-2">
+                        <div className="flex items-center justify-center h-8 w-8 rounded-[2px] bg-white group-hover:bg-indigo-50 transition-colors shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] border border-stone-100 mr-3">
+                          <Filter className="h-[14px] w-[14px] text-stone-400 group-hover:text-indigo-600 transition-colors" />
                         </div>
                         <span className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider mr-1">
                           Origin Node:
@@ -2312,8 +2365,8 @@ const AdminDashboardContent = () => {
                               </option>
                             ))}
                           </select>
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none bg-stone-100 group-hover:bg-pink-100 rounded-md p-1 transition-colors">
-                            <ChevronRight className="h-3 w-3 text-stone-500 group-hover:text-pink-600 rotate-90 transition-transform" />
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none bg-stone-100 group-hover:bg-indigo-100 rounded-[2px] p-1 transition-colors">
+                            <ChevronRight className="h-3 w-3 text-stone-500 group-hover:text-indigo-600 rotate-90 transition-transform" />
                           </div>
                         </div>
                       </div>
@@ -2399,7 +2452,7 @@ const AdminDashboardContent = () => {
                                   </TableCell>
                                   <TableCell className="px-8">
                                     <div className="flex items-center gap-2">
-                                      <div className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                                      <div className="h-1.5 w-1.5 rounded-[2px] bg-amber-400 animate-pulse" />
                                       <span className="font-bold text-indigo-900/60 text-[10px] uppercase tracking-widest">
                                         {o.destination}
                                       </span>
@@ -2563,7 +2616,7 @@ const AdminDashboardContent = () => {
                     value="offline"
                     className="animate-in slide-in-from-bottom-2 duration-500"
                   >
-                    <Card className="border-none shadow-[0_8px_30px_rgba(0,0,0,0.02)] rounded-[2.5rem] overflow-hidden bg-white">
+                    <Card className="border-none shadow-[0_8px_30px_rgba(0,0,0,0.02)] rounded-[2px] overflow-hidden bg-white">
                       <Table>
                         <TableHeader className="bg-stone-50/50">
                           <TableRow className="border-stone-100 hover:bg-transparent h-16">
@@ -2620,7 +2673,7 @@ const AdminDashboardContent = () => {
                               >
                                 <TableCell className="px-8">
                                   <div className="flex flex-col">
-                                    <Badge className="w-fit bg-slate-100 group-hover:bg-pink-600 text-slate-600 group-hover:text-white text-[9px] font-mono font-black uppercase tracking-widest rounded px-2.5 py-1.5 transition-all shadow-sm border border-slate-200 group-hover:border-pink-600">
+                                    <Badge className="w-fit bg-slate-100 group-hover:bg-indigo-600 text-slate-600 group-hover:text-white text-[9px] font-mono font-black uppercase tracking-widest rounded-[2px] px-2.5 py-1.5 transition-all shadow-sm border border-slate-200 group-hover:border-indigo-600">
                                       {o.orderNumber}
                                     </Badge>
                                     <span className="text-[8px] font-mono font-black text-slate-300 uppercase tracking-widest mt-2 ml-0.5">
@@ -4110,7 +4163,7 @@ const AdminDashboardContent = () => {
                                             className="h-full w-full object-cover"
                                           />
                                           <div className="absolute inset-0 bg-[#1a0b2e]/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                            <span className="text-white text-[8px] font-black uppercase tracking-widest bg-stone-900/80 px-2 py-1 rounded-sm">
+                                            <span className="text-white text-[8px] font-black uppercase tracking-widest bg-indigo-950/80 px-2 py-1 rounded-[2px]">
                                               Existing
                                             </span>
                                           </div>
@@ -4272,6 +4325,7 @@ const AdminDashboardContent = () => {
                   </div>
                 );
               })()}
+            </div>
           </main>
         </div>
 
@@ -4371,7 +4425,7 @@ const AdminDashboardContent = () => {
                     <div className="p-10 space-y-12">
                       {/* Top Line Analytics Grid */}
                       <div className="grid grid-cols-3 gap-8">
-                        <div className="p-8 bg-white rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-emerald-500/10 transition-all duration-500">
+                        <div className="p-8 bg-white rounded-[2px] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-emerald-500/10 transition-all duration-500">
                           <div className="flex items-center justify-between mb-4">
                             <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">
                               Transaction Credits
@@ -4388,7 +4442,7 @@ const AdminDashboardContent = () => {
                           </p>
                           <div className="absolute bottom-0 right-0 h-1.5 w-0 bg-emerald-500 group-hover:w-full transition-all duration-700" />
                         </div>
-                        <div className="p-8 bg-white rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-stone-900/10 transition-all duration-500">
+                        <div className="p-8 bg-white rounded-[2px] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-indigo-950/10 transition-all duration-500">
                           <div className="flex items-center justify-between mb-4">
                             <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">
                               Activity Events
@@ -4404,7 +4458,7 @@ const AdminDashboardContent = () => {
                             Confirmed Shipments
                           </p>
                         </div>
-                        <div className="p-8 bg-white rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-stone-900/10 transition-all duration-500">
+                        <div className="p-8 bg-white rounded-[2px] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-indigo-950/10 transition-all duration-500">
                           <div className="flex items-center justify-between mb-4">
                             <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">
                               Node Creation
@@ -4715,7 +4769,7 @@ const AdminDashboardContent = () => {
                   <ScrollArea className="flex-1 bg-white/40 backdrop-blur-sm">
                     <div className="p-10 space-y-12">
                       <div className="grid grid-cols-3 gap-8">
-                        <div className="p-8 bg-white rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-emerald-500/10 transition-all duration-500">
+                        <div className="p-8 bg-white rounded-[2px] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-emerald-500/10 transition-all duration-500">
                           <div className="flex items-center justify-between mb-4">
                             <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">
                               Gross Revenue
@@ -4733,7 +4787,7 @@ const AdminDashboardContent = () => {
                           </p>
                           <div className="absolute bottom-0 right-0 h-1.5 w-0 bg-emerald-500 group-hover:w-full transition-all duration-700" />
                         </div>
-                        <div className="p-8 bg-white rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-blue-900/10 transition-all duration-500">
+                        <div className="p-8 bg-white rounded-[2px] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-blue-900/10 transition-all duration-500">
                           <div className="flex items-center justify-between mb-4">
                             <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">
                               Inventory Nodes
@@ -4749,7 +4803,7 @@ const AdminDashboardContent = () => {
                             Live Catalog Items
                           </p>
                         </div>
-                        <div className="p-8 bg-stone-900 rounded-[2.5rem] shadow-2xl shadow-stone-900/20 text-white relative overflow-hidden group">
+                        <div className="p-8 bg-indigo-950 rounded-[2px] shadow-2xl shadow-indigo-950/20 text-white relative overflow-hidden group">
                           <div className="flex items-center justify-between mb-4">
                             <p className="text-[10px] font-black text-stone-500 uppercase tracking-[0.2em]">
                               Sales Events
@@ -4943,8 +4997,8 @@ const AdminDashboardContent = () => {
 
         {/* Manual Offline Sale Registry */}
         <Dialog open={isManualOrderOpen} onOpenChange={setIsManualOrderOpen}>
-          <DialogContent className="sm:max-w-2xl rounded-[2.5rem] p-10 border-none shadow-2xl bg-white relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-12 opacity-[0.03] blur-2xl bg-emerald-500 rounded-xl -mr-8 -mt-8" />
+          <DialogContent className="sm:max-w-2xl rounded-[2px] p-10 border-none shadow-2xl bg-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-12 opacity-[0.03] blur-2xl bg-emerald-500 rounded-[2px] -mr-8 -mt-8" />
             <DialogHeader className="mb-8">
               <DialogTitle className="text-3xl font-black text-stone-900 tracking-tighter uppercase">
                 Record Manual Transmission
@@ -5040,7 +5094,7 @@ const AdminDashboardContent = () => {
                 </div>
               </div>
 
-              <div className="p-8 bg-stone-50 rounded-[2rem] border border-stone-100 space-y-6">
+              <div className="p-8 bg-stone-50 rounded-[2px] border border-stone-100 space-y-6">
                 <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.3em]">
                   Transmission Details
                 </p>
@@ -5202,15 +5256,15 @@ const AdminDashboardContent = () => {
             ) : (
               selectedOrder && (
                 <div className="flex flex-col max-h-[90vh]">
-                  <header className="p-10 bg-gradient-to-br from-stone-900 via-[#0a0a0c] to-indigo-900 text-white relative overflow-hidden shrink-0 border-b border-white/5 shadow-2xl">
-                    <div className="absolute top-0 right-0 p-64 bg-pink-500/10 blur-[150px] rounded-full -mr-32 -mt-32" />
-                    <div className="absolute bottom-0 left-0 p-32 bg-amber-500/5 blur-[80px] rounded-full -ml-16 -mb-16" />
+                  <header className="p-10 bg-gradient-to-br from-indigo-950 via-[#0a0a0c] to-indigo-900 text-white relative overflow-hidden shrink-0 border-b border-white/5 shadow-2xl">
+                    <div className="absolute top-0 right-0 p-64 bg-indigo-500/10 blur-[150px] rounded-[2px] -mr-32 -mt-32" />
+                    <div className="absolute bottom-0 left-0 p-32 bg-amber-500/5 blur-[80px] rounded-[2px] -ml-16 -mb-16" />
                     <div className="flex justify-between items-end relative z-10">
                       <div className="space-y-6">
                         <div className="flex items-center gap-4">
                           <Badge
                             className={cn(
-                              "text-[9px] font-black uppercase tracking-[0.3em] px-4 py-1.5 border-none rounded-[1px] shadow-lg",
+                              "text-[9px] font-black uppercase tracking-[0.3em] px-4 py-1.5 border-none rounded-[2px] shadow-lg",
                               selectedOrder.status === "DELIVERED"
                                 ? "bg-emerald-500 text-white"
                                 : "bg-pink-600 text-white",
@@ -5231,7 +5285,7 @@ const AdminDashboardContent = () => {
                             {selectedOrder.orderNumber}
                           </h2>
                         </div>
-                        <div className="flex items-center gap-8 text-white/50 font-black text-[11px] uppercase tracking-[0.3em] mt-8 bg-white/5 backdrop-blur-md px-6 py-3 rounded-[1px] border border-white/10 inline-flex shadow-inner">
+                        <div className="flex items-center gap-8 text-white/50 font-black text-[11px] uppercase tracking-[0.3em] mt-8 bg-white/5 backdrop-blur-md px-6 py-3 rounded-[2px] border border-white/10 inline-flex shadow-inner">
                           <span className="flex items-center gap-2.5">
                             <Calendar className="h-3.5 w-3.5 text-indigo-400" />
                             {new Date(
@@ -5252,7 +5306,7 @@ const AdminDashboardContent = () => {
                         </div>
                       </div>
                       <div className="text-right flex flex-col items-end gap-3">
-                        <div className="bg-white/5 backdrop-blur-md p-6 rounded-[1px] border border-white/10 shadow-2xl ring-1 ring-white/5">
+                        <div className="bg-white/5 backdrop-blur-md p-6 rounded-[2px] border border-white/10 shadow-2xl ring-1 ring-white/5">
                           <p className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-3">
                             Settlement Quantum
                           </p>
@@ -5278,9 +5332,9 @@ const AdminDashboardContent = () => {
                             Customer Identity & Destination Profile
                           </h3>
                           <div className="space-y-4">
-                            <div className="bg-white p-6 rounded-xl border border-stone-100 shadow-sm transition-all hover:shadow-md">
-                              <h4 className="text-[10px] font-black text-stone-900 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                                <span className="h-1.5 w-1.5 bg-pink-600 rounded-full" />
+                            <div className="bg-white p-6 rounded-[2px] border border-stone-100 shadow-sm transition-all hover:shadow-md">
+                              <h4 className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                <span className="h-1.5 w-1.5 bg-indigo-600 rounded-[2px]" />
                                 Operational Identity
                               </h4>
                               <div className="flex items-center gap-5">
@@ -5316,7 +5370,7 @@ const AdminDashboardContent = () => {
                                   <Navigation className="h-16 w-16 rotate-12" />
                                 </div>
                                 <h4 className="text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-4 flex items-center gap-2 relative z-10">
-                                  <div className="h-1.5 w-1.5 bg-indigo-400 rounded-full animate-pulse" />
+                                  <div className="h-1.5 w-1.5 bg-indigo-400 rounded-[2px] animate-pulse" />
                                   Shipping Protocol
                                 </h4>
                                 {(() => {
@@ -5343,7 +5397,7 @@ const AdminDashboardContent = () => {
                                           Verified Destination
                                         </span>
                                         {!selectedOrder.shippingAddress && (
-                                          <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest bg-amber-400/10 px-2 py-0.5 rounded-sm border border-amber-400/20">
+                                          <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest bg-amber-400/10 px-2 py-0.5 rounded-[2px] border border-amber-400/20">
                                             Registry Default
                                           </span>
                                         )}
@@ -5472,7 +5526,7 @@ const AdminDashboardContent = () => {
                                       </div>
                                     );
                                   })()}
-                                  <div className="absolute top-1.5 right-1.5 bg-stone-900 text-white text-[11px] font-black px-2.5 py-1 rounded-[1px] shadow-2xl z-20">
+                                  <div className="absolute top-1.5 right-1.5 bg-indigo-950 text-white text-[11px] font-black px-2.5 py-1 rounded-[2px] shadow-2xl z-20">
                                     {item.quantity}
                                   </div>
                                 </div>
@@ -5483,7 +5537,7 @@ const AdminDashboardContent = () => {
                                       {item.name}
                                     </h4>
                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                                      <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest bg-stone-100 px-2 py-0.5 rounded-sm">
+                                      <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest bg-stone-100 px-2 py-0.5 rounded-[2px]">
                                         REF:{" "}
                                         {item.productId?.slice(0, 8) ||
                                           "MANUAL"}
@@ -5578,7 +5632,7 @@ const AdminDashboardContent = () => {
         </Dialog>
         {/* Add Direct Vendor Modal */}
         <Dialog open={isAddVendorOpen} onOpenChange={setIsAddVendorOpen}>
-          <DialogContent className="sm:max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl">
+          <DialogContent className="sm:max-w-2xl rounded-[2px] p-0 overflow-hidden border-none shadow-2xl">
             <form
               onSubmit={handleAddVendor}
               className="flex flex-col max-h-[90vh]"
@@ -5733,8 +5787,8 @@ const AdminDashboardContent = () => {
           <DialogContent
             className={`max-w-lg p-0 overflow-hidden border-none ${THEME.borders.radius.xl} bg-white/80 backdrop-blur-3xl ${THEME.shadows.xl}`}
           >
-            <header className="p-6 bg-gradient-to-br from-stone-900 via-indigo-900 to-indigo-800 text-white flex flex-col gap-1 shrink-0 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-24 bg-white/5 blur-3xl rounded-full -mr-12 -mt-12" />
+            <header className="p-6 bg-gradient-to-br from-indigo-950 via-indigo-900 to-indigo-800 text-white flex flex-col gap-1 shrink-0 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-24 bg-white/5 blur-3xl rounded-[2px] -mr-12 -mt-12" />
               <div className="flex items-center justify-between relative z-10">
                 <h2 className="text-lg font-black uppercase tracking-tighter flex items-center gap-3">
                   <div
@@ -5953,6 +6007,14 @@ const AdminDashboard = () => {
     const saved = localStorage.getItem("adminUser");
     return saved ? JSON.parse(saved) : null;
   });
+
+  useEffect(() => {
+    document.body.setAttribute("data-admin-dashboard", "true");
+
+    return () => {
+      document.body.removeAttribute("data-admin-dashboard");
+    };
+  }, []);
 
   useEffect(() => {
     if (adminUser?.id) {

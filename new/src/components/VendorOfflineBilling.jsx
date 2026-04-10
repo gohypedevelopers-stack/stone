@@ -205,19 +205,20 @@ export function VendorOfflineBilling() {
 
   if (successBill) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] animate-in zoom-in duration-700">
-        <div className="h-24 w-24 bg-pink-50 text-pink-600 rounded-xl flex items-center justify-center mb-10 shadow-xl shadow-pink-100/50 border border-pink-100">
-          <CheckCircle2 className="h-12 w-12" strokeWidth={3} />
+      <div className="flex flex-col items-center justify-center min-h-[60vh] animate-in zoom-in duration-500">
+        <div className="h-20 w-20 bg-stone-100 text-stone-900 rounded-[2px] flex items-center justify-center mb-6">
+          <CheckCircle2 className="h-10 w-10" />
         </div>
         <h2 className="text-3xl font-black text-stone-900 tracking-tight mb-3 uppercase">Order Authorized</h2>
         <p className="text-[11px] font-black text-stone-400 uppercase tracking-[0.3em] mb-12">
           Ref: <span className="text-pink-600 ml-1">OFF-{successBill.id.slice(0, 8).toUpperCase()}</span>
         </p>
         
-        <div className="bg-white p-10 rounded-xl shadow-[0_10px_50px_rgba(0,0,0,0.04)] border border-stone-100 max-w-lg w-full text-center space-y-6">
-           <div className="flex flex-col items-center gap-2 mb-4">
-              <span className="text-[10px] font-black text-stone-300 uppercase tracking-widest">Transaction Summary</span>
-              <div className="h-0.5 w-10 bg-pink-500/20" />
+        <div className="bg-white p-6 rounded-[2px] shadow-sm border border-stone-200 max-w-md w-full text-center space-y-4">
+           <h3 className="font-bold text-md uppercase tracking-wide text-stone-800 border-b border-stone-100 pb-4 mb-4">Receipt Summary</h3>
+           <div className="flex justify-between text-sm">
+             <span className="text-stone-500">Total Items</span>
+             <span className="font-bold">{successBill.items?.reduce((a,b) => a + b.quantity, 0)}</span>
            </div>
            
            <div className="space-y-4">
@@ -248,13 +249,13 @@ export function VendorOfflineBilling() {
         <div className="flex items-center gap-5 mt-12">
           <Button 
             onClick={() => printThermalReceipt(successBill)} 
-            className="bg-white text-stone-900 border border-stone-100 rounded-xl h-12 px-8 font-black text-[10px] uppercase tracking-widest hover:bg-stone-50 shadow-sm transition-all"
+            className="bg-white text-stone-900 border border-stone-200 rounded-[2px] h-10 px-6 font-medium text-sm hover:bg-stone-50"
           >
             <span className="flex items-center gap-3"><Printer className="h-4 w-4" /> Print Receipt</span>
           </Button>
           <Button 
             onClick={() => setSuccessBill(null)} 
-            className="bg-stone-900 text-white rounded-xl h-12 px-10 font-black text-[10px] uppercase tracking-widest hover:bg-[#ff4fa3] shadow-xl shadow-stone-200 transition-all hover:scale-105"
+            className="bg-stone-900 text-white rounded-[2px] h-10 px-8 font-medium text-sm hover:bg-stone-800"
           >
             New Session
           </Button>
@@ -278,14 +279,15 @@ export function VendorOfflineBilling() {
       </header>
 
       {/* Vendor Details Section */}
-      <div className="bg-stone-100/50 p-2 rounded-xl grid grid-cols-1 md:grid-cols-2 gap-2 border border-stone-100">
-        <div className="bg-white rounded-xl border border-stone-100 p-6 flex flex-col justify-center">
-          <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-3 block">Vendor Identification</Label>
+      <div className="bg-stone-100/60 p-2 rounded-[2px] grid grid-cols-1 md:grid-cols-2 gap-2 border border-stone-200/60 shadow-inner">
+        {/* Vendor Selector */}
+        <div className="bg-white rounded-[2px] border border-stone-200 p-5 shadow-sm flex flex-col justify-center">
+          <Label className="text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-2 block">Operating Vendor</Label>
           <Select value={selectedVendorId} onValueChange={setSelectedVendorId}>
-            <SelectTrigger className="h-12 rounded-xl border-stone-100 bg-stone-50/50 focus:ring-pink-500 font-black text-[12px] text-stone-900 focus:bg-white transition-all shadow-none">
-              <SelectValue placeholder="Identify merchant node..." />
+            <SelectTrigger className="h-11 rounded-[2px] border-stone-200 bg-stone-50 focus:ring-stone-900 font-semibold text-stone-800 focus:bg-white transition-colors">
+              <SelectValue placeholder="Search or select a vendor..." />
             </SelectTrigger>
-            <SelectContent className="rounded-xl border-stone-100 shadow-2xl">
+            <SelectContent className="rounded-[2px] border-stone-200">
               {vendors.map(v => (
                 <SelectItem key={v.id} value={v.id} className="cursor-pointer font-black text-[11px] py-3 uppercase tracking-widest focus:bg-pink-50 focus:text-pink-600">
                   {v.businessName}
@@ -295,13 +297,16 @@ export function VendorOfflineBilling() {
           </Select>
         </div>
 
-        <div className="bg-white rounded-xl border border-stone-100 p-6 flex flex-col justify-center">
-          <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-3 block">Node Deployment Address</Label>
-          <div className="flex-1 rounded-xl border border-stone-100 bg-stone-50/50 px-5 flex items-center gap-3 w-full h-12">
+        {/* Location Display */}
+        <div className="bg-white rounded-[2px] border border-stone-200 p-5 shadow-sm flex flex-col justify-center">
+          <Label className="text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-2 block">Terminal Location</Label>
+          <div className="flex-1 rounded-[2px] border border-stone-100 bg-stone-50 px-4 flex items-center gap-3 w-full h-11">
             {selectedVendor ? (
               <>
-                <MapPin className="h-3.5 w-3.5 text-pink-500" />
-                <span className="font-black text-[11px] text-stone-900 truncate uppercase tracking-tight">{selectedVendor.storeAddress || 'Address not verified.'}</span>
+                <div className="bg-white shadow-sm border border-stone-200 p-1.5 rounded-[2px] flex items-center justify-center shrink-0">
+                  <MapPin className="h-3.5 w-3.5 text-stone-600" />
+                </div>
+                <span className="font-semibold text-sm text-stone-800 truncate">{selectedVendor.storeAddress || 'No physical address logged.'}</span>
               </>
             ) : (
               <span className="text-stone-400 font-black text-[10px] uppercase tracking-widest">Awaiting merchant identification...</span>
@@ -315,8 +320,8 @@ export function VendorOfflineBilling() {
         
         {/* Left Side: Product Selector */}
         <div className="lg:col-span-8 space-y-6">
-          <Card className="border border-stone-100 shadow-[0_4px_30px_rgba(0,0,0,0.02)] rounded-xl overflow-hidden bg-white h-[850px] flex flex-col">
-            <CardHeader className="bg-stone-50/30 border-b border-stone-50 flex flex-row items-center justify-between py-6 px-8">
+          <Card className="border border-stone-200 shadow-sm rounded-[2px] overflow-hidden bg-white h-[800px] flex flex-col">
+            <CardHeader className="bg-stone-50 border-b border-stone-100 flex flex-row items-center justify-between pb-4">
               <div>
                 <CardTitle className="text-[11px] font-black text-stone-900 uppercase tracking-[0.25em] flex items-center gap-3">
                   <Store className="h-4 w-4 text-pink-500" /> Catalog Registry
@@ -328,7 +333,7 @@ export function VendorOfflineBilling() {
                   placeholder="Filter by name or SKU..." 
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-12 h-11 rounded-xl bg-white border border-stone-100 shadow-none focus-visible:ring-pink-500 font-black text-[11px] uppercase tracking-widest placeholder:text-stone-300"
+                  className="pl-10 h-10 rounded-[2px] bg-white border border-stone-200 shadow-sm"
                 />
               </div>
             </CardHeader>
@@ -346,14 +351,14 @@ export function VendorOfflineBilling() {
                       animate={{ opacity: 1, scale: 1 }}
                       key={p.id}
                       onClick={() => addToCart(p)}
-                      className={`group cursor-pointer bg-white border border-stone-100 rounded-xl p-5 transition-all flex flex-col relative ${p.stock <= 0 ? 'opacity-40 grayscale' : 'hover:border-pink-500 hover:shadow-xl hover:shadow-pink-100/50'}`}
+                      className={`group cursor-pointer bg-stone-50 border border-stone-200 rounded-[2px] p-4 transition-all flex flex-col relative ${p.stock <= 0 ? 'opacity-50 grayscale hover:border-rose-300' : 'hover:border-stone-400 hover:shadow-md'}`}
                     >
                       {p.stock <= 0 && (
-                        <div className="absolute top-4 right-4 bg-stone-900 text-white text-[8px] font-black uppercase px-3 py-1 rounded-xl z-10 tracking-[0.2em] shadow-lg">
-                          Depleted
+                        <div className="absolute top-2 right-2 bg-rose-500 text-white text-[10px] font-bold uppercase px-2 py-1 rounded-[2px] z-10 shadow-sm">
+                          Out of Stock
                         </div>
                       )}
-                      <div className="aspect-[4/5] bg-stone-50 rounded-[1px] mb-5 overflow-hidden border border-stone-50 relative">
+                      <div className="aspect-square bg-white rounded-[2px] mb-3 overflow-hidden border border-stone-100 relative">
                         {p.imageUrls && p.imageUrls[0] ? (
                           <img src={p.imageUrls[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                         ) : (
@@ -361,8 +366,8 @@ export function VendorOfflineBilling() {
                              <Store className="h-10 w-10 stroke-[1]" />
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-stone-900/0 group-hover:bg-pink-500/10 flex items-center justify-center transition-all duration-300">
-                          <Plus className="opacity-0 group-hover:opacity-100 h-10 w-10 text-white bg-pink-500 rounded-full p-2.5 shadow-2xl transition-all scale-50 group-hover:scale-100" />
+                        <div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/5 flex items-center justify-center transition-colors">
+                          <Plus className="opacity-0 group-hover:opacity-100 h-8 w-8 text-stone-900 bg-white rounded-[2px] p-2 shadow-sm transition-all scale-75 group-hover:scale-100" />
                         </div>
                       </div>
                       <div className="flex flex-col flex-1">
@@ -370,10 +375,10 @@ export function VendorOfflineBilling() {
                         <div className="mt-auto pt-4 flex flex-col gap-2">
                           <span className="font-black text-stone-950 block text-lg tracking-tighter">&#8377;{Number(p.discountPrice || p.price).toLocaleString('en-IN')}</span>
                           {calcPoints(Number(p.discountPrice || p.price)) > 0 && (
-                            <div className="flex items-center gap-1.5 bg-pink-50 text-pink-600 rounded-xl px-2 py-1 text-[9px] font-black whitespace-nowrap w-fit uppercase tracking-widest border border-pink-100">
+                            <span className="flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200/60 rounded-[2px] px-2 py-0.5 text-[10px] font-bold whitespace-nowrap">
                               <Coins className="h-3 w-3" />
                               +{calcPoints(Number(p.discountPrice || p.price))} pts
-                            </div>
+                            </span>
                           )}
                         </div>
                       </div>
@@ -387,11 +392,11 @@ export function VendorOfflineBilling() {
 
         {/* Right Side: Electronic Ledger / Cart */}
         <div className="lg:col-span-4">
-          <Card className="border border-stone-100 shadow-[0_4px_30px_rgba(0,0,0,0.02)] rounded-xl overflow-hidden bg-white flex flex-col h-[850px]">
-            <CardHeader className="bg-stone-50/20 border-b border-stone-50 py-6 px-8 flex flex-row items-center justify-between">
-              <CardTitle className="text-[11px] font-black text-stone-950 uppercase tracking-[0.25em] flex items-center gap-3">
-                <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-stone-900 text-white">
-                  <ShoppingCart className="h-4 w-4" /> 
+          <Card className="border border-stone-200 shadow-sm rounded-[2px] overflow-hidden bg-white flex flex-col">
+            <CardHeader className="bg-stone-50 border-b border-stone-200 pb-4 pt-4 z-10">
+              <CardTitle className="text-lg font-bold text-stone-900 flex items-center gap-2">
+                <div className="h-8 w-8 flex items-center justify-center rounded-[2px] bg-stone-200">
+                  <ShoppingCart className="h-4 w-4 text-stone-700" /> 
                 </div>
                 <span>Active Ledger</span>
               </CardTitle>
@@ -413,16 +418,16 @@ export function VendorOfflineBilling() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95 }}
                           key={item.id}
-                          className="flex flex-col gap-4 bg-white p-5 rounded-xl border border-stone-50 shadow-sm group/item hover:border-pink-100 transition-colors"
+                          className="flex flex-col gap-3 bg-white p-3.5 rounded-[2px] border border-stone-200 shadow-sm"
                         >
                           <div className="flex items-start gap-4">
                             {item.imageUrls && item.imageUrls[0] ? (
-                              <div className="h-16 w-16 rounded-[1px] border border-stone-50 overflow-hidden shrink-0 bg-stone-50">
+                              <div className="h-12 w-12 rounded-[2px] border border-stone-100 overflow-hidden shrink-0 bg-stone-50">
                                 <img src={item.imageUrls[0]} alt={item.name} className="h-full w-full object-cover" />
                               </div>
                             ) : (
-                              <div className="h-16 w-16 rounded-[1px] border border-stone-50 flex items-center justify-center shrink-0 bg-stone-50 text-stone-200">
-                                <Store className="h-6 w-6" />
+                              <div className="h-12 w-12 rounded-[2px] border border-stone-100 flex items-center justify-center shrink-0 bg-stone-50 text-stone-300">
+                                <Store className="h-5 w-5" />
                               </div>
                             )}
                             <div className="flex-1">
@@ -434,13 +439,13 @@ export function VendorOfflineBilling() {
                             </button>
                           </div>
                           
-                          <div className="flex items-center justify-between pt-4 border-t border-stone-50/50">
-                            <div className="flex items-center gap-1 bg-stone-50/50 rounded-xl p-1 border border-stone-100">
-                              <Button size="icon" variant="ghost" className="h-7 w-7 rounded-[1px] text-stone-600 hover:text-stone-900 bg-white shadow-sm border border-stone-100" onClick={() => updateQuantity(item.id, -1)}>
+                          <div className="flex items-center justify-between pt-2 mt-1 border-t border-stone-100">
+                            <div className="flex items-center gap-1 bg-stone-50 rounded-[2px] p-1 border border-stone-200">
+                              <Button size="icon" variant="ghost" className="h-6 w-6 rounded-[2px] text-stone-600 hover:text-stone-900 bg-white shadow-sm border border-stone-100" onClick={() => updateQuantity(item.id, -1)}>
                                 <Minus className="h-3 w-3" />
                               </Button>
-                              <span className="font-black text-xs w-8 text-center text-stone-950">{item.quantity}</span>
-                              <Button size="icon" variant="ghost" className="h-7 w-7 rounded-[1px] text-stone-600 hover:text-stone-900 bg-white shadow-sm border border-stone-100" onClick={() => updateQuantity(item.id, 1)}>
+                              <span className="font-semibold text-xs w-6 text-center text-stone-800">{item.quantity}</span>
+                              <Button size="icon" variant="ghost" className="h-6 w-6 rounded-[2px] text-stone-600 hover:text-stone-900 bg-white shadow-sm border border-stone-100" onClick={() => updateQuantity(item.id, 1)}>
                                 <Plus className="h-3 w-3" />
                               </Button>
                             </div>
@@ -496,7 +501,7 @@ export function VendorOfflineBilling() {
                         placeholder="IDENTIFY..." 
                         value={customerName}
                         onChange={e => setCustomerName(e.target.value)}
-                        className="h-11 border-stone-100 rounded-xl focus-visible:ring-pink-500 px-4 font-black text-[10px] uppercase tracking-widest"
+                        className="h-10 border-stone-200 rounded-[2px] focus-visible:ring-stone-900 px-3"
                       />
                     </div>
                     <div className="space-y-2">
@@ -505,8 +510,21 @@ export function VendorOfflineBilling() {
                         placeholder="MOBILE..." 
                         value={customerMobile}
                         onChange={e => setCustomerMobile(e.target.value)}
-                        className="h-11 border-stone-100 rounded-xl focus-visible:ring-pink-500 px-4 font-black text-[10px] uppercase tracking-widest"
+                        className="h-10 border-stone-200 rounded-[2px] focus-visible:ring-stone-900 px-3"
                       />
+                      {lookedUpCustomer && (
+                        <div className="flex items-center gap-2 mt-1.5 bg-emerald-50 border border-emerald-200/60 rounded-[2px] px-3 py-2">
+                          <div className="flex-1">
+                            <p className="text-[11px] font-bold text-emerald-800">{lookedUpCustomer.name}</p>
+                            <p className="text-[10px] text-emerald-600 font-medium">Existing customer</p>
+                          </div>
+                          <div className="flex items-center gap-1 bg-amber-50 border border-amber-200/60 rounded-[2px] px-2.5 py-1">
+                            <Coins className="h-3.5 w-3.5 text-amber-600" />
+                            <span className="text-sm font-bold text-amber-700">{lookedUpCustomer.rewardPoints}</span>
+                            <span className="text-[9px] font-bold text-amber-500 uppercase">pts</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
@@ -524,12 +542,12 @@ export function VendorOfflineBilling() {
                   )}
 
                   <Button 
-                    className="w-full h-14 rounded-xl bg-stone-950 hover:bg-[#ff4fa3] text-white font-black uppercase tracking-[0.3em] text-[11px] shadow-2xl transition-all duration-500 disabled:opacity-30 group"
+                    className="w-full h-12 rounded-[2px] bg-stone-900 hover:bg-stone-800 text-white font-semibold shadow-none disabled:opacity-50 transition-colors shrink-0 mt-2"
                     disabled={cart.length === 0 || !customerMobile || isSubmitting}
                     onClick={handleCheckout}
                   >
                     {isSubmitting ? (
-                      <span className="flex items-center gap-3"><div className="h-4 w-4 border-2 border-white border-t-transparent animate-spin rounded-full"></div> Authorizing...</span>
+                      <span className="flex items-center gap-2"><div className="h-4 w-4 border-2 border-white border-t-transparent animate-spin rounded-[2px]"></div> Processing</span>
                     ) : (
                       <span className="flex items-center gap-3">Authorize Session <CheckCircle2 className="h-4 w-4 group-hover:translate-x-1 transition-transform" /></span>
                     )}

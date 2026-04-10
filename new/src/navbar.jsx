@@ -280,6 +280,12 @@ const Navbar = memo(function Navbar({
                           >
                             Admin Dashboard
                           </button>
+                          <button
+                            className="w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition-colors font-bold"
+                            onClick={() => { onNavigate("vendor-dashboard"); setShowProfileMenu(false); }}
+                          >
+                            Vendor Dashboard
+                          </button>
                           <div className="h-px bg-stone-100 my-1 mx-2" />
                           <button
                             className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg transition-colors font-black"
