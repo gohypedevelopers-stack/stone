@@ -51,8 +51,14 @@ import {
   User,
   Info,
   Zap,
+<<<<<<< HEAD
   Key,
   AlertTriangle,
+=======
+  Download,
+  LogOut,
+  ChevronDown,
+>>>>>>> e67f4f806b3fb832741548db118e8f7e24778808
 } from "lucide-react";
 import { toast } from "sonner";
 import AdminLogin from "./AdminLogin";
@@ -71,7 +77,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-import { AdminHomepageCategories } from "@/components/AdminHomepageCategories";
+
 import CategoryManager from "@/components/CategoryManager";
 import { VendorOfflineBilling } from "@/components/VendorOfflineBilling";
 import { AdminCouponManager } from "@/components/AdminCouponManager";
@@ -136,6 +142,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { API_URL, SERVER_URL } from "@/utils/api";
 
 const AdminDashboardContent = () => {
+  const { user, logout } = useAuth();
   const [stats, setStats] = useState(null);
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -254,10 +261,7 @@ const AdminDashboardContent = () => {
   const [brands, setBrands] = useState([]);
   const [isAddingNewBrand, setIsAddingNewBrand] = useState(false);
 
-  const logout = () => {
-    localStorage.removeItem("adminUser");
-    window.location.reload();
-  };
+
 
   const handleEditProduct = (p) => {
     setEditingProductId(p.id);
@@ -413,8 +417,12 @@ const AdminDashboardContent = () => {
       }
     } else {
       fetchStats();
+      fetchDataForView("vendor-analytics");
+      if (products.length === 0) {
+        fetchDataForView("inventory");
+      }
     }
-  }, [activeView]);
+  }, [activeView, selectedTimeRange]);
 
   const fetchCategories = async () => {
     try {
@@ -975,35 +983,61 @@ const AdminDashboardContent = () => {
     }
   };
 
-  const renderLineGraph = () => {
-    const data = analyticsData?.graphData || [];
-    if (data.length === 0)
-      return <div className="h-56 w-full mt-6 bg-stone-50 rounded-[2px]" />;
+  const RevenueReport = () => {
+    const rawData = analyticsData?.graphData || [];
+    const [hoverIndex, setHoverIndex] = useState(null);
 
-    const maxAmt = Math.max(...data.map((d) => d.amount), 1);
-    const points = data.map((d, i) => {
-      const x = data.length > 1 ? (i / (data.length - 1)) * 100 : 50;
-      const y = 100 - (d.amount / maxAmt) * 100;
-      return `${x},${y}`;
-    });
+    if (rawData.length === 0)
+      return (
+        <div className="h-72 w-full mt-6 bg-stone-50/50 rounded-xl animate-pulse" />
+      );
 
-    const pathData = `M ${points.join(" L ")}`;
-    const areaData = `M 0,100 L ${points.join(" L ")} L 100,100 Z`;
+    // Color definitions to match screenshot
+    const COLORS = {
+      earnings: "#6f42c1", // Purple
+      expenses: "#fd7e14", // Orange
+      invested: "#20c997", // Emerald/Green
+    };
+
+    const maxAmt = Math.max(
+      ...rawData.map((d) =>
+        Math.max(
+          d.onlineAmount || 0,
+          d.offlineAmount || 0,
+          (d.onlineAmount || 0) * 0.4,
+        ),
+      ),
+      1,
+    );
+
+    const getPoints = (data, field) =>
+      data.map((d, i) => ({
+        x: data.length > 1 ? (i / (data.length - 1)) * 100 : 50,
+        y: 100 - ((d[field] || 0) / maxAmt) * 100,
+      }));
+
+    const earningsPoints = getPoints(rawData, "onlineAmount");
+    const expensesPoints = getPoints(rawData, "offlineAmount");
+
+    // Function to generate straight line path
+    const getLinePath = (points) => {
+      if (!points || points.length === 0) return "";
+      let d = `M ${points[0].x},${points[0].y}`;
+
+      for (let i = 1; i < points.length; i++) {
+        d += ` L ${points[i].x},${points[i].y}`;
+      }
+      return d;
+    };
 
     return (
-      <div className="w-full h-56 mt-8 relative">
+      <div className="w-full h-80 mt-6 relative group/chart cursor-crosshair" onMouseLeave={() => setHoverIndex(null)}>
         <svg
-          viewBox="0 0 100 100"
+          viewBox="0 -10 100 110"
           preserveAspectRatio="none"
           className="w-full h-full overflow-visible"
         >
-          <defs>
-            <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-
+          {/* Horizontal Grid */}
           {[0, 25, 50, 75, 100].map((y) => (
             <line
               key={y}
@@ -1011,53 +1045,137 @@ const AdminDashboardContent = () => {
               y1={y}
               x2="100"
               y2={y}
-              stroke="#f5f5f4"
+              stroke="#f1f5f9"
               strokeWidth="0.5"
               vectorEffect="non-scaling-stroke"
             />
           ))}
 
+          {/* Interaction Vertical Line */}
+          {hoverIndex !== null && (
+             <line 
+                x1={rawData.length > 1 ? (hoverIndex / (rawData.length - 1)) * 100 : 50} 
+                y1="-10" 
+                x2={rawData.length > 1 ? (hoverIndex / (rawData.length - 1)) * 100 : 50} 
+                y2="100" 
+                stroke="#cbd5e1" 
+                strokeDasharray="4,4" 
+                strokeWidth="1" 
+                vectorEffect="non-scaling-stroke"
+             />
+          )}
+
+          {/* Paths */}
+
           <path
-            d={areaData}
-            fill="url(#lineGrad)"
-            className="transition-all duration-700 ease-out opacity-60 hover:opacity-100"
-          />
-          <path
-            d={pathData}
+            d={getLinePath(expensesPoints)}
             fill="none"
-            stroke="#10b981"
-            strokeWidth="2"
+            stroke={COLORS.expenses}
+            strokeWidth="2.5"
             vectorEffect="non-scaling-stroke"
             strokeLinecap="round"
-            strokeLinejoin="round"
-            className="transition-all duration-700 ease-out drop-shadow-sm"
+            className="transition-all duration-1000"
           />
+          <path
+            d={getLinePath(earningsPoints)}
+            fill="none"
+            stroke={COLORS.earnings}
+            strokeWidth="2.5"
+            vectorEffect="non-scaling-stroke"
+            strokeLinecap="round"
+            className="transition-all duration-1000"
+          />
+
         </svg>
 
-        {/* Hover overlay targets and physical dots */}
-        {data.map((d, i) => {
-          const x = data.length > 1 ? (i / (data.length - 1)) * 100 : 50;
-          const y = 100 - (d.amount / maxAmt) * 100;
+        {/* HTML Based X-Axis Labels to prevent text stretching */}
+        <div className="absolute left-0 right-0 -bottom-6 h-5 pointer-events-none z-0">
+          {rawData.map((d, i) => {
+            const step = Math.max(1, Math.floor(rawData.length / 6));
+            if (i % step !== 0 && i !== rawData.length - 1) return null;
+            const x = rawData.length > 1 ? (i / (rawData.length - 1)) * 100 : 50;
+            return (
+              <div
+                key={`html-label-${i}`}
+                className="absolute text-[8px] font-bold text-stone-400/80 uppercase tracking-[0.15em] whitespace-nowrap"
+                style={{ left: `${x}%`, transform: 'translateX(-50%)' }}
+              >
+                {d.label}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Hover Interaction Circles */}
+        {rawData.map((d, i) => {
+          const x = rawData.length > 1 ? (i / (rawData.length - 1)) * 100 : 50;
+          const yOnline = 100 - ((d.onlineAmount || 0) / maxAmt) * 100;
+          const yOffline = 100 - ((d.offlineAmount || 0) / maxAmt) * 100;
+
           return (
             <div
-              key={`target-${i}`}
-              className="absolute w-6 h-6 -ml-3 -mt-3 group/tip z-10 cursor-pointer flex items-center justify-center transition-all duration-500"
-              style={{ left: `${x}%`, top: `${y}%` }}
+              key={`interact-${i}`}
+              onMouseEnter={() => setHoverIndex(i)}
+              className="absolute top-0 bottom-0 w-[5%] -ml-[2.5%] z-10"
+              style={{ left: `${x}%` }}
             >
-              {/* Visible clean dot (HTML based to prevent SVG stretch) */}
-              <div className="w-[7px] h-[7px] rounded-[2px] bg-white border-[1.5px] border-emerald-500 shadow-sm transition-all duration-300 group-hover/tip:scale-[1.8] group-hover/tip:bg-emerald-50 z-20 pointer-events-none" />
-
-              {/* Tooltip Popup */}
-              <div className="opacity-0 group-hover/tip:opacity-100 absolute bottom-full left-1/2 -translate-x-1/2 mb-3 bg-indigo-950 text-white text-[10px] font-bold py-1.5 px-3 rounded-[2px] shadow-xl shadow-indigo-950/20 whitespace-nowrap pointer-events-none transition-all duration-300 transform translate-y-2 group-hover/tip:translate-y-0 text-center z-50 border border-white/10">
-                <div className="text-[8px] font-bold text-emerald-400 mb-0.5 tracking-wider uppercase">
-                  {d.label}
-                </div>
-                {formatMoney(d.amount)}
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-x-4 border-t-4 border-x-transparent border-t-indigo-950" />
-              </div>
+               {hoverIndex === i && (
+                 <>
+                  <div 
+                    className="absolute w-2.5 h-2.5 rounded-full bg-white border-[3px] shadow-lg z-20 -ml-[5px]"
+                    style={{ left: "50%", top: `${yOnline}%`, borderColor: COLORS.earnings }}
+                  />
+                  <div 
+                    className="absolute w-2.5 h-2.5 rounded-full bg-white border-[3px] shadow-lg z-20 -ml-[5px]"
+                    style={{ left: "50%", top: `${yOffline}%`, borderColor: COLORS.expenses }}
+                  />
+                 </>
+               )}
             </div>
           );
         })}
+
+        {/* Improved Dark Tooltip */}
+        {hoverIndex !== null && (
+          <div 
+            className="absolute z-50 pointer-events-none transition-all duration-200"
+            style={{ 
+              left: `${rawData.length > 1 ? (hoverIndex / (rawData.length - 1)) * 100 : 50}%`,
+              top: `${100 - ((rawData[hoverIndex].onlineAmount || 0) / maxAmt) * 100}%`,
+              transform: "translate(-50%, -120%)"
+            }}
+          >
+            <div className="bg-[#0f172a] text-white rounded-xl py-4 px-5 shadow-2xl relative min-w-[180px] border border-white/10 backdrop-blur-md">
+               <div className="flex flex-col gap-2">
+                 <div className="flex items-center justify-between gap-4">
+                   <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: COLORS.earnings }} />
+                      <span className="text-[10px] font-black text-stone-400 uppercase tracking-wider">Online</span>
+                   </div>
+                   <span className="text-xs font-black tabular-nums">{formatMoney(rawData[hoverIndex].onlineAmount)}</span>
+                 </div>
+                 
+                 <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: COLORS.expenses }} />
+                      <span className="text-[10px] font-black text-stone-400 uppercase tracking-wider">Offline</span>
+                   </div>
+                   <span className="text-xs font-black tabular-nums">{formatMoney(rawData[hoverIndex].offlineAmount)}</span>
+                 </div>
+
+                 <div className="h-px bg-white/10 my-1" />
+
+                 <div className="flex items-center justify-between gap-4">
+                   <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Aggregate</span>
+                   <span className="text-sm font-black text-[#9a6bff] tabular-nums">
+                      {formatMoney((rawData[hoverIndex].onlineAmount || 0) + (rawData[hoverIndex].offlineAmount || 0))}
+                   </span>
+                 </div>
+               </div>
+               <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 border-x-[6px] border-t-[6px] border-x-transparent border-t-[#0f172a]" />
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -1065,7 +1183,7 @@ const AdminDashboardContent = () => {
   if (loading && activeView === "overview")
     return (
       <div className="flex h-screen w-full items-center justify-center bg-stone-50">
-        <div className="h-10 w-10 animate-spin rounded-[2px] border-4 border-stone-200 border-t-indigo-950" />
+        <div className="h-10 w-10 animate-spin rounded-xl border-4 border-stone-200 border-t-stone-900" />
       </div>
     );
 
@@ -1093,32 +1211,27 @@ const AdminDashboardContent = () => {
             <SidebarMenu className="mt-2 gap-1">
               {[
                 { id: "overview", label: "Overview", icon: LayoutDashboard },
-                {
-                  id: "homepage-categories",
-                  label: "Homepage Categories",
-                  icon: LayoutTemplate,
-                },
               ].map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
                     isActive={activeView === item.id}
                     onClick={() => handleViewChange(item.id)}
                     className={cn(
-                      "flex items-center gap-3 py-5 px-4 rounded-[2px] transition-all duration-200 group",
+                      "flex items-center gap-3 py-5 px-4 rounded-xl transition-all duration-300 group",
                       activeView === item.id
-                        ? "!bg-indigo-50 !text-indigo-950 font-bold"
-                        : "text-stone-600 hover:bg-stone-50 hover:text-indigo-950",
+                        ? "bg-pink-50 text-pink-600 font-black shadow-sm shadow-pink-100/50"
+                        : "text-stone-500 hover:bg-stone-50 hover:text-stone-900",
                     )}
                   >
                     <item.icon
                       className={cn(
-                        "h-[18px] w-[18px] transition-colors",
+                        "h-[18px] w-[18px] transition-all",
                         activeView === item.id
-                          ? "!text-indigo-600"
-                          : "text-stone-400 group-hover:text-indigo-600",
+                          ? "text-pink-600 scale-110"
+                          : "text-stone-400 group-hover:text-pink-500",
                       )}
                     />
-                    <span className="font-['Inter'] font-semibold text-[13px]">
+                    <span className="font-['Inter'] font-bold text-[13px] tracking-tight">
                       {item.label}
                     </span>
                   </SidebarMenuButton>
@@ -1133,8 +1246,8 @@ const AdminDashboardContent = () => {
               >
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton className="flex items-center gap-3 py-5 px-4 rounded-[2px] transition-all duration-200 text-stone-600 hover:bg-stone-50 hover:text-indigo-950 w-full">
-                      <Package className="h-[18px] w-[18px] text-stone-400 group-hover:text-indigo-600 transition-colors" />
+                    <SidebarMenuButton className="flex items-center gap-3 py-5 px-4 rounded-xl transition-all duration-200 text-stone-600 hover:bg-stone-50 hover:text-stone-900 w-full">
+                      <Package className="h-[18px] w-[18px] text-stone-400 group-hover:text-pink-600 transition-colors" />
                       <span className="font-['Inter'] font-semibold text-[13px] flex-1 text-left">
                         Inventory
                       </span>
@@ -1148,15 +1261,12 @@ const AdminDashboardContent = () => {
                           isActive={activeView === "inventory"}
                           onClick={() => handleViewChange("inventory")}
                           className={cn(
-                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-[2px] transition-all duration-200",
+                            "font-['Inter'] font-bold text-[12px] py-3 px-3 rounded-xl transition-all duration-300 whitespace-nowrap",
                             activeView === "inventory"
-                              ? "bg-indigo-50 text-indigo-700 font-semibold"
+                              ? "bg-pink-50 text-pink-600"
                               : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
                           )}
                         >
-                          {activeView === "inventory" && (
-                            <div className="h-1.5 w-1.5 rounded-[2px] bg-indigo-600 mr-2" />
-                          )}
                           Products
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
@@ -1165,15 +1275,12 @@ const AdminDashboardContent = () => {
                           isActive={activeView === "categories"}
                           onClick={() => handleViewChange("categories")}
                           className={cn(
-                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-[2px] transition-all duration-200",
+                            "font-['Inter'] font-bold text-[12px] py-3 px-3 rounded-xl transition-all duration-300 whitespace-nowrap",
                             activeView === "categories"
-                              ? "bg-indigo-50 text-indigo-700 font-semibold"
+                              ? "bg-pink-50 text-pink-600 font-bold"
                               : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
                           )}
                         >
-                          {activeView === "categories" && (
-                            <div className="h-1.5 w-1.5 rounded-[2px] bg-indigo-600 mr-2" />
-                          )}
                           Manage Categories
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
@@ -1183,15 +1290,12 @@ const AdminDashboardContent = () => {
                           isActive={activeView === "preorder"}
                           onClick={() => handleViewChange("preorder")}
                           className={cn(
-                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-[2px] transition-all duration-200",
+                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-xl transition-all duration-200 whitespace-nowrap",
                             activeView === "preorder"
-                              ? "bg-indigo-50 text-indigo-700 font-semibold"
+                              ? "bg-pink-50 text-pink-700 font-semibold"
                               : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
                           )}
                         >
-                          {activeView === "preorder" && (
-                            <div className="h-1.5 w-1.5 rounded-[2px] bg-indigo-600 mr-2" />
-                          )}
                           Pre Order Products
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
@@ -1200,15 +1304,12 @@ const AdminDashboardContent = () => {
                           isActive={activeView === "upcoming-drops"}
                           onClick={() => handleViewChange("upcoming-drops")}
                           className={cn(
-                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-[2px] transition-all duration-200",
+                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-xl transition-all duration-200 whitespace-nowrap",
                             activeView === "upcoming-drops"
-                              ? "bg-indigo-50 text-indigo-700 font-semibold"
+                              ? "bg-pink-50 text-pink-700 font-semibold"
                               : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
                           )}
                         >
-                          {activeView === "upcoming-drops" && (
-                            <div className="h-1.5 w-1.5 rounded-[2px] bg-indigo-600 mr-2" />
-                          )}
                           Upcoming Drops
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
@@ -1217,14 +1318,14 @@ const AdminDashboardContent = () => {
                           isActive={activeView === "special-offers"}
                           onClick={() => handleViewChange("special-offers")}
                           className={cn(
-                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-[2px] transition-all duration-200",
+                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-lg transition-all duration-200",
                             activeView === "special-offers"
-                              ? "bg-indigo-50 text-indigo-700 font-semibold"
+                              ? "bg-pink-50 text-pink-700 font-semibold"
                               : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
                           )}
                         >
                           {activeView === "special-offers" && (
-                            <div className="h-1.5 w-1.5 rounded-[2px] bg-indigo-600 mr-2" />
+                            <div className="h-1.5 w-1.5 rounded-full bg-pink-600 mr-2" />
                           )}
                           Special Offers
                         </SidebarMenuSubButton>
@@ -1239,18 +1340,18 @@ const AdminDashboardContent = () => {
                   isActive={activeView === "orders"}
                   onClick={() => handleViewChange("orders")}
                   className={cn(
-                    "flex items-center gap-3 py-5 px-4 rounded-[2px] transition-all duration-200 group",
+                    "flex items-center gap-3 py-5 px-4 rounded-xl transition-all duration-200 group",
                     activeView === "orders"
-                      ? "!bg-indigo-50 !text-indigo-950 font-bold"
-                      : "text-stone-600 hover:bg-stone-50 hover:text-indigo-950",
+                      ? "!bg-pink-50 !text-pink-950 font-bold"
+                      : "text-stone-600 hover:bg-stone-50 hover:text-pink-950",
                   )}
                 >
                   <ShoppingCart
                     className={cn(
                       "h-[18px] w-[18px] transition-colors",
                       activeView === "orders"
-                        ? "!text-indigo-600"
-                        : "text-stone-400 group-hover:text-indigo-600",
+                        ? "!text-pink-600"
+                        : "text-stone-400 group-hover:text-pink-600",
                     )}
                   />
                   <span className="font-['Inter'] font-semibold text-[13px]">
@@ -1262,8 +1363,8 @@ const AdminDashboardContent = () => {
               <Collapsible defaultOpen className="group/collapsible">
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton className="flex items-center gap-3 py-5 px-4 rounded-[2px] transition-all duration-200 text-stone-600 hover:bg-stone-50 hover:text-indigo-950 w-full">
-                      <Users className="h-[18px] w-[18px] text-stone-400 group-hover:text-indigo-600 transition-colors" />
+                    <SidebarMenuButton className="flex items-center gap-3 py-5 px-4 rounded-xl transition-all duration-200 text-stone-600 hover:bg-stone-50 hover:text-pink-950 w-full">
+                      <Users className="h-[18px] w-[18px] text-stone-400 group-hover:text-pink-600 transition-colors" />
                       <span className="font-['Inter'] font-semibold text-[13px] flex-1 text-left">
                         Vendors
                       </span>
@@ -1277,14 +1378,14 @@ const AdminDashboardContent = () => {
                           isActive={activeView === "vendors"}
                           onClick={() => handleViewChange("vendors")}
                           className={cn(
-                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-[2px] transition-all duration-200",
+                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-xl transition-all duration-200",
                             activeView === "vendors"
-                              ? "bg-indigo-50 text-indigo-700 font-semibold"
+                              ? "bg-pink-50 text-pink-700 font-semibold"
                               : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
                           )}
                         >
                           {activeView === "vendors" && (
-                            <div className="h-1.5 w-1.5 rounded-[2px] bg-indigo-600 mr-2" />
+                            <div className="h-1.5 w-1.5 rounded-xl bg-pink-600 mr-2" />
                           )}
                           Vendor Overview
                         </SidebarMenuSubButton>
@@ -1294,14 +1395,14 @@ const AdminDashboardContent = () => {
                           isActive={activeView === "vendor-analytics"}
                           onClick={() => handleViewChange("vendor-analytics")}
                           className={cn(
-                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-[2px] transition-all duration-200",
+                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-xl transition-all duration-200",
                             activeView === "vendor-analytics"
-                              ? "bg-indigo-50 text-indigo-700 font-semibold"
+                              ? "bg-pink-50 text-pink-700 font-semibold"
                               : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
                           )}
                         >
                           {activeView === "vendor-analytics" && (
-                            <div className="h-1.5 w-1.5 rounded-[2px] bg-indigo-600 mr-2" />
+                            <div className="h-1.5 w-1.5 rounded-xl bg-pink-600 mr-2" />
                           )}
                           Vendor Analytics
                         </SidebarMenuSubButton>
@@ -1311,14 +1412,14 @@ const AdminDashboardContent = () => {
                           isActive={activeView === "offline-billing"}
                           onClick={() => handleViewChange("offline-billing")}
                           className={cn(
-                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-[2px] transition-all duration-200",
+                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-xl transition-all duration-200",
                             activeView === "offline-billing"
-                              ? "bg-indigo-50 text-indigo-700 font-semibold"
+                              ? "bg-pink-50 text-pink-700 font-semibold"
                               : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
                           )}
                         >
                           {activeView === "offline-billing" && (
-                            <div className="h-1.5 w-1.5 rounded-[2px] bg-indigo-600 mr-2" />
+                            <div className="h-1.5 w-1.5 rounded-xl bg-pink-600 mr-2" />
                           )}
                           Offline Billing
                         </SidebarMenuSubButton>
@@ -1333,18 +1434,18 @@ const AdminDashboardContent = () => {
                   isActive={activeView === "coupons"}
                   onClick={() => handleViewChange("coupons")}
                   className={cn(
-                    "flex items-center gap-3 py-5 px-4 rounded-[2px] transition-all duration-200 group",
+                    "flex items-center gap-3 py-5 px-4 rounded-xl transition-all duration-200 group",
                     activeView === "coupons"
-                      ? "!bg-indigo-50 !text-indigo-950 font-bold"
-                      : "text-stone-600 hover:bg-stone-50 hover:text-indigo-950",
+                      ? "!bg-pink-50 !text-stone-900 font-bold"
+                      : "text-stone-600 hover:bg-stone-50 hover:text-stone-900",
                   )}
                 >
                   <Ticket
                     className={cn(
                       "h-[18px] w-[18px] transition-colors",
                       activeView === "coupons"
-                        ? "!text-indigo-600"
-                        : "text-stone-400 group-hover:text-indigo-600",
+                        ? "!text-pink-600"
+                        : "text-stone-400 group-hover:text-pink-600",
                     )}
                   />
                   <span className="font-['Inter'] font-semibold text-[13px]">
@@ -1362,21 +1463,21 @@ const AdminDashboardContent = () => {
                     isActive={activeView === item.id}
                     onClick={() => handleViewChange(item.id)}
                     className={cn(
-                      "flex items-center gap-3 py-5 px-4 rounded-[2px] transition-all duration-200 group",
+                      "flex items-center gap-3 py-5 px-4 rounded-xl transition-all duration-300 group",
                       activeView === item.id
-                        ? "!bg-indigo-50 !text-indigo-950 font-bold"
-                        : "text-stone-600 hover:bg-stone-50 hover:text-indigo-950",
+                        ? "bg-pink-50 text-pink-600 font-black shadow-sm shadow-pink-100/50"
+                        : "text-stone-500 hover:bg-stone-50 hover:text-stone-900",
                     )}
                   >
                     <item.icon
                       className={cn(
-                        "h-[18px] w-[18px] transition-colors",
+                        "h-[18px] w-[18px] transition-all",
                         activeView === item.id
-                          ? "!text-indigo-600"
-                          : "text-stone-400 group-hover:text-indigo-600",
+                          ? "text-pink-600 scale-110"
+                          : "text-stone-400 group-hover:text-pink-500",
                       )}
                     />
-                    <span className="font-['Inter'] font-semibold text-[13px]">
+                    <span className="font-['Inter'] font-bold text-[13px] tracking-tight">
                       {item.label}
                     </span>
                   </SidebarMenuButton>
@@ -1385,29 +1486,14 @@ const AdminDashboardContent = () => {
             </SidebarMenu>
           </SidebarContent>
 
-          <SidebarFooter className="p-4 border-t border-stone-100">
-            <div className="flex items-center gap-3 p-3 bg-stone-50 rounded-[2px]">
-              <Avatar className="h-9 w-9 ring-2 ring-indigo-100">
-                <AvatarFallback className="bg-indigo-950 text-white font-bold text-xs">
-                  AD
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col flex-1 overflow-hidden">
-                <span className="font-['Inter'] text-sm font-bold text-stone-800 truncate">
-                  Admin
-                </span>
-                <span className="font-['Inter'] text-[10px] text-stone-400 font-medium">
-                  Manager Access
-                </span>
-              </div>
-              <button
-                onClick={logout}
-                className="p-2 rounded-[2px] hover:bg-rose-50 transition-all group"
-                title="Logout"
-              >
-                <X className="h-4 w-4 text-stone-400 group-hover:text-rose-500 transition-colors" />
-              </button>
-            </div>
+          <SidebarFooter className="p-6 border-t border-stone-100 flex-shrink-0 bg-white">
+            <button
+              onClick={logout}
+              className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all duration-500 group/logout font-black text-[11px] uppercase tracking-[0.2em] shadow-sm hover:shadow-xl hover:shadow-rose-100 hover:-translate-y-1"
+            >
+              <LogOut className="h-4 w-4 transition-transform group-hover/logout:-translate-x-1" />
+              Logout
+            </button>
           </SidebarFooter>
         </Sidebar>
 
@@ -1499,35 +1585,228 @@ const AdminDashboardContent = () => {
                   </div>
                 </header>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Stat Cards - High Density Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-7">
                   <StatCard
-                    title="Customers"
-                    value={stats?.totalUsers || 0}
-                    icon={Users}
-                    colorClass=""
-                    description="Total registered platform buyers"
+                    title="Gross Revenue"
+                    value={formatMoney(stats?.totalEarnings || 0)}
+                    icon={DollarSign}
+                    colorClass="bg-[#9a6bff]/10 text-[#9a6bff]"
+                    description="Aggregate cross-channel revenue"
+                    trend="up"
+                    trendValue="+12.5%"
                   />
                   <StatCard
-                    title="Vendors"
-                    value={stats?.totalVendors || 0}
-                    icon={Users}
-                    colorClass=""
-                    description="Verified active enterprise nodes"
-                  />
-                  <StatCard
-                    title="Inventory"
-                    value={stats?.totalProducts || 0}
-                    icon={Package}
-                    colorClass=""
-                    description="Live catalog items in network"
-                  />
-                  <StatCard
-                    title="Orders"
+                    title="Active Orders"
                     value={stats?.totalOrders || 0}
                     icon={ShoppingCart}
-                    colorClass=""
-                    description="Gross completed transactions"
+                    colorClass="bg-purple-50 text-purple-600"
+                    description="Current lifecycle transactions"
+                    trend="up"
+                    trendValue="+5.2%"
                   />
+                  <StatCard
+                    title="Growth Users"
+                    value={stats?.totalUsers || 0}
+                    icon={Users}
+                    colorClass="bg-amber-50 text-amber-600"
+                    description="New customer registrations"
+                    trend="down"
+                    trendValue="-1.2%"
+                  />
+                  <StatCard
+                    title="Total Inventory"
+                    value={stats?.totalProducts || 0}
+                    icon={Package}
+                    colorClass="bg-blue-50 text-blue-600"
+                    description="Active SKU count on cloud"
+                    trend="up"
+                    trendValue="+18.7%"
+                  />
+                </div>
+
+                {/* Main Content Area - Grid for Chart & Activity */}
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                  {/* Revenue Report Chart Section */}
+                  <Card className="xl:col-span-2 border border-[#151515]/5 shadow-sm hover:shadow-[0_20px_40px_rgba(154,107,255,0.12)] transition-all duration-500 ease-out p-8 rounded-[2px] bg-white flex flex-col">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+                      <div className="flex flex-col gap-1">
+                        <h2 className="text-2xl font-black text-stone-900 tracking-tight">Revenue Report</h2>
+                      </div>
+                      
+                      <div className="flex items-center gap-12 flex-1 justify-center">
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="h-3 w-3 rounded-[3px] bg-[#6f42c1]" />
+                            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Online Sales</span>
+                          </div>
+                          <span className="text-xl font-black text-stone-900 tabular-nums">
+                            {formatMoney(stats?.totalOnlineRevenue || 0).replace("₹", "")}
+                          </span>
+                        </div>
+                        
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="h-3 w-3 rounded-[3px] bg-[#fd7e14]" />
+                            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Offline Sales</span>
+                          </div>
+                          <span className="text-xl font-black text-stone-900 tabular-nums">
+                             {formatMoney(stats?.totalOfflineRevenue || 0).replace("₹", "")}
+                          </span>
+                        </div>
+
+                      </div>
+
+                      <div className="relative group/sel">
+                        <select 
+                          value={selectedTimeRange}
+                          onChange={(e) => setSelectedTimeRange(e.target.value)}
+                          className="appearance-none bg-white border border-[#151515]/10 rounded-[2px] px-5 py-2.5 pr-10 text-[11px] font-black uppercase tracking-widest text-[#151515] focus:outline-none focus:ring-1 focus:ring-[#9a6bff]/40 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] cursor-pointer transition-all hover:bg-stone-50"
+                        >
+                          <option value="7d">7 Days</option>
+                          <option value="1m">1 Month</option>
+                          <option value="1y">1 Year</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400 pointer-events-none" />
+                      </div>
+                    </div>
+                    <RevenueReport />
+                  </Card>
+
+                  {/* Recent Activity Feed */}
+                  <Card className="border border-[#151515]/5 shadow-sm hover:shadow-[0_20px_40px_rgba(154,107,255,0.12)] transition-all duration-500 ease-out p-8 rounded-[2px] bg-white flex flex-col">
+                    <div className="flex items-center justify-between mb-8">
+                      <h2 className="text-xl font-black text-[#151515]">Recent Activity</h2>
+                      <Button variant="link" className="text-[#9a6bff] hover:text-[#7b51db] transition-colors font-bold text-[11px] uppercase tracking-wider p-0 h-auto">View All</Button>
+                    </div>
+                    
+                    <ScrollArea className="h-[340px] pr-4 -mr-4">
+                      <div className="space-y-5 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-px before:bg-stone-100">
+                        {(stats?.recentActivity?.length > 0 ? stats.recentActivity : [
+                          { title: "System Ready", description: "Listening for new platform activity...", time: new Date().toISOString(), iconType: "activity" }
+                        ]).map((act, idx) => {
+                          const iconMap = {
+                            cart: { icon: ShoppingCart, color: "text-blue-500", bg: "bg-blue-50" },
+                            alert: { icon: AlertCircle, color: "text-amber-500", bg: "bg-amber-50" },
+                            user: { icon: UserPlus, color: "text-[#9a6bff]", bg: "bg-[#9a6bff]/10" },
+                            activity: { icon: Activity, color: "text-[#9a6bff]", bg: "bg-[#9a6bff]/10" }
+                          };
+                          const iconObj = iconMap[act.iconType] || iconMap.activity;
+                          
+                          const diff = Math.floor((new Date() - new Date(act.time)) / 60000);
+                          const timeStr = diff < 1 ? "Just now" : diff < 60 ? `${diff} min ago` : diff < 1440 ? `${Math.floor(diff/60)} hr ago` : `${Math.floor(diff/1440)} d ago`;
+
+                          return (
+                          <div key={act.id || idx} className="flex gap-4 relative group">
+                            <div className={cn("h-6 w-6 rounded-full flex items-center justify-center shrink-0 z-10 border-2 border-white shadow-sm ring-4 ring-white", iconObj.bg, iconObj.color)}>
+                              <iconObj.icon className="h-3 w-3" />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[13px] font-black text-stone-900 group-hover:text-[#9a6bff] transition-colors">{act.title}</span>
+                              <p className="text-[11px] text-stone-400 font-medium leading-relaxed mt-1">{act.description}</p>
+                              <span className="text-[9px] font-bold text-stone-300 uppercase tracking-widest mt-2">{timeStr}</span>
+                            </div>
+                          </div>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
+                  </Card>
+                </div>
+
+                {/* Bottom Row - Best Selling Table */}
+                <div className="grid grid-cols-1 xl:grid-cols-1 gap-8">
+                  <Card className="border border-[#151515]/5 shadow-sm hover:shadow-[0_20px_40px_rgba(154,107,255,0.12)] transition-all duration-500 ease-out p-8 bg-white overflow-hidden rounded-[2px]">
+                    <div className="flex items-center justify-between mb-10">
+                      <div>
+                        <h2 className="text-xl font-black text-[#151515]">Best Selling Products</h2>
+                        <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1 block">Top performing SKUs from current catalog</span>
+                      </div>
+                      <Button variant="outline" className="rounded-[2px] border-[#151515]/10 font-bold text-xs h-10 px-6 transition-all hover:border-[#151515]/30">View Full Catalog</Button>
+                    </div>
+
+                    <div className="overflow-x-auto pb-2">
+                      <Table className="min-w-[900px]">
+                      <TableHeader className="bg-transparent border-b border-stone-100">
+                        <TableRow className="hover:bg-transparent border-none">
+                          <TableHead className="text-stone-400 text-[10px] font-black uppercase tracking-[0.2em] py-5">Product Details</TableHead>
+                          <TableHead className="text-stone-400 text-[10px] font-black uppercase tracking-[0.2em] py-5">Category</TableHead>
+                          <TableHead className="text-stone-400 text-[10px] font-black uppercase tracking-[0.2em] py-5">Price</TableHead>
+                          <TableHead className="text-stone-400 text-[10px] font-black uppercase tracking-[0.2em] py-5">Total Sold</TableHead>
+                          <TableHead className="text-stone-400 text-[10px] font-black uppercase tracking-[0.2em] py-5">Stock Status</TableHead>
+                          <TableHead className="text-stone-400 text-[10px] font-black uppercase tracking-[0.2em] py-5 text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {(filteredProducts || [])
+                          .map((p) => {
+                            const perf = analyticsData?.productPerformance?.find(pf => pf.label === p.name);
+                            return { ...p, _totalSold: perf ? perf.qty : 0 };
+                          })
+                          .sort((a, b) => b._totalSold - a._totalSold)
+                          .slice(0, 5)
+                          .map((prod) => {
+                            const totalSold = prod._totalSold;
+                            const totalInventory = (prod.stock || 0) + totalSold;
+                            const stockPercent = totalInventory === 0 ? 0 : Math.min(100, Math.floor(((prod.stock || 0) / totalInventory) * 100));
+                            
+                            return (
+                              <TableRow key={prod._id || prod.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors group">
+                                <TableCell className="py-6">
+                                  <div className="flex items-center gap-4">
+                                    <div className="h-14 w-14 rounded-[2px] bg-stone-100 overflow-hidden shadow-sm flex items-center justify-center p-1 border border-stone-200/40 relative">
+                                      {prod.images?.[0] || prod.imageUrls?.[0] ? (
+                                        <img src={prod.images?.[0] || prod.imageUrls?.[0]} alt="" className="h-full w-full object-cover rounded-[1px] group-hover:scale-110 transition-transform duration-500" />
+                                      ) : (
+                                        <ImageIcon className="h-6 w-6 text-stone-300" />
+                                      )}
+                                      {prod.bestSeller && (
+                                        <div className="absolute top-0 right-0 h-4 w-4 bg-amber-500 rounded-bl-[2px] flex items-center justify-center shadow-sm">
+                                          <Star className="h-2 w-2 text-white fill-current" />
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="flex flex-col max-w-[220px] xl:max-w-[320px]">
+                                      <span className="font-black text-stone-900 text-sm tracking-tight truncate" title={prod.name}>{prod.name}</span>
+                                      <span className="text-[10px] text-stone-400 font-bold uppercase tracking-widest mt-1 truncate" title={prod.brand || "OMW Original"}>{prod.brand || "OMW Original"}</span>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge className="bg-[#151515]/5 text-[#151515]/70 hover:bg-[#151515]/10 border-none rounded-[2px] font-black text-[10px] py-1 px-3 uppercase tracking-wider">
+                                    {prod.categoryName || prod.category?.name || "General"}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="font-black text-stone-900 text-sm tabular-nums">₹{prod.price?.toLocaleString()}</TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <TrendingUp className="h-3 w-3 text-emerald-500" />
+                                    <span className="font-bold text-stone-700 text-xs">{totalSold} sales</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex flex-col gap-1.5 w-24">
+                                    <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-widest text-stone-400">
+                                      <span>{prod.stock || 0} in stock</span>
+                                      <span>{stockPercent}%</span>
+                                    </div>
+                                    <div className="h-1.5 w-full bg-stone-100 rounded-[2px] overflow-hidden">
+                                      <div className="h-full bg-[#9a6bff] rounded-[2px] transition-all duration-1000" style={{ width: `${stockPercent}%` }}></div>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <Button size="icon" variant="ghost" className="h-9 w-9 text-stone-400 hover:text-[#9a6bff] hover:bg-[#9a6bff]/10 rounded-[2px] transition-colors">
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            );
+                        })}
+                      </TableBody>
+                    </Table>
+                    </div>
+                  </Card>
                 </div>
 
                 {stats?.pendingVendorApprovals > 0 && (
@@ -1555,7 +1834,7 @@ const AdminDashboardContent = () => {
                       onClick={() => handleViewChange("vendors")}
                       className="bg-gradient-to-r from-[#9a6bff] to-pink-500 text-white font-black px-10 h-12 rounded-[2px] shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95 shrink-0 uppercase tracking-widest text-[10px]"
                     >
-                      Process Now
+                      <span className="relative z-10">Authorize Now</span>
                     </Button>
                   </Card>
                 )}
@@ -1580,16 +1859,16 @@ const AdminDashboardContent = () => {
                     </p>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="group flex items-center bg-white hover:bg-stone-50 transition-all duration-300 rounded-[2px] border border-stone-200/60 hover:border-indigo-200 hover:shadow-md px-3 py-1.5 w-fit cursor-pointer animate-in fade-in slide-in-from-right-2 h-14">
-                      <div className="flex items-center justify-center h-8 w-8 rounded-[2px] bg-stone-50 group-hover:bg-indigo-50 transition-colors border border-stone-100 mr-3">
-                        <Filter className="h-[14px] w-[14px] text-stone-400 group-hover:text-indigo-600 transition-colors" />
+                    <div className="group flex items-center bg-white hover:bg-stone-50 transition-all duration-300 rounded-xl border border-stone-100 hover:border-pink-200 hover:shadow-md px-3 py-1.5 w-fit cursor-pointer animate-in fade-in slide-in-from-right-2 h-14">
+                      <div className="flex items-center justify-center h-8 w-8 rounded-xl bg-stone-50 group-hover:bg-pink-50 transition-colors border border-stone-100 mr-3">
+                        <Filter className="h-[14px] w-[14px] text-stone-400 group-hover:text-pink-600 transition-colors" />
                       </div>
-                      <span className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider mr-1">
+                      <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest mr-1">
                         Category:
                       </span>
                       <div className="relative flex items-center min-w-[140px]">
                         <select
-                          className="appearance-none bg-transparent border-none text-indigo-950 font-bold text-xs focus:ring-0 cursor-pointer py-1 pl-2 pr-8 w-full hover:text-indigo-600 transition-colors outline-none"
+                          className="appearance-none bg-transparent border-none text-stone-900 font-bold text-xs focus:ring-0 cursor-pointer py-1 pl-2 pr-8 w-full hover:text-pink-600 transition-colors outline-none"
                           value={selectedCategory}
                           onChange={(e) => setSelectedCategory(e.target.value)}
                         >
@@ -1607,7 +1886,7 @@ const AdminDashboardContent = () => {
                     </div>
                     <Button
                       onClick={handleCreateProductClick}
-                      className="bg-indigo-950 text-white rounded-[2px] h-14 px-10 font-black uppercase tracking-widest text-[10px] flex items-center gap-3 shadow-2xl shadow-indigo-950/40 hover:bg-[#1a0b2e] transition-all hover:scale-105 active:scale-95"
+                      className="bg-stone-900 text-white rounded-xl h-14 px-10 font-black uppercase tracking-widest text-[10px] flex items-center gap-3 shadow-2xl shadow-stone-900/10 hover:bg-[#ff4fa3] transition-all hover:scale-105 active:scale-95"
                     >
                       <Plus className="h-4 w-4" />
                       Add Product
@@ -1615,7 +1894,7 @@ const AdminDashboardContent = () => {
                   </div>
                 </header>
 
-                <Card className="border-none shadow-sm rounded-[2px] overflow-hidden">
+                <Card className="border-none shadow-sm rounded-xl overflow-hidden">
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader className="bg-stone-50">
@@ -1673,7 +1952,7 @@ const AdminDashboardContent = () => {
                             >
                               <TableCell className="p-4">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-12 h-12 rounded-[2px] overflow-hidden bg-stone-100 flex-shrink-0 border border-stone-200">
+                                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-stone-100 flex-shrink-0 border border-stone-200">
                                     {p.imageUrls &&
                                     p.imageUrls.filter(
                                       (u) => u && u.trim() !== "",
@@ -1700,7 +1979,7 @@ const AdminDashboardContent = () => {
                                   </div>
                                   <div className="flex flex-col min-w-0 max-w-[200px]">
                                     <div className="flex items-center gap-2">
-                                      <p className="font-black text-indigo-950 text-sm truncate">
+                                      <p className="font-black text-stone-900 text-sm truncate">
                                         {p.name}
                                       </p>
                                       {p.specialOfferType &&
@@ -1736,7 +2015,7 @@ const AdminDashboardContent = () => {
                               <TableCell className="p-4">
                                 <Badge
                                   variant="outline"
-                                  className="rounded-[2px] font-semibold text-[10px] uppercase tracking-wider border-stone-200 text-stone-500 bg-stone-50"
+                                  className="rounded-xl font-semibold text-[10px] uppercase tracking-wider border-stone-200 text-stone-500 bg-stone-50"
                                 >
                                   {p.category?.name || "—"}
                                 </Badge>
@@ -1760,7 +2039,7 @@ const AdminDashboardContent = () => {
                                       return (
                                         <Badge
                                           variant="outline"
-                                          className="rounded-[2px] text-[10px] text-stone-400"
+                                          className="rounded-xl text-[10px] text-stone-400"
                                         >
                                           None
                                         </Badge>
@@ -1769,8 +2048,8 @@ const AdminDashboardContent = () => {
                                     if (vendorsList.length === 1) {
                                       const bv = vendorsList[0];
                                       return (
-                                        <div className="flex items-center gap-1.5 bg-stone-50 hover:bg-stone-100 transition-colors border border-stone-200/80 rounded-[2px] px-2.5 py-1 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)]">
-                                          <span className="text-[10px] font-black tracking-wide text-indigo-950/80 truncate max-w-[90px]">
+                                        <div className="flex items-center gap-1.5 bg-stone-50 hover:bg-stone-100 transition-colors border border-stone-100 rounded-xl px-2.5 py-1">
+                                          <span className="text-[10px] font-black tracking-wide text-stone-900/80 truncate max-w-[90px]">
                                             {bv.vendor?.businessName ||
                                               "Unknown"}
                                           </span>
@@ -1779,8 +2058,8 @@ const AdminDashboardContent = () => {
                                     }
 
                                     return (
-                                      <div className="flex items-center gap-1.5 bg-indigo-50/50 hover:bg-indigo-100/50 transition-colors border border-indigo-200/60 rounded-[2px] px-2.5 py-1">
-                                        <span className="text-[10px] font-black tracking-wide text-indigo-900 truncate max-w-[90px]">
+                                      <div className="flex items-center gap-1.5 bg-pink-50/50 hover:bg-pink-100/50 transition-colors border border-pink-100/60 rounded-xl px-2.5 py-1">
+                                        <span className="text-[10px] font-black tracking-wide text-pink-900 truncate max-w-[90px]">
                                           {vendorsList.length} Vendors
                                         </span>
                                       </div>
@@ -1788,7 +2067,7 @@ const AdminDashboardContent = () => {
                                   })()}
                                 </div>
                               </TableCell>
-                              <TableCell className="p-4 text-right font-black text-indigo-950">
+                              <TableCell className="p-4 text-right font-black text-stone-900">
                                 &#8377;{Number(p.price).toLocaleString("en-IN")}
                               </TableCell>
                               <TableCell className="p-4 text-center font-bold">
@@ -1797,7 +2076,7 @@ const AdminDashboardContent = () => {
                                     p.stock < 10
                                       ? "text-rose-500"
                                       : "text-stone-600",
-                                    "px-3 py-1 bg-stone-50 rounded-[2px] border border-stone-100",
+                                    "px-3 py-1 bg-stone-50 rounded-xl border border-stone-100",
                                   )}
                                 >
                                   {p.stock}
@@ -1807,9 +2086,9 @@ const AdminDashboardContent = () => {
                                 <span
                                   className={cn(
                                     p.onlineStock < 10
-                                      ? "text-blue-500"
+                                      ? "text-pink-500"
                                       : "text-emerald-600",
-                                    "px-3 py-1 bg-emerald-50/50 rounded-[2px] border border-emerald-100/50",
+                                    "px-3 py-1 bg-pink-50/30 rounded-xl border border-pink-100/50 text-[10px]",
                                   )}
                                 >
                                   {p.onlineStock}
@@ -1818,7 +2097,7 @@ const AdminDashboardContent = () => {
                               <TableCell className="p-4 text-center">
                                 <Badge
                                   className={cn(
-                                    "rounded-[2px] font-bold px-3 border-none text-[10px]",
+                                    "rounded-xl font-black px-3 border-none text-[9px] uppercase tracking-wider",
                                     p.status === "ACTIVE"
                                       ? "bg-emerald-50 text-emerald-600"
                                       : "bg-stone-100 text-stone-400",
@@ -1834,7 +2113,7 @@ const AdminDashboardContent = () => {
                                       e.stopPropagation();
                                       handleEditProduct(p);
                                     }}
-                                    className="p-2 text-stone-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-[2px] transition-colors"
+                                    className="p-2 text-stone-400 hover:text-pink-600 hover:bg-pink-50 rounded-xl transition-colors"
                                   >
                                     <Pencil className="h-4 w-4" />
                                   </button>
@@ -1846,7 +2125,7 @@ const AdminDashboardContent = () => {
                                         handleDeleteProduct(bv.id),
                                       );
                                     }}
-                                    className="p-2 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-[2px] transition-colors"
+                                    className="p-2 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </button>
@@ -1895,20 +2174,20 @@ const AdminDashboardContent = () => {
                       <div key={slotName} className="space-y-6">
                         <div className="flex items-center gap-4 px-2">
                           <div
-                            className={`h-10 w-10 ${THEME.borders.radius.md} bg-indigo-950 flex items-center justify-center text-white shadow-xl shadow-indigo-950/20`}
+                            className={`h-11 w-11 rounded-xl bg-stone-900 flex items-center justify-center text-white shadow-xl shadow-stone-200`}
                           >
-                            <Sparkles className="h-4 w-4" />
+                            <Sparkles className="h-5 w-5" />
                           </div>
                           <div>
-                            <h2 className="text-sm font-black text-indigo-950 uppercase tracking-[0.2em]">
+                            <h2 className="text-sm font-black text-stone-900 uppercase tracking-[0.2em]">
                               {slotName}
                             </h2>
-                            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-0.5">
+                            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1">
                               {slotProducts.length} Product
                               {slotProducts.length !== 1 ? "s" : ""} Active
                             </p>
                           </div>
-                          <div className="flex-1 h-px bg-linear-to-r from-stone-200 to-transparent ml-4" />
+                          <div className="flex-1 h-px bg-gradient-to-r from-stone-100 to-transparent ml-4" />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -1918,10 +2197,10 @@ const AdminDashboardContent = () => {
                               className="relative group/slot h-full flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500"
                             >
                               <div
-                                className={`absolute -inset-1 bg-linear-to-r from-indigo-500 to-purple-600 ${THEME.borders.radius.xl} blur opacity-5 group-hover/slot:opacity-20 transition duration-1000 group-hover/slot:duration-200`}
+                                className={`absolute -inset-1 bg-linear-to-r from-pink-500 to-purple-600 ${THEME.borders.radius.xl} blur opacity-5 group-hover/slot:opacity-20 transition duration-1000 group-hover/slot:duration-200`}
                               ></div>
                               <Card
-                                className={`relative bg-white border border-stone-200/50 ${THEME.borders.radius.xl} overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex-1 flex flex-col p-3 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 hover:border-indigo-100 group/card`}
+                                className={`relative bg-white border border-stone-200/50 ${THEME.borders.radius.xl} overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex-1 flex flex-col p-3 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 hover:border-pink-100 group/card`}
                               >
                                 <div
                                   className={`aspect-16/10 w-full ${THEME.borders.radius.xl} overflow-hidden bg-stone-50 border border-stone-100/50 relative mb-3 group/img shrink-0`}
@@ -1963,7 +2242,7 @@ const AdminDashboardContent = () => {
                                       }}
                                       className="h-8 px-4 rounded-[2px] bg-white shadow-lg text-indigo-600 hover:bg-indigo-600 hover:text-white font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105"
                                     >
-                                      Edit
+                                      Edit Deal
                                     </Button>
                                     <Button
                                       variant="destructive"
@@ -1974,7 +2253,7 @@ const AdminDashboardContent = () => {
                                       }
                                       className="h-8 w-8 p-0 rounded-[2px] shadow-lg font-black bg-white text-rose-500 hover:bg-rose-500 hover:text-white transition-all hover:scale-105"
                                     >
-                                      <Trash2 size={12} strokeWidth={3} />
+                                      <Trash2 size={14} strokeWidth={3} />
                                     </Button>
                                   </div>
                                 </div>
@@ -1995,7 +2274,7 @@ const AdminDashboardContent = () => {
                           {/* Add New Slot card specific to THIS section */}
                           <div className="relative group/slot h-full flex flex-col animate-in zoom-in duration-500">
                             <Card
-                              className={`relative bg-stone-50/30 border-stone-200/60 border-dashed border-2 ${THEME.borders.radius.xl} overflow-hidden flex-1 flex flex-col transition-all duration-300 hover:border-indigo-300 hover:bg-indigo-50/10`}
+                              className={`relative bg-stone-50/30 border-stone-200/60 border-dashed border-2 ${THEME.borders.radius.xl} overflow-hidden flex-1 flex flex-col transition-all duration-300 hover:border-indigo-300 hover:bg-pink-50/10`}
                             >
                               <CardContent className="p-5 flex-1 flex flex-col items-center justify-center space-y-4">
                                 <div
@@ -2013,7 +2292,7 @@ const AdminDashboardContent = () => {
                                     });
                                     setIsQuickAddOpen(true);
                                   }}
-                                  className={`h-12 w-12 ${THEME.borders.radius.xl} bg-white border border-stone-200 flex items-center justify-center group/add cursor-pointer hover:bg-indigo-600 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/20 hover:scale-105 transition-all duration-300 shadow-sm`}
+                                  className={`h-12 w-12 ${THEME.borders.radius.xl} bg-white border border-stone-200 flex items-center justify-center group/add cursor-pointer hover:bg-pink-600 hover:border-pink-600 hover:shadow-lg hover:shadow-pink-500/20 hover:scale-105 transition-all duration-300 shadow-sm`}
                                 >
                                   <Plus className="h-5 w-5 text-stone-400 group-hover/add:text-white transition-colors" />
                                 </div>
@@ -2039,7 +2318,7 @@ const AdminDashboardContent = () => {
                     <Info className="h-4 w-4" />
                   </div>
                   <div className="space-y-1">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-950">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-stone-900">
                       Advanced Slot Management
                     </h4>
                     <p className="text-xs text-stone-500 leading-relaxed max-w-2xl">
@@ -2077,19 +2356,19 @@ const AdminDashboardContent = () => {
                     <TabsList className="bg-stone-50 p-1.5 rounded-[2px] border border-stone-100 gap-2 h-auto w-fit">
                       <TabsTrigger
                         value="online"
-                        className="rounded-[2px] px-10 h-10 data-[state=active]:bg-indigo-950 data-[state=active]:text-white font-black text-[10px] uppercase tracking-widest transition-all"
+                        className="rounded-xl px-10 h-10 data-[state=active]:bg-stone-900 data-[state=active]:text-white font-black text-[10px] uppercase tracking-widest transition-all"
                       >
                         Online
                       </TabsTrigger>
                       <TabsTrigger
                         value="pre-order"
-                        className="rounded-[2px] px-10 h-10 data-[state=active]:bg-indigo-950 data-[state=active]:text-white font-black text-[10px] uppercase tracking-widest transition-all"
+                        className="rounded-xl px-10 h-10 data-[state=active]:bg-stone-900 data-[state=active]:text-white font-black text-[10px] uppercase tracking-widest transition-all"
                       >
                         Pre-Order
                       </TabsTrigger>
                       <TabsTrigger
                         value="offline"
-                        className="rounded-[2px] px-10 h-10 data-[state=active]:bg-indigo-950 data-[state=active]:text-white font-black text-[10px] uppercase tracking-widest transition-all"
+                        className="rounded-xl px-10 h-10 data-[state=active]:bg-stone-900 data-[state=active]:text-white font-black text-[10px] uppercase tracking-widest transition-all"
                       >
                         Offline
                       </TabsTrigger>
@@ -2105,7 +2384,7 @@ const AdminDashboardContent = () => {
                         </span>
                         <div className="relative flex items-center min-w-[140px]">
                           <select
-                            className="appearance-none bg-transparent border-none text-indigo-950 font-bold text-xs focus:ring-0 cursor-pointer py-1 pl-2 pr-8 w-full hover:text-indigo-600 transition-colors outline-none"
+                            className="appearance-none bg-transparent border-none text-stone-900 font-bold text-xs focus:ring-0 cursor-pointer py-1 pl-2 pr-8 w-full hover:text-pink-600 transition-colors outline-none"
                             value={selectedOutletFilter}
                             onChange={(e) =>
                               setSelectedOutletFilter(e.target.value)
@@ -2130,7 +2409,7 @@ const AdminDashboardContent = () => {
                     value="online"
                     className="animate-in slide-in-from-bottom-2 duration-500"
                   >
-                    <Card className="border-none shadow-sm rounded-[2px] overflow-hidden">
+                    <Card className="border-none shadow-sm rounded-xl overflow-hidden">
                       <Table>
                         <TableHeader className="bg-stone-50/50">
                           <TableRow className="border-stone-100 hover:bg-transparent h-16">
@@ -2189,7 +2468,7 @@ const AdminDashboardContent = () => {
                                   className="border-stone-50 hover:bg-stone-50 transition-all duration-300 cursor-pointer group h-20"
                                 >
                                   <TableCell className="px-8">
-                                    <span className="text-sm font-black text-indigo-950 tracking-tighter uppercase group-hover:text-amber-600 transition-colors">
+                                    <span className="text-sm font-black text-stone-900 tracking-tighter uppercase group-hover:text-amber-600 transition-colors">
                                       {o.orderNumber}
                                     </span>
                                   </TableCell>
@@ -2212,7 +2491,7 @@ const AdminDashboardContent = () => {
                                     </div>
                                   </TableCell>
                                   <TableCell className="px-8 text-right">
-                                    <span className="font-mono font-bold text-indigo-950 text-base">
+                                    <span className="font-mono font-bold text-stone-900 text-base">
                                       &#8377;
                                       {parseFloat(
                                         o.totalAmount,
@@ -2220,7 +2499,7 @@ const AdminDashboardContent = () => {
                                     </span>
                                   </TableCell>
                                   <TableCell className="px-8 text-center">
-                                    <div className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 rounded-[2px] px-3.5 py-1.5 ring-1 ring-amber-500/20">
+                                    <div className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 rounded-xl px-3.5 py-1.5 ring-1 ring-amber-500/20">
                                       <Coins className="h-3.5 w-3.5" />
                                       <span className="text-xs font-black">
                                         {o.rewardPointsEarned || 0}
@@ -2231,7 +2510,7 @@ const AdminDashboardContent = () => {
                                     <Badge
                                       variant="outline"
                                       className={cn(
-                                        "text-[9px] font-black uppercase tracking-[0.15em] px-4 py-1.5 rounded-[2px] border-none shadow-sm",
+                                        "text-[9px] font-black uppercase tracking-[0.15em] px-4 py-1.5 rounded-xl border-none shadow-sm",
                                         o.status === "DELIVERED" ||
                                           o.status === "COMPLETED"
                                           ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-500/20"
@@ -2252,7 +2531,7 @@ const AdminDashboardContent = () => {
                     value="pre-order"
                     className="animate-in slide-in-from-bottom-2 duration-500"
                   >
-                    <Card className="border-none shadow-sm rounded-[2px] overflow-hidden">
+                    <Card className="border-none shadow-sm rounded-xl overflow-hidden">
                       <Table>
                         <TableHeader className="bg-stone-50/50">
                           <TableRow className="border-stone-100 hover:bg-transparent h-16">
@@ -2311,7 +2590,7 @@ const AdminDashboardContent = () => {
                                   className="border-stone-50 hover:bg-purple-50/30 transition-all duration-300 cursor-pointer group h-20"
                                 >
                                   <TableCell className="px-8">
-                                    <span className="text-sm font-black text-indigo-950 tracking-tighter uppercase group-hover:text-purple-600 transition-colors">
+                                    <span className="text-sm font-black text-stone-900 tracking-tighter uppercase group-hover:text-purple-600 transition-colors">
                                       {o.orderNumber}
                                     </span>
                                   </TableCell>
@@ -2326,12 +2605,12 @@ const AdminDashboardContent = () => {
                                     </span>
                                   </TableCell>
                                   <TableCell className="px-8">
-                                    <span className="font-bold text-indigo-900/40 text-[10px] uppercase tracking-widest bg-stone-100/50 px-2.5 py-1 rounded-[2px] border border-stone-200/50">
+                                    <span className="font-bold text-indigo-900/40 text-[10px] uppercase tracking-widest bg-stone-100/50 px-2.5 py-1 rounded-xl border border-stone-200/50">
                                       {o.destination}
                                     </span>
                                   </TableCell>
                                   <TableCell className="px-8 text-right">
-                                    <span className="font-mono font-bold text-indigo-950 text-base">
+                                    <span className="font-mono font-bold text-stone-900 text-base">
                                       &#8377;
                                       {parseFloat(
                                         o.totalAmount,
@@ -2339,7 +2618,7 @@ const AdminDashboardContent = () => {
                                     </span>
                                   </TableCell>
                                   <TableCell className="px-8 text-center">
-                                    <div className="inline-flex items-center gap-1.5 bg-purple-50 text-purple-700 rounded-[2px] px-3.5 py-1.5 ring-1 ring-purple-500/20">
+                                    <div className="inline-flex items-center gap-1.5 bg-purple-50 text-purple-700 rounded-xl px-3.5 py-1.5 ring-1 ring-purple-500/20">
                                       <Coins className="h-3.5 w-3.5" />
                                       <span className="text-xs font-black">
                                         {o.rewardPointsEarned || 0}
@@ -2350,7 +2629,7 @@ const AdminDashboardContent = () => {
                                     <Badge
                                       variant="outline"
                                       className={cn(
-                                        "text-[9px] font-black uppercase tracking-[0.15em] px-4 py-1.5 rounded-[2px] border-none shadow-sm",
+                                        "text-[9px] font-black uppercase tracking-[0.15em] px-4 py-1.5 rounded-xl border-none shadow-sm",
                                         "bg-purple-50 text-purple-600 ring-1 ring-purple-500/20",
                                       )}
                                     >
@@ -2422,7 +2701,7 @@ const AdminDashboardContent = () => {
                                 onClick={() =>
                                   fetchOrderDetail(o.id, "Offline")
                                 }
-                                className="border-stone-50/50 h-[5.5rem] hover:bg-indigo-50/20 transition-all duration-300 cursor-pointer group"
+                                className="border-stone-50/50 h-[5.5rem] hover:bg-pink-50/20 transition-all duration-300 cursor-pointer group"
                               >
                                 <TableCell className="px-8">
                                   <div className="flex flex-col">
@@ -2436,7 +2715,7 @@ const AdminDashboardContent = () => {
                                 </TableCell>
                                 <TableCell className="px-8">
                                   <div className="flex flex-col">
-                                    <span className="text-base font-black text-indigo-950 tracking-tight group-hover:text-amber-600 transition-colors">
+                                    <span className="text-base font-black text-stone-900 tracking-tight group-hover:text-amber-600 transition-colors">
                                       {o.vendorName}
                                     </span>
                                     <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest leading-none mt-1">
@@ -2456,7 +2735,7 @@ const AdminDashboardContent = () => {
                                 </TableCell>
                                 <TableCell className="px-8 text-right">
                                   <div className="flex flex-col items-end">
-                                    <span className="text-2xl font-mono font-black text-indigo-950 tracking-tighter group-hover:scale-105 transition-transform origin-right">
+                                    <span className="text-2xl font-mono font-black text-stone-900 tracking-tighter group-hover:scale-105 transition-transform origin-right">
                                       &#8377;
                                       {parseFloat(
                                         o.totalAmount,
@@ -2468,7 +2747,7 @@ const AdminDashboardContent = () => {
                                   </div>
                                 </TableCell>
                                 <TableCell className="px-8 text-center">
-                                  <div className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 rounded-[2px] px-3.5 py-1.5 ring-1 ring-amber-500/20 shadow-sm border border-amber-100 group-hover:scale-110 transition-transform">
+                                  <div className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 rounded-xl px-3.5 py-1.5 ring-1 ring-amber-500/20 shadow-sm border border-amber-100 group-hover:scale-110 transition-transform">
                                     <Coins className="h-3.5 w-3.5" />
                                     <span className="text-xs font-black">
                                       {o.rewardPointsEarned || 0}
@@ -2476,8 +2755,8 @@ const AdminDashboardContent = () => {
                                   </div>
                                 </TableCell>
                                 <TableCell className="px-8 text-center">
-                                  <Badge className="bg-slate-50 text-slate-500 border border-slate-200 text-[9px] font-black uppercase tracking-[0.3em] px-4 py-2 rounded-[2px] shadow-sm group-hover:bg-emerald-50 group-hover:text-emerald-700 group-hover:border-emerald-200 transition-all">
-                                    <div className="h-1.5 w-1.5 bg-slate-300 group-hover:bg-emerald-500 rounded-[2px] mr-2.5 transition-colors" />
+                                  <Badge className="bg-slate-50 text-slate-500 border border-slate-200 text-[9px] font-black uppercase tracking-[0.3em] px-4 py-2 rounded-xl shadow-sm group-hover:bg-emerald-50 group-hover:text-emerald-700 group-hover:border-emerald-200 transition-all">
+                                    <div className="h-1.5 w-1.5 bg-slate-300 group-hover:bg-emerald-500 rounded-xl mr-2.5 transition-colors" />
                                     ARCHIVED
                                   </Badge>
                                 </TableCell>
@@ -2507,13 +2786,13 @@ const AdminDashboardContent = () => {
                   </div>
                   <Button
                     onClick={() => setIsAddVendorOpen(true)}
-                    className="rounded-[2px] h-14 px-8 shadow-2xl shadow-indigo-950/40 hover:bg-[#1a0b2e] font-black uppercase tracking-widest text-[10px] bg-indigo-950 text-white transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
+                    className="rounded-xl h-14 px-8 shadow-2xl shadow-stone-900/40 hover:bg-[#1a0b2e] font-black uppercase tracking-widest text-[10px] bg-stone-900 text-white transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
                   >
                     <UserPlus className="h-4 w-4" /> Add Direct Vendor
                   </Button>
                 </header>
 
-                <Card className="border-none shadow-[0_8px_30px_rgba(0,0,0,0.04)] rounded-[2px] overflow-hidden bg-white">
+                <Card className="border-none shadow-[0_8px_30px_rgba(0,0,0,0.04)] rounded-xl overflow-hidden bg-white">
                   <Table>
                     <TableHeader className="bg-stone-50">
                       <TableRow className="border-stone-100 py-4 hover:bg-transparent">
@@ -2570,7 +2849,7 @@ const AdminDashboardContent = () => {
                             <TableCell className="p-6 text-center">
                               <Badge
                                 className={cn(
-                                  "rounded-[2px] font-black text-[9px] uppercase tracking-[0.2em] px-3 py-1 border-none shadow-sm flex items-center gap-2 w-fit mx-auto",
+                                  "rounded-xl font-black text-[9px] uppercase tracking-[0.2em] px-3 py-1 border-none shadow-sm flex items-center gap-2 w-fit mx-auto",
                                   v.approvalStatus === "APPROVED"
                                     ? "bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20"
                                     : v.approvalStatus === "PENDING"
@@ -2580,7 +2859,7 @@ const AdminDashboardContent = () => {
                               >
                                 <span
                                   className={cn(
-                                    "h-1.5 w-1.5 rounded-[2px] animate-pulse",
+                                    "h-1.5 w-1.5 rounded-xl animate-pulse",
                                     v.approvalStatus === "APPROVED"
                                       ? "bg-emerald-500"
                                       : v.approvalStatus === "PENDING"
@@ -2605,7 +2884,7 @@ const AdminDashboardContent = () => {
                                 {v.approvalStatus === "PENDING" && (
                                   <Button
                                     size="sm"
-                                    className="h-8 bg-emerald-600 hover:bg-emerald-700 text-xs font-bold rounded-[2px]"
+                                    className="h-8 bg-emerald-600 hover:bg-emerald-700 text-xs font-bold rounded-xl"
                                     onClick={async () => {
                                       await fetch(
                                         `${API_URL}/admin/vendors/${v.id}/approve`,
@@ -2637,7 +2916,7 @@ const AdminDashboardContent = () => {
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent
                                     align="end"
-                                    className="w-[160px] rounded-[2px] font-bold bg-white text-xs"
+                                    className="w-[160px] rounded-xl font-bold bg-white text-xs"
                                   >
                                     <DropdownMenuItem
                                       onClick={() => fetchVendorDetail(v.id)}
@@ -2662,7 +2941,7 @@ const AdminDashboardContent = () => {
               <div className="space-y-12 animate-in fade-in">
                 <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
                   <div>
-                    <h1 className="text-3xl sm:text-4xl font-bold text-indigo-950 tracking-tight">
+                    <h1 className="text-3xl sm:text-4xl font-bold text-stone-900 tracking-tight">
                       Vendor Analytics
                     </h1>
                     <p className="text-sm font-medium text-stone-500 mt-2">
@@ -2672,13 +2951,13 @@ const AdminDashboardContent = () => {
 
                   <div className="flex gap-3">
                     {/* Time Filter */}
-                    <div className="group flex items-center bg-stone-50 hover:bg-white transition-all duration-300 rounded-[2px] border border-stone-200/60 hover:border-indigo-200 px-3 py-2 w-fit cursor-pointer animate-in fade-in zoom-in-95">
+                    <div className="group flex items-center bg-stone-50 hover:bg-white transition-all duration-300 rounded-xl border border-stone-200/60 hover:border-indigo-200 px-3 py-2 w-fit cursor-pointer animate-in fade-in zoom-in-95">
                       <span className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider mr-2">
                         Range:
                       </span>
                       <div className="relative flex items-center min-w-[100px]">
                         <select
-                          className="appearance-none bg-transparent border-none text-indigo-950 font-bold text-xs focus:ring-0 cursor-pointer py-1 pl-1 pr-8 w-full hover:text-indigo-600 outline-none truncate"
+                          className="appearance-none bg-transparent border-none text-stone-900 font-bold text-xs focus:ring-0 cursor-pointer py-1 pl-1 pr-8 w-full hover:text-pink-600 outline-none truncate"
                           value={selectedTimeRange}
                           onChange={(e) =>
                             handleVendorAnalyticsFilterChange(
@@ -2693,19 +2972,19 @@ const AdminDashboardContent = () => {
                           <option value="1y">1 Year</option>
                         </select>
                         <div className="absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none">
-                          <ChevronRight className="h-3 w-3 text-stone-500 group-hover:text-indigo-600 transition-colors rotate-90" />
+                          <ChevronRight className="h-3 w-3 text-stone-500 group-hover:text-pink-600 transition-colors rotate-90" />
                         </div>
                       </div>
                     </div>
 
                     {/* Vendor Filter */}
-                    <div className="group flex items-center bg-stone-50 hover:bg-white transition-all duration-300 rounded-[2px] border border-stone-200/60 hover:border-indigo-200 px-3 py-2 w-fit cursor-pointer animate-in fade-in zoom-in-95">
+                    <div className="group flex items-center bg-stone-50 hover:bg-white transition-all duration-300 rounded-xl border border-stone-200/60 hover:border-indigo-200 px-3 py-2 w-fit cursor-pointer animate-in fade-in zoom-in-95">
                       <span className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider mr-2">
                         Source:
                       </span>
                       <div className="relative flex items-center min-w-[130px]">
                         <select
-                          className="appearance-none bg-transparent border-none text-indigo-950 font-bold text-xs focus:ring-0 cursor-pointer py-1 pl-1 pr-8 w-full hover:text-indigo-600 outline-none truncate"
+                          className="appearance-none bg-transparent border-none text-stone-900 font-bold text-xs focus:ring-0 cursor-pointer py-1 pl-1 pr-8 w-full hover:text-pink-600 outline-none truncate"
                           value={selectedAnalyticsVendor}
                           onChange={(e) =>
                             handleVendorAnalyticsFilterChange(
@@ -2722,7 +3001,7 @@ const AdminDashboardContent = () => {
                           ))}
                         </select>
                         <div className="absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none">
-                          <ChevronRight className="h-3 w-3 text-stone-500 group-hover:text-indigo-600 transition-colors rotate-90" />
+                          <ChevronRight className="h-3 w-3 text-stone-500 group-hover:text-pink-600 transition-colors rotate-90" />
                         </div>
                       </div>
                     </div>
@@ -2730,9 +3009,9 @@ const AdminDashboardContent = () => {
                 </header>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  <div className="p-6 bg-white rounded-[2px] shadow-sm border border-stone-100/40 group hover:shadow-xl transition-all duration-500">
+                  <div className="p-6 bg-white rounded-xl shadow-sm border border-stone-100/40 group hover:shadow-xl transition-all duration-500">
                     <div className="flex items-center justify-between mb-3">
-                      <div className="h-8 w-8 rounded-[2px] bg-blue-50 text-blue-600 flex items-center justify-center">
+                      <div className="h-8 w-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                         <ShoppingCart className="h-4 w-4" />
                       </div>
                       <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold text-[9px]">
@@ -2742,7 +3021,7 @@ const AdminDashboardContent = () => {
                     <p className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider mb-1">
                       Total Sale Units
                     </p>
-                    <h2 className="text-2xl font-bold text-indigo-950 tracking-tight">
+                    <h2 className="text-2xl font-bold text-stone-900 tracking-tight">
                       {analyticsData?.totalSaleUnits >= 1000
                         ? (analyticsData.totalSaleUnits / 1000).toFixed(1) + "K"
                         : analyticsData?.totalSaleUnits || 0}
@@ -2752,9 +3031,9 @@ const AdminDashboardContent = () => {
                     </p>
                   </div>
 
-                  <div className="p-6 bg-white rounded-[2px] shadow-sm border border-stone-100/40 group hover:shadow-xl transition-all duration-500">
+                  <div className="p-6 bg-white rounded-xl shadow-sm border border-stone-100/40 group hover:shadow-xl transition-all duration-500">
                     <div className="flex items-center justify-between mb-3">
-                      <div className="h-8 w-8 rounded-[2px] bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                      <div className="h-8 w-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
                         <DollarSign className="h-4 w-4" />
                       </div>
                       <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold text-[9px]">
@@ -2764,7 +3043,7 @@ const AdminDashboardContent = () => {
                     <p className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider mb-1">
                       Gross Revenue
                     </p>
-                    <h2 className="text-2xl font-bold text-indigo-950 tracking-tight">
+                    <h2 className="text-2xl font-bold text-stone-900 tracking-tight">
                       {formatMoney(analyticsData?.grossRevenue || 0)}
                     </h2>
                     <p className="text-[10px] font-medium text-stone-400 mt-1.5 leading-relaxed">
@@ -2773,19 +3052,19 @@ const AdminDashboardContent = () => {
                     </p>
                   </div>
 
-                  <div className="p-6 bg-white rounded-[2px] shadow-sm border border-stone-100/40 group hover:shadow-xl transition-all duration-500">
+                  <div className="p-6 bg-white rounded-xl shadow-sm border border-stone-100/40 group hover:shadow-xl transition-all duration-500">
                     <div className="flex items-center justify-between mb-3">
-                      <div className="h-8 w-8 rounded-[2px] bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                      <div className="h-8 w-8 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center">
                         <TrendingUp className="h-4 w-4" />
                       </div>
-                      <Badge className="bg-indigo-50 text-indigo-600 border-none font-bold text-[9px]">
+                      <Badge className="bg-pink-50 text-pink-600 border-none font-bold text-[9px]">
                         PEAK
                       </Badge>
                     </div>
                     <p className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider mb-1">
                       Platform Earnings
                     </p>
-                    <h2 className="text-2xl font-bold text-indigo-950 tracking-tight">
+                    <h2 className="text-2xl font-bold text-stone-900 tracking-tight">
                       {formatMoney(analyticsData?.platformEarnings || 0)}
                     </h2>
                     <p className="text-[10px] font-medium text-stone-400 mt-1.5 leading-relaxed">
@@ -2795,43 +3074,21 @@ const AdminDashboardContent = () => {
                 </div>
 
                 <div className="grid grid-cols-12 gap-8">
-                  <Card className="col-span-8 p-10 rounded-[2px] border border-stone-100/40 shadow-sm bg-white overflow-hidden relative group">
+                  <Card className="col-span-8 p-10 rounded-xl border border-stone-100/40 shadow-sm bg-white overflow-hidden relative group">
                     <div className="flex items-center justify-between">
                       <h3 className="text-[11px] font-bold text-stone-500 uppercase tracking-widest flex items-center gap-3">
-                        <span className="h-1.5 w-1.5 rounded-[2px] bg-emerald-500" />
+                        <span className="h-1.5 w-1.5 rounded-xl bg-emerald-500" />
                         Revenue Distribution
                       </h3>
                     </div>
 
-                    {renderLineGraph()}
-
-                    {/* X Axis Labels */}
-                    <div className="relative w-full h-4 mt-3">
-                      {analyticsData?.graphData?.map((d, i) => {
-                        const len = analyticsData.graphData.length;
-                        const showLabel =
-                          len > 15
-                            ? i % Math.ceil(len / 6) === 0 || i === len - 1
-                            : true;
-                        if (!showLabel) return null;
-                        const x = len > 1 ? (i / (len - 1)) * 100 : 50;
-                        return (
-                          <span
-                            key={`l-${i}`}
-                            className="absolute top-0 -translate-x-1/2 text-[9px] font-bold text-stone-400 uppercase tracking-wider whitespace-nowrap"
-                            style={{ left: `${x}%` }}
-                          >
-                            {d.label}
-                          </span>
-                        );
-                      })}
-                    </div>
+                    <RevenueReport />
                   </Card>
 
-                  <Card className="col-span-4 p-10 rounded-[2px] border border-stone-100/40 shadow-sm bg-white overflow-hidden relative group">
+                  <Card className="col-span-4 p-10 rounded-xl border border-stone-100/40 shadow-sm bg-white overflow-hidden relative group">
                     <div className="flex items-center justify-between mb-8">
                       <h3 className="text-[11px] font-bold text-stone-500 uppercase tracking-widest flex items-center gap-3">
-                        <span className="h-1.5 w-1.5 rounded-[2px] bg-blue-500" />
+                        <span className="h-1.5 w-1.5 rounded-xl bg-blue-500" />
                         Product Sales Performance
                       </h3>
                     </div>
@@ -2847,11 +3104,11 @@ const AdminDashboardContent = () => {
                               onClick={() => setSelectedTopProduct(s)}
                             >
                               <div className="flex justify-between items-end mb-2">
-                                <span className="text-xs font-bold text-indigo-950 truncate max-w-[65%] group-hover/item:text-blue-600 transition-colors">
+                                <span className="text-xs font-bold text-stone-900 truncate max-w-[65%] group-hover/item:text-blue-600 transition-colors">
                                   {s.label}
                                 </span>
                                 <div className="text-right">
-                                  <span className="text-xs font-bold text-indigo-950 block">
+                                  <span className="text-xs font-bold text-stone-900 block">
                                     {formatMoney(s.val)}
                                   </span>
                                   <span className="text-[9px] font-semibold text-stone-400">
@@ -2859,9 +3116,9 @@ const AdminDashboardContent = () => {
                                   </span>
                                 </div>
                               </div>
-                              <div className="h-1.5 w-full bg-stone-50 rounded-[2px] overflow-hidden">
+                              <div className="h-1.5 w-full bg-stone-50 rounded-xl overflow-hidden">
                                 <div
-                                  className="h-full bg-indigo-950 rounded-[2px] transition-all duration-1000 ease-out group-hover/item:bg-blue-500 shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
+                                  className="h-full bg-stone-900 rounded-xl transition-all duration-1000 ease-out group-hover/item:bg-blue-500 shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
                                   style={{ width: `${Math.max(2, s.p)}%` }}
                                 />
                               </div>
@@ -2897,7 +3154,7 @@ const AdminDashboardContent = () => {
                   </p>
                 </header>
 
-                <Card className="border-none shadow-sm rounded-[2px] overflow-hidden">
+                <Card className="border-none shadow-sm rounded-xl overflow-hidden">
                   <Table>
                     <TableHeader className="bg-stone-50">
                       <TableRow className="border-stone-100 py-4 hover:bg-transparent">
@@ -2977,7 +3234,7 @@ const AdminDashboardContent = () => {
                             <TableCell className="p-6 text-right">
                               <Badge
                                 variant="outline"
-                                className="rounded-[2px] font-black text-purple-900 bg-stone-50 border-stone-100"
+                                className="rounded-xl font-black text-purple-900 bg-stone-50 border-stone-100"
                               >
                                 {c.rewardPoints} points
                               </Badge>
@@ -2999,7 +3256,7 @@ const AdminDashboardContent = () => {
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent
                                     align="end"
-                                    className="w-[160px] rounded-[2px] font-bold bg-white text-xs"
+                                    className="w-[160px] rounded-xl font-bold bg-white text-xs"
                                   >
                                     <DropdownMenuItem
                                       onClick={() => fetchCustomerDetail(c.id)}
@@ -3044,12 +3301,12 @@ const AdminDashboardContent = () => {
                             <div className="flex items-center justify-between border-b border-stone-200/60 pb-6">
                               <div className="flex items-center gap-4">
                                 <div
-                                  className={`h-10 w-10 ${THEME.borders.radius.sm} bg-indigo-950 flex items-center justify-center shadow-lg shadow-indigo-900/20`}
+                                  className={`h-10 w-10 ${THEME.borders.radius.sm} bg-stone-900 flex items-center justify-center shadow-lg shadow-indigo-900/20`}
                                 >
                                   <Package className="h-5 w-5 text-white" />
                                 </div>
                                 <div>
-                                  <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-950">
+                                  <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-stone-900">
                                     Product Core details
                                   </h2>
                                   <p className="text-[8px] font-bold text-stone-400 uppercase tracking-widest mt-1">
@@ -3059,12 +3316,12 @@ const AdminDashboardContent = () => {
                               </div>
                               <Badge
                                 variant="outline"
-                                className="rounded-[2px] border-stone-200 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 bg-white"
+                                className="rounded-xl border-stone-200 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 bg-white"
                               >
                                 Required Node
                               </Badge>
                             </div>
-                            <div className="grid grid-cols-3 gap-6 bg-white p-6 rounded-[2px] border border-stone-100 shadow-sm transition-all hover:shadow-md">
+                            <div className="grid grid-cols-3 gap-6 bg-white p-6 rounded-xl border border-stone-100 shadow-sm transition-all hover:shadow-md">
                               <div className="col-span-3 space-y-2">
                                 <Label
                                   className={`${THEME.typography.micro.default} ${THEME.colors.text.primary} ml-1`}
@@ -3080,7 +3337,7 @@ const AdminDashboardContent = () => {
                                       name: e.target.value,
                                     })
                                   }
-                                  className={`${THEME.borders.radius.lg} h-14 border-stone-200 bg-stone-50 font-bold px-6 focus:ring-indigo-950 transition-all`}
+                                  className={`${THEME.borders.radius.lg} h-14 border-stone-200 bg-stone-50 font-bold px-6 focus:ring-stone-900 transition-all`}
                                   placeholder="e.g., Hydra Barrier Serum"
                                 />
                               </div>
@@ -3096,7 +3353,7 @@ const AdminDashboardContent = () => {
                                     onClick={() =>
                                       setIsAddingNewBrand(!isAddingNewBrand)
                                     }
-                                    className="text-[10px] font-black uppercase tracking-wider text-indigo-600 hover:text-indigo-800 transition-colors px-1"
+                                    className="text-[10px] font-black uppercase tracking-wider text-pink-600 hover:text-indigo-800 transition-colors px-1"
                                   >
                                     {isAddingNewBrand
                                       ? "Select Existing"
@@ -3117,7 +3374,7 @@ const AdminDashboardContent = () => {
                                           brand: e.target.value,
                                         })
                                       }
-                                      className={`${THEME.borders.radius.lg} h-14 border-stone-200 bg-stone-50 font-bold pl-14 pr-6 focus:ring-indigo-950 transition-all`}
+                                      className={`${THEME.borders.radius.lg} h-14 border-stone-200 bg-stone-50 font-bold pl-14 pr-6 focus:ring-stone-900 transition-all`}
                                       placeholder="Brand name..."
                                       autoFocus
                                     />
@@ -3132,7 +3389,7 @@ const AdminDashboardContent = () => {
                                             brand: e.target.value,
                                           })
                                         }
-                                        className={`w-full ${THEME.borders.radius.lg} h-14 border border-stone-200 bg-stone-50 font-bold pl-14 pr-12 appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-950 transition-all text-sm`}
+                                        className={`w-full ${THEME.borders.radius.lg} h-14 border border-stone-200 bg-stone-50 font-bold pl-14 pr-12 appearance-none focus:outline-none focus:ring-2 focus:ring-stone-900 transition-all text-sm`}
                                       >
                                         <option value="" disabled>
                                           Select Brand
@@ -3163,7 +3420,7 @@ const AdminDashboardContent = () => {
                                         !isAddingNewCategory,
                                       )
                                     }
-                                    className="text-[10px] font-black uppercase tracking-wider text-indigo-600 hover:text-indigo-800 transition-colors px-1"
+                                    className="text-[10px] font-black uppercase tracking-wider text-pink-600 hover:text-indigo-800 transition-colors px-1"
                                   >
                                     {isAddingNewCategory
                                       ? "Select Existing"
@@ -3184,7 +3441,7 @@ const AdminDashboardContent = () => {
                                           categoryName: e.target.value,
                                         })
                                       }
-                                      className={`${THEME.borders.radius.lg} h-14 border-stone-200 bg-stone-50 font-bold pl-14 pr-6 focus:ring-indigo-950 transition-all`}
+                                      className={`${THEME.borders.radius.lg} h-14 border-stone-200 bg-stone-50 font-bold pl-14 pr-6 focus:ring-stone-900 transition-all`}
                                       placeholder="Category name..."
                                       autoFocus
                                     />
@@ -3199,7 +3456,7 @@ const AdminDashboardContent = () => {
                                             categoryName: e.target.value,
                                           })
                                         }
-                                        className={`w-full ${THEME.borders.radius.lg} h-14 border border-stone-200 bg-stone-50 font-bold pl-14 pr-12 appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-950 transition-all text-sm`}
+                                        className={`w-full ${THEME.borders.radius.lg} h-14 border border-stone-200 bg-stone-50 font-bold pl-14 pr-12 appearance-none focus:outline-none focus:ring-2 focus:ring-stone-900 transition-all text-sm`}
                                       >
                                         <option value="" disabled>
                                           Select Category
@@ -3235,7 +3492,7 @@ const AdminDashboardContent = () => {
                                         onlineStock: e.target.value,
                                       })
                                     }
-                                    className={`${THEME.borders.radius.lg} h-14 border-stone-200 bg-stone-50 font-bold pl-14 pr-6 focus:ring-indigo-950 transition-all`}
+                                    className={`${THEME.borders.radius.lg} h-14 border-stone-200 bg-stone-50 font-bold pl-14 pr-6 focus:ring-stone-900 transition-all`}
                                     placeholder="0"
                                   />
                                 </div>
@@ -3259,7 +3516,7 @@ const AdminDashboardContent = () => {
                                         ],
                                       })
                                     }
-                                    className={`h-8 px-4 text-[10px] uppercase font-black tracking-wider text-indigo-900 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 ${THEME.borders.radius.sm} transition-all flex items-center gap-1.5`}
+                                    className={`h-8 px-4 text-[10px] uppercase font-black tracking-wider text-indigo-900 bg-pink-50 border border-pink-100 hover:bg-pink-100 ${THEME.borders.radius.sm} transition-all flex items-center gap-1.5`}
                                   >
                                     <Plus className="h-3 w-3" /> Add Vendor
                                   </button>
@@ -3273,7 +3530,7 @@ const AdminDashboardContent = () => {
                                       <div className="relative flex-1">
                                         <select
                                           required
-                                          className={`w-full h-12 ${THEME.borders.radius.sm} bg-transparent px-4 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-950 appearance-none transition-all`}
+                                          className={`w-full h-12 ${THEME.borders.radius.sm} bg-transparent px-4 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-stone-900 appearance-none transition-all`}
                                           value={v.vendorId}
                                           onChange={(e) => {
                                             const newVs = [
@@ -3337,7 +3594,7 @@ const AdminDashboardContent = () => {
                                               vendors: newVs,
                                             });
                                           }}
-                                          className="rounded-[2px] h-12 border-0 bg-white shadow-sm font-black text-indigo-950 pl-12 pr-4"
+                                          className="rounded-xl h-12 border-0 bg-white shadow-sm font-black text-stone-900 pl-12 pr-4"
                                           placeholder="0"
                                         />
                                       </div>
@@ -3355,7 +3612,7 @@ const AdminDashboardContent = () => {
                                                 vendors: newVs,
                                               });
                                             }}
-                                            className="w-12 h-12 flex items-center justify-center text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-[2px] transition-all"
+                                            className="w-12 h-12 flex items-center justify-center text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
                                           >
                                             <Trash2 className="h-4 w-4" />
                                           </button>
@@ -3381,7 +3638,7 @@ const AdminDashboardContent = () => {
                                         specialOfferType: e.target.value,
                                       })
                                     }
-                                    className={`w-full ${THEME.borders.radius.lg} h-14 border border-stone-200 bg-stone-50 font-bold px-6 appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-950 transition-all text-sm`}
+                                    className={`w-full ${THEME.borders.radius.lg} h-14 border border-stone-200 bg-stone-50 font-bold px-6 appearance-none focus:outline-none focus:ring-2 focus:ring-stone-900 transition-all text-sm`}
                                   >
                                     <option value="None">
                                       Standard Product (None)
@@ -3410,14 +3667,14 @@ const AdminDashboardContent = () => {
                                       tags: e.target.value,
                                     })
                                   }
-                                  className={`${THEME.borders.radius.lg} h-14 border-stone-200 bg-stone-50 font-bold px-6 focus:ring-indigo-950 transition-all`}
+                                  className={`${THEME.borders.radius.lg} h-14 border-stone-200 bg-stone-50 font-bold px-6 focus:ring-stone-900 transition-all`}
                                   placeholder="Hydrating, Korea, Glow"
                                 />
                               </div>
-                              <div className="col-span-3 bg-white rounded-[2px] border border-stone-100 shadow-sm transition-all hover:shadow-md overflow-hidden">
+                              <div className="col-span-3 bg-white rounded-xl border border-stone-100 shadow-sm transition-all hover:shadow-md overflow-hidden">
                                 <div className="p-8 border-b border-stone-50 bg-stone-50/30">
                                   <div className="flex items-center gap-4">
-                                    <div className="h-10 w-10 rounded-[2px] bg-stone-900 flex items-center justify-center shadow-lg shadow-stone-900/20">
+                                    <div className="h-10 w-10 rounded-xl bg-stone-900 flex items-center justify-center shadow-lg shadow-stone-900/20">
                                       <BookOpen className="h-5 w-5 text-white" />
                                     </div>
                                     <div>
@@ -3456,7 +3713,7 @@ const AdminDashboardContent = () => {
                                             description: e.target.value,
                                           })
                                         }
-                                        className="flex min-h-[150px] w-full rounded-[2px] border border-stone-200 bg-stone-50/50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-950 transition-all"
+                                        className="flex min-h-[150px] w-full rounded-xl border border-stone-200 bg-stone-50/50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 transition-all"
                                         placeholder="Enter comprehensive product story..."
                                       />
                                     </AccordionContent>
@@ -3481,7 +3738,7 @@ const AdminDashboardContent = () => {
                                             howToUse: e.target.value,
                                           })
                                         }
-                                        className="flex min-h-[150px] w-full rounded-[2px] border border-stone-200 bg-stone-50/50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-950 transition-all"
+                                        className="flex min-h-[150px] w-full rounded-xl border border-stone-200 bg-stone-50/50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 transition-all"
                                         placeholder="Step-by-step application protocol..."
                                       />
                                     </AccordionContent>
@@ -3506,7 +3763,7 @@ const AdminDashboardContent = () => {
                                             whyWeLoveIt: e.target.value,
                                           })
                                         }
-                                        className="flex min-h-[120px] w-full rounded-[2px] border border-stone-200 bg-stone-50/50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-950 transition-all"
+                                        className="flex min-h-[120px] w-full rounded-xl border border-stone-200 bg-stone-50/50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 transition-all"
                                         placeholder="Summary of primary skin outcomes..."
                                       />
 
@@ -3523,7 +3780,7 @@ const AdminDashboardContent = () => {
                                                 { icon: "✨", text: "" },
                                               ])
                                             }
-                                            className="flex items-center gap-2 text-[8px] font-black uppercase tracking-widest text-emerald-600 border border-emerald-100 bg-emerald-50/50 px-3 py-1 rounded-[2px] hover:bg-emerald-600 hover:text-white transition-all"
+                                            className="flex items-center gap-2 text-[8px] font-black uppercase tracking-widest text-emerald-600 border border-emerald-100 bg-emerald-50/50 px-3 py-1 rounded-xl hover:bg-emerald-600 hover:text-white transition-all"
                                           >
                                             <Plus className="h-3 w-3" /> Add
                                             Outcome
@@ -3546,7 +3803,7 @@ const AdminDashboardContent = () => {
                                                       e.target.value;
                                                     setProductBenefits(u);
                                                   }}
-                                                  className="appearance-none rounded-[2px] h-12 border border-stone-200 bg-stone-50 font-bold w-16 text-center text-lg cursor-pointer hover:border-stone-300 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-950"
+                                                  className="appearance-none rounded-xl h-12 border border-stone-200 bg-stone-50 font-bold w-16 text-center text-lg cursor-pointer hover:border-stone-300 transition-colors focus:outline-none focus:ring-2 focus:ring-stone-900"
                                                 >
                                                   {[
                                                     "✨",
@@ -3580,7 +3837,7 @@ const AdminDashboardContent = () => {
                                                       e.target.value;
                                                     setProductBenefits(u);
                                                   }}
-                                                  className="rounded-[2px] h-12 border-stone-200 bg-stone-50 font-bold px-5 flex-1 focus:ring-indigo-950 transition-all"
+                                                  className="rounded-xl h-12 border-stone-200 bg-stone-50 font-bold px-5 flex-1 focus:ring-stone-900 transition-all"
                                                   placeholder="e.g., 72h Hydration"
                                                 />
                                                 {productBenefits.length > 1 && (
@@ -3593,7 +3850,7 @@ const AdminDashboardContent = () => {
                                                         ),
                                                       )
                                                     }
-                                                    className="h-12 w-12 flex items-center justify-center rounded-[2px] text-stone-300 hover:text-rose-500 hover:bg-rose-50 border border-stone-100 transition-all"
+                                                    className="h-12 w-12 flex items-center justify-center rounded-xl text-stone-300 hover:text-rose-500 hover:bg-rose-50 border border-stone-100 transition-all"
                                                   >
                                                     <Trash2 className="h-4 w-4" />
                                                   </button>
@@ -3625,7 +3882,7 @@ const AdminDashboardContent = () => {
                                             ingredients: e.target.value,
                                           })
                                         }
-                                        className="flex min-h-[150px] w-full rounded-[2px] border border-stone-200 bg-stone-50/50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-950 transition-all"
+                                        className="flex min-h-[150px] w-full rounded-xl border border-stone-200 bg-stone-50/50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 transition-all"
                                         placeholder="Full formulation list (INCI format)..."
                                       />
                                     </AccordionContent>
@@ -3650,7 +3907,7 @@ const AdminDashboardContent = () => {
                                             additionalInfo: e.target.value,
                                           })
                                         }
-                                        className="flex min-h-[150px] w-full rounded-[2px] border border-stone-200 bg-stone-50/50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-950 transition-all"
+                                        className="flex min-h-[150px] w-full rounded-xl border border-stone-200 bg-stone-50/50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 transition-all"
                                         placeholder="Regulatory details, pH level, shelf life etc..."
                                       />
                                     </AccordionContent>
@@ -3660,10 +3917,10 @@ const AdminDashboardContent = () => {
                             </div>
                           </div>
 
-                          <div className="bg-stone-50/80 backdrop-blur-sm rounded-[2px] border border-stone-100 shadow-sm p-10 space-y-8 transition-all hover:shadow-md">
+                          <div className="bg-stone-50/80 backdrop-blur-sm rounded-xl border border-stone-100 shadow-sm p-10 space-y-8 transition-all hover:shadow-md">
                             <div className="flex items-center justify-between border-b border-stone-200/60 pb-6">
                               <div className="flex items-center gap-4">
-                                <div className="h-10 w-10 rounded-[2px] bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
+                                <div className="h-10 w-10 rounded-xl bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
                                   <Star className="h-5 w-5 text-white" />
                                 </div>
                                 <div>
@@ -3677,7 +3934,7 @@ const AdminDashboardContent = () => {
                               </div>
                               <Badge
                                 variant="outline"
-                                className="text-[8px] font-black uppercase tracking-widest px-2 py-0 border-stone-200 text-stone-400 bg-white rounded-[2px]"
+                                className="text-[8px] font-black uppercase tracking-widest px-2 py-0 border-stone-200 text-stone-400 bg-white rounded-xl"
                               >
                                 Active States
                               </Badge>
@@ -3748,7 +4005,7 @@ const AdminDashboardContent = () => {
                                       "group relative p-4 border transition-all duration-300 cursor-pointer overflow-hidden flex items-center justify-between",
                                       THEME.borders.radius.md,
                                       isActive
-                                        ? "bg-indigo-950 border-indigo-900 shadow-md"
+                                        ? "bg-stone-900 border-indigo-900 shadow-md"
                                         : "bg-white border-stone-100 hover:border-stone-200",
                                     )}
                                   >
@@ -3758,7 +4015,7 @@ const AdminDashboardContent = () => {
                                     <div className="flex items-center gap-4 relative z-10">
                                       <div
                                         className={cn(
-                                          "h-10 w-10 rounded-[2px] flex items-center justify-center transition-all duration-500 group-hover:scale-105",
+                                          "h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-500 group-hover:scale-105",
                                           isActive
                                             ? "bg-white/10 text-white"
                                             : cn(flag.bg, flag.color),
@@ -3817,9 +4074,9 @@ const AdminDashboardContent = () => {
 
                         {/* Right Column */}
                         <div className="col-span-4 space-y-8">
-                          <div className="bg-stone-50/80 backdrop-blur-sm rounded-[2px] border border-stone-100 shadow-sm p-10 space-y-8 transition-all hover:shadow-md">
+                          <div className="bg-stone-50/80 backdrop-blur-sm rounded-xl border border-stone-100 shadow-sm p-10 space-y-8 transition-all hover:shadow-md">
                             <div className="flex items-center gap-4 border-b border-stone-200/60 pb-6">
-                              <div className="h-10 w-10 rounded-[2px] bg-rose-600 flex items-center justify-center shadow-lg shadow-rose-500/20">
+                              <div className="h-10 w-10 rounded-xl bg-rose-600 flex items-center justify-center shadow-lg shadow-rose-500/20">
                                 <ImageIcon className="h-5 w-5 text-white" />
                               </div>
                               <div>
@@ -3844,7 +4101,7 @@ const AdminDashboardContent = () => {
                                     .getElementById("primaryImageFP")
                                     .click()
                                 }
-                                className="relative h-52 rounded-[2px] border-2 border-dashed border-stone-100 bg-stone-50/50 flex flex-col items-center justify-center cursor-pointer group hover:bg-white hover:border-emerald-500/30 transition-all overflow-hidden"
+                                className="relative h-52 rounded-xl border-2 border-dashed border-stone-100 bg-stone-50/50 flex flex-col items-center justify-center cursor-pointer group hover:bg-white hover:border-emerald-500/30 transition-all overflow-hidden"
                               >
                                 {imageFiles.primary ? (
                                   <>
@@ -3870,7 +4127,7 @@ const AdminDashboardContent = () => {
                                       className="h-full w-full object-cover"
                                     />
                                     <div className="absolute inset-0 bg-[#1a0b2e]/40 opacity-0 group-hover:opacity-100 flex flex-col gap-2 items-center justify-center transition-opacity">
-                                      <span className="text-white text-[10px] font-black uppercase tracking-widest bg-indigo-950/80 px-3 py-1 rounded-[2px]">
+                                      <span className="text-white text-[10px] font-black uppercase tracking-widest bg-stone-900/80 px-3 py-1 rounded-xl">
                                         Overwrite Image
                                       </span>
                                     </div>
@@ -3902,7 +4159,7 @@ const AdminDashboardContent = () => {
                             </div>
                             <div className="flex flex-col gap-3">
                               <div
-                                className="flex items-center gap-3 p-4 bg-stone-50 rounded-[2px] border border-stone-100 cursor-pointer"
+                                className="flex items-center gap-3 p-4 bg-stone-50 rounded-xl border border-stone-100 cursor-pointer"
                                 onClick={() =>
                                   setHasMultipleImages(!hasMultipleImages)
                                 }
@@ -3914,7 +4171,7 @@ const AdminDashboardContent = () => {
                                     hasMultipleImages ||
                                       (newProduct.existingImages &&
                                         newProduct.existingImages.length > 1)
-                                      ? "bg-indigo-950 border-indigo-950"
+                                      ? "bg-stone-900 border-stone-900"
                                       : "bg-white border-stone-200",
                                   )}
                                 >
@@ -3925,7 +4182,7 @@ const AdminDashboardContent = () => {
                                     <Check className="h-3 w-3 text-white" />
                                   )}
                                 </div>
-                                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-950">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-stone-900">
                                   Include Multiple Images
                                 </span>
                               </div>
@@ -3940,7 +4197,7 @@ const AdminDashboardContent = () => {
                                       .map((url, idx) => (
                                         <div
                                           key={`exist-${idx}`}
-                                          className="aspect-square rounded-[2px] overflow-hidden relative group border border-stone-100 hover:border-indigo-400 transition-all"
+                                          className="aspect-square rounded-xl overflow-hidden relative group border border-stone-100 hover:border-indigo-400 transition-all"
                                         >
                                           <img
                                             src={getMediaUrl(url)}
@@ -3956,7 +4213,7 @@ const AdminDashboardContent = () => {
                                   {imageFiles.additional.map((file, idx) => (
                                     <div
                                       key={idx}
-                                      className="aspect-square rounded-[2px] overflow-hidden relative group border border-stone-100"
+                                      className="aspect-square rounded-xl overflow-hidden relative group border border-stone-100"
                                     >
                                       <img
                                         src={URL.createObjectURL(file)}
@@ -4055,7 +4312,7 @@ const AdminDashboardContent = () => {
                                       price: e.target.value,
                                     })
                                   }
-                                  className="rounded-[2px] h-14 border-stone-200 bg-white font-bold px-6 focus:ring-indigo-950 transition-all"
+                                  className="rounded-xl h-14 border-stone-200 bg-white font-bold px-6 focus:ring-stone-900 transition-all"
                                   placeholder="0.00"
                                 />
                               </div>
@@ -4075,7 +4332,7 @@ const AdminDashboardContent = () => {
                                       discountPrice: e.target.value,
                                     })
                                   }
-                                  className="rounded-[2px] h-14 border-stone-200 bg-white font-bold px-6 focus:ring-indigo-950 transition-all"
+                                  className="rounded-xl h-14 border-stone-200 bg-white font-bold px-6 focus:ring-stone-900 transition-all"
                                   placeholder="Optional"
                                 />
                               </div>
@@ -4096,7 +4353,7 @@ const AdminDashboardContent = () => {
                         <Button
                           type="submit"
                           disabled={loading || !hasChanges}
-                          className={`flex-[2] bg-indigo-950 text-white disabled:opacity-50 disabled:bg-stone-400 ${THEME.borders.radius.lg} h-16 font-black uppercase tracking-widest text-[10px] hover:bg-[#1a0b2e] shadow-2xl shadow-indigo-950/30 transition-all hover:scale-[1.01] active:scale-[0.99]`}
+                          className={`flex-[2] bg-stone-900 text-white disabled:opacity-50 disabled:bg-stone-400 ${THEME.borders.radius.lg} h-16 font-black uppercase tracking-widest text-[10px] hover:bg-[#1a0b2e] shadow-2xl shadow-stone-900/30 transition-all hover:scale-[1.01] active:scale-[0.99]`}
                         >
                           {loading
                             ? "Saving..."
@@ -4129,10 +4386,10 @@ const AdminDashboardContent = () => {
               <div className="h-[600px] flex items-center justify-center bg-white/80 backdrop-blur-md">
                 <div className="flex flex-col items-center gap-6">
                   <div
-                    className={`h-12 w-12 animate-spin ${THEME.borders.radius.sm} border-[3px] border-stone-100 border-t-indigo-950 shadow-xl`}
+                    className={`h-12 w-12 animate-spin ${THEME.borders.radius.sm} border-[3px] border-stone-100 border-t-stone-900 shadow-xl`}
                   />
                   <div className="space-y-1 text-center">
-                    <p className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.3em] ">
+                    <p className="text-[10px] font-black text-stone-900 uppercase tracking-[0.3em] ">
                       Accessing Intel
                     </p>
                     <p className="text-[8px] font-bold text-stone-400 uppercase tracking-widest">
@@ -4191,7 +4448,7 @@ const AdminDashboardContent = () => {
                     <div className="flex items-center gap-3 relative z-10">
                       <Button
                         variant="outline"
-                        className={`h-11 ${THEME.borders.radius.sm} border-purple-900 text-white hover:bg-white hover:text-indigo-950 bg-transparent text-[10px] font-black uppercase tracking-[0.2em] px-8 transition-all duration-300`}
+                        className={`h-11 ${THEME.borders.radius.sm} border-purple-900 text-white hover:bg-white hover:text-stone-900 bg-transparent text-[10px] font-black uppercase tracking-[0.2em] px-8 transition-all duration-300`}
                       >
                         Export Dossier
                       </Button>
@@ -4231,7 +4488,7 @@ const AdminDashboardContent = () => {
                             <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">
                               Activity Events
                             </p>
-                            <ShoppingCart className="h-5 w-5 text-stone-300 group-hover:text-indigo-950 transition-colors" />
+                            <ShoppingCart className="h-5 w-5 text-stone-300 group-hover:text-stone-900 transition-colors" />
                           </div>
                           <p
                             className={`text-4xl ${THEME.typography.weights.heavy} bg-clip-text text-transparent ${THEME.gradients.brand} tracking-tighter leading-none`}
@@ -4247,9 +4504,9 @@ const AdminDashboardContent = () => {
                             <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">
                               Node Creation
                             </p>
-                            <Calendar className="h-5 w-5 text-stone-300 group-hover:text-indigo-950 transition-colors" />
+                            <Calendar className="h-5 w-5 text-stone-300 group-hover:text-stone-900 transition-colors" />
                           </div>
-                          <p className="text-3xl font-black text-indigo-950 tracking-tighter leading-none mt-2">
+                          <p className="text-3xl font-black text-stone-900 tracking-tighter leading-none mt-2">
                             {new Date(selectedUser.createdAt)
                               .toLocaleDateString(undefined, {
                                 month: "short",
@@ -4269,8 +4526,8 @@ const AdminDashboardContent = () => {
                         {/* Left Intelligence Sidebar */}
                         <div className="col-span-4 space-y-12 border-r border-stone-100 pr-12">
                           <section>
-                            <h3 className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.4em] mb-8 flex items-center gap-4">
-                              <span className="h-px w-8 bg-indigo-950" />
+                            <h3 className="text-[10px] font-black text-stone-900 uppercase tracking-[0.4em] mb-8 flex items-center gap-4">
+                              <span className="h-px w-8 bg-stone-900" />
                               Identity Access
                             </h3>
                             <div className="space-y-4">
@@ -4282,7 +4539,7 @@ const AdminDashboardContent = () => {
                                   <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest leading-none">
                                     Primary Endpoint
                                   </p>
-                                  <p className="text-sm font-bold text-indigo-950 truncate leading-tight">
+                                  <p className="text-sm font-bold text-stone-900 truncate leading-tight">
                                     {selectedUser.email || "N/A"}
                                   </p>
                                 </div>
@@ -4295,7 +4552,7 @@ const AdminDashboardContent = () => {
                                   <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest leading-none">
                                     Mobile Terminal
                                   </p>
-                                  <p className="text-sm font-bold text-indigo-950 leading-tight">
+                                  <p className="text-sm font-bold text-stone-900 leading-tight">
                                     {selectedUser.mobile}
                                   </p>
                                 </div>
@@ -4304,8 +4561,8 @@ const AdminDashboardContent = () => {
                           </section>
 
                           <section>
-                            <h3 className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.4em] mb-8 flex items-center gap-4">
-                              <span className="h-px w-8 bg-indigo-950" />
+                            <h3 className="text-[10px] font-black text-stone-900 uppercase tracking-[0.4em] mb-8 flex items-center gap-4">
+                              <span className="h-px w-8 bg-stone-900" />
                               Logistics Ledger
                             </h3>
                             <div className="space-y-4">
@@ -4314,7 +4571,7 @@ const AdminDashboardContent = () => {
                                 .map((addr) => (
                                   <div
                                     key={addr.id}
-                                    className="p-6 rounded-[2px] border border-stone-100 bg-white shadow-sm group hover:border-emerald-500/20 hover:shadow-xl transition-all duration-300"
+                                    className="p-6 rounded-xl border border-stone-100 bg-white shadow-sm group hover:border-emerald-500/20 hover:shadow-xl transition-all duration-300"
                                   >
                                     <div className="flex justify-between items-start mb-4">
                                       <Badge
@@ -4325,11 +4582,11 @@ const AdminDashboardContent = () => {
                                       </Badge>
                                       <MapPin className="h-4 w-4 text-stone-200 group-hover:text-emerald-500 transition-colors" />
                                     </div>
-                                    <p className="text-sm font-black text-indigo-950 leading-tight">
+                                    <p className="text-sm font-black text-stone-900 leading-tight">
                                       "{addr.line1}"
                                     </p>
                                     <p className="text-[11px] font-medium text-stone-400 mt-2 flex items-center gap-2">
-                                      <span className="h-1 w-1 rounded-[2px] bg-stone-200" />
+                                      <span className="h-1 w-1 rounded-xl bg-stone-200" />
                                       {addr.city.toUpperCase()},{" "}
                                       {addr.state.toUpperCase()}
                                     </p>
@@ -4342,17 +4599,17 @@ const AdminDashboardContent = () => {
                         {/* Right Transmission Table */}
                         <div className="col-span-8">
                           <header className="flex items-center justify-between mb-8 pb-4 border-b border-stone-100">
-                            <h3 className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.4em] flex items-center gap-4">
-                              <span className="h-px w-8 bg-indigo-950" />
+                            <h3 className="text-[10px] font-black text-stone-900 uppercase tracking-[0.4em] flex items-center gap-4">
+                              <span className="h-px w-8 bg-stone-900" />
                               Transmission Registry
                             </h3>
-                            <span className="text-[9px] font-black text-emerald-600 px-4 py-1.5 bg-emerald-50 rounded-[2px] flex items-center gap-2 border border-emerald-100">
-                              <div className="h-1.5 w-1.5 bg-emerald-500 rounded-[2px] animate-pulse" />
+                            <span className="text-[9px] font-black text-emerald-600 px-4 py-1.5 bg-emerald-50 rounded-xl flex items-center gap-2 border border-emerald-100">
+                              <div className="h-1.5 w-1.5 bg-emerald-500 rounded-xl animate-pulse" />
                               {selectedUser.orders?.length || 0} EVENTS SYNCED
                             </span>
                           </header>
 
-                          <div className="overflow-hidden rounded-[2px] border border-stone-100 shadow-xl bg-white">
+                          <div className="overflow-hidden rounded-xl border border-stone-100 shadow-xl bg-white">
                             <Table>
                               <TableHeader className="bg-stone-50/50">
                                 <TableRow className="border-stone-100 hover:bg-transparent h-14">
@@ -4379,7 +4636,7 @@ const AdminDashboardContent = () => {
                                     >
                                       <TableCell className="px-8">
                                         <div className="flex flex-col">
-                                          <span className="text-sm font-black text-indigo-950 tracking-tighter group-hover:text-emerald-600 transition-colors">
+                                          <span className="text-sm font-black text-stone-900 tracking-tighter group-hover:text-emerald-600 transition-colors">
                                             #{order.orderNumber}
                                           </span>
                                           <span className="text-[8px] font-bold text-stone-300 uppercase tracking-widest">
@@ -4399,17 +4656,17 @@ const AdminDashboardContent = () => {
                                       <TableCell className="px-8">
                                         <Badge
                                           className={cn(
-                                            "rounded-[2px] font-black text-[9px] uppercase tracking-widest px-3 py-1 border-none shadow-sm transition-all",
+                                            "rounded-xl font-black text-[9px] uppercase tracking-widest px-3 py-1 border-none shadow-sm transition-all",
                                             order.status === "DELIVERED"
                                               ? "bg-emerald-500 text-white shadow-emerald-500/20"
-                                              : "bg-indigo-950 text-white shadow-indigo-950/20",
+                                              : "bg-stone-900 text-white shadow-stone-900/20",
                                           )}
                                         >
                                           {order.status}
                                         </Badge>
                                       </TableCell>
                                       <TableCell className="px-8 text-right">
-                                        <span className="text-lg font-black text-indigo-950 tracking-tighter">
+                                        <span className="text-lg font-black text-stone-900 tracking-tighter">
                                           &#8377;
                                           {parseFloat(
                                             order.totalAmount,
@@ -4440,14 +4697,14 @@ const AdminDashboardContent = () => {
                     <div className="flex gap-3">
                       <Badge
                         variant="outline"
-                        className="bg-white border-stone-200 text-stone-400 font-black text-[8px] rounded-[2px] px-3 py-1 uppercase tracking-widest"
+                        className="bg-white border-stone-200 text-stone-400 font-black text-[8px] rounded-xl px-3 py-1 uppercase tracking-widest"
                       >
                         End-to-End Encrypted Dossier
                       </Badge>
                     </div>
                     <Button
                       onClick={() => setIsDetailOpen(false)}
-                      className="bg-indigo-950 hover:bg-[#1a0b2e] font-black uppercase tracking-[0.2em] text-[10px] rounded-[2px] px-12 h-12 shadow-2xl shadow-indigo-950/40"
+                      className="bg-stone-900 hover:bg-[#1a0b2e] font-black uppercase tracking-[0.2em] text-[10px] rounded-xl px-12 h-12 shadow-2xl shadow-stone-900/40"
                     >
                       Close Session
                     </Button>
@@ -4475,9 +4732,9 @@ const AdminDashboardContent = () => {
             {detailLoading ? (
               <div className="h-[600px] flex items-center justify-center bg-white/80 backdrop-blur-md">
                 <div className="flex flex-col items-center gap-6">
-                  <div className="h-12 w-12 animate-spin rounded-[2px] border-[3px] border-stone-100 border-t-indigo-950 shadow-xl" />
+                  <div className="h-12 w-12 animate-spin rounded-xl border-[3px] border-stone-100 border-t-stone-900 shadow-xl" />
                   <div className="space-y-1 text-center">
-                    <p className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.3em]">
+                    <p className="text-[10px] font-black text-stone-900 uppercase tracking-[0.3em]">
                       Syncing Partner Node
                     </p>
                     <p className="text-[8px] font-bold text-stone-400 uppercase tracking-widest">
@@ -4493,7 +4750,7 @@ const AdminDashboardContent = () => {
                   <header
                     className={`p-10 ${THEME.colors.background.accentSolid} text-white flex items-center justify-between shrink-0 relative overflow-hidden ring-1 ring-white/10`}
                   >
-                    <div className="absolute top-0 right-0 p-16 opacity-10 blur-3xl bg-blue-500 rounded-[2px] -mr-16 -mt-16" />
+                    <div className="absolute top-0 right-0 p-16 opacity-10 blur-3xl bg-blue-500 rounded-xl -mr-16 -mt-16" />
                     <div className="relative z-10 flex items-center gap-8">
                       <div className="relative group">
                         <Avatar className="h-20 w-20 ring-4 ring-white/10 shadow-2xl transition-transform duration-500 group-hover:scale-105">
@@ -4503,13 +4760,13 @@ const AdminDashboardContent = () => {
                         </Avatar>
                         <div
                           className={cn(
-                            "absolute -bottom-1 -right-1 h-6 w-6 rounded-[2px] border-4 border-indigo-900 flex items-center justify-center",
+                            "absolute -bottom-1 -right-1 h-6 w-6 rounded-xl border-4 border-indigo-900 flex items-center justify-center",
                             selectedVendor.approvalStatus === "APPROVED"
                               ? "bg-emerald-500"
                               : "bg-amber-500",
                           )}
                         >
-                          <div className="h-1.5 w-1.5 bg-white rounded-[2px] animate-pulse" />
+                          <div className="h-1.5 w-1.5 bg-white rounded-xl animate-pulse" />
                         </div>
                       </div>
                       <div className="space-y-1.5">
@@ -4523,7 +4780,7 @@ const AdminDashboardContent = () => {
                         </div>
                         <div className="flex items-center gap-4 text-stone-400">
                           <span className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                            <span className="h-1.5 w-1.5 rounded-[2px] bg-purple-900" />
+                            <span className="h-1.5 w-1.5 rounded-xl bg-purple-900" />
                             Protocol: VND-
                             {selectedVendor.id.slice(0, 8).toUpperCase()}
                           </span>
@@ -4536,14 +4793,14 @@ const AdminDashboardContent = () => {
                     <div className="flex items-center gap-3 relative z-10">
                       <Button
                         variant="outline"
-                        className="h-11 rounded-[2px] border-purple-900 text-white hover:bg-white hover:text-indigo-950 bg-transparent text-[10px] font-black uppercase tracking-[0.2em] px-8 transition-all duration-300"
+                        className="h-11 rounded-xl border-purple-900 text-white hover:bg-white hover:text-stone-900 bg-transparent text-[10px] font-black uppercase tracking-[0.2em] px-8 transition-all duration-300"
                       >
                         Audit Partner
                       </Button>
                       <Button
                         onClick={() => setIsVendorDetailOpen(false)}
                         variant="ghost"
-                        className="h-11 w-11 text-stone-400 hover:text-white rounded-[2px] bg-white/5 border border-white/5 hover:border-white/20 transition-all"
+                        className="h-11 w-11 text-stone-400 hover:text-white rounded-xl bg-white/5 border border-white/5 hover:border-white/20 transition-all"
                       >
                         <X className="h-5 w-5" />
                       </Button>
@@ -4606,33 +4863,33 @@ const AdminDashboardContent = () => {
                       <div className="grid grid-cols-12 gap-12 pt-4">
                         <div className="col-span-4 space-y-12 border-r border-stone-100 pr-12">
                           <section>
-                            <h3 className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.4em] mb-8 flex items-center gap-4">
-                              <span className="h-px w-8 bg-indigo-950" />
+                            <h3 className="text-[10px] font-black text-stone-900 uppercase tracking-[0.4em] mb-8 flex items-center gap-4">
+                              <span className="h-px w-8 bg-stone-900" />
                               Merchant Intelligence
                             </h3>
                             <div className="space-y-4">
-                              <div className="flex items-center gap-5 p-5 rounded-[2px] bg-stone-50 border border-stone-100/50 group hover:bg-white hover:shadow-lg transition-all duration-300">
-                                <div className="h-11 w-11 rounded-[2px] bg-white flex items-center justify-center shadow-sm text-stone-400 group-hover:text-blue-500 transition-colors">
+                              <div className="flex items-center gap-5 p-5 rounded-xl bg-stone-50 border border-stone-100/50 group hover:bg-white hover:shadow-lg transition-all duration-300">
+                                <div className="h-11 w-11 rounded-xl bg-white flex items-center justify-center shadow-sm text-stone-400 group-hover:text-blue-500 transition-colors">
                                   <Mail className="h-5 w-5" />
                                 </div>
                                 <div className="overflow-hidden space-y-0.5">
                                   <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest leading-none">
                                     Administrative Contact
                                   </p>
-                                  <p className="text-sm font-bold text-indigo-950 truncate leading-tight">
+                                  <p className="text-sm font-bold text-stone-900 truncate leading-tight">
                                     {selectedVendor.email || "No Email"}
                                   </p>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-5 p-5 rounded-[2px] bg-stone-50 border border-stone-100/50 group hover:bg-white hover:shadow-lg transition-all duration-300">
-                                <div className="h-11 w-11 rounded-[2px] bg-white flex items-center justify-center shadow-sm text-stone-400 group-hover:text-emerald-500 transition-colors">
+                              <div className="flex items-center gap-5 p-5 rounded-xl bg-stone-50 border border-stone-100/50 group hover:bg-white hover:shadow-lg transition-all duration-300">
+                                <div className="h-11 w-11 rounded-xl bg-white flex items-center justify-center shadow-sm text-stone-400 group-hover:text-emerald-500 transition-colors">
                                   <Phone className="h-5 w-5" />
                                 </div>
                                 <div className="space-y-0.5">
                                   <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest leading-none">
                                     Emergency Terminal
                                   </p>
-                                  <p className="text-sm font-bold text-indigo-950 leading-tight">
+                                  <p className="text-sm font-bold text-stone-900 leading-tight">
                                     {selectedVendor.contactNumber}
                                   </p>
                                 </div>
@@ -4641,15 +4898,15 @@ const AdminDashboardContent = () => {
                           </section>
 
                           <section>
-                            <h3 className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.4em] mb-8 flex items-center gap-4">
-                              <span className="h-px w-8 bg-indigo-950" />
+                            <h3 className="text-[10px] font-black text-stone-900 uppercase tracking-[0.4em] mb-8 flex items-center gap-4">
+                              <span className="h-px w-8 bg-stone-900" />
                               Live Inventory
                             </h3>
                             <div className="space-y-4">
                               {selectedVendor.products?.map((p) => (
                                 <div
                                   key={p.id}
-                                  className="flex items-center gap-4 p-4 rounded-[2px] bg-white border border-stone-100 shadow-sm"
+                                  className="flex items-center gap-4 p-4 rounded-xl bg-white border border-stone-100 shadow-sm"
                                 >
                                   <Avatar className="h-10 w-10">
                                     <AvatarFallback className="bg-stone-50 text-[10px] font-black">
@@ -4657,7 +4914,7 @@ const AdminDashboardContent = () => {
                                     </AvatarFallback>
                                   </Avatar>
                                   <div className="flex-1 overflow-hidden">
-                                    <p className="text-[11px] font-bold text-indigo-950 truncate tracking-tight">
+                                    <p className="text-[11px] font-bold text-stone-900 truncate tracking-tight">
                                       {p.name}
                                     </p>
                                     <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">
@@ -4673,12 +4930,12 @@ const AdminDashboardContent = () => {
 
                         <div className="col-span-8">
                           <header className="flex items-center justify-between mb-8 pb-4 border-b border-stone-100">
-                            <h3 className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.4em] flex items-center gap-4">
-                              <span className="h-px w-8 bg-indigo-950" />
+                            <h3 className="text-[10px] font-black text-stone-900 uppercase tracking-[0.4em] flex items-center gap-4">
+                              <span className="h-px w-8 bg-stone-900" />
                               Sales Transmission Registry
                             </h3>
-                            <span className="text-[9px] font-black text-emerald-600 px-4 py-1.5 bg-emerald-50 rounded-[2px] flex items-center gap-2 border border-emerald-100">
-                              <div className="h-1.5 w-1.5 bg-emerald-500 rounded-[2px] animate-pulse" />
+                            <span className="text-[9px] font-black text-emerald-600 px-4 py-1.5 bg-emerald-50 rounded-xl flex items-center gap-2 border border-emerald-100">
+                              <div className="h-1.5 w-1.5 bg-emerald-500 rounded-xl animate-pulse" />
                               {selectedVendor.orders?.length || 0} SALES EVENT
                               SYNCED
                             </span>
@@ -4704,13 +4961,13 @@ const AdminDashboardContent = () => {
                                     key={order.orderNumber}
                                     className="border-stone-50/50 hover:bg-stone-50/50 transition-colors"
                                   >
-                                    <TableCell className="font-bold text-xs text-indigo-950">
+                                    <TableCell className="font-bold text-xs text-stone-900">
                                       {order.orderNumber}
                                     </TableCell>
                                     <TableCell className="text-xs text-stone-500 font-medium">
                                       {order.customer.name}
                                     </TableCell>
-                                    <TableCell className="text-right font-black text-xs text-indigo-950">
+                                    <TableCell className="text-right font-black text-xs text-stone-900">
                                       &#8377;
                                       {parseFloat(
                                         order.totalAmount,
@@ -4752,7 +5009,7 @@ const AdminDashboardContent = () => {
                     <div className="flex gap-3">
                       <Badge
                         variant="outline"
-                        className="bg-white border-stone-200 text-stone-400 font-black text-[8px] rounded-[2px] px-3 py-1 uppercase tracking-widest"
+                        className="bg-white border-stone-200 text-stone-400 font-black text-[8px] rounded-xl px-3 py-1 uppercase tracking-widest"
                       >
                         Secure Merchant Node: Audit Link Active
                       </Badge>
@@ -4761,13 +5018,13 @@ const AdminDashboardContent = () => {
                       <Button
                         onClick={() => setIsVendorDetailOpen(false)}
                         variant="outline"
-                        className="font-black uppercase tracking-[0.2em] text-[10px] rounded-[2px] px-8 h-12 border-stone-200"
+                        className="font-black uppercase tracking-[0.2em] text-[10px] rounded-xl px-8 h-12 border-stone-200"
                       >
                         De-Authorize
                       </Button>
                       <Button
                         onClick={() => setIsVendorDetailOpen(false)}
-                        className="bg-indigo-950 hover:bg-[#1a0b2e] font-black uppercase tracking-[0.2em] text-[10px] rounded-[2px] px-12 h-12 shadow-2xl shadow-indigo-950/40"
+                        className="bg-stone-900 hover:bg-[#1a0b2e] font-black uppercase tracking-[0.2em] text-[10px] rounded-xl px-12 h-12 shadow-2xl shadow-stone-900/40"
                       >
                         Secure Session
                       </Button>
@@ -4784,7 +5041,7 @@ const AdminDashboardContent = () => {
           <DialogContent className="sm:max-w-2xl rounded-[2px] p-10 border-none shadow-2xl bg-white relative overflow-hidden">
             <div className="absolute top-0 right-0 p-12 opacity-[0.03] blur-2xl bg-emerald-500 rounded-[2px] -mr-8 -mt-8" />
             <DialogHeader className="mb-8">
-              <DialogTitle className="text-3xl font-black text-indigo-950 tracking-tighter uppercase">
+              <DialogTitle className="text-3xl font-black text-stone-900 tracking-tighter uppercase">
                 Record Manual Transmission
               </DialogTitle>
               <DialogDescription className="text-stone-400 font-medium">
@@ -4832,13 +5089,13 @@ const AdminDashboardContent = () => {
             >
               <div className="grid grid-cols-2 gap-8">
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.2em]">
+                  <Label className="text-[10px] font-black text-stone-900 uppercase tracking-[0.2em]">
                     Partner Merchant
                   </Label>
                   <select
                     name="vendorId"
                     required
-                    className="w-full h-12 bg-stone-50 border-stone-100 rounded-[2px] px-4 text-sm font-bold focus:ring-2 focus:ring-indigo-950 transition-all outline-none"
+                    className="w-full h-12 bg-stone-50 border-stone-100 rounded-xl px-4 text-sm font-bold focus:ring-2 focus:ring-stone-900 transition-all outline-none"
                     onChange={async (e) => {
                       const vid = e.target.value;
                       if (!vid) {
@@ -4866,14 +5123,14 @@ const AdminDashboardContent = () => {
                   </select>
                 </div>
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.2em]">
+                  <Label className="text-[10px] font-black text-stone-900 uppercase tracking-[0.2em]">
                     Customer Terminal (Mobile)
                   </Label>
                   <Input
                     name="mobile"
                     placeholder="+91 XXXXX XXXXX"
                     required
-                    className="h-12 bg-stone-50 border-stone-100 rounded-[2px] px-4 text-sm font-bold shadow-none"
+                    className="h-12 bg-stone-50 border-stone-100 rounded-xl px-4 text-sm font-bold shadow-none"
                   />
                 </div>
               </div>
@@ -4890,7 +5147,7 @@ const AdminDashboardContent = () => {
                     <select
                       name="productId"
                       required
-                      className="w-full h-10 bg-white border-none rounded-[2px] text-xs font-bold shadow-sm px-3 outline-none"
+                      className="w-full h-10 bg-white border-none rounded-xl text-xs font-bold shadow-sm px-3 outline-none"
                       onChange={(e) => {
                         const p = manualOrderProducts.find(
                           (prod) => prod.id === e.target.value,
@@ -4918,7 +5175,7 @@ const AdminDashboardContent = () => {
                       type="number"
                       defaultValue="1"
                       required
-                      className="h-10 bg-white border-none rounded-[2px] text-xs font-bold shadow-sm"
+                      className="h-10 bg-white border-none rounded-xl text-xs font-bold shadow-sm"
                     />
                   </div>
                   <div className="col-span-3 space-y-2">
@@ -4930,7 +5187,7 @@ const AdminDashboardContent = () => {
                       type="number"
                       placeholder="0.00"
                       required
-                      className="h-10 bg-white border-none rounded-[2px] text-xs font-bold shadow-sm"
+                      className="h-10 bg-white border-none rounded-xl text-xs font-bold shadow-sm"
                     />
                   </div>
                 </div>
@@ -4942,8 +5199,8 @@ const AdminDashboardContent = () => {
                     Status
                   </p>
                   <div className="flex items-center gap-2 mt-1">
-                    <div className="h-2 w-2 rounded-[2px] bg-emerald-500 animate-pulse" />
-                    <span className="text-xl font-black text-indigo-950">
+                    <div className="h-2 w-2 rounded-xl bg-emerald-500 animate-pulse" />
+                    <span className="text-xl font-black text-stone-900">
                       LIVE SESSION
                     </span>
                   </div>
@@ -4953,13 +5210,13 @@ const AdminDashboardContent = () => {
                     type="button"
                     onClick={() => setIsManualOrderOpen(false)}
                     variant="ghost"
-                    className="h-12 rounded-[2px] px-8 text-[10px] font-black uppercase tracking-widest"
+                    className="h-12 rounded-xl px-8 text-[10px] font-black uppercase tracking-widest"
                   >
                     Abort
                   </Button>
                   <Button
                     type="submit"
-                    className="h-12 bg-indigo-950 hover:bg-[#1a0b2e] text-white rounded-[2px] px-12 text-[10px] font-black uppercase tracking-widest shadow-2xl shadow-indigo-950/20"
+                    className="h-12 bg-stone-900 hover:bg-[#1a0b2e] text-white rounded-xl px-12 text-[10px] font-black uppercase tracking-widest shadow-2xl shadow-stone-900/20"
                   >
                     Commit Sync
                   </Button>
@@ -4976,17 +5233,17 @@ const AdminDashboardContent = () => {
             onClick={() => setSelectedTopProduct(null)}
           >
             <div
-              className="bg-white rounded-[2px] p-6 w-[90%] max-w-sm shadow-2xl animate-in zoom-in-95 duration-300 relative"
+              className="bg-white rounded-xl p-6 w-[90%] max-w-sm shadow-2xl animate-in zoom-in-95 duration-300 relative"
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={() => setSelectedTopProduct(null)}
-                className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center rounded-[2px] hover:bg-stone-100 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center rounded-xl hover:bg-stone-100 transition-colors cursor-pointer"
               >
                 <X className="h-4 w-4 text-stone-500" />
               </button>
               <div className="flex flex-col items-center mt-2">
-                <div className="w-48 h-48 rounded-[2px] bg-stone-50 border border-stone-100/50 mb-6 overflow-hidden flex items-center justify-center p-2">
+                <div className="w-48 h-48 rounded-xl bg-stone-50 border border-stone-100/50 mb-6 overflow-hidden flex items-center justify-center p-2">
                   {selectedTopProduct.image ? (
                     <img
                       src={selectedTopProduct.image}
@@ -4997,15 +5254,15 @@ const AdminDashboardContent = () => {
                     <Package className="h-16 w-16 text-stone-300" />
                   )}
                 </div>
-                <h3 className="text-xl font-bold text-indigo-950 text-center leading-tight mb-2">
+                <h3 className="text-xl font-bold text-stone-900 text-center leading-tight mb-2">
                   {selectedTopProduct.label}
                 </h3>
-                <div className="flex items-center gap-6 mt-4 bg-stone-50 px-8 py-3.5 rounded-[2px] border border-stone-100">
+                <div className="flex items-center gap-6 mt-4 bg-stone-50 px-8 py-3.5 rounded-xl border border-stone-100">
                   <div className="text-center">
                     <span className="block text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-0.5">
                       Revenue
                     </span>
-                    <span className="font-black text-indigo-950">
+                    <span className="font-black text-stone-900">
                       {formatMoney(selectedTopProduct.val)}
                     </span>
                   </div>
@@ -5014,7 +5271,7 @@ const AdminDashboardContent = () => {
                     <span className="block text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-0.5">
                       Units Sold
                     </span>
-                    <span className="font-black text-indigo-950">
+                    <span className="font-black text-stone-900">
                       {selectedTopProduct.qty}
                     </span>
                   </div>
@@ -5024,7 +5281,7 @@ const AdminDashboardContent = () => {
           </div>
         )}
         <Dialog open={isOrderOpen} onOpenChange={setIsOrderOpen}>
-          <DialogContent className="sm:max-w-6xl rounded-[2px] p-0 overflow-hidden border-none shadow-[0_0_100px_rgba(0,0,0,0.4)] bg-stone-50/50 backdrop-blur-3xl ring-1 ring-white/10">
+          <DialogContent className="sm:max-w-6xl rounded-xl p-0 overflow-hidden border-none shadow-[0_0_100px_rgba(0,0,0,0.4)] bg-stone-50/50 backdrop-blur-3xl ring-1 ring-white/10">
             <DialogHeader className="sr-only">
               <DialogTitle>
                 Order Detail: {selectedOrder?.orderNumber || "Loading..."}
@@ -5035,7 +5292,7 @@ const AdminDashboardContent = () => {
             </DialogHeader>
             {detailLoading ? (
               <div className="h-[600px] flex items-center justify-center">
-                <div className="h-10 w-10 animate-spin rounded-[2px] border-4 border-stone-200 border-t-indigo-950" />
+                <div className="h-10 w-10 animate-spin rounded-xl border-4 border-stone-200 border-t-stone-900" />
               </div>
             ) : (
               selectedOrder && (
@@ -5051,7 +5308,7 @@ const AdminDashboardContent = () => {
                               "text-[9px] font-black uppercase tracking-[0.3em] px-4 py-1.5 border-none rounded-[2px] shadow-lg",
                               selectedOrder.status === "DELIVERED"
                                 ? "bg-emerald-500 text-white"
-                                : "bg-indigo-600 text-white",
+                                : "bg-pink-600 text-white",
                             )}
                           >
                             {selectedOrder.status}
@@ -5095,7 +5352,7 @@ const AdminDashboardContent = () => {
                             Settlement Quantum
                           </p>
                           <p className="text-5xl font-mono font-black text-white leading-none tracking-tighter flex items-start gap-2">
-                            <span className="text-2xl text-indigo-500 mt-1">
+                            <span className="text-2xl text-pink-500 mt-1">
                               &#8377;
                             </span>
                             {parseFloat(
@@ -5111,8 +5368,8 @@ const AdminDashboardContent = () => {
                     <div className="grid grid-cols-12 border-b border-stone-200">
                       <section className="col-span-12 lg:col-span-6 p-12 space-y-12">
                         <div>
-                          <h3 className="text-[10px] font-black text-indigo-950/40 uppercase tracking-[0.4em] mb-6 flex items-center gap-3">
-                            <span className="h-px w-6 bg-indigo-950/10" />
+                          <h3 className="text-[10px] font-black text-stone-900/40 uppercase tracking-[0.4em] mb-6 flex items-center gap-3">
+                            <span className="h-px w-6 bg-stone-900/10" />
                             Customer Identity & Destination Profile
                           </h3>
                           <div className="space-y-4">
@@ -5122,11 +5379,11 @@ const AdminDashboardContent = () => {
                                 Operational Identity
                               </h4>
                               <div className="flex items-center gap-5">
-                                <div className="h-14 w-14 rounded-[2px] bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-inner">
+                                <div className="h-14 w-14 rounded-xl bg-pink-50 border border-pink-100 flex items-center justify-center text-pink-600 shadow-inner">
                                   <User className="h-7 w-7" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-black text-indigo-950 truncate uppercase tracking-tight">
+                                  <p className="text-sm font-black text-stone-900 truncate uppercase tracking-tight">
                                     {selectedOrder.customer?.name ||
                                       "Anonymous Terminal"}
                                   </p>
@@ -5149,7 +5406,7 @@ const AdminDashboardContent = () => {
                               (selectedOrder.customer?.addresses &&
                                 selectedOrder.customer.addresses.length >
                                   0)) && (
-                              <div className="bg-indigo-950 p-6 rounded-[2px] text-white shadow-2xl shadow-indigo-950/20 relative overflow-hidden group border border-white/5">
+                              <div className="bg-stone-900 p-6 rounded-xl text-white shadow-2xl shadow-stone-900/20 relative overflow-hidden group border border-white/5">
                                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                                   <Navigation className="h-16 w-16 rotate-12" />
                                 </div>
@@ -5195,15 +5452,15 @@ const AdminDashboardContent = () => {
                         </div>
 
                         <div className="space-y-6">
-                          <h3 className="text-[10px] font-black text-indigo-950/40 uppercase tracking-[0.4em] mb-6 flex items-center gap-3">
-                            <span className="h-px w-6 bg-indigo-950/10" />
+                          <h3 className="text-[10px] font-black text-stone-900/40 uppercase tracking-[0.4em] mb-6 flex items-center gap-3">
+                            <span className="h-px w-6 bg-stone-900/10" />
                             Settlement Summary
                           </h3>
-                          <div className="p-8 bg-white rounded-[2px] border border-stone-200 shadow-sm hover:shadow-md transition-all space-y-5">
+                          <div className="p-8 bg-white rounded-xl border border-stone-200 shadow-sm hover:shadow-md transition-all space-y-5">
                             <div className="space-y-3 pb-5 border-b border-stone-50">
                               <div className="flex justify-between items-center text-[10px] font-bold text-stone-400 uppercase tracking-widest leading-none">
                                 <span>Transaction Subtotal</span>
-                                <span className="text-indigo-950 font-mono text-xs">
+                                <span className="text-stone-900 font-mono text-xs">
                                   &#8377;
                                   {parseFloat(
                                     selectedOrder.subtotal ||
@@ -5225,7 +5482,7 @@ const AdminDashboardContent = () => {
                               )}
 
                               {selectedOrder.rewardPointsUsed > 0 && (
-                                <div className="flex justify-between items-center text-[10px] font-black text-indigo-600 uppercase tracking-widest leading-none">
+                                <div className="flex justify-between items-center text-[10px] font-black text-pink-600 uppercase tracking-widest leading-none">
                                   <span>Loyalty Redemption</span>
                                   <span className="font-mono text-xs">
                                     - &#8377;
@@ -5240,12 +5497,12 @@ const AdminDashboardContent = () => {
                                 <p className="text-[8px] font-black text-stone-400 uppercase tracking-widest mb-1">
                                   Final Settlement
                                 </p>
-                                <p className="text-[10px] font-bold text-indigo-950 uppercase">
+                                <p className="text-[10px] font-bold text-stone-900 uppercase">
                                   Balance Paid
                                 </p>
                               </div>
                               <div className="text-right">
-                                <p className="text-2xl font-black text-indigo-950 tracking-tighter">
+                                <p className="text-2xl font-black text-stone-900 tracking-tighter">
                                   &#8377;
                                   {parseFloat(
                                     selectedOrder.totalAmount,
@@ -5259,8 +5516,8 @@ const AdminDashboardContent = () => {
 
                       <section className="col-span-12 lg:col-span-6 p-12 bg-white/40 backdrop-blur-3xl border-l border-stone-200 shadow-2xl relative z-10">
                         <div className="space-y-10">
-                          <h3 className="text-[11px] font-black text-indigo-950/40 uppercase tracking-[0.5em] mb-8 flex items-center gap-4">
-                            <span className="h-px w-10 bg-indigo-950/20" />
+                          <h3 className="text-[11px] font-black text-stone-900/40 uppercase tracking-[0.5em] mb-8 flex items-center gap-4">
+                            <span className="h-px w-10 bg-stone-900/20" />
                             Inventory Allocation Overview
                           </h3>
 
@@ -5268,9 +5525,9 @@ const AdminDashboardContent = () => {
                             {selectedOrder.items?.map((item, idx) => (
                               <div
                                 key={idx}
-                                className="flex gap-6 p-6 bg-white rounded-[2px] border border-stone-100 hover:border-[#d1408e]/30 transition-all duration-300 group shadow-sm hover:shadow-xl"
+                                className="flex gap-6 p-6 bg-white rounded-xl border border-stone-100 hover:border-[#d1408e]/30 transition-all duration-300 group shadow-sm hover:shadow-xl"
                               >
-                                <div className="h-28 w-28 bg-stone-50 rounded-[2px] border border-stone-100 overflow-hidden flex items-center justify-center relative p-3 shrink-0">
+                                <div className="h-28 w-28 bg-stone-50 rounded-xl border border-stone-100 overflow-hidden flex items-center justify-center relative p-3 shrink-0">
                                   {(() => {
                                     const fallbackProduct = (
                                       groupedProducts || []
@@ -5317,7 +5574,7 @@ const AdminDashboardContent = () => {
 
                                 <div className="flex-1 py-1 flex flex-col justify-between">
                                   <div className="space-y-1.5">
-                                    <h4 className="text-md font-black text-indigo-950 uppercase tracking-tight leading-tight group-hover:text-[#d1408e] transition-colors">
+                                    <h4 className="text-md font-black text-stone-900 uppercase tracking-tight leading-tight group-hover:text-[#d1408e] transition-colors">
                                       {item.name}
                                     </h4>
                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -5348,14 +5605,14 @@ const AdminDashboardContent = () => {
                                         return (
                                           <div className="flex items-center gap-2">
                                             {isLinked ? (
-                                              <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-[2px] ring-1 ring-emerald-500/20 animate-pulse">
+                                              <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-xl ring-1 ring-emerald-500/20 animate-pulse">
                                                 <ShieldCheck className="h-3 w-3" />
                                                 <span className="text-[9px] font-black uppercase tracking-widest">
                                                   Registry Verified
                                                 </span>
                                               </div>
                                             ) : (
-                                              <div className="flex items-center gap-1.5 px-3 py-1 bg-stone-50 text-stone-400 rounded-[2px] ring-1 ring-stone-500/10">
+                                              <div className="flex items-center gap-1.5 px-3 py-1 bg-stone-50 text-stone-400 rounded-xl ring-1 ring-stone-500/10">
                                                 <AlertCircle className="h-3 w-3" />
                                                 <span className="text-[9px] font-black uppercase tracking-widest">
                                                   Unverified Entry
@@ -5372,7 +5629,7 @@ const AdminDashboardContent = () => {
                                       <p className="text-[8px] font-bold text-stone-400 uppercase tracking-widest">
                                         Allocation Value
                                       </p>
-                                      <p className="text-xl font-black text-indigo-950 tracking-tighter">
+                                      <p className="text-xl font-black text-stone-900 tracking-tighter">
                                         &#8377;
                                         {parseFloat(
                                           item.unitPrice ||
@@ -5382,7 +5639,7 @@ const AdminDashboardContent = () => {
                                       </p>
                                     </div>
                                     <div className="text-right">
-                                      <p className="text-[14px] font-bold text-indigo-950 tracking-tight">
+                                      <p className="text-[14px] font-bold text-stone-900 tracking-tight">
                                         &#8377;
                                         {Number(
                                           (item.unitPrice || 0) *
@@ -5404,7 +5661,7 @@ const AdminDashboardContent = () => {
                     <Button
                       onClick={() => printThermalReceipt(selectedOrder)}
                       variant="outline"
-                      className="rounded-[2px] px-8 h-12 font-bold uppercase tracking-[0.2em] text-[10px] border-stone-200 text-indigo-950 hover:bg-indigo-50 transition-all gap-2.5 shadow-sm active:scale-95"
+                      className="rounded-xl px-8 h-12 font-bold uppercase tracking-[0.2em] text-[10px] border-stone-200 text-stone-900 hover:bg-pink-50 transition-all gap-2.5 shadow-sm active:scale-95"
                     >
                       <Printer className="h-4 w-4" /> Print Audit Dossier
                     </Button>
@@ -5428,6 +5685,7 @@ const AdminDashboardContent = () => {
                   network.
                 </DialogDescription>
               </DialogHeader>
+<<<<<<< HEAD
               <header className="p-10 bg-[#1e1e1e] text-white relative shrink-0">
                 <div className="absolute top-0 right-0 p-32 bg-gradient-to-br from-[#00d084]/10 to-transparent blur-3xl -mr-12 -mt-12" />
                 <Button
@@ -5441,6 +5699,12 @@ const AdminDashboardContent = () => {
                 </Button>
                 <div className="relative z-10 space-y-1">
                   <h2 className="text-4xl font-black uppercase tracking-tight leading-none text-white">
+=======
+              <header className="p-10 bg-stone-900 text-white relative overflow-hidden shrink-0">
+                <div className="absolute top-0 right-0 p-24 bg-gradient-to-br from-emerald-500/20 to-transparent blur-3xl rounded-xl -mr-12 -mt-12" />
+                <div className="relative z-10">
+                  <h2 className="text-3xl font-black uppercase tracking-tight leading-none">
+>>>>>>> e67f4f806b3fb832741548db118e8f7e24778808
                     Vendor Creation
                   </h2>
                   <p className="text-[#00d084] font-bold text-lg">
@@ -5453,8 +5717,13 @@ const AdminDashboardContent = () => {
                 <div className="space-y-6">
                   <div className="grid grid-cols-2 gap-x-8 gap-y-6">
                     <div className="space-y-2">
+<<<<<<< HEAD
                       <Label className="text-[11px] font-black text-black uppercase tracking-widest pl-1">
                         Vendor Name <span className="text-[#ff2b5e] ml-1">*</span>
+=======
+                      <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest">
+                        Vendor Name <span className="text-rose-500">*</span>
+>>>>>>> e67f4f806b3fb832741548db118e8f7e24778808
                       </Label>
                       <Input
                         value={newVendorData.businessName}
@@ -5465,12 +5734,21 @@ const AdminDashboardContent = () => {
                           })
                         }
                         required
+<<<<<<< HEAD
                         className="h-14 bg-white border border-stone-200 rounded-[12px] text-base px-4 focus-visible:ring-4 focus-visible:ring-stone-200 focus-visible:border-stone-400 outline-none shadow-sm transition-all"
                       />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[11px] font-black text-black uppercase tracking-widest pl-1">
                         Owner Name <span className="text-[#ff2b5e] ml-1">*</span>
+=======
+                        className="h-12 bg-stone-50 border-stone-100 rounded-xl"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest">
+                        Owner Name <span className="text-rose-500">*</span>
+>>>>>>> e67f4f806b3fb832741548db118e8f7e24778808
                       </Label>
                       <Input
                         value={newVendorData.ownerName}
@@ -5481,12 +5759,21 @@ const AdminDashboardContent = () => {
                           })
                         }
                         required
+<<<<<<< HEAD
                         className="h-14 bg-white border border-stone-200 rounded-[12px] text-base px-4 focus-visible:ring-4 focus-visible:ring-stone-200 focus-visible:border-stone-400 outline-none shadow-sm transition-all"
                       />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[11px] font-black text-black uppercase tracking-widest pl-1">
                         Contact Number <span className="text-[#ff2b5e] ml-1">*</span>
+=======
+                        className="h-12 bg-stone-50 border-stone-100 rounded-xl"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest">
+                        Contact Number <span className="text-rose-500">*</span>
+>>>>>>> e67f4f806b3fb832741548db118e8f7e24778808
                       </Label>
                       <Input
                         value={newVendorData.contactNumber}
@@ -5497,11 +5784,19 @@ const AdminDashboardContent = () => {
                           })
                         }
                         required
+<<<<<<< HEAD
                         className="h-14 bg-white border border-stone-200 rounded-[12px] text-base px-4 focus-visible:ring-4 focus-visible:ring-stone-200 focus-visible:border-stone-400 outline-none shadow-sm transition-all"
                       />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[11px] font-black text-black uppercase tracking-widest pl-1">
+=======
+                        className="h-12 bg-stone-50 border-stone-100 rounded-xl"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest">
+>>>>>>> e67f4f806b3fb832741548db118e8f7e24778808
                         Email Address
                       </Label>
                       <Input
@@ -5513,12 +5808,22 @@ const AdminDashboardContent = () => {
                             email: e.target.value,
                           })
                         }
+<<<<<<< HEAD
                         className="h-14 bg-white border border-stone-200 rounded-[12px] text-base px-4 focus-visible:ring-4 focus-visible:ring-stone-200 focus-visible:border-stone-400 outline-none shadow-sm transition-all"
                       />
                     </div>
                     <div className="col-span-2 space-y-2">
                       <Label className="text-[11px] font-black text-black uppercase tracking-widest pl-1">
                         Business Category <span className="text-[#ff2b5e] ml-1">*</span>
+=======
+                        className="h-12 bg-stone-50 border-stone-100 rounded-xl"
+                      />
+                    </div>
+                    <div className="col-span-2 space-y-2">
+                      <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest">
+                        Business Category{" "}
+                        <span className="text-rose-500">*</span>
+>>>>>>> e67f4f806b3fb832741548db118e8f7e24778808
                       </Label>
                       <Input
                         placeholder="e.g. Health & Beauty"
@@ -5530,12 +5835,21 @@ const AdminDashboardContent = () => {
                           })
                         }
                         required
+<<<<<<< HEAD
                         className="h-14 bg-white border border-stone-200 rounded-[12px] text-base px-4 focus-visible:ring-4 focus-visible:ring-stone-200 focus-visible:border-stone-400 outline-none shadow-sm transition-all placeholder:text-stone-400"
                       />
                     </div>
                     <div className="col-span-2 space-y-2">
                       <Label className="text-[11px] font-black text-black uppercase tracking-widest pl-1">
                         Store Address <span className="text-[#ff2b5e] ml-1">*</span>
+=======
+                        className="h-12 bg-stone-50 border-stone-100 rounded-xl"
+                      />
+                    </div>
+                    <div className="col-span-2 space-y-2">
+                      <Label className="text-[10px] font-black text-stone-900 uppercase tracking-widest">
+                        Store Address <span className="text-rose-500">*</span>
+>>>>>>> e67f4f806b3fb832741548db118e8f7e24778808
                       </Label>
                       <textarea
                         value={newVendorData.storeAddress}
@@ -5547,7 +5861,11 @@ const AdminDashboardContent = () => {
                         }
                         required
                         placeholder="e.g. 123 Main St, City, State, Zip"
+<<<<<<< HEAD
                         className="w-full min-h-[120px] p-4 bg-white border border-stone-200 rounded-[12px] text-base focus-visible:ring-4 focus-visible:ring-stone-200 focus-visible:border-stone-400 outline-none shadow-sm transition-all resize-y placeholder:text-stone-400"
+=======
+                        className="w-full min-h-[100px] p-4 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all resize-y"
+>>>>>>> e67f4f806b3fb832741548db118e8f7e24778808
                       />
                     </div>
                   </div>
@@ -5558,14 +5876,23 @@ const AdminDashboardContent = () => {
                 <button
                   type="button"
                   onClick={() => setIsAddVendorOpen(false)}
+<<<<<<< HEAD
                   className="font-black uppercase tracking-widest text-[11px] text-black hover:text-stone-600 transition-colors bg-transparent border-none outline-none"
+=======
+                  variant="ghost"
+                  className="rounded-xl px-8 h-12 font-black uppercase tracking-widest text-[10px]"
+>>>>>>> e67f4f806b3fb832741548db118e8f7e24778808
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
+<<<<<<< HEAD
                   className="bg-[#00a86b] text-white rounded-[12px] px-8 h-12 flex items-center font-black uppercase tracking-widest text-[11px] hover:bg-[#00925e] transition-colors outline-none"
+=======
+                  className="bg-emerald-600 text-white rounded-xl px-12 h-12 font-black uppercase tracking-widest text-[10px] shadow-xl hover:bg-emerald-700"
+>>>>>>> e67f4f806b3fb832741548db118e8f7e24778808
                 >
                   Issue Authority
                 </button>
@@ -5607,14 +5934,14 @@ const AdminDashboardContent = () => {
               <div className="grid grid-cols-2 gap-5">
                 {/* Image Upload Area */}
                 <div className="col-span-2">
-                  <Label className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-2 block ml-1 underline decoration-indigo-500/30 underline-offset-8">
+                  <Label className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-2 block ml-1 underline decoration-pink-500/30 underline-offset-8">
                     Product Image
                   </Label>
                   <div
                     onClick={() =>
                       document.getElementById("quick-image-input").click()
                     }
-                    className={`h-44 w-full border-2 border-dashed border-stone-200 ${THEME.borders.radius.lg} flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500 hover:bg-indigo-50/20 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-500 overflow-hidden group/img bg-stone-50/50`}
+                    className={`h-44 w-full border-2 border-dashed border-stone-200 ${THEME.borders.radius.lg} flex flex-col items-center justify-center cursor-pointer hover:border-pink-500 hover:bg-pink-50/20 hover:shadow-2xl hover:shadow-pink-500/10 transition-all duration-500 overflow-hidden group/img bg-stone-50/50`}
                   >
                     {quickAddImage ? (
                       <img
@@ -5637,7 +5964,7 @@ const AdminDashboardContent = () => {
                         <div
                           className={`h-12 w-12 ${THEME.borders.radius.md} bg-white flex items-center justify-center shadow-lg group-hover/img:scale-110 group-hover/img:rotate-12 transition-all duration-500 mx-auto`}
                         >
-                          <Camera className="h-6 w-6 text-stone-300 group-hover/img:text-indigo-600" />
+                          <Camera className="h-6 w-6 text-stone-300 group-hover/img:text-pink-600" />
                         </div>
                         <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest block">
                           Select Product Media
@@ -5662,7 +5989,7 @@ const AdminDashboardContent = () => {
                     <select
                       value={currentSlotEditing}
                       onChange={(e) => setCurrentSlotEditing(e.target.value)}
-                      className={`w-full h-11 bg-white/50 border border-stone-200 ${THEME.borders.radius.md} font-black text-indigo-950 px-5 focus-visible:ring-indigo-950 focus:outline-none transition-all shadow-sm text-xs appearance-none cursor-pointer`}
+                      className={`w-full h-11 bg-white/50 border border-stone-200 ${THEME.borders.radius.md} font-black text-stone-900 px-5 focus-visible:ring-stone-900 focus:outline-none transition-all shadow-sm text-xs appearance-none cursor-pointer`}
                     >
                       <option value="None">None (Standard Product)</option>
                       <option value="Deal 1">Deal 1 (Primary Deal)</option>
@@ -5685,7 +6012,7 @@ const AdminDashboardContent = () => {
                     onChange={(e) =>
                       setQuickAddData({ ...quickAddData, name: e.target.value })
                     }
-                    className={`h-11 bg-white/50 border-stone-200 ${THEME.borders.radius.md} font-black text-indigo-950 px-5 focus-visible:ring-indigo-950 transition-all shadow-sm text-xs`}
+                    className={`h-11 bg-white/50 border-stone-200 ${THEME.borders.radius.md} font-black text-stone-900 px-5 focus-visible:ring-stone-900 transition-all shadow-sm text-xs`}
                   />
                 </div>
 
@@ -5703,7 +6030,7 @@ const AdminDashboardContent = () => {
                         brand: e.target.value,
                       })
                     }
-                    className={`h-11 bg-white/50 border-stone-200 ${THEME.borders.radius.md} font-black text-indigo-950 px-5 focus-visible:ring-indigo-950 transition-all shadow-sm text-xs`}
+                    className={`h-11 bg-white/50 border-stone-200 ${THEME.borders.radius.md} font-black text-stone-900 px-5 focus-visible:ring-stone-900 transition-all shadow-sm text-xs`}
                   />
                 </div>
 
@@ -5721,7 +6048,7 @@ const AdminDashboardContent = () => {
                         categoryName: e.target.value,
                       })
                     }
-                    className={`h-11 bg-white/50 border-stone-200 ${THEME.borders.radius.md} font-black text-indigo-950 px-5 focus-visible:ring-indigo-950 transition-all shadow-sm text-xs`}
+                    className={`h-11 bg-white/50 border-stone-200 rounded-xl font-black text-stone-900 px-5 focus-visible:ring-pink-500 transition-all shadow-sm text-xs`}
                   />
                 </div>
 
@@ -5740,7 +6067,7 @@ const AdminDashboardContent = () => {
                         price: e.target.value,
                       })
                     }
-                    className={`h-11 bg-white/50 border-stone-200 ${THEME.borders.radius.md} font-black text-emerald-600 px-5 focus-visible:ring-emerald-500 transition-all shadow-sm text-xs`}
+                    className={`h-11 bg-white/50 border-stone-200 rounded-xl font-black text-pink-600 px-5 focus-visible:ring-pink-500 transition-all shadow-sm text-xs`}
                   />
                 </div>
 
@@ -5758,7 +6085,7 @@ const AdminDashboardContent = () => {
                         stock: e.target.value,
                       })
                     }
-                    className={`h-11 bg-stone-50 border-stone-200 ${THEME.borders.radius.md} font-black text-indigo-950 px-5 focus-visible:ring-indigo-950 transition-all shadow-sm text-xs`}
+                    className={`h-11 bg-stone-50 border-stone-200 rounded-xl font-black text-stone-900 px-5 focus-visible:ring-pink-500 transition-all shadow-sm text-xs`}
                   />
                 </div>
               </div>
@@ -5775,12 +6102,12 @@ const AdminDashboardContent = () => {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className={`h-11 px-10 bg-indigo-950 text-white font-black uppercase tracking-[0.2em] text-[9px] ${THEME.borders.radius.pill} ${THEME.shadows.lg} hover:bg-indigo-900 hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 flex items-center gap-2`}
+                  className={`h-11 px-10 bg-[#ff4fa3] text-white font-black uppercase tracking-[0.2em] text-[9px] rounded-xl shadow-xl shadow-pink-100 hover:bg-[#e0458f] hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 flex items-center gap-2`}
                 >
                   {loading ? (
-                    <Spinner className="h-3 w-3" />
+                    <div className="h-3 w-3 border-2 border-white border-t-transparent animate-spin rounded-full" />
                   ) : (
-                    <Plus className="h-4 w-4 text-indigo-300" />
+                    <Plus className="h-4 w-4 text-white" />
                   )}
                   Add Product
                 </Button>

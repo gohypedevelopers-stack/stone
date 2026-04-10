@@ -160,20 +160,20 @@ export const AdminCouponManager = () => {
                 <div className="h-10 w-10 rounded-[2px] bg-indigo-50 text-indigo-600 flex items-center justify-center">
                   <Plus className="h-5 w-5" />
                 </div>
-                Create New Coupon
+                Draft Voucher
               </CardTitle>
             </CardHeader>
             <CardContent className="px-6 pb-8 pt-2">
               <form onSubmit={handleCreate} className="space-y-6">
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <div className="flex items-center justify-between px-1">
-                    <Label className="text-xs font-bold text-stone-600">Coupon Code</Label>
+                    <Label className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Coupon Code</Label>
                     <button 
                       type="button" 
                       onClick={generateRandomCode}
-                      className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 transition-all flex items-center gap-1.5"
+                      className="text-[10px] font-black text-pink-600 hover:text-pink-700 transition-all flex items-center gap-1.5 uppercase tracking-widest"
                     >
-                      <RefreshCw className="h-3 w-3" /> Auto-Generate
+                      <RefreshCw className="h-3 w-3" /> Roll
                     </button>
                   </div>
                   <Input 
@@ -211,8 +211,8 @@ export const AdminCouponManager = () => {
                       </button>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-stone-600 px-1">Value</Label>
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black text-stone-400 uppercase tracking-widest px-1">Value</Label>
                     <Input 
                       type="number"
                       value={newCoupon.discountValue}
@@ -224,8 +224,8 @@ export const AdminCouponManager = () => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-stone-600 px-1">Min. Purchase Amount (₹)</Label>
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black text-stone-400 uppercase tracking-widest px-1">Min. Order Value (₹)</Label>
                   <Input 
                     type="number"
                     value={newCoupon.minPurchase}
@@ -235,8 +235,8 @@ export const AdminCouponManager = () => {
                   />
                 </div>
 
-                <div className="space-y-2 flex flex-col">
-                  <Label className="text-xs font-bold text-stone-600 px-1">Expiry Date</Label>
+                <div className="space-y-3 flex flex-col">
+                  <Label className="text-[10px] font-black text-stone-400 uppercase tracking-widest px-1">Voucher Expiry</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -246,11 +246,11 @@ export const AdminCouponManager = () => {
                           !newCoupon.expiresAt && "text-stone-400"
                         )}
                       >
-                        <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
+                        <CalendarIcon className="mr-3 h-4 w-4 opacity-50" />
                         {newCoupon.expiresAt ? (
                           format(new Date(newCoupon.expiresAt), "PPP")
                         ) : (
-                          <span>Pick a date</span>
+                          <span className="text-[11px] uppercase tracking-widest">Select Date</span>
                         )}
                       </Button>
                     </PopoverTrigger>
@@ -278,7 +278,7 @@ export const AdminCouponManager = () => {
                   {submitting ? (
                     <RefreshCw className="h-4 w-4 animate-spin" />
                   ) : (
-                    "Create Coupon"
+                    "Authorize Coupon"
                   )}
                 </Button>
               </form>
@@ -290,13 +290,13 @@ export const AdminCouponManager = () => {
         <div className="lg:col-span-8 space-y-6">
            <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2px] bg-white overflow-hidden">
               <Table>
-                <TableHeader className="bg-stone-50/50 border-b border-stone-100">
+                <TableHeader className="bg-stone-50/30 border-b border-stone-50">
                   <TableRow className="hover:bg-transparent border-none">
-                    <TableHead className="py-6 px-8 text-xs font-bold text-stone-500 uppercase tracking-wider">Coupon</TableHead>
-                    <TableHead className="py-6 px-4 text-xs font-bold text-stone-500 uppercase tracking-wider text-center">Value</TableHead>
-                    <TableHead className="py-6 px-4 text-xs font-bold text-stone-500 uppercase tracking-wider">Usage</TableHead>
-                    <TableHead className="py-6 px-4 text-xs font-bold text-stone-500 uppercase tracking-wider">Expiry</TableHead>
-                    <TableHead className="py-6 px-8 text-right"></TableHead>
+                    <TableHead className="py-7 px-8 text-[10px] font-black text-stone-400 uppercase tracking-widest">Master Key</TableHead>
+                    <TableHead className="py-7 px-4 text-[10px] font-black text-stone-400 uppercase tracking-widest text-center">Benefit</TableHead>
+                    <TableHead className="py-7 px-4 text-[10px] font-black text-stone-400 uppercase tracking-widest">Engagement</TableHead>
+                    <TableHead className="py-7 px-4 text-[10px] font-black text-stone-400 uppercase tracking-widest">Lifetime</TableHead>
+                    <TableHead className="py-7 px-8 text-right"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -317,12 +317,12 @@ export const AdminCouponManager = () => {
                     </TableRow>
                   ) : (
                     coupons.map((c) => (
-                      <TableRow key={c.id} className="border-stone-50 hover:bg-stone-50/50 transition-all group">
-                        <TableCell className="py-6 px-8">
+                      <TableRow key={c.id} className="border-stone-50 hover:bg-pink-50/20 transition-all group">
+                        <TableCell className="py-8 px-8">
                           <div className="space-y-1">
-                            <span className="text-sm font-bold text-stone-900 tracking-tight">{c.code}</span>
+                            <span className="text-[13px] font-black text-stone-900 tracking-wider uppercase">{c.code}</span>
                             <div className="flex items-center gap-2">
-                               <span className="text-[10px] font-bold text-stone-400">Min. ₹{c.minPurchase}</span>
+                               <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">Limit ₹{c.minPurchase}</span>
                             </div>
                           </div>
                         </TableCell>
@@ -331,11 +331,11 @@ export const AdminCouponManager = () => {
                             {c.discountType === 'PERCENTAGE' ? `${c.discountValue}%` : `₹${c.discountValue}`}
                           </span>
                         </TableCell>
-                        <TableCell className="py-6 px-4">
-                           <div className="space-y-2 w-32">
-                              <div className="flex justify-between text-[10px] font-bold text-stone-400">
-                                 <span>{c.usedCount} used</span>
-                                 <span>{c.maxUsage || '∞'} limit</span>
+                        <TableCell className="py-8 px-4">
+                           <div className="space-y-2.5 w-36">
+                              <div className="flex justify-between text-[9px] font-black text-stone-400 uppercase tracking-widest">
+                                 <span>{c.usedCount} Redeemed</span>
+                                 <span>{c.maxUsage || '∞'} Cap</span>
                               </div>
                               <div className="h-1.5 w-full bg-stone-100 rounded-[2px] overflow-hidden">
                                  <div 
@@ -345,13 +345,13 @@ export const AdminCouponManager = () => {
                               </div>
                            </div>
                         </TableCell>
-                        <TableCell className="py-6 px-4">
-                          <div className="flex items-center gap-2 text-xs font-bold text-stone-500">
+                        <TableCell className="py-8 px-4">
+                          <div className="flex items-center gap-2.5 text-[10px] font-bold text-stone-500 uppercase tracking-widest">
                             <Calendar className="h-3.5 w-3.5 text-stone-300" />
-                            {c.expiresAt ? new Date(c.expiresAt).toLocaleDateString() : 'No expiry'}
+                            {c.expiresAt ? new Date(c.expiresAt).toLocaleDateString() : 'Infinite'}
                           </div>
                         </TableCell>
-                        <TableCell className="py-6 px-8 text-right">
+                        <TableCell className="py-8 px-8 text-right">
                           <Button
                             onClick={() => handleDelete(c.id)}
                             variant="ghost"

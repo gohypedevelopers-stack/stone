@@ -209,9 +209,9 @@ export function VendorOfflineBilling() {
         <div className="h-20 w-20 bg-stone-100 text-stone-900 rounded-[2px] flex items-center justify-center mb-6">
           <CheckCircle2 className="h-10 w-10" />
         </div>
-        <h2 className="text-2xl font-bold text-stone-900 tracking-tight mb-2">Offline Bill Processed Successfully</h2>
-        <p className="text-stone-500 font-medium mb-8">
-          Bill Reference: <span className="font-bold text-stone-900 ml-1">OFF-{successBill.id.slice(0,8).toUpperCase()}</span>
+        <h2 className="text-3xl font-black text-stone-900 tracking-tight mb-3 uppercase">Order Authorized</h2>
+        <p className="text-[11px] font-black text-stone-400 uppercase tracking-[0.3em] mb-12">
+          Ref: <span className="text-pink-600 ml-1">OFF-{successBill.id.slice(0, 8).toUpperCase()}</span>
         </p>
         
         <div className="bg-white p-6 rounded-[2px] shadow-sm border border-stone-200 max-w-md w-full text-center space-y-4">
@@ -220,34 +220,44 @@ export function VendorOfflineBilling() {
              <span className="text-stone-500">Total Items</span>
              <span className="font-bold">{successBill.items?.reduce((a,b) => a + b.quantity, 0)}</span>
            </div>
-           {(successBill.customerName || successBill.customer?.name) && (
-             <div className="flex justify-between text-sm">
-               <span className="text-stone-500">Customer Name</span>
-               <span className="font-bold">{successBill.customerName || successBill.customer?.name}</span>
+           
+           <div className="space-y-4">
+             <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
+               <span className="text-stone-400">Inventory Nodes</span>
+               <span className="text-stone-900">{successBill.items?.reduce((a, b) => a + b.quantity, 0)} Units</span>
              </div>
-           )}
-           <div className="flex justify-between text-sm">
-             <span className="text-stone-500">Customer Mobile</span>
-             <span className="font-bold">{successBill.mobile}</span>
+             {(successBill.customerName || successBill.customer?.name) && (
+               <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
+                 <span className="text-stone-400">Member</span>
+                 <span className="text-stone-900">{successBill.customerName || successBill.customer?.name}</span>
+               </div>
+             )}
+             <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
+               <span className="text-stone-400">Terminal Link</span>
+               <span className="text-stone-900">{successBill.mobile}</span>
+             </div>
            </div>
-           <div className="flex justify-between text-lg pt-4 border-t border-stone-100 mt-4">
-             <span className="font-bold text-stone-900">Total Charged</span>
-             <span className="font-bold text-stone-900">&#8377;{Number(successBill.amount).toLocaleString('en-IN')}</span>
+
+           <div className="pt-8 border-t border-stone-50 mt-8 flex flex-col items-center">
+             <span className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-2">Total Yield</span>
+             <span className="text-4xl font-black text-stone-900 tracking-tighter">
+               &#8377;{Number(successBill.amount).toLocaleString('en-IN')}
+             </span>
            </div>
         </div>
 
-        <div className="flex items-center gap-4 mt-8">
+        <div className="flex items-center gap-5 mt-12">
           <Button 
             onClick={() => printThermalReceipt(successBill)} 
             className="bg-white text-stone-900 border border-stone-200 rounded-[2px] h-10 px-6 font-medium text-sm hover:bg-stone-50"
           >
-            <span className="flex items-center gap-2"><Printer className="h-4 w-4" /> Print Copy</span>
+            <span className="flex items-center gap-3"><Printer className="h-4 w-4" /> Print Receipt</span>
           </Button>
           <Button 
             onClick={() => setSuccessBill(null)} 
             className="bg-stone-900 text-white rounded-[2px] h-10 px-8 font-medium text-sm hover:bg-stone-800"
           >
-            New Transaction
+            New Session
           </Button>
         </div>
       </div>
@@ -255,13 +265,16 @@ export function VendorOfflineBilling() {
   }
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-12 animate-in fade-in duration-500">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 pt-4">
+    <div className="space-y-10 max-w-7xl mx-auto pb-12 animate-in fade-in duration-700">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-4 pt-4 px-2">
         <div>
-          <h1 className="text-3xl font-bold text-stone-900 tracking-tight flex items-center gap-3">
-             <CreditCard className="h-8 w-8 text-stone-700" /> POS / Offline Billing
+          <h1 className="text-2xl font-black text-stone-900 uppercase tracking-tight flex items-center gap-4">
+             <div className="h-11 w-11 rounded-xl bg-stone-900 flex items-center justify-center text-white shadow-xl shadow-stone-200">
+               <CreditCard className="h-5 w-5" />
+             </div>
+             Terminal Auth
           </h1>
-          <p className="text-stone-500 font-medium mt-2">Process secure in-store purchases and offline transactions for merchant partners.</p>
+          <p className="text-[11px] font-black text-stone-400 uppercase tracking-[0.2em] mt-3">Authorize secure in-store purchases and offline settlements.</p>
         </div>
       </header>
 
@@ -276,7 +289,7 @@ export function VendorOfflineBilling() {
             </SelectTrigger>
             <SelectContent className="rounded-[2px] border-stone-200">
               {vendors.map(v => (
-                <SelectItem key={v.id} value={v.id} className="cursor-pointer font-medium py-2 focus:bg-stone-50">
+                <SelectItem key={v.id} value={v.id} className="cursor-pointer font-black text-[11px] py-3 uppercase tracking-widest focus:bg-pink-50 focus:text-pink-600">
                   {v.businessName}
                 </SelectItem>
               ))}
@@ -296,7 +309,7 @@ export function VendorOfflineBilling() {
                 <span className="font-semibold text-sm text-stone-800 truncate">{selectedVendor.storeAddress || 'No physical address logged.'}</span>
               </>
             ) : (
-              <span className="text-stone-400 font-medium text-sm">Awaiting merchant selection...</span>
+              <span className="text-stone-400 font-black text-[10px] uppercase tracking-widest">Awaiting merchant identification...</span>
             )}
           </div>
         </div>
@@ -310,14 +323,14 @@ export function VendorOfflineBilling() {
           <Card className="border border-stone-200 shadow-sm rounded-[2px] overflow-hidden bg-white h-[800px] flex flex-col">
             <CardHeader className="bg-stone-50 border-b border-stone-100 flex flex-row items-center justify-between pb-4">
               <div>
-                <CardTitle className="text-lg font-bold text-stone-900 tracking-tight flex items-center gap-2">
-                  <Store className="h-5 w-5 text-stone-500" /> Terminal Catalog
+                <CardTitle className="text-[11px] font-black text-stone-900 uppercase tracking-[0.25em] flex items-center gap-3">
+                  <Store className="h-4 w-4 text-pink-500" /> Catalog Registry
                 </CardTitle>
               </div>
-              <div className="relative w-72">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+              <div className="relative w-80">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
                 <Input 
-                  placeholder="Search products..." 
+                  placeholder="Filter by name or SKU..." 
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="pl-10 h-10 rounded-[2px] bg-white border border-stone-200 shadow-sm"
@@ -326,15 +339,15 @@ export function VendorOfflineBilling() {
             </CardHeader>
             <CardContent className="p-0 flex-1 overflow-hidden">
               <ScrollArea className="h-full">
-                <div className="p-6 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="p-8 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
                   {vendorProducts.length === 0 ? (
-                    <div className="col-span-full py-20 text-center text-stone-400 font-medium text-sm">
-                      No products found for this terminal.
+                    <div className="col-span-full py-32 text-center text-stone-300 font-black text-[10px] uppercase tracking-widest">
+                      Node catalog currently empty for this terminal.
                     </div>
                   ) : vendorProducts.map(p => (
                     <motion.div
                       layout
-                      initial={{ opacity: 0, scale: 0.95 }}
+                      initial={{ opacity: 0, scale: 0.98 }}
                       animate={{ opacity: 1, scale: 1 }}
                       key={p.id}
                       onClick={() => addToCart(p)}
@@ -347,10 +360,10 @@ export function VendorOfflineBilling() {
                       )}
                       <div className="aspect-square bg-white rounded-[2px] mb-3 overflow-hidden border border-stone-100 relative">
                         {p.imageUrls && p.imageUrls[0] ? (
-                          <img src={p.imageUrls[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                          <img src={p.imageUrls[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-stone-200">
-                             <Store className="h-8 w-8" />
+                             <Store className="h-10 w-10 stroke-[1]" />
                           </div>
                         )}
                         <div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/5 flex items-center justify-center transition-colors">
@@ -358,9 +371,9 @@ export function VendorOfflineBilling() {
                         </div>
                       </div>
                       <div className="flex flex-col flex-1">
-                        <h4 className="font-semibold text-sm text-stone-800 line-clamp-2 leading-tight">{p.name}</h4>
-                        <div className="mt-auto pt-2 flex items-center justify-between gap-1">
-                          <span className="font-bold text-stone-900 block text-base">&#8377;{Number(p.discountPrice || p.price).toLocaleString('en-IN')}</span>
+                        <h4 className="font-black text-[12px] text-stone-900 line-clamp-2 leading-tight uppercase tracking-tight h-10">{p.name}</h4>
+                        <div className="mt-auto pt-4 flex flex-col gap-2">
+                          <span className="font-black text-stone-950 block text-lg tracking-tighter">&#8377;{Number(p.discountPrice || p.price).toLocaleString('en-IN')}</span>
                           {calcPoints(Number(p.discountPrice || p.price)) > 0 && (
                             <span className="flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200/60 rounded-[2px] px-2 py-0.5 text-[10px] font-bold whitespace-nowrap">
                               <Coins className="h-3 w-3" />
@@ -389,25 +402,25 @@ export function VendorOfflineBilling() {
               </CardTitle>
             </CardHeader>
             
-            <CardContent className="p-0 flex-1 flex flex-col overflow-hidden relative bg-stone-50/50">
-              <div className="flex-1 overflow-y-auto max-h-[340px] px-5">
+            <CardContent className="p-0 flex-1 flex flex-col overflow-hidden relative">
+              <div className="flex-1 overflow-y-auto px-6 pt-6">
                 <AnimatePresence>
                   {cart.length === 0 ? (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-20 text-center text-stone-400 font-medium">
-                      Register is currently empty.
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-32 text-center text-stone-300 font-black text-[10px] uppercase tracking-widest">
+                      Terminal register idle.
                     </motion.div>
                   ) : (
-                    <div className="space-y-3 py-4 pb-6">
-                      {cart.map((item, idx) => (
+                    <div className="space-y-4 pb-8">
+                      {cart.map((item) => (
                         <motion.div
                           layout
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95 }}
                           key={item.id}
                           className="flex flex-col gap-3 bg-white p-3.5 rounded-[2px] border border-stone-200 shadow-sm"
                         >
-                          <div className="flex items-start gap-3">
+                          <div className="flex items-start gap-4">
                             {item.imageUrls && item.imageUrls[0] ? (
                               <div className="h-12 w-12 rounded-[2px] border border-stone-100 overflow-hidden shrink-0 bg-stone-50">
                                 <img src={item.imageUrls[0]} alt={item.name} className="h-full w-full object-cover" />
@@ -418,10 +431,10 @@ export function VendorOfflineBilling() {
                               </div>
                             )}
                             <div className="flex-1">
-                              <h5 className="font-semibold text-sm text-stone-900 leading-snug line-clamp-2 pr-1">{item.name}</h5>
-                              <span className="font-medium text-stone-500 text-[11px] mt-0.5 block">&#8377;{Number(item.unitPrice).toLocaleString()} / unit</span>
+                              <h5 className="font-black text-[11px] text-stone-900 leading-tight uppercase tracking-tight">{item.name}</h5>
+                              <span className="font-black text-stone-400 text-[9px] mt-2 block uppercase tracking-widest">&#8377;{Number(item.unitPrice).toLocaleString()} / UNIT</span>
                             </div>
-                            <button onClick={() => removeFromCart(item.id)} className="text-stone-300 hover:text-rose-500 transition-colors p-1 shrink-0 -mt-0.5 -mr-1">
+                            <button onClick={() => removeFromCart(item.id)} className="text-stone-200 hover:text-pink-600 transition-colors p-1 shrink-0 -mt-1 -mr-1">
                               <Trash2 className="h-4 w-4" />
                             </button>
                           </div>
@@ -437,12 +450,12 @@ export function VendorOfflineBilling() {
                               </Button>
                             </div>
                             <div className="text-right">
-                              <span className="font-bold text-stone-900 text-sm">&#8377;{(Number(item.unitPrice) * item.quantity).toLocaleString()}</span>
+                              <span className="font-black text-stone-950 text-sm tracking-tight">&#8377;{(Number(item.unitPrice) * item.quantity).toLocaleString()}</span>
                               {calcPoints(Number(item.unitPrice) * item.quantity) > 0 && (
-                                <span className="flex items-center justify-end gap-0.5 text-amber-600 text-[10px] font-bold mt-0.5">
+                                <div className="flex items-center justify-end gap-1 text-pink-600 text-[9px] font-black mt-1 uppercase tracking-widest">
                                   <Coins className="h-2.5 w-2.5" />
-                                  +{calcPoints(Number(item.unitPrice) * item.quantity)} pts
-                                </span>
+                                  +{calcPoints(Number(item.unitPrice) * item.quantity)}
+                                </div>
                               )}
                             </div>
                           </div>
@@ -454,48 +467,47 @@ export function VendorOfflineBilling() {
               </div>
 
               {/* Ledger Footer */}
-              <div className="bg-white p-6 border-t border-stone-200 z-10 flex flex-col gap-5 shrink-0 mt-auto">
-                <div className="space-y-3">
-                   <div className="flex justify-between text-sm">
-                     <span className="font-semibold text-stone-500">Subtotal</span>
-                     <span className="font-bold text-stone-900">&#8377;{subtotal.toLocaleString('en-IN')}</span>
+              <div className="bg-stone-50/30 p-8 border-t border-stone-100 z-10 flex flex-col gap-6 shrink-0">
+                <div className="space-y-4">
+                   <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+                     <span className="text-stone-400">Inventory Subtotal</span>
+                     <span className="text-stone-900">&#8377;{subtotal.toLocaleString('en-IN')}</span>
                    </div>
-                   <div className="flex justify-between text-sm">
-                     <span className="font-semibold text-stone-500">Tax</span>
-                     <span className="font-bold text-stone-900">&#8377;{tax.toLocaleString('en-IN')}</span>
+                   <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+                     <span className="text-stone-400">Terminal Tax (Inclusive)</span>
+                     <span className="text-stone-900">&#8377;{tax.toLocaleString('en-IN')}</span>
                    </div>
                    {calcPoints(subtotal) > 0 && (
-                     <div className="flex justify-between items-center text-sm bg-amber-50/70 -mx-6 px-6 py-2.5 border-y border-amber-100">
-                       <span className="font-semibold text-amber-700 flex items-center gap-1.5">
-                         <Coins className="h-3.5 w-3.5" /> Reward Points
+                     <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.2em] bg-pink-50 -mx-8 px-8 py-3 border-y border-pink-100/50">
+                       <span className="text-pink-600 flex items-center gap-2">
+                         <Coins className="h-4 w-4" /> Points Accrued
                        </span>
-                       <span className="font-bold text-amber-700 flex items-center gap-1">
-                         +{calcPoints(subtotal)} pts
+                       <span className="text-pink-600">
+                         +{calcPoints(subtotal)} PTS
                        </span>
                      </div>
                    )}
-                   <Separator className="bg-stone-200" />
-                   <div className="flex justify-between items-end pt-1">
-                     <span className="font-semibold uppercase tracking-wide text-xs text-stone-500 pb-1">Total Net</span>
-                     <span className="font-bold text-2xl text-stone-900 leading-none">&#8377;{total.toLocaleString('en-IN')}</span>
+                   <div className="flex justify-between items-end pt-2">
+                     <span className="font-black uppercase tracking-[0.3em] text-[11px] text-stone-400 pb-1">Total Yield</span>
+                     <span className="font-black text-3xl text-stone-950 tracking-tighter leading-none">&#8377;{total.toLocaleString('en-IN')}</span>
                    </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="space-y-1.5 flex-1">
-                      <Label className="text-xs font-semibold text-stone-600">Customer Name</Label>
+                <div className="space-y-5">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">Member Name</Label>
                       <Input 
-                        placeholder="e.g. Aditi..." 
+                        placeholder="IDENTIFY..." 
                         value={customerName}
                         onChange={e => setCustomerName(e.target.value)}
                         className="h-10 border-stone-200 rounded-[2px] focus-visible:ring-stone-900 px-3"
                       />
                     </div>
-                    <div className="space-y-1.5 flex-1">
-                      <Label className="text-xs font-semibold text-stone-600">Mobile No <span className="text-rose-500">*</span></Label>
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">Terminal Link <span className="text-pink-500">*</span></Label>
                       <Input 
-                        placeholder="e.g. 987654..." 
+                        placeholder="MOBILE..." 
                         value={customerMobile}
                         onChange={e => setCustomerMobile(e.target.value)}
                         className="h-10 border-stone-200 rounded-[2px] focus-visible:ring-stone-900 px-3"
@@ -515,6 +527,20 @@ export function VendorOfflineBilling() {
                       )}
                     </div>
                   </div>
+                  
+                  {lookedUpCustomer && (
+                    <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 bg-stone-900 rounded-xl p-4 shadow-xl">
+                      <div className="flex-1">
+                        <p className="text-[10px] font-black text-white uppercase tracking-widest">{lookedUpCustomer.name}</p>
+                        <p className="text-[8px] text-stone-500 font-black uppercase tracking-widest mt-1">Verified Member node</p>
+                      </div>
+                      <div className="flex items-center gap-2 bg-white/10 rounded-[1px] px-3 py-1.5 border border-white/5">
+                        <Coins className="h-3.5 w-3.5 text-pink-500" />
+                        <span className="text-xs font-black text-white">{lookedUpCustomer.rewardPoints}</span>
+                      </div>
+                    </motion.div>
+                  )}
+
                   <Button 
                     className="w-full h-12 rounded-[2px] bg-stone-900 hover:bg-stone-800 text-white font-semibold shadow-none disabled:opacity-50 transition-colors shrink-0 mt-2"
                     disabled={cart.length === 0 || !customerMobile || isSubmitting}
@@ -523,7 +549,7 @@ export function VendorOfflineBilling() {
                     {isSubmitting ? (
                       <span className="flex items-center gap-2"><div className="h-4 w-4 border-2 border-white border-t-transparent animate-spin rounded-[2px]"></div> Processing</span>
                     ) : (
-                      <span className="flex items-center gap-2 text-white">Complete Transaction <CheckCircle2 className="h-4 w-4 ml-1" /></span>
+                      <span className="flex items-center gap-3">Authorize Session <CheckCircle2 className="h-4 w-4 group-hover:translate-x-1 transition-transform" /></span>
                     )}
                   </Button>
                 </div>

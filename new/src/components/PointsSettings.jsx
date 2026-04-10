@@ -118,7 +118,7 @@ export const PointsSettings = () => {
             className="bg-indigo-950 text-white rounded-[2px] h-11 px-8 font-bold text-xs flex items-center gap-2.5 shadow-xl shadow-indigo-950/20 hover:bg-[#1a0b2e] transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:hover:scale-100"
           >
             <Save className="h-3.5 w-3.5" />
-            {saving ? "Saving..." : "Save Changes"}
+            {saving ? "Deploying..." : "Commit Changes"}
           </Button>
         </div>
       </header>
@@ -126,9 +126,9 @@ export const PointsSettings = () => {
       {/* Live Rate Banner */}
       <div className="relative rounded-[2px] overflow-hidden">
         {/* Animated gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-r from-indigo-950 via-violet-900 to-indigo-950 bg-[length:200%_100%]" 
-          style={{ animation: "shimmer 8s ease-in-out infinite" }} 
-        />
+        <div className="absolute inset-0 bg-stone-900" />
+        <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 via-transparent to-purple-500/20" />
+        
         {/* Noise texture overlay */}
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E\")" }} />
         {/* Decorative circles */}
@@ -178,8 +178,8 @@ export const PointsSettings = () => {
                 <Gift className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h3 className="text-[15px] font-black text-indigo-950 tracking-tight">Points to Award</h3>
-                <p className="text-[11px] text-stone-400 font-medium">How many points per threshold</p>
+                <h3 className="text-[16px] font-black text-stone-900 tracking-tight">Reward Quota</h3>
+                <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest mt-0.5">Points per currency node</p>
               </div>
             </div>
 
@@ -212,15 +212,15 @@ export const PointsSettings = () => {
             </div>
 
             {/* Quick presets */}
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-3">
               {[1, 2, 5, 10].map((val) => (
                 <button
                   key={val}
                   onClick={() => setPointsPerAmount(val)}
                   className={`py-2.5 rounded-[2px] text-xs font-bold transition-all duration-200 ${
                     pointsPerAmount === val
-                      ? "bg-indigo-950 text-white shadow-lg shadow-indigo-950/25 scale-[1.02]"
-                      : "bg-stone-100/80 text-stone-500 hover:bg-stone-200/80 hover:text-stone-700"
+                      ? "bg-stone-900 text-white shadow-xl shadow-stone-200"
+                      : "bg-stone-50 text-stone-400 hover:bg-stone-100 hover:text-stone-900"
                   }`}
                 >
                   {val} pt{val !== 1 ? "s" : ""}
@@ -238,8 +238,8 @@ export const PointsSettings = () => {
                 <Zap className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h3 className="text-[15px] font-black text-indigo-950 tracking-tight">Spend Threshold</h3>
-                <p className="text-[11px] text-stone-400 font-medium">Amount (₹) required to earn points</p>
+                <h3 className="text-[16px] font-black text-stone-900 tracking-tight">Spend Milestone</h3>
+                <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest mt-0.5">Currency required for points earn</p>
               </div>
             </div>
 
@@ -273,15 +273,15 @@ export const PointsSettings = () => {
             </div>
 
             {/* Quick presets */}
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-3">
               {[50, 100, 200, 500].map((val) => (
                 <button
                   key={val}
                   onClick={() => setAmountThreshold(val)}
                   className={`py-2.5 rounded-[2px] text-xs font-bold transition-all duration-200 ${
                     amountThreshold === val
-                      ? "bg-indigo-950 text-white shadow-lg shadow-indigo-950/25 scale-[1.02]"
-                      : "bg-stone-100/80 text-stone-500 hover:bg-stone-200/80 hover:text-stone-700"
+                      ? "bg-stone-900 text-white shadow-xl shadow-stone-200"
+                      : "bg-stone-50 text-stone-400 hover:bg-stone-100 hover:text-stone-900"
                   }`}
                 >
                   ₹{val}
@@ -298,19 +298,18 @@ export const PointsSettings = () => {
           <Info className="h-4 w-4 text-indigo-600" />
           <h4 className="text-xs font-black text-indigo-950 uppercase tracking-wider">How It Works</h4>
         </div>
-        <div className="flex items-center gap-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { icon: "🛒", label: "Customer makes a purchase", color: "bg-blue-50 border-blue-100" },
-            { icon: "⚡", label: `Every ₹${amountThreshold} spent`, color: "bg-amber-50 border-amber-100" },
-            { icon: "🎁", label: `Earns ${pointsPerAmount} reward point${pointsPerAmount !== 1 ? "s" : ""}`, color: "bg-emerald-50 border-emerald-100" },
-            { icon: "💰", label: "Points redeemable at checkout", color: "bg-purple-50 border-purple-100" },
+            { icon: "🛒", label: "Member creates order", color: "bg-stone-50 border-stone-100" },
+            { icon: "⚡", label: `Per ₹${amountThreshold} investment`, color: "bg-pink-50/50 border-pink-100/50" },
+            { icon: "🎁", label: `Earns ${pointsPerAmount} reward node${pointsPerAmount !== 1 ? "s" : ""}`, color: "bg-purple-50/50 border-purple-100/50" },
+            { icon: "💰", label: "Redeemable at checkout", color: "bg-amber-50/50 border-amber-100/50" },
           ].map((step, i) => (
             <div key={i} className="flex items-center flex-1">
               <div className={`flex items-center gap-2.5 ${step.color} border rounded-[2px] px-4 py-3 flex-1`}>
                 <span className="text-lg">{step.icon}</span>
                 <span className="text-[11px] font-semibold text-stone-600 leading-tight">{step.label}</span>
               </div>
-              {i < 3 && <ArrowRight className="h-3.5 w-3.5 text-stone-300 mx-2 shrink-0" />}
             </div>
           ))}
         </div>
@@ -325,8 +324,8 @@ export const PointsSettings = () => {
                 <Sparkles className="h-4 w-4 text-white" />
               </div>
               <div>
-                <CardTitle className="text-sm font-black text-indigo-950">Earnings Simulator</CardTitle>
-                <CardDescription className="text-[11px] text-stone-400 mt-0.5">Preview points at different purchase amounts</CardDescription>
+                <CardTitle className="text-sm font-black text-stone-900 uppercase tracking-tight">Earnings Analytics Preview</CardTitle>
+                <CardDescription className="text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em] mt-1">Cross-check rewards across purchase tiers</CardDescription>
               </div>
             </div>
             <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold text-[10px] rounded-[2px] px-3 py-1 border">
