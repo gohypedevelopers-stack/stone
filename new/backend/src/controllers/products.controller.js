@@ -237,7 +237,7 @@ export const createProduct = async (req, res) => {
         benefits: benefits || null,
         faq: faq || null,
         specialOfferType: specialOfferType || null,
-        linkedProductId: linkedProductId || null,
+        linkedProduct: linkedProductId ? { connect: { id: linkedProductId } } : undefined,
       },
       include: {
         vendor: true,
@@ -345,7 +345,7 @@ export const updateProduct = async (req, res) => {
       whyWeLoveIt,
       faq,
       specialOfferType,
-      linkedProductId: linkedProductId !== undefined ? (linkedProductId || null) : undefined,
+      linkedProduct: linkedProductId !== undefined ? (linkedProductId ? { connect: { id: linkedProductId } } : { disconnect: true }) : undefined,
     };
 
     // Remove undefined values

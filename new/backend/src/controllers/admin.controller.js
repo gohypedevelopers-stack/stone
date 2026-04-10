@@ -300,6 +300,32 @@ export const getAdminVendors = async (req, res) => {
   }
 };
 
+export const resetVendorPassword = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { newPassword } = req.body;
+
+    if (!newPassword) {
+      return sendError(res, "New password is required", 400);
+    }
+
+    const bcrypt = await import("bcryptjs");
+    const hashedPassword = await bcrypt.default.hash(newPassword, 10);
+
+    const vendor = await prisma.vendor.update({
+      where: { id },
+      data: { password: hashedPassword },
+    });
+
+    const vendorData = { ...vendor };
+    delete vendorData.password;
+
+    return sendSuccess(res, vendorData, "Vendor password reset successfully");
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
 export const approveVendor = async (req, res) => {
   try {
     const { id } = req.params;
@@ -595,22 +621,13 @@ export const getAdminOrderDetail = async (req, res) => {
         }
       }
 
-      // Normalize offline purchase to look like an order for the frontend
-      const normalized = {
-        ...purchase,
-        orderNumber: `OFF-${purchase.id.slice(0, 8).toUpperCase()}`,
-        totalAmount: purchase.amount,
-        createdAt: purchase.purchaseDate,
-        status: 'COMPLETED',
-        type: 'Offline'
-      };
-      
-      return sendSuccess(res, normalized, "Offline purchase details fetched");
+      return sendSuccess(res, purchase, "Offline purchase details fetched");
     }
   } catch (error) {
     return sendError(res, error.message, 500);
   }
 };
+
 
 export const seedFrontendProducts = async (req, res) => {
     try {

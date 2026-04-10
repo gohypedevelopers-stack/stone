@@ -31,6 +31,7 @@ import AccountPage from "./AccountPage.jsx";
 import RewardsPage from "./RewardsPage.jsx";
 import WishlistPage from "./WishlistPage.jsx";
 import VendorDashboard from "./pages/VendorDashboard.jsx";
+import VendorLogin from "./pages/VendorLogin.jsx";
 import { useProducts } from "@/context/ProductContext";
 import { useAuth } from "@/context/AuthContext";
 import AuthModal from "./components/AuthModal";
@@ -334,6 +335,7 @@ export default function App() {
       {/* Main Content Area */}
       <Routes>
         <Route path="/vendor-dashboard" element={<VendorDashboard />} />
+        <Route path="/vendor-login" element={<VendorLogin />} />
         <Route
           path="/"
           element={

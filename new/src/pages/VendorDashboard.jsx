@@ -5,7 +5,7 @@ import {
   Bell, ChevronDown, ChevronRight, TrendingUp, TrendingDown, MoreVertical,
   Plus, Minus, Trash2, Printer, Check, AlertTriangle, BarChart3, History,
   Eye, X, Clock, CheckCircle2, Truck, MapPin, RefreshCw, Edit3, ArrowRight,
-  IndianRupee, Users, Store, Receipt, Box, Filter, ChevronUp
+  IndianRupee, Users, Store, Receipt, Box, Filter, ChevronUp, LogOut
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { printThermalReceipt } from "@/utils/printReceipt";
 import { API_URL, SERVER_URL } from "@/utils/api";
+import VendorLogin from "./VendorLogin";
 
 // ─── Constants ─────────────────────────────────────────────────────────
 const BRAND_PURPLE = "#9a6bff";
@@ -56,10 +57,20 @@ export default function VendorDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
-  // Data
-  const [vendors, setVendors] = useState([]);
-  const [currentVendor, setCurrentVendor] = useState(null);
+  // Authentication
+  const [currentVendor, setCurrentVendor] = useState(() => {
+    const saved = localStorage.getItem("vendorUser");
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  useEffect(() => {
+    if (!currentVendor) {
+      navigate("/vendor-login");
+    }
+  }, [currentVendor, navigate]);
+
   const [vendorProducts, setVendorProducts] = useState([]);
   const [vendorOrders, setVendorOrders] = useState([]);
   const [offlinePurchases, setOfflinePurchases] = useState([]);
@@ -85,23 +96,37 @@ export default function VendorDashboard() {
   const [editingStock, setEditingStock] = useState(null);
   const [newStockValue, setNewStockValue] = useState("");
 
-  // ─── Data Fetching ─────────────────────────────────────────────────
+  const profileRef = useRef(null);
+
+  // Close dropdown on click outside
   useEffect(() => {
-    fetchVendors();
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const fetchVendors = async () => {
-    try {
-      const res = await fetch(`${API_URL}/admin/vendors`);
-      const data = await res.json();
-      if (data.success && data.data.length > 0) {
-        setVendors(data.data);
-        setCurrentVendor(data.data[0]);
-      }
-    } catch (err) {
-      console.error("Failed to fetch vendors:", err);
+  // ─── Data Fetching ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (currentVendor?.id) {
+      // Re-fetch profile to ensure session is valid and status is correct
+      fetch(`${API_URL}/vendors/auth/profile?vendorId=${currentVendor.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setCurrentVendor(data.data);
+            localStorage.setItem("vendorUser", JSON.stringify(data.data));
+          } else {
+            localStorage.removeItem("vendorUser");
+            setCurrentVendor(null);
+          }
+        })
+        .catch(() => {});
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (!currentVendor) return;
@@ -390,6 +415,8 @@ export default function VendorDashboard() {
   // RENDER
   // ═══════════════════════════════════════════════════════════════════════
 
+  if (!currentVendor) return <VendorLogin />;
+
   return (
     <div className="flex h-screen bg-[#f5f5f7] font-['Inter',sans-serif]">
       {/* ─── Sidebar ─── */}
@@ -465,20 +492,6 @@ export default function VendorDashboard() {
             <h1 className="text-xl font-black text-[#151515] tracking-tight">
               {currentVendor ? `Welcome, ${currentVendor.ownerName || currentVendor.businessName}` : "Vendor Dashboard"}
             </h1>
-            {vendors.length > 1 && (
-              <select
-                className="border border-gray-200 rounded-[2px] text-sm py-1.5 px-3 bg-gray-50 focus:ring-2 focus:ring-[#9a6bff] outline-none font-medium"
-                value={currentVendor?.id || ""}
-                onChange={(e) => {
-                  const v = vendors.find((x) => x.id === e.target.value);
-                  if (v) handleVendorChange(v);
-                }}
-              >
-                {vendors.map((v) => (
-                  <option key={v.id} value={v.id}>{v.businessName}</option>
-                ))}
-              </select>
-            )}
           </div>
           <div className="flex items-center gap-4">
             <button
@@ -493,14 +506,57 @@ export default function VendorDashboard() {
                 </span>
               )}
             </button>
-            <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
-              <div className="w-8 h-8 rounded-[2px] bg-gradient-to-tr from-[#9a6bff] to-purple-300 flex items-center justify-center text-white font-black text-sm">
-                {currentVendor?.businessName?.charAt(0) || "V"}
-              </div>
-              <div className="text-sm hidden sm:block">
-                <p className="font-bold text-[#151515] leading-tight">{currentVendor?.ownerName || currentVendor?.businessName || "Vendor"}</p>
-                <p className="text-gray-400 text-xs font-medium">{currentVendor?.businessCategory || "Vendor"}</p>
-              </div>
+            <div className="relative" ref={profileRef}>
+              <button
+                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                className="flex items-center gap-3 pl-4 border-l border-gray-200 hover:bg-gray-50 py-1 transition-colors rounded-[2px]"
+              >
+                <div className="w-8 h-8 rounded-[2px] bg-gradient-to-tr from-[#9a6bff] to-purple-300 flex items-center justify-center text-white font-black text-sm">
+                  {currentVendor?.businessName?.charAt(0) || "V"}
+                </div>
+                <div className="text-sm hidden sm:block text-left">
+                  <p className="font-bold text-[#151515] leading-tight flex items-center gap-1.5">
+                    {currentVendor?.ownerName || currentVendor?.businessName || "Vendor"}
+                    <ChevronDown className={`h-3 w-3 text-gray-400 transition-transform ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
+                  </p>
+                  <p className="text-gray-400 text-xs font-medium">{currentVendor?.businessCategory || "Vendor"}</p>
+                </div>
+              </button>
+
+              {/* Profile Dropdown Menu */}
+              {isProfileDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-[2px] shadow-xl z-20 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="p-4 border-b border-gray-50 bg-gray-50/50">
+                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Store Authority</p>
+                    <p className="text-sm font-bold text-[#151515] truncate">{currentVendor?.businessName}</p>
+                  </div>
+                  <div className="p-1">
+                    <button
+                      onClick={() => { setActiveTab("settings"); setIsProfileDropdownOpen(false); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-bold text-gray-600 hover:text-[#9a6bff] hover:bg-purple-50 transition-colors rounded-[2px]"
+                    >
+                      <Store className="h-4 w-4" /> Store Profile
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab("settings"); setIsProfileDropdownOpen(false); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-bold text-gray-600 hover:text-[#9a6bff] hover:bg-purple-50 transition-colors rounded-[2px]"
+                    >
+                      <Settings className="h-4 w-4" /> Account Settings
+                    </button>
+                  </div>
+                  <div className="p-1 border-t border-gray-50">
+                    <button
+                      onClick={() => {
+                        localStorage.removeItem("vendorUser");
+                        navigate("/vendor-login");
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-bold text-rose-500 hover:bg-rose-50 transition-colors rounded-[2px]"
+                    >
+                      <LogOut className="h-4 w-4" /> Logout Session
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

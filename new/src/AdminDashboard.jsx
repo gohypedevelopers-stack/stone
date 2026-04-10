@@ -51,6 +51,8 @@ import {
   User,
   Info,
   Zap,
+  Key,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import AdminLogin from "./AdminLogin";
@@ -141,6 +143,31 @@ const AdminDashboardContent = () => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const handleResetVendorPassword = async (e) => {
+    e.preventDefault();
+    if (!resetPasswordVendor || !newVendorPassword) return;
+    setLoading(true);
+    try {
+      const resp = await fetch(`${API_URL}/admin/vendors/${resetPasswordVendor.id}/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newPassword: newVendorPassword }),
+      });
+      const data = await resp.json();
+      if (data.success) {
+        toast.success(`Password for ${resetPasswordVendor.businessName} updated.`);
+        setResetPasswordVendor(null);
+        setNewVendorPassword("");
+      } else {
+        toast.error(data.message || "Failed to reset password.");
+      }
+    } catch (err) {
+      toast.error("Server connection failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const location = useLocation();
   const navigate = useNavigate();
   const pathPart = location.pathname.split("/").filter(Boolean).pop();
@@ -173,6 +200,8 @@ const AdminDashboardContent = () => {
   const [currentSlotEditing, setCurrentSlotEditing] = useState(null); // 'Deal 1' or 'Deal 2'
   const [slotSearchQuery, setSlotSearchQuery] = useState("");
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const [resetPasswordVendor, setResetPasswordVendor] = useState(null);
+  const [newVendorPassword, setNewVendorPassword] = useState("");
   const [quickAddData, setQuickAddData] = useState({
     name: "",
     brand: "",
@@ -2564,6 +2593,15 @@ const AdminDashboardContent = () => {
                             </TableCell>
                             <TableCell className="p-6 text-right">
                               <div className="flex justify-end gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setResetPasswordVendor(v)}
+                                  className="h-8 border-indigo-100 bg-indigo-50/50 hover:bg-indigo-100 text-indigo-600 text-xs font-bold rounded-[2px]"
+                                  title="Reset Password"
+                                >
+                                  <Key className="h-3.5 w-3.5" />
+                                </Button>
                                 {v.approvalStatus === "PENDING" && (
                                   <Button
                                     size="sm"
@@ -5378,7 +5416,7 @@ const AdminDashboardContent = () => {
         </Dialog>
         {/* Add Direct Vendor Modal */}
         <Dialog open={isAddVendorOpen} onOpenChange={setIsAddVendorOpen}>
-          <DialogContent className="sm:max-w-2xl rounded-[2px] p-0 overflow-hidden border-none shadow-2xl">
+          <DialogContent className="sm:max-w-3xl rounded-[32px] p-0 overflow-hidden border-none shadow-2xl bg-[#fafafa]">
             <form
               onSubmit={handleAddVendor}
               className="flex flex-col max-h-[90vh]"
@@ -5390,13 +5428,22 @@ const AdminDashboardContent = () => {
                   network.
                 </DialogDescription>
               </DialogHeader>
-              <header className="p-10 bg-indigo-950 text-white relative overflow-hidden shrink-0">
-                <div className="absolute top-0 right-0 p-24 bg-gradient-to-br from-emerald-500/20 to-transparent blur-3xl rounded-[2px] -mr-12 -mt-12" />
-                <div className="relative z-10">
-                  <h2 className="text-3xl font-black uppercase tracking-tight leading-none">
+              <header className="p-10 bg-[#1e1e1e] text-white relative shrink-0">
+                <div className="absolute top-0 right-0 p-32 bg-gradient-to-br from-[#00d084]/10 to-transparent blur-3xl -mr-12 -mt-12" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  type="button"
+                  onClick={() => setIsAddVendorOpen(false)}
+                  className="absolute top-6 right-6 h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-colors border-none"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+                <div className="relative z-10 space-y-1">
+                  <h2 className="text-4xl font-black uppercase tracking-tight leading-none text-white">
                     Vendor Creation
                   </h2>
-                  <p className="text-emerald-400 font-medium mt-3">
+                  <p className="text-[#00d084] font-bold text-lg">
                     Register a new verified partner authority.
                   </p>
                 </div>
@@ -5404,10 +5451,10 @@ const AdminDashboardContent = () => {
 
               <ScrollArea className="flex-1 p-10 h-full">
                 <div className="space-y-6">
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 gap-x-8 gap-y-6">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black text-indigo-950 uppercase tracking-widest">
-                        Vendor Name <span className="text-rose-500">*</span>
+                      <Label className="text-[11px] font-black text-black uppercase tracking-widest pl-1">
+                        Vendor Name <span className="text-[#ff2b5e] ml-1">*</span>
                       </Label>
                       <Input
                         value={newVendorData.businessName}
@@ -5418,12 +5465,12 @@ const AdminDashboardContent = () => {
                           })
                         }
                         required
-                        className="h-12 bg-stone-50 border-stone-100 rounded-[2px]"
+                        className="h-14 bg-white border border-stone-200 rounded-[12px] text-base px-4 focus-visible:ring-4 focus-visible:ring-stone-200 focus-visible:border-stone-400 outline-none shadow-sm transition-all"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black text-indigo-950 uppercase tracking-widest">
-                        Owner Name <span className="text-rose-500">*</span>
+                      <Label className="text-[11px] font-black text-black uppercase tracking-widest pl-1">
+                        Owner Name <span className="text-[#ff2b5e] ml-1">*</span>
                       </Label>
                       <Input
                         value={newVendorData.ownerName}
@@ -5434,12 +5481,12 @@ const AdminDashboardContent = () => {
                           })
                         }
                         required
-                        className="h-12 bg-stone-50 border-stone-100 rounded-[2px]"
+                        className="h-14 bg-white border border-stone-200 rounded-[12px] text-base px-4 focus-visible:ring-4 focus-visible:ring-stone-200 focus-visible:border-stone-400 outline-none shadow-sm transition-all"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black text-indigo-950 uppercase tracking-widest">
-                        Contact Number <span className="text-rose-500">*</span>
+                      <Label className="text-[11px] font-black text-black uppercase tracking-widest pl-1">
+                        Contact Number <span className="text-[#ff2b5e] ml-1">*</span>
                       </Label>
                       <Input
                         value={newVendorData.contactNumber}
@@ -5450,11 +5497,11 @@ const AdminDashboardContent = () => {
                           })
                         }
                         required
-                        className="h-12 bg-stone-50 border-stone-100 rounded-[2px]"
+                        className="h-14 bg-white border border-stone-200 rounded-[12px] text-base px-4 focus-visible:ring-4 focus-visible:ring-stone-200 focus-visible:border-stone-400 outline-none shadow-sm transition-all"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black text-indigo-950 uppercase tracking-widest">
+                      <Label className="text-[11px] font-black text-black uppercase tracking-widest pl-1">
                         Email Address
                       </Label>
                       <Input
@@ -5466,13 +5513,12 @@ const AdminDashboardContent = () => {
                             email: e.target.value,
                           })
                         }
-                        className="h-12 bg-stone-50 border-stone-100 rounded-[2px]"
+                        className="h-14 bg-white border border-stone-200 rounded-[12px] text-base px-4 focus-visible:ring-4 focus-visible:ring-stone-200 focus-visible:border-stone-400 outline-none shadow-sm transition-all"
                       />
                     </div>
                     <div className="col-span-2 space-y-2">
-                      <Label className="text-[10px] font-black text-indigo-950 uppercase tracking-widest">
-                        Business Category{" "}
-                        <span className="text-rose-500">*</span>
+                      <Label className="text-[11px] font-black text-black uppercase tracking-widest pl-1">
+                        Business Category <span className="text-[#ff2b5e] ml-1">*</span>
                       </Label>
                       <Input
                         placeholder="e.g. Health & Beauty"
@@ -5484,12 +5530,12 @@ const AdminDashboardContent = () => {
                           })
                         }
                         required
-                        className="h-12 bg-stone-50 border-stone-100 rounded-[2px]"
+                        className="h-14 bg-white border border-stone-200 rounded-[12px] text-base px-4 focus-visible:ring-4 focus-visible:ring-stone-200 focus-visible:border-stone-400 outline-none shadow-sm transition-all placeholder:text-stone-400"
                       />
                     </div>
                     <div className="col-span-2 space-y-2">
-                      <Label className="text-[10px] font-black text-indigo-950 uppercase tracking-widest">
-                        Store Address <span className="text-rose-500">*</span>
+                      <Label className="text-[11px] font-black text-black uppercase tracking-widest pl-1">
+                        Store Address <span className="text-[#ff2b5e] ml-1">*</span>
                       </Label>
                       <textarea
                         value={newVendorData.storeAddress}
@@ -5501,29 +5547,28 @@ const AdminDashboardContent = () => {
                         }
                         required
                         placeholder="e.g. 123 Main St, City, State, Zip"
-                        className="w-full min-h-[100px] p-4 bg-stone-50 border border-stone-200 rounded-[2px] text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all resize-y"
+                        className="w-full min-h-[120px] p-4 bg-white border border-stone-200 rounded-[12px] text-base focus-visible:ring-4 focus-visible:ring-stone-200 focus-visible:border-stone-400 outline-none shadow-sm transition-all resize-y placeholder:text-stone-400"
                       />
                     </div>
                   </div>
                 </div>
               </ScrollArea>
 
-              <footer className="p-8 bg-stone-50 border-t border-stone-100 flex justify-end gap-4 shrink-0 mt-auto">
-                <Button
+              <footer className="p-8 bg-[#fafafa] flex justify-end gap-6 shrink-0 mt-auto items-center">
+                <button
                   type="button"
                   onClick={() => setIsAddVendorOpen(false)}
-                  variant="ghost"
-                  className="rounded-[2px] px-8 h-12 font-black uppercase tracking-widest text-[10px]"
+                  className="font-black uppercase tracking-widest text-[11px] text-black hover:text-stone-600 transition-colors bg-transparent border-none outline-none"
                 >
                   Cancel
-                </Button>
-                <Button
+                </button>
+                <button
                   type="submit"
                   disabled={loading}
-                  className="bg-emerald-600 text-white rounded-[2px] px-12 h-12 font-black uppercase tracking-widest text-[10px] shadow-xl hover:bg-emerald-700"
+                  className="bg-[#00a86b] text-white rounded-[12px] px-8 h-12 flex items-center font-black uppercase tracking-widest text-[11px] hover:bg-[#00925e] transition-colors outline-none"
                 >
                   Issue Authority
-                </Button>
+                </button>
               </footer>
             </form>
           </DialogContent>
@@ -5738,6 +5783,60 @@ const AdminDashboardContent = () => {
                     <Plus className="h-4 w-4 text-indigo-300" />
                   )}
                   Add Product
+                </Button>
+              </footer>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Reset Vendor Password Dialog */}
+        <Dialog 
+          open={!!resetPasswordVendor} 
+          onOpenChange={(open) => !open && setResetPasswordVendor(null)}
+        >
+          <DialogContent className="sm:max-w-md rounded-[2px] p-0 overflow-hidden border-none shadow-2xl">
+            <form onSubmit={handleResetVendorPassword}>
+              <header className="p-8 bg-indigo-950 text-white relative">
+                <div className="absolute top-0 right-0 p-16 bg-white/5 blur-3xl -mr-8 -mt-8" />
+                <h2 className="text-xl font-black uppercase tracking-tight italic">Reset Authority</h2>
+                <p className="text-indigo-300 text-[10px] font-bold uppercase tracking-widest mt-1">
+                  Updating credentials for {resetPasswordVendor?.businessName}
+                </p>
+              </header>
+              <div className="p-8 space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black text-indigo-950 uppercase tracking-widest">New Security Key</Label>
+                  <Input 
+                    required
+                    type="password"
+                    placeholder="Enter new password"
+                    value={newVendorPassword}
+                    onChange={(e) => setNewVendorPassword(e.target.value)}
+                    className="h-12 bg-stone-50 border-stone-100 rounded-[2px] font-bold text-sm"
+                  />
+                </div>
+                <div className="p-3 bg-amber-50 rounded-[2px] border border-amber-100 flex items-start gap-3">
+                  <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+                  <p className="text-[10px] font-medium text-amber-800 leading-relaxed">
+                    IMPORTANT: Provide the new password to the vendor manually after resetting. This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+              <footer className="p-6 bg-stone-50 border-t border-stone-100 flex justify-end gap-3">
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  onClick={() => setResetPasswordVendor(null)}
+                  className="rounded-[2px] font-bold uppercase tracking-widest text-[10px]"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={loading}
+                  className="bg-indigo-950 text-white rounded-[2px] px-8 h-11 font-black uppercase tracking-widest text-[11px]"
+                >
+                  Update Keys
                 </Button>
               </footer>
             </form>

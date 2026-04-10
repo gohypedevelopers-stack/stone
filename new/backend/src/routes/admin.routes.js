@@ -20,7 +20,8 @@ import {
   reorderAdminCategories,
   seedAdminCategories,
   getAdminVendorAnalytics,
-  getAdminBrands
+  getAdminBrands,
+  resetVendorPassword
 } from "../controllers/admin.controller.js";
 import { seedAdmin, loginAdmin, getAdminProfile } from "../controllers/auth.admin.controller.js";
 import { getPointsSettings, updatePointsSettings } from "../controllers/settings.controller.js";
@@ -56,6 +57,7 @@ router.post("/offline-ledgers", createAdminOfflinePurchase);
 router.get("/customers", getAdminCustomers);
 router.get("/customers/lookup", lookupCustomerByMobile);
 router.get("/customers/:id", getAdminCustomerDetail);
+router.post("/vendors/:id/reset-password", resetVendorPassword);
 router.patch("/vendors/:id/approve", approveVendor);
 router.post("/seed-products", seedFrontendProducts);
 router.get("/categories", getAdminCategories);
