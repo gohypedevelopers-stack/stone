@@ -3,7 +3,7 @@ import comingSoonH from "../assets/COMINGSOON/H.jpg";
 import comingSoonI from "../assets/COMINGSOON/I.jpg";
 import comingSoonJ from "../assets/COMINGSOON/J.jpg";
 
-export const SERVER_URL = import.meta.env.VITE_APP_API_URL || "http://localhost:5000";
+export const SERVER_URL = import.meta.env.VITE_APP_API_URL || "https://stone-backend.vercel.app";
 
 const LEGACY_COMING_SOON_IMAGES = {
     "G.jpg": comingSoonG,
@@ -30,9 +30,10 @@ export const resolveImage = (img) => {
     // 1. Handle absolute URLs (Cloudinary, Unsplash, etc.)
     if (
         normalized.startsWith("http://localhost:5000/") ||
-        normalized.startsWith("https://localhost:5000/")
+        normalized.startsWith("https://localhost:5000/") ||
+        normalized.startsWith("https://stone-backend.vercel.app/")
     ) {
-        return normalized.replace(/^https?:\/\/localhost:5000/i, SERVER_URL);
+        return normalized.replace(/^https?:\/\/(localhost:5000|stone-backend\.vercel\.app)/i, SERVER_URL);
     }
 
     if (normalized.startsWith("http") || normalized.startsWith("data:") || normalized.startsWith("blob:")) {

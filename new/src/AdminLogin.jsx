@@ -16,7 +16,7 @@ export default function AdminLogin({ onLoginSuccess }) {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000/api'}/admin/auth/login`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'https://stone-backend.vercel.app/api'}/admin/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

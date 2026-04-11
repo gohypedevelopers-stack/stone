@@ -358,9 +358,10 @@ const AdminDashboardContent = () => {
 
     if (
       normalized.startsWith("http://localhost:5000/") ||
-      normalized.startsWith("https://localhost:5000/")
+      normalized.startsWith("https://localhost:5000/") ||
+      normalized.startsWith("https://stone-backend.vercel.app/")
     ) {
-      return normalized.replace(/^https?:\/\/localhost:5000/i, SERVER_URL);
+      return normalized.replace(/^https?:\/\/(localhost:5000|stone-backend\.vercel\.app)/i, SERVER_URL);
     }
 
     if (normalized.startsWith("http://") || normalized.startsWith("https://")) {
