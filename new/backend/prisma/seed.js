@@ -3,6 +3,8 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import pg from "pg";
 
+import bcrypt from "bcryptjs";
+
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
 });
@@ -12,6 +14,17 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
+  // Create Admin
+  const adminPassword = await bcrypt.hash("admin123", 10);
+  await prisma.admin.upsert({
+    where: { email: "admin@omw.com" },
+    update: {},
+    create: {
+      name: "Global Admin",
+      email: "admin@omw.com",
+      password: adminPassword,
+    },
+  });
   const skincareCategory = await prisma.category.upsert({
     where: { slug: "serums" },
     update: {},

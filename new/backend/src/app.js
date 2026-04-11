@@ -6,7 +6,13 @@ import apiRoutes from "./routes/index.js";
 
 const app = express();
 
-const allowedOrigins = [env.clientUrl, "http://localhost:5173", "http://localhost:5174"];
+const allowedOrigins = [
+  env.clientUrl,
+  "https://stone-one-sandy.vercel.app",
+  "https://omw-marketplace.vercel.app",
+  "http://localhost:5173",
+  "http://localhost:5174"
+];
 
 app.use(
   cors({
