@@ -14,8 +14,11 @@ import {
 } from "../controllers/vendors.controller.js";
 import { lookupCustomerByMobile } from "../controllers/admin.controller.js";
 
+import authVendorRoutes from "./auth.vendor.routes.js";
+
 const router = Router();
 
+router.use("/auth", authVendorRoutes);
 router.get("/", listVendors);
 router.post("/", createVendor);
 router.get("/dashboard", getVendorDashboard);
