@@ -174,25 +174,6 @@ body[data-admin-dashboard="true"] #root {
   text-align: left;
 }
 
-body[data-admin-dashboard="true"] [class*="rounded-"] {
-  border-radius: 0 !important;
-}
-
-body[data-admin-dashboard="true"] button,
-body[data-admin-dashboard="true"] [role="button"],
-body[data-admin-dashboard="true"] input,
-body[data-admin-dashboard="true"] select,
-body[data-admin-dashboard="true"] textarea,
-body[data-admin-dashboard="true"] [data-slot="card"],
-body[data-admin-dashboard="true"] [data-slot="dialog-content"],
-body[data-admin-dashboard="true"] [data-slot="sheet-content"],
-body[data-admin-dashboard="true"] [data-slot="dropdown-menu-content"],
-body[data-admin-dashboard="true"] [data-slot="popover-content"],
-body[data-admin-dashboard="true"] [data-slot="sidebar-inner"],
-body[data-admin-dashboard="true"] [data-slot="tabs-list"] {
-  border-radius: 0 !important;
-}
-
 /* Lenis Custom Smooth Scroll */
 html.lenis {
   height: auto;

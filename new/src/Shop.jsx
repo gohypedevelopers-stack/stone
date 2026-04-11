@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useProducts } from "./context/ProductContext";
 import ProductCard from "./components/card.jsx";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Search } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 function formatINR(amount) {

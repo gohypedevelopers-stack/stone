@@ -144,8 +144,8 @@ export const AdminCouponManager = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-[2px] text-xs font-bold flex items-center gap-2 border border-emerald-100 shadow-sm">
-            <div className="h-1.5 w-1.5 bg-emerald-500 rounded-[2px] animate-pulse" />
+          <div className="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 border border-emerald-100 shadow-sm">
+            <div className="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-pulse" />
             {coupons.length} Active Codes
           </div>
         </div>
@@ -154,10 +154,10 @@ export const AdminCouponManager = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Generator Section */}
         <div className="lg:col-span-4">
-          <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2px] bg-white overflow-hidden p-2">
+          <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-3xl bg-white overflow-hidden p-2">
             <CardHeader className="pb-4 pt-6 px-6">
               <CardTitle className="text-sm font-bold text-stone-900 flex items-center gap-3">
-                <div className="h-10 w-10 rounded-[2px] bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <div className="h-10 w-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center">
                   <Plus className="h-5 w-5" />
                 </div>
                 Draft Voucher
@@ -180,7 +180,7 @@ export const AdminCouponManager = () => {
                     value={newCoupon.code}
                     onChange={(e) => setNewCoupon({...newCoupon, code: e.target.value.toUpperCase()})}
                     placeholder="SUMMER2024"
-                    className="h-12 bg-stone-50 border-none rounded-[2px] font-bold tracking-wide text-stone-900 focus-visible:ring-2 focus-visible:ring-indigo-100 hover:bg-stone-100/50 transition-all"
+                    className="h-12 bg-stone-50 border-none rounded-2xl font-bold tracking-wide text-stone-900 focus-visible:ring-2 focus-visible:ring-indigo-100 hover:bg-stone-100/50 transition-all"
                     required
                   />
                 </div>
@@ -188,12 +188,12 @@ export const AdminCouponManager = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-xs font-bold text-stone-600 px-1">Discount Type</Label>
-                    <div className="grid grid-cols-2 bg-stone-50 p-1.5 rounded-[2px] gap-1">
+                    <div className="grid grid-cols-2 bg-stone-50 p-1.5 rounded-full gap-1">
                       <button
                         type="button"
                         onClick={() => setNewCoupon({...newCoupon, discountType: 'PERCENTAGE'})}
                         className={cn(
-                          "h-10 rounded-[2px] text-xs font-bold transition-all",
+                          "h-10 rounded-full text-xs font-bold transition-all",
                           newCoupon.discountType === 'PERCENTAGE' ? "bg-white text-indigo-600 shadow-sm" : "text-stone-400 hover:text-stone-600"
                         )}
                       >
@@ -203,7 +203,7 @@ export const AdminCouponManager = () => {
                         type="button"
                         onClick={() => setNewCoupon({...newCoupon, discountType: 'FIXED'})}
                         className={cn(
-                          "h-10 rounded-[2px] text-xs font-bold transition-all",
+                          "h-10 rounded-full text-xs font-bold transition-all",
                           newCoupon.discountType === 'FIXED' ? "bg-white text-indigo-600 shadow-sm" : "text-stone-400 hover:text-stone-600"
                         )}
                       >
@@ -218,7 +218,7 @@ export const AdminCouponManager = () => {
                       value={newCoupon.discountValue}
                       onChange={(e) => setNewCoupon({...newCoupon, discountValue: e.target.value})}
                       placeholder="10"
-                      className="h-12 bg-stone-50 border-none rounded-[2px] font-bold focus-visible:ring-2 focus-visible:ring-indigo-100 hover:bg-stone-100/50 transition-all"
+                      className="h-12 bg-stone-50 border-none rounded-2xl font-bold focus-visible:ring-2 focus-visible:ring-indigo-100 hover:bg-stone-100/50 transition-all"
                       required
                     />
                   </div>
@@ -231,7 +231,7 @@ export const AdminCouponManager = () => {
                     value={newCoupon.minPurchase}
                     onChange={(e) => setNewCoupon({...newCoupon, minPurchase: e.target.value})}
                     placeholder="500"
-                    className="h-12 bg-stone-50 border-none rounded-[2px] font-bold focus-visible:ring-2 focus-visible:ring-indigo-100 hover:bg-stone-100/50 transition-all"
+                    className="h-12 bg-stone-50 border-none rounded-2xl font-bold focus-visible:ring-2 focus-visible:ring-indigo-100 hover:bg-stone-100/50 transition-all"
                   />
                 </div>
 
@@ -242,7 +242,7 @@ export const AdminCouponManager = () => {
                       <Button
                         variant="outline"
                         className={cn(
-                          "h-12 w-full bg-stone-50 border-none rounded-[2px] font-bold justify-start text-left font-sans hover:bg-stone-100/50 transition-all",
+                          "h-12 w-full bg-stone-50 border-none rounded-full font-bold justify-start text-left font-sans hover:bg-stone-100/50 transition-all",
                           !newCoupon.expiresAt && "text-stone-400"
                         )}
                       >
@@ -254,7 +254,7 @@ export const AdminCouponManager = () => {
                         )}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-[2px]" align="start">
+                    <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-full" align="start">
                       <CalendarComponent
                         mode="single"
                         selected={newCoupon.expiresAt ? new Date(newCoupon.expiresAt) : undefined}
@@ -265,7 +265,7 @@ export const AdminCouponManager = () => {
                           });
                         }}
                         initialFocus
-                        className="rounded-[2px] border-none"
+                        className="rounded-full border-none"
                       />
                     </PopoverContent>
                   </Popover>
@@ -273,7 +273,7 @@ export const AdminCouponManager = () => {
 
                 <Button 
                   disabled={submitting}
-                  className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[2px] font-bold text-sm shadow-lg shadow-indigo-200 transition-all active:scale-[0.98] mt-2"
+                  className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold text-sm shadow-lg shadow-indigo-200 transition-all active:scale-[0.98] mt-2"
                 >
                   {submitting ? (
                     <RefreshCw className="h-4 w-4 animate-spin" />
@@ -288,7 +288,7 @@ export const AdminCouponManager = () => {
 
         {/* List Section */}
         <div className="lg:col-span-8 space-y-6">
-           <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2px] bg-white overflow-hidden">
+           <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-3xl bg-white overflow-hidden">
               <Table>
                 <TableHeader className="bg-stone-50/30 border-b border-stone-50">
                   <TableRow className="hover:bg-transparent border-none">
@@ -303,7 +303,7 @@ export const AdminCouponManager = () => {
                   {loading ? (
                     [1, 2, 3].map(i => (
                       <TableRow key={i} className="border-stone-50">
-                        <TableCell colSpan={5} className="h-24 px-8"><div className="h-12 w-full bg-stone-50 rounded-[2px] animate-pulse" /></TableCell>
+                        <TableCell colSpan={5} className="h-24 px-8"><div className="h-12 w-full bg-stone-50 rounded-full animate-pulse" /></TableCell>
                       </TableRow>
                     ))
                   ) : coupons.length === 0 ? (
@@ -327,7 +327,7 @@ export const AdminCouponManager = () => {
                           </div>
                         </TableCell>
                         <TableCell className="py-6 px-4 text-center">
-                          <span className="inline-block px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-[2px] text-sm font-bold">
+                          <span className="inline-block px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-sm font-bold">
                             {c.discountType === 'PERCENTAGE' ? `${c.discountValue}%` : `₹${c.discountValue}`}
                           </span>
                         </TableCell>
@@ -337,9 +337,9 @@ export const AdminCouponManager = () => {
                                  <span>{c.usedCount} Redeemed</span>
                                  <span>{c.maxUsage || '∞'} Cap</span>
                               </div>
-                              <div className="h-1.5 w-full bg-stone-100 rounded-[2px] overflow-hidden">
+                              <div className="h-1.5 w-full bg-stone-100 rounded-full overflow-hidden">
                                  <div 
-                                    className="h-full bg-indigo-500 rounded-[2px] transition-all duration-1000"
+                                    className="h-full bg-indigo-500 rounded-full transition-all duration-1000"
                                     style={{ width: `${c.maxUsage ? (c.usedCount / c.maxUsage) * 100 : Math.min(100, (c.usedCount / 100) * 100)}%` }}
                                  />
                               </div>
@@ -356,7 +356,7 @@ export const AdminCouponManager = () => {
                             onClick={() => handleDelete(c.id)}
                             variant="ghost"
                             size="icon"
-                            className="h-9 w-9 rounded-[2px] text-stone-300 hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"
+                            className="h-9 w-9 rounded-full text-stone-300 hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

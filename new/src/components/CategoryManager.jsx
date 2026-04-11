@@ -126,7 +126,7 @@ const CategoryRow = memo(({ cat, onToggleStatus, onEdit, onDelete, canDrag }) =>
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-8 w-8 text-stone-400 hover:text-stone-900 hover:bg-stone-50 rounded-xl"
+            className="h-8 w-8 text-stone-400 hover:text-stone-900 hover:bg-stone-50 rounded-[10px]"
             onClick={() => onEdit(cat)}
           >
             <Pencil className="h-4 w-4" />
@@ -134,7 +134,7 @@ const CategoryRow = memo(({ cat, onToggleStatus, onEdit, onDelete, canDrag }) =>
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-8 w-8 text-stone-400 hover:text-pink-600 hover:bg-pink-50 rounded-xl"
+            className="h-8 w-8 text-stone-400 hover:text-pink-600 hover:bg-pink-50 rounded-[10px]"
             onClick={() => onDelete(cat.id)}
           >
             <Trash2 className="h-4 w-4" />
@@ -327,21 +327,21 @@ export default function CategoryManager() {
 
   if (loading) return (
     <div className="p-12 text-center">
-      <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-stone-900 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+      <div className="inline-block h-8 w-8 animate-spin rounded-[10px] border-4 border-solid border-stone-900 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
       <div className="mt-4 text-stone-400 font-medium italic">Synchronizing inventory system...</div>
     </div>
   );
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 relative max-w-5xl mx-auto px-4 md:px-0 mb-20">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 relative w-full mb-20 px-4 lg:px-2">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-stone-200">
         <div className="space-y-1.5">
           <div className="flex items-center gap-2 mb-1">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-[2px] bg-stone-100 text-stone-600 text-[9px] font-black uppercase tracking-[0.1em] border border-stone-200">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-[10px] bg-stone-100 text-stone-600 text-[9px] font-black uppercase tracking-[0.1em] border border-stone-200">
               Navigation Authority
             </span>
             {hasOrderChanged && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-[2px] bg-pink-50 text-pink-600 text-[9px] font-black uppercase tracking-[0.1em] border border-pink-100 animate-pulse">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-[10px] bg-pink-50 text-pink-600 text-[9px] font-black uppercase tracking-[0.1em] border border-pink-100 animate-pulse">
                 Unsaved Changes
               </span>
             )}
@@ -356,19 +356,19 @@ export default function CategoryManager() {
             <Button 
               onClick={handleReorder} 
               disabled={isSavingOrder}
-              className="rounded-[2px] h-11 px-5 bg-pink-500 hover:bg-pink-600 text-white font-bold text-[10px] uppercase tracking-widest gap-2 shadow-lg shadow-pink-100 transition-all active:scale-95"
+              className="rounded-[10px] h-11 px-5 bg-pink-500 hover:bg-pink-600 text-white font-bold text-[10px] uppercase tracking-widest gap-2 shadow-lg shadow-pink-100 transition-all active:scale-95"
             >
               {isSavingOrder ? <Sparkles className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Apply New Hierarchy
             </Button>
           )}
-          <Button onClick={openAddDialog} className="rounded-[2px] h-11 px-5 bg-stone-900 hover:bg-black text-white font-bold text-[10px] uppercase tracking-widest gap-2 shadow-lg transition-all active:scale-95">
+          <Button onClick={openAddDialog} className="rounded-[10px] h-11 px-5 bg-stone-900 hover:bg-black text-white font-bold text-[10px] uppercase tracking-widest gap-2 shadow-lg transition-all active:scale-95">
             <Plus className="h-4 w-4" /> Add Category
           </Button>
         </div>
       </header>
 
-      <div className="bg-white rounded-[2px] border border-stone-200 overflow-hidden shadow-sm">
+      <div className="bg-white rounded-[10px] border border-stone-200 overflow-hidden shadow-sm">
         <div className="p-4 border-b border-stone-100 flex items-center justify-between gap-4 bg-stone-50/10">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
@@ -376,7 +376,7 @@ export default function CategoryManager() {
               placeholder="Search by name..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-10 rounded-[2px] bg-white border-stone-200 focus-visible:ring-stone-950 font-medium text-sm"
+              className="pl-10 h-10 rounded-[10px] bg-white border-stone-200 focus-visible:ring-stone-950 font-medium text-sm"
             />
           </div>
           <div className="text-[9px] font-black text-stone-400 uppercase tracking-widest hidden sm:block">
@@ -398,7 +398,7 @@ export default function CategoryManager() {
             {filteredCategories.length === 0 ? (
               <div className="py-24 text-center border-t border-stone-100">
                 <div className="flex flex-col items-center justify-center space-y-4">
-                  <div className="h-16 w-16 rounded-[2px] bg-stone-50 flex items-center justify-center text-stone-200 border border-stone-100 border-dashed">
+                  <div className="h-16 w-16 rounded-[10px] bg-stone-50 flex items-center justify-center text-stone-200 border border-stone-100 border-dashed">
                     <Tag className="h-8 w-8" />
                   </div>
                   <div>
@@ -429,7 +429,7 @@ export default function CategoryManager() {
                         <GripVertical className="h-4 w-4 text-stone-300 group-hover:text-stone-400 cursor-grab active:cursor-grabbing mx-auto" />
                       </div>
                       <div className="px-4 py-3 flex-shrink-0">
-                        <div className="h-11 w-11 rounded-[2px] overflow-hidden border border-stone-200 bg-stone-100 shadow-sm ring-2 ring-white ring-offset-0 transition-transform group-hover:scale-105 flex items-center justify-center">
+                        <div className="h-11 w-11 rounded-[10px] overflow-hidden border border-stone-200 bg-stone-100 shadow-sm ring-2 ring-white ring-offset-0 transition-transform group-hover:scale-105 flex items-center justify-center">
                           {cat.imageUrl || CATEGORY_IMAGES[cat.name] ? (
                             <img 
                               src={cat.imageUrl || CATEGORY_IMAGES[cat.name] || categorySphere} 
@@ -472,7 +472,7 @@ export default function CategoryManager() {
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-8 w-8 text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-[2px]"
+                            className="h-8 w-8 text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-[10px]"
                             onClick={() => openEditDialog(cat)}
                           >
                             <Pencil className="h-4 w-4" />
@@ -480,7 +480,7 @@ export default function CategoryManager() {
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-8 w-8 text-stone-400 hover:text-pink-600 hover:bg-pink-50 rounded-[2px]"
+                            className="h-8 w-8 text-stone-400 hover:text-pink-600 hover:bg-pink-50 rounded-[10px]"
                             onClick={() => handleDelete(cat.id)}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -496,18 +496,18 @@ export default function CategoryManager() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[440px] rounded-[2px] p-0 overflow-hidden gap-0 border border-stone-200 shadow-2xl">
+        <DialogContent className="sm:max-w-[440px] rounded-[10px] p-0 overflow-hidden gap-0 border border-stone-200 shadow-2xl">
           <div className="h-28 bg-stone-950 relative">
             <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 to-transparent" />
             <div className="absolute inset-0 flex items-center justify-center translate-y-8">
               <div className={cn(
-                "h-20 w-20 rounded-[2px] bg-white shadow-xl flex items-center justify-center border-4 border-white transition-all transform hover:scale-105 overflow-hidden",
+                "h-20 w-20 rounded-[10px] bg-white shadow-xl flex items-center justify-center border-4 border-white transition-all transform hover:scale-105 overflow-hidden",
                 !(formData.imageUrl || CATEGORY_IMAGES[formData.name]) && getBackgroundColor(formData.name)
               )}>
                 {formData.imageUrl || CATEGORY_IMAGES[formData.name] ? (
                   <img 
                     src={formData.imageUrl || CATEGORY_IMAGES[formData.name] || categorySphere} 
-                    className="h-full w-full object-cover rounded-[2px]" 
+                    className="h-full w-full object-cover rounded-[10px]" 
                     alt="Preview" 
                   />
                 ) : (
@@ -532,7 +532,7 @@ export default function CategoryManager() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g. Cleansers & Toners"
-                  className="h-11 rounded-[2px] bg-stone-50 border-stone-200 focus-visible:ring-stone-950 font-bold px-4"
+                  className="h-11 rounded-[10px] bg-stone-50 border-stone-200 focus-visible:ring-stone-950 font-bold px-4"
                 />
               </div>
 
@@ -544,15 +544,15 @@ export default function CategoryManager() {
                     value={formData.imageUrl}
                     onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
                     placeholder="https://..."
-                    className="h-11 rounded-[2px] bg-stone-50 border-stone-200 focus-visible:ring-stone-950 pl-11 font-medium text-sm"
+                    className="h-11 rounded-[10px] bg-stone-50 border-stone-200 focus-visible:ring-stone-950 pl-11 font-medium text-sm"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-4 rounded-[2px] bg-stone-50 border border-stone-100">
+              <div className="flex items-center justify-between p-4 rounded-[10px] bg-stone-50 border border-stone-100">
                 <div className="flex items-center gap-3">
                   <div className={cn(
-                    "p-2 rounded-[2px] bg-white shadow-sm border border-stone-100",
+                    "p-2 rounded-[10px] bg-white shadow-sm border border-stone-100",
                     formData.isActive ? "text-stone-950" : "text-stone-300"
                   )}>
                     {formData.isActive ? <Eye className="h-4.5 w-4.5" /> : <EyeOff className="h-4.5 w-4.5" />}
@@ -573,13 +573,13 @@ export default function CategoryManager() {
               <Button 
                 variant="outline" 
                 onClick={() => setIsDialogOpen(false)} 
-                className="flex-1 h-11 rounded-[2px] border-stone-200 font-bold text-[10px] uppercase tracking-widest hover:bg-stone-50"
+                className="flex-1 h-11 rounded-[10px] border-stone-200 font-bold text-[10px] uppercase tracking-widest hover:bg-stone-50"
               >
                 Cancel
               </Button>
               <Button 
                 onClick={handleSave} 
-                className="flex-1 h-11 rounded-[2px] bg-stone-950 hover:bg-black text-white font-bold text-[10px] uppercase tracking-widest shadow-xl transition-all"
+                className="flex-1 h-11 rounded-[10px] bg-stone-950 hover:bg-black text-white font-bold text-[10px] uppercase tracking-widest shadow-xl transition-all"
               >
                 {editingCategory ? "Commit Sync" : "Deploy Node"}
               </Button>

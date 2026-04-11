@@ -37,12 +37,22 @@ export const THEME = {
     raw: {
       brandPurple: "#9a6bff",
       brandDark: "#151515"
+    },
+
+    // Admin-Specific Brand Identity
+    admin: {
+      primary: "emerald-500",
+      secondary: "teal-600",
+      accent: "sky-500",
+      highlight: "emerald-600",
+      muted: "emerald-50"
     }
   },
 
   gradients: {
     brand: "bg-gradient-to-r from-[#ff4fa3] via-[#6f5cff] to-[#ff8a2a]",
     brandSolid: "bg-[#ff4fa3]",
+    adminBrand: "bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500",
     videoOverlay: "bg-gradient-to-b from-black/10 via-transparent to-black/60",
     heroOverlay: "bg-gradient-to-t from-black/80 via-black/20 to-transparent",
     brandHover: "hover:bg-gradient-to-r hover:from-[#ff4fa3] hover:to-[#6f5cff]"
@@ -73,12 +83,21 @@ export const THEME = {
 
   borders: {
     // Rounding used universally across dashboard and storefront
+    // Original sharp rounding for storefront (restored)
     radius: {
       sm: "rounded-[2px]",
       md: "rounded-[2px]",
       lg: "rounded-[2px]",
       xl: "rounded-[2px]",
       pill: "rounded-[2px]"
+    },
+
+    // New hyper-rounded tokens strictly for Admin Dashboard
+    adminRadius: {
+      card: "rounded-3xl",      // 24px
+      button: "rounded-full",   // pill
+      input: "rounded-2xl",     // 16px
+      inner: "rounded-xl"       // 12px
     },
 
     // Standard Line strokes

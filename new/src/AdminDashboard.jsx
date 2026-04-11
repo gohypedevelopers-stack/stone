@@ -863,50 +863,29 @@ const AdminDashboardContent = () => {
     navigate(view === "overview" ? "/admin" : `/admin/${view}`);
   };
 
-  const StatCard = ({ title, value, icon: Icon, colorClass, description }) => {
+  const AdminKPICard = ({ title, value, icon: Icon, trend, trendUp, color = "emerald" }) => {
+    const colorMap = {
+      emerald: { icon: "bg-emerald-100 text-emerald-600", trend: trendUp ? "text-emerald-600 bg-emerald-50" : "text-rose-600 bg-rose-50" },
+      sky: { icon: "bg-sky-100 text-sky-600", trend: trendUp ? "text-emerald-600 bg-emerald-50" : "text-rose-600 bg-rose-50" },
+      teal: { icon: "bg-teal-100 text-teal-600", trend: trendUp ? "text-emerald-600 bg-emerald-50" : "text-rose-600 bg-rose-50" },
+      indigo: { icon: "bg-indigo-100 text-emerald-600", trend: trendUp ? "text-emerald-600 bg-emerald-50" : "text-rose-600 bg-rose-50" },
+    };
+    const c = colorMap[color] || colorMap.emerald;
     return (
-      <Card
-        className={cn(
-          "relative overflow-hidden group border border-[#151515]/5 transition-all duration-500 ease-out hover:-translate-y-1 rounded-[2px] cursor-pointer flex flex-col",
-          "shadow-sm hover:shadow-[0_20px_40px_rgba(154,107,255,0.12)] bg-white",
+      <div className="bg-white p-5 rounded-[10px] border border-gray-100 flex flex-col justify-between min-h-[120px] hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1 transition-all duration-300">
+        <div className="flex justify-between items-start">
+          <div className="text-3xl font-black text-[#151515] tracking-tight">{value}</div>
+          <div className={`w-11 h-11 rounded-[10px] flex items-center justify-center ${c.icon}`}>
+            <Icon className="h-5 w-5" />
+          </div>
+        </div>
+        <div className="text-[11px] text-gray-400 font-extrabold uppercase tracking-widest mt-2">{title}</div>
+        {trend && (
+          <div className={`mt-4 flex items-center text-[10px] font-black w-fit px-3 py-1.5 rounded-full ${c.trend}`}>
+            {trend} {trendUp ? <TrendingUp className="h-3.5 w-3.5 ml-1" /> : <ChevronDown className="h-3.5 w-3.5 ml-1" />}
+          </div>
         )}
-      >
-        {/* Animated Gradient Accent Line */}
-        <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-pink-500 via-[#9a6bff] to-indigo-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-left z-20" />
-        
-        {/* Soft glowing ambient orb in the top right corner */}
-        <div
-          className={cn(
-            "absolute -top-10 -right-10 w-32 h-32 rounded-full blur-[40px] opacity-0 group-hover:opacity-20 transition-all duration-700 ease-in-out bg-[#9a6bff]"
-          )}
-        />
-
-        <CardHeader className="flex flex-row items-center justify-between pb-2 pt-6 px-6 relative z-20">
-          <CardTitle className="text-[#151515]/40 font-black text-[10px] uppercase tracking-[0.2em] leading-tight flex items-center gap-2">
-            <div className="h-1.5 w-1.5 rounded-[2px] bg-stone-200 group-hover:bg-[#9a6bff] transition-colors duration-500" />
-            {title}
-          </CardTitle>
-          <div
-            className={cn(
-              "p-2 rounded-[2px] transition-all duration-500 group-hover:scale-110 group-hover:rotate-[15deg] group-hover:bg-[#9a6bff]/10",
-              "text-[#151515]/20 group-hover:text-[#9a6bff]"
-            )}
-          >
-            <Icon className="h-5 w-5" strokeWidth={2.5} />
-          </div>
-        </CardHeader>
-
-        <CardContent className="px-6 pb-6 pt-1 relative z-20">
-          <div className="text-[36px] font-black leading-none tracking-tighter text-[#151515] transition-all duration-500 group-hover:text-[#9a6bff] group-hover:translate-x-1">
-            {value}
-          </div>
-          {description && (
-            <p className="text-[9px] text-[#151515]/40 font-bold leading-tight mt-2 uppercase tracking-widest truncate transition-all duration-500 group-hover:opacity-80">
-              {description}
-            </p>
-          )}
-        </CardContent>
-      </Card>
+      </div>
     );
   };
 
@@ -957,7 +936,7 @@ const AdminDashboardContent = () => {
 
     if (rawData.length === 0)
       return (
-        <div className="h-72 w-full mt-6 bg-stone-50/50 rounded-xl animate-pulse" />
+        <div className="h-72 w-full mt-6 bg-stone-50/50 rounded-[10px] animate-pulse" />
       );
 
     // Color definitions to match screenshot
@@ -1113,7 +1092,7 @@ const AdminDashboardContent = () => {
               transform: "translate(-50%, -120%)"
             }}
           >
-            <div className="bg-[#0f172a] text-white rounded-xl py-4 px-5 shadow-2xl relative min-w-[180px] border border-white/10 backdrop-blur-md">
+            <div className="bg-[#0f172a] text-white rounded-[10px] py-4 px-5 shadow-2xl relative min-w-[180px] border border-white/10 backdrop-blur-md">
                <div className="flex flex-col gap-2">
                  <div className="flex items-center justify-between gap-4">
                    <div className="flex items-center gap-2">
@@ -1151,7 +1130,7 @@ const AdminDashboardContent = () => {
   if (loading && activeView === "overview")
     return (
       <div className="flex h-screen w-full items-center justify-center bg-stone-50">
-        <div className="h-10 w-10 animate-spin rounded-xl border-4 border-stone-200 border-t-stone-900" />
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-stone-200 border-t-stone-900" />
       </div>
     );
 
@@ -1161,7 +1140,7 @@ const AdminDashboardContent = () => {
         <Sidebar className="border-r border-stone-200/60 bg-white/90 backdrop-blur-xl shadow-[18px_0_60px_rgba(15,23,42,0.04)]">
           <SidebarHeader className="p-6 pb-5 border-b border-stone-100">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-[2px] bg-gradient-to-br from-pink-500 via-[#9a6bff] to-indigo-500 text-white font-black text-lg shadow-lg shadow-[#9a6bff]/30">
+              <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-gradient-to-br from-pink-500 via-[#9a6bff] to-indigo-500 text-white font-black text-lg shadow-lg shadow-[#9a6bff]/30">
                 <span className="text-transparent bg-clip-text bg-white">O</span>
               </div>
               <div className="flex flex-col">
@@ -1185,9 +1164,9 @@ const AdminDashboardContent = () => {
                     isActive={activeView === item.id}
                     onClick={() => handleViewChange(item.id)}
                     className={cn(
-                      "flex items-center gap-3 py-5 px-4 rounded-xl transition-all duration-300 group",
+                      "flex items-center gap-3 py-5 px-4 rounded-full transition-all duration-300 group",
                       activeView === item.id
-                        ? "bg-pink-50 text-pink-600 font-black shadow-sm shadow-pink-100/50"
+                        ? "bg-emerald-50 text-emerald-600 font-black shadow-sm shadow-pink-100/50"
                         : "text-stone-500 hover:bg-stone-50 hover:text-stone-900",
                     )}
                   >
@@ -1195,8 +1174,8 @@ const AdminDashboardContent = () => {
                       className={cn(
                         "h-[18px] w-[18px] transition-all",
                         activeView === item.id
-                          ? "text-pink-600 scale-110"
-                          : "text-stone-400 group-hover:text-pink-500",
+                          ? "text-emerald-600 scale-110"
+                          : "text-stone-400 group-hover:text-rose-500",
                       )}
                     />
                     <span className="font-['Inter'] font-bold text-[13px] tracking-tight">
@@ -1214,8 +1193,8 @@ const AdminDashboardContent = () => {
               >
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton className="flex items-center gap-3 py-5 px-4 rounded-xl transition-all duration-200 text-stone-600 hover:bg-stone-50 hover:text-stone-900 w-full">
-                      <Package className="h-[18px] w-[18px] text-stone-400 group-hover:text-pink-600 transition-colors" />
+                    <SidebarMenuButton className="flex items-center gap-3 py-5 px-4 rounded-full transition-all duration-200 text-stone-600 hover:bg-stone-50 hover:text-stone-900 w-full">
+                      <Package className="h-[18px] w-[18px] text-stone-400 group-hover:text-emerald-600 transition-colors" />
                       <span className="font-['Inter'] font-semibold text-[13px] flex-1 text-left">
                         Inventory
                       </span>
@@ -1229,9 +1208,9 @@ const AdminDashboardContent = () => {
                           isActive={activeView === "inventory"}
                           onClick={() => handleViewChange("inventory")}
                           className={cn(
-                            "font-['Inter'] font-bold text-[12px] py-3 px-3 rounded-xl transition-all duration-300 whitespace-nowrap",
+                            "font-['Inter'] font-bold text-[12px] py-3 px-3 rounded-full transition-all duration-300 whitespace-nowrap",
                             activeView === "inventory"
-                              ? "bg-pink-50 text-pink-600"
+                              ? "bg-emerald-50 text-emerald-600"
                               : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
                           )}
                         >
@@ -1243,9 +1222,9 @@ const AdminDashboardContent = () => {
                           isActive={activeView === "categories"}
                           onClick={() => handleViewChange("categories")}
                           className={cn(
-                            "font-['Inter'] font-bold text-[12px] py-3 px-3 rounded-xl transition-all duration-300 whitespace-nowrap",
+                            "font-['Inter'] font-bold text-[12px] py-3 px-3 rounded-full transition-all duration-300 whitespace-nowrap",
                             activeView === "categories"
-                              ? "bg-pink-50 text-pink-600 font-bold"
+                              ? "bg-emerald-50 text-emerald-600 font-bold"
                               : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
                           )}
                         >
@@ -1258,9 +1237,9 @@ const AdminDashboardContent = () => {
                           isActive={activeView === "preorder"}
                           onClick={() => handleViewChange("preorder")}
                           className={cn(
-                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-xl transition-all duration-200 whitespace-nowrap",
+                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-full transition-all duration-200 whitespace-nowrap",
                             activeView === "preorder"
-                              ? "bg-pink-50 text-pink-700 font-semibold"
+                              ? "bg-emerald-50 text-pink-700 font-semibold"
                               : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
                           )}
                         >
@@ -1272,9 +1251,9 @@ const AdminDashboardContent = () => {
                           isActive={activeView === "upcoming-drops"}
                           onClick={() => handleViewChange("upcoming-drops")}
                           className={cn(
-                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-xl transition-all duration-200 whitespace-nowrap",
+                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-full transition-all duration-200 whitespace-nowrap",
                             activeView === "upcoming-drops"
-                              ? "bg-pink-50 text-pink-700 font-semibold"
+                              ? "bg-emerald-50 text-pink-700 font-semibold"
                               : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
                           )}
                         >
@@ -1286,14 +1265,14 @@ const AdminDashboardContent = () => {
                           isActive={activeView === "special-offers"}
                           onClick={() => handleViewChange("special-offers")}
                           className={cn(
-                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-lg transition-all duration-200",
+                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-full transition-all duration-200",
                             activeView === "special-offers"
-                              ? "bg-pink-50 text-pink-700 font-semibold"
+                              ? "bg-emerald-50 text-pink-700 font-semibold"
                               : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
                           )}
                         >
                           {activeView === "special-offers" && (
-                            <div className="h-1.5 w-1.5 rounded-full bg-pink-600 mr-2" />
+                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-600 mr-2" />
                           )}
                           Special Offers
                         </SidebarMenuSubButton>
@@ -1308,9 +1287,9 @@ const AdminDashboardContent = () => {
                   isActive={activeView === "orders"}
                   onClick={() => handleViewChange("orders")}
                   className={cn(
-                    "flex items-center gap-3 py-5 px-4 rounded-xl transition-all duration-200 group",
+                    "flex items-center gap-3 py-5 px-4 rounded-full transition-all duration-200 group",
                     activeView === "orders"
-                      ? "!bg-pink-50 !text-pink-950 font-bold"
+                      ? "!bg-emerald-50 !text-pink-950 font-bold"
                       : "text-stone-600 hover:bg-stone-50 hover:text-pink-950",
                   )}
                 >
@@ -1318,8 +1297,8 @@ const AdminDashboardContent = () => {
                     className={cn(
                       "h-[18px] w-[18px] transition-colors",
                       activeView === "orders"
-                        ? "!text-pink-600"
-                        : "text-stone-400 group-hover:text-pink-600",
+                        ? "!text-emerald-600"
+                        : "text-stone-400 group-hover:text-emerald-600",
                     )}
                   />
                   <span className="font-['Inter'] font-semibold text-[13px]">
@@ -1331,8 +1310,8 @@ const AdminDashboardContent = () => {
               <Collapsible defaultOpen className="group/collapsible">
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton className="flex items-center gap-3 py-5 px-4 rounded-xl transition-all duration-200 text-stone-600 hover:bg-stone-50 hover:text-pink-950 w-full">
-                      <Users className="h-[18px] w-[18px] text-stone-400 group-hover:text-pink-600 transition-colors" />
+                    <SidebarMenuButton className="flex items-center gap-3 py-5 px-4 rounded-full transition-all duration-200 text-stone-600 hover:bg-stone-50 hover:text-pink-950 w-full">
+                      <Users className="h-[18px] w-[18px] text-stone-400 group-hover:text-emerald-600 transition-colors" />
                       <span className="font-['Inter'] font-semibold text-[13px] flex-1 text-left">
                         Vendors
                       </span>
@@ -1346,14 +1325,14 @@ const AdminDashboardContent = () => {
                           isActive={activeView === "vendors"}
                           onClick={() => handleViewChange("vendors")}
                           className={cn(
-                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-xl transition-all duration-200",
+                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-full transition-all duration-200",
                             activeView === "vendors"
-                              ? "bg-pink-50 text-pink-700 font-semibold"
+                              ? "bg-emerald-50 text-pink-700 font-semibold"
                               : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
                           )}
                         >
                           {activeView === "vendors" && (
-                            <div className="h-1.5 w-1.5 rounded-xl bg-pink-600 mr-2" />
+                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-600 mr-2" />
                           )}
                           Vendor Overview
                         </SidebarMenuSubButton>
@@ -1363,14 +1342,14 @@ const AdminDashboardContent = () => {
                           isActive={activeView === "vendor-analytics"}
                           onClick={() => handleViewChange("vendor-analytics")}
                           className={cn(
-                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-xl transition-all duration-200",
+                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-full transition-all duration-200",
                             activeView === "vendor-analytics"
-                              ? "bg-pink-50 text-pink-700 font-semibold"
+                              ? "bg-emerald-50 text-pink-700 font-semibold"
                               : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
                           )}
                         >
                           {activeView === "vendor-analytics" && (
-                            <div className="h-1.5 w-1.5 rounded-xl bg-pink-600 mr-2" />
+                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-600 mr-2" />
                           )}
                           Vendor Analytics
                         </SidebarMenuSubButton>
@@ -1380,14 +1359,14 @@ const AdminDashboardContent = () => {
                           isActive={activeView === "offline-billing"}
                           onClick={() => handleViewChange("offline-billing")}
                           className={cn(
-                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-xl transition-all duration-200",
+                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-full transition-all duration-200",
                             activeView === "offline-billing"
-                              ? "bg-pink-50 text-pink-700 font-semibold"
+                              ? "bg-emerald-50 text-pink-700 font-semibold"
                               : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
                           )}
                         >
                           {activeView === "offline-billing" && (
-                            <div className="h-1.5 w-1.5 rounded-xl bg-pink-600 mr-2" />
+                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-600 mr-2" />
                           )}
                           Offline Billing
                         </SidebarMenuSubButton>
@@ -1402,9 +1381,9 @@ const AdminDashboardContent = () => {
                   isActive={activeView === "coupons"}
                   onClick={() => handleViewChange("coupons")}
                   className={cn(
-                    "flex items-center gap-3 py-5 px-4 rounded-xl transition-all duration-200 group",
+                    "flex items-center gap-3 py-5 px-4 rounded-full transition-all duration-200 group",
                     activeView === "coupons"
-                      ? "!bg-pink-50 !text-stone-900 font-bold"
+                      ? "!bg-emerald-50 !text-stone-900 font-bold"
                       : "text-stone-600 hover:bg-stone-50 hover:text-stone-900",
                   )}
                 >
@@ -1412,8 +1391,8 @@ const AdminDashboardContent = () => {
                     className={cn(
                       "h-[18px] w-[18px] transition-colors",
                       activeView === "coupons"
-                        ? "!text-pink-600"
-                        : "text-stone-400 group-hover:text-pink-600",
+                        ? "!text-emerald-600"
+                        : "text-stone-400 group-hover:text-emerald-600",
                     )}
                   />
                   <span className="font-['Inter'] font-semibold text-[13px]">
@@ -1431,9 +1410,9 @@ const AdminDashboardContent = () => {
                     isActive={activeView === item.id}
                     onClick={() => handleViewChange(item.id)}
                     className={cn(
-                      "flex items-center gap-3 py-5 px-4 rounded-xl transition-all duration-300 group",
+                      "flex items-center gap-3 py-5 px-4 rounded-full transition-all duration-300 group",
                       activeView === item.id
-                        ? "bg-pink-50 text-pink-600 font-black shadow-sm shadow-pink-100/50"
+                        ? "bg-emerald-50 text-emerald-600 font-black shadow-sm shadow-pink-100/50"
                         : "text-stone-500 hover:bg-stone-50 hover:text-stone-900",
                     )}
                   >
@@ -1441,8 +1420,8 @@ const AdminDashboardContent = () => {
                       className={cn(
                         "h-[18px] w-[18px] transition-all",
                         activeView === item.id
-                          ? "text-pink-600 scale-110"
-                          : "text-stone-400 group-hover:text-pink-500",
+                          ? "text-emerald-600 scale-110"
+                          : "text-stone-400 group-hover:text-rose-500",
                       )}
                     />
                     <span className="font-['Inter'] font-bold text-[13px] tracking-tight">
@@ -1457,7 +1436,7 @@ const AdminDashboardContent = () => {
           <SidebarFooter className="p-6 border-t border-stone-100 flex-shrink-0 bg-white">
             <button
               onClick={logout}
-              className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all duration-500 group/logout font-black text-[11px] uppercase tracking-[0.2em] shadow-sm hover:shadow-xl hover:shadow-rose-100 hover:-translate-y-1"
+              className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-full bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all duration-500 group/logout font-black text-[11px] uppercase tracking-[0.2em] shadow-sm hover:shadow-xl hover:shadow-rose-100 hover:-translate-y-1"
             >
               <LogOut className="h-4 w-4 transition-transform group-hover/logout:-translate-x-1" />
               Logout
@@ -1492,28 +1471,28 @@ const AdminDashboardContent = () => {
               </div>
               <Input
                 placeholder="Global search protocol..."
-                className="w-full bg-white/60 border border-[#151515]/10 focus-visible:ring-1 focus-visible:ring-[#9a6bff]/40 focus-visible:bg-white pl-10 h-10 rounded-[2px] transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] placeholder:text-stone-400 placeholder:text-[11px] placeholder:font-black placeholder:uppercase placeholder:tracking-widest font-bold text-xs"
+                className="w-full bg-white/60 border border-[#151515]/10 focus-visible:ring-1 focus-visible:ring-[#9a6bff]/40 focus-visible:bg-white pl-10 h-10 rounded-full transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] placeholder:text-stone-400 placeholder:text-[11px] placeholder:font-black placeholder:uppercase placeholder:tracking-widest font-bold text-xs"
               />
               <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
-                <span className="text-[9px] font-black uppercase text-stone-400 tracking-widest bg-stone-100 px-2 py-1 rounded-[2px]">CMD+K</span>
+                <span className="text-[9px] font-black uppercase text-stone-400 tracking-widest bg-stone-100 px-2 py-1 rounded-full">CMD+K</span>
               </div>
             </div>
 
             {/* Right: Actions & Notifications */}
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1 bg-white border border-[#151515]/5 rounded-[2px] p-1 shadow-sm">
+              <div className="flex items-center gap-1 bg-white border border-[#151515]/5 rounded-[10px] p-1 shadow-sm">
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-8 w-8 rounded-[2px] text-stone-400 hover:text-[#9a6bff] hover:bg-[#9a6bff]/10 transition-all relative group"
+                  className="h-8 w-8 rounded-[10px] text-stone-400 hover:text-[#9a6bff] hover:bg-[#9a6bff]/10 transition-all relative group"
                 >
                   <Bell className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                  <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-pink-500 shadow-[0_0_8px_rgba(236,72,153,0.8)]"></span>
+                  <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(236,72,153,0.8)]"></span>
                 </Button>
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-8 w-8 rounded-[2px] text-stone-400 hover:text-[#9a6bff] hover:bg-[#9a6bff]/10 transition-all group"
+                  className="h-8 w-8 rounded-[10px] text-stone-400 hover:text-[#9a6bff] hover:bg-[#9a6bff]/10 transition-all group"
                 >
                   <Settings className="h-4 w-4 group-hover:scale-110 transition-transform group-hover:rotate-45" />
                 </Button>
@@ -1521,191 +1500,136 @@ const AdminDashboardContent = () => {
 
               <div className="h-6 w-px bg-[#151515]/10 hidden sm:block"></div>
 
-              <Button className="hidden sm:flex bg-[#151515] text-white hover:bg-[#111] rounded-[2px] px-6 h-10 text-[10px] uppercase font-black tracking-[0.2em] shadow-lg shadow-black/10 hover:shadow-xl hover:-translate-y-0.5 transition-all">
+              <Button className="hidden sm:flex bg-[#151515] text-white hover:bg-[#111] rounded-full px-6 h-10 text-[10px] uppercase font-black tracking-[0.2em] shadow-lg shadow-black/10 hover:shadow-xl hover:-translate-y-0.5 transition-all">
                 Export Data
               </Button>
             </div>
           </header>
 
           <main className="flex-1 min-h-0 w-full px-6 py-8 lg:px-8 xl:px-10">
-            <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-10">
+            <div className="flex w-full flex-col gap-10">
               {activeView === "homepage-categories" && <AdminHomepageCategories />}
               {activeView === "categories" && <CategoryManager />}
               {activeView === "offline-billing" && <VendorOfflineBilling />}
               {activeView === "points" && <PointsSettings />}
               {activeView === "coupons" && <AdminCouponManager />}
               {activeView === "overview" && (
-                <div className="space-y-10 animate-in fade-in slide-in-from-bottom-5">
-                <header className="relative overflow-hidden rounded-[2px] bg-[#151515] p-10 md:p-14 shadow-2xl">
-                  {/* Subtle Brand Gradient Glow Background */}
-                  <div className="absolute -top-40 -right-40 w-[500px] h-[500px] bg-gradient-to-br from-pink-500 via-[#9a6bff] to-indigo-500 rounded-full blur-[100px] opacity-20 pointer-events-none" />
-                  
-                  <div className="relative z-10 max-w-2xl">
-                    <h1 className="text-[42px] font-black tracking-tighter leading-none mb-4 text-white">
-                      Enterprise <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#9a6bff] to-pink-500">Overview</span>
-                    </h1>
-                    <p className="text-[#9a6bff] opacity-80 text-sm font-bold uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
-                       <Sparkles className="h-4 w-4" /> Operations Hub
-                    </p>
-                    <p className="text-stone-400 font-medium text-sm md:text-base max-w-md leading-relaxed mt-4">
-                      Holistic view of marketplace performance, vendor networking, and platform scale across all touchpoints.
-                    </p>
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                  {/* KPI Grid — Vendor-style compact cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <AdminKPICard
+                      title="Total Revenue"
+                      value={formatMoney(stats?.totalEarnings || 0)}
+                      icon={DollarSign}
+                      trend="+12.5%"
+                      trendUp
+                      color="emerald"
+                    />
+                    <AdminKPICard
+                      title="Total Orders"
+                      value={(stats?.totalOrders || 0).toLocaleString()}
+                      icon={ShoppingCart}
+                      trend="+5.2%"
+                      trendUp
+                      color="sky"
+                    />
+                    <AdminKPICard
+                      title="Active Products"
+                      value={(stats?.totalProducts || 0).toLocaleString()}
+                      icon={Package}
+                      color="teal"
+                    />
+                    <AdminKPICard
+                      title="Total Customers"
+                      value={(stats?.totalUsers || 0).toLocaleString()}
+                      icon={Users}
+                      trend="+8.9%"
+                      trendUp
+                      color="indigo"
+                    />
                   </div>
-                </header>
 
-                {/* Stat Cards - High Density Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-7">
-                  <StatCard
-                    title="Gross Revenue"
-                    value={formatMoney(stats?.totalEarnings || 0)}
-                    icon={DollarSign}
-                    colorClass="bg-[#9a6bff]/10 text-[#9a6bff]"
-                    description="Aggregate cross-channel revenue"
-                    trend="up"
-                    trendValue="+12.5%"
-                  />
-                  <StatCard
-                    title="Active Orders"
-                    value={stats?.totalOrders || 0}
-                    icon={ShoppingCart}
-                    colorClass="bg-purple-50 text-purple-600"
-                    description="Current lifecycle transactions"
-                    trend="up"
-                    trendValue="+5.2%"
-                  />
-                  <StatCard
-                    title="Growth Users"
-                    value={stats?.totalUsers || 0}
-                    icon={Users}
-                    colorClass="bg-amber-50 text-amber-600"
-                    description="New customer registrations"
-                    trend="down"
-                    trendValue="-1.2%"
-                  />
-                  <StatCard
-                    title="Total Inventory"
-                    value={stats?.totalProducts || 0}
-                    icon={Package}
-                    colorClass="bg-blue-50 text-blue-600"
-                    description="Active SKU count on cloud"
-                    trend="up"
-                    trendValue="+18.7%"
-                  />
-                </div>
-
-                {/* Main Content Area - Grid for Chart & Activity */}
-                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                  {/* Revenue Report Chart Section */}
-                  <Card className="xl:col-span-2 border border-[#151515]/5 shadow-sm hover:shadow-[0_20px_40px_rgba(154,107,255,0.12)] transition-all duration-500 ease-out p-8 rounded-[2px] bg-white flex flex-col">
-                    <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-                      <div className="flex flex-col gap-1">
-                        <h2 className="text-2xl font-black text-stone-900 tracking-tight">Revenue Report</h2>
-                      </div>
-                      
-                      <div className="flex items-center gap-12 flex-1 justify-center">
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-2 mb-1">
-                            <div className="h-3 w-3 rounded-[3px] bg-[#6f42c1]" />
-                            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Online Sales</span>
-                          </div>
-                          <span className="text-xl font-black text-stone-900 tabular-nums">
-                            {formatMoney(stats?.totalOnlineRevenue || 0).replace("₹", "")}
-                          </span>
+                  {/* Revenue + Recent Activity Row */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Revenue Breakdown */}
+                    <div className="lg:col-span-2 bg-white p-6 rounded-[10px] border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-xl font-black text-[#151515]">Revenue Overview</h2>
+                        <div className="relative">
+                          <select 
+                            value={selectedTimeRange}
+                            onChange={(e) => setSelectedTimeRange(e.target.value)}
+                            className="appearance-none bg-gray-50 border border-gray-200 rounded-[10px] px-4 py-2 pr-8 text-xs font-bold text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-200 cursor-pointer"
+                          >
+                            <option value="7d">7 Days</option>
+                            <option value="1m">1 Month</option>
+                            <option value="1y">1 Year</option>
+                          </select>
+                          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
                         </div>
-                        
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-2 mb-1">
-                            <div className="h-3 w-3 rounded-[3px] bg-[#fd7e14]" />
-                            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Offline Sales</span>
-                          </div>
-                          <span className="text-xl font-black text-stone-900 tabular-nums">
-                             {formatMoney(stats?.totalOfflineRevenue || 0).replace("₹", "")}
-                          </span>
+                      </div>
+
+                      {/* Online / Offline Breakdown Cards */}
+                      <div className="grid grid-cols-2 gap-4 mb-6">
+                        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-5 rounded-[10px]">
+                          <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-2">Online Sales</p>
+                          <p className="text-2xl font-black text-[#151515]">{formatMoney(stats?.totalOnlineRevenue || 0)}</p>
+                          <p className="text-xs text-gray-500 mt-1">{stats?.totalOrders || 0} orders</p>
                         </div>
-
+                        <div className="bg-gradient-to-br from-sky-50 to-sky-100/50 p-5 rounded-[10px]">
+                          <p className="text-xs font-bold text-sky-600 uppercase tracking-wider mb-2">Offline Sales</p>
+                          <p className="text-2xl font-black text-[#151515]">{formatMoney(stats?.totalOfflineRevenue || 0)}</p>
+                          <p className="text-xs text-gray-500 mt-1">In-store transactions</p>
+                        </div>
                       </div>
 
-                      <div className="relative group/sel">
-                        <select 
-                          value={selectedTimeRange}
-                          onChange={(e) => setSelectedTimeRange(e.target.value)}
-                          className="appearance-none bg-white border border-[#151515]/10 rounded-[2px] px-5 py-2.5 pr-10 text-[11px] font-black uppercase tracking-widest text-[#151515] focus:outline-none focus:ring-1 focus:ring-[#9a6bff]/40 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] cursor-pointer transition-all hover:bg-stone-50"
-                        >
-                          <option value="7d">7 Days</option>
-                          <option value="1m">1 Month</option>
-                          <option value="1y">1 Year</option>
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400 pointer-events-none" />
-                      </div>
+                      {/* Revenue Chart */}
+                      <RevenueReport />
                     </div>
-                    <RevenueReport />
-                  </Card>
 
-                  {/* Recent Activity Feed */}
-                  <Card className="border border-[#151515]/5 shadow-sm hover:shadow-[0_20px_40px_rgba(154,107,255,0.12)] transition-all duration-500 ease-out p-8 rounded-[2px] bg-white flex flex-col">
-                    <div className="flex items-center justify-between mb-8">
-                      <h2 className="text-xl font-black text-[#151515]">Recent Activity</h2>
-                      <Button variant="link" className="text-[#9a6bff] hover:text-[#7b51db] transition-colors font-bold text-[11px] uppercase tracking-wider p-0 h-auto">View All</Button>
-                    </div>
-                    
-                    <ScrollArea className="h-[340px] pr-4 -mr-4">
-                      <div className="space-y-5 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-px before:bg-stone-100">
+                    {/* Recent Activity Feed */}
+                    <div className="bg-white p-6 rounded-[10px] border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex flex-col max-h-[480px]">
+                      <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-xl font-black text-[#151515]">Recent Activity</h2>
+                        <button className="text-xs text-emerald-600 font-bold hover:underline">View All →</button>
+                      </div>
+                      <div className="flex-1 overflow-y-auto space-y-3 pr-1" data-lenis-prevent>
                         {(stats?.recentActivity?.length > 0 ? stats.recentActivity : [
                           { title: "System Ready", description: "Listening for new platform activity...", time: new Date().toISOString(), iconType: "activity" }
                         ]).map((act, idx) => {
                           const iconMap = {
-                            cart: { icon: ShoppingCart, color: "text-blue-500", bg: "bg-blue-50" },
+                            cart: { icon: ShoppingCart, color: "text-sky-500", bg: "bg-sky-50" },
                             alert: { icon: AlertCircle, color: "text-amber-500", bg: "bg-amber-50" },
-                            user: { icon: UserPlus, color: "text-[#9a6bff]", bg: "bg-[#9a6bff]/10" },
-                            activity: { icon: Activity, color: "text-[#9a6bff]", bg: "bg-[#9a6bff]/10" }
+                            user: { icon: UserPlus, color: "text-emerald-500", bg: "bg-emerald-50" },
+                            activity: { icon: Activity, color: "text-emerald-500", bg: "bg-emerald-50" }
                           };
                           const iconObj = iconMap[act.iconType] || iconMap.activity;
-                          
                           const diff = Math.floor((new Date() - new Date(act.time)) / 60000);
                           const timeStr = diff < 1 ? "Just now" : diff < 60 ? `${diff} min ago` : diff < 1440 ? `${Math.floor(diff/60)} hr ago` : `${Math.floor(diff/1440)} d ago`;
 
                           return (
-                          <div key={act.id || idx} className="flex gap-4 relative group">
-                            <div className={cn("h-6 w-6 rounded-full flex items-center justify-center shrink-0 z-10 border-2 border-white shadow-sm ring-4 ring-white", iconObj.bg, iconObj.color)}>
-                              <iconObj.icon className="h-3 w-3" />
+                            <div key={act.id || idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-[10px] hover:bg-gray-100 transition-colors">
+                              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0", iconObj.bg, iconObj.color)}>
+                                <iconObj.icon className="h-4 w-4" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-bold text-[#151515] truncate">{act.title}</p>
+                                <p className="text-xs text-gray-400 truncate">{act.description}</p>
+                              </div>
+                              <span className="text-[10px] font-bold text-gray-300 uppercase tracking-wide shrink-0">{timeStr}</span>
                             </div>
-                            <div className="flex flex-col">
-                              <span className="text-[13px] font-black text-stone-900 group-hover:text-[#9a6bff] transition-colors">{act.title}</span>
-                              <p className="text-[11px] text-stone-400 font-medium leading-relaxed mt-1">{act.description}</p>
-                              <span className="text-[9px] font-bold text-stone-300 uppercase tracking-widest mt-2">{timeStr}</span>
-                            </div>
-                          </div>
                           );
                         })}
                       </div>
-                    </ScrollArea>
-                  </Card>
-                </div>
-
-                {/* Bottom Row - Best Selling Table */}
-                <div className="grid grid-cols-1 xl:grid-cols-1 gap-8">
-                  <Card className="border border-[#151515]/5 shadow-sm hover:shadow-[0_20px_40px_rgba(154,107,255,0.12)] transition-all duration-500 ease-out p-8 bg-white overflow-hidden rounded-[2px]">
-                    <div className="flex items-center justify-between mb-10">
-                      <div>
-                        <h2 className="text-xl font-black text-[#151515]">Best Selling Products</h2>
-                        <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1 block">Top performing SKUs from current catalog</span>
-                      </div>
-                      <Button variant="outline" className="rounded-[2px] border-[#151515]/10 font-bold text-xs h-10 px-6 transition-all hover:border-[#151515]/30">View Full Catalog</Button>
                     </div>
+                  </div>
 
-                    <div className="overflow-x-auto pb-2">
-                      <Table className="min-w-[900px]">
-                      <TableHeader className="bg-transparent border-b border-stone-100">
-                        <TableRow className="hover:bg-transparent border-none">
-                          <TableHead className="text-stone-400 text-[10px] font-black uppercase tracking-[0.2em] py-5">Product Details</TableHead>
-                          <TableHead className="text-stone-400 text-[10px] font-black uppercase tracking-[0.2em] py-5">Category</TableHead>
-                          <TableHead className="text-stone-400 text-[10px] font-black uppercase tracking-[0.2em] py-5">Price</TableHead>
-                          <TableHead className="text-stone-400 text-[10px] font-black uppercase tracking-[0.2em] py-5">Total Sold</TableHead>
-                          <TableHead className="text-stone-400 text-[10px] font-black uppercase tracking-[0.2em] py-5">Stock Status</TableHead>
-                          <TableHead className="text-stone-400 text-[10px] font-black uppercase tracking-[0.2em] py-5 text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
+                  {/* Bottom Row — Top Products + Low Stock */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Top Selling Products */}
+                    <div className="bg-white p-8 rounded-[10px] border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                      <h2 className="text-xl font-black text-[#151515] mb-6">Top Selling Products</h2>
+                      <div className="space-y-3">
                         {(filteredProducts || [])
                           .map((p) => {
                             const perf = analyticsData?.productPerformance?.find(pf => pf.label === p.name);
@@ -1713,101 +1637,105 @@ const AdminDashboardContent = () => {
                           })
                           .sort((a, b) => b._totalSold - a._totalSold)
                           .slice(0, 5)
-                          .map((prod) => {
-                            const totalSold = prod._totalSold;
-                            const totalInventory = (prod.stock || 0) + totalSold;
-                            const stockPercent = totalInventory === 0 ? 0 : Math.min(100, Math.floor(((prod.stock || 0) / totalInventory) * 100));
-                            
-                            return (
-                              <TableRow key={prod._id || prod.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors group">
-                                <TableCell className="py-6">
-                                  <div className="flex items-center gap-4">
-                                    <div className="h-14 w-14 rounded-[2px] bg-stone-100 overflow-hidden shadow-sm flex items-center justify-center p-1 border border-stone-200/40 relative">
-                                      {prod.images?.[0] || prod.imageUrls?.[0] ? (
-                                        <img src={prod.images?.[0] || prod.imageUrls?.[0]} alt="" className="h-full w-full object-cover rounded-[1px] group-hover:scale-110 transition-transform duration-500" />
-                                      ) : (
-                                        <ImageIcon className="h-6 w-6 text-stone-300" />
-                                      )}
-                                      {prod.bestSeller && (
-                                        <div className="absolute top-0 right-0 h-4 w-4 bg-amber-500 rounded-bl-[2px] flex items-center justify-center shadow-sm">
-                                          <Star className="h-2 w-2 text-white fill-current" />
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div className="flex flex-col max-w-[220px] xl:max-w-[320px]">
-                                      <span className="font-black text-stone-900 text-sm tracking-tight truncate" title={prod.name}>{prod.name}</span>
-                                      <span className="text-[10px] text-stone-400 font-bold uppercase tracking-widest mt-1 truncate" title={prod.brand || "OMW Original"}>{prod.brand || "OMW Original"}</span>
-                                    </div>
-                                  </div>
-                                </TableCell>
-                                <TableCell>
-                                  <Badge className="bg-[#151515]/5 text-[#151515]/70 hover:bg-[#151515]/10 border-none rounded-[2px] font-black text-[10px] py-1 px-3 uppercase tracking-wider">
-                                    {prod.categoryName || prod.category?.name || "General"}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="font-black text-stone-900 text-sm tabular-nums">₹{prod.price?.toLocaleString()}</TableCell>
-                                <TableCell>
-                                  <div className="flex items-center gap-2">
-                                    <TrendingUp className="h-3 w-3 text-emerald-500" />
-                                    <span className="font-bold text-stone-700 text-xs">{totalSold} sales</span>
-                                  </div>
-                                </TableCell>
-                                <TableCell>
-                                  <div className="flex flex-col gap-1.5 w-24">
-                                    <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-widest text-stone-400">
-                                      <span>{prod.stock || 0} in stock</span>
-                                      <span>{stockPercent}%</span>
-                                    </div>
-                                    <div className="h-1.5 w-full bg-stone-100 rounded-[2px] overflow-hidden">
-                                      <div className="h-full bg-[#9a6bff] rounded-[2px] transition-all duration-1000" style={{ width: `${stockPercent}%` }}></div>
-                                    </div>
-                                  </div>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  <Button size="icon" variant="ghost" className="h-9 w-9 text-stone-400 hover:text-[#9a6bff] hover:bg-[#9a6bff]/10 rounded-[2px] transition-colors">
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            );
-                        })}
-                      </TableBody>
-                    </Table>
+                          .map((p, i) => (
+                          <div key={p.id || p._id} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
+                            <span className="text-xs font-black text-gray-400 w-5">#{i + 1}</span>
+                            {(p.images?.[0] || p.imageUrls?.[0]) ? (
+                              <img src={p.images?.[0] || p.imageUrls?.[0]} className="w-9 h-9 rounded-[10px] object-cover border border-gray-100" alt="" />
+                            ) : (
+                              <div className="w-9 h-9 rounded-[10px] bg-emerald-50 flex items-center justify-center">
+                                <Package className="h-4 w-4 text-emerald-500" />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold text-[#151515] truncate">{p.name}</p>
+                              <p className="text-xs text-gray-400">{p._totalSold} sold</p>
+                            </div>
+                            <span className="font-black text-sm text-emerald-600">{formatMoney(p.price || 0)}</span>
+                          </div>
+                        ))}
+                        {(!filteredProducts || filteredProducts.length === 0) && (
+                          <p className="text-center text-gray-400 text-sm py-6">No sales data yet</p>
+                        )}
+                      </div>
                     </div>
-                  </Card>
-                </div>
 
-                {stats?.pendingVendorApprovals > 0 && (
-                  <Card className="bg-[#151515] text-white border border-[#9a6bff]/20 p-8 rounded-[2px] flex flex-col lg:flex-row lg:items-center justify-between gap-6 shadow-[0_20px_40px_rgba(154,107,255,0.15)] relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-pink-500 to-[#9a6bff]" />
-                    <div className="flex items-start lg:items-center gap-6 z-10 relative pl-4">
-                      <div className="h-14 w-14 rounded-[2px] bg-[#9a6bff]/10 flex items-center justify-center text-pink-500 shadow-inner group-hover:scale-110 transition-transform">
-                        <AlertCircle className="h-7 w-7" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-black tracking-tight flex items-center gap-3">
-                          Critical Approvals Required
-                          <span className="flex h-2 w-2 relative">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-pink-500"></span>
+                    {/* Low Stock Alert */}
+                    <div className="bg-white p-8 rounded-[10px] border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-xl font-black text-[#151515]">⚠️ Low Stock Alert</h2>
+                        {(products || []).filter(p => (p.stock || 0) <= 5 && p.status === "ACTIVE").length > 0 && (
+                          <span className="bg-rose-100 text-rose-700 text-xs font-black px-2 py-1 rounded-[10px]">
+                            {(products || []).filter(p => (p.stock || 0) <= 5 && p.status === "ACTIVE").length} items
                           </span>
-                        </h3>
-                        <p className="text-stone-400 text-xs md:text-sm mt-1.5 font-medium">
-                          <strong className="text-white">{stats.pendingVendorApprovals}</strong> vendor profiles are
-                          awaiting enterprise authorization to join the network.
-                        </p>
+                        )}
+                      </div>
+                      <div className="space-y-3 max-h-[280px] overflow-y-auto" data-lenis-prevent>
+                        {(products || [])
+                          .filter(p => (p.stock || 0) <= 5 && p.status === "ACTIVE")
+                          .slice(0, 6)
+                          .map((p) => (
+                          <div key={p.id || p._id} className="flex items-center gap-3 p-3 bg-rose-50/50 rounded-[10px] border border-rose-100">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold text-[#151515] truncate">{p.name}</p>
+                              <p className="text-xs text-gray-500">{p.categoryName || p.category?.name || "General"}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-sm font-black ${(p.stock || 0) === 0 ? "text-rose-600" : "text-amber-600"}`}>
+                                {(p.stock || 0) === 0 ? "OUT" : `${p.stock} left`}
+                              </span>
+                              <button
+                                onClick={() => handleViewChange("inventory")}
+                                className="text-xs bg-emerald-500 text-white px-2 py-1 rounded-[10px] font-bold hover:bg-emerald-600"
+                              >
+                                Restock
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                        {(products || []).filter(p => (p.stock || 0) <= 5 && p.status === "ACTIVE").length === 0 && (
+                          <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+                            <CheckCircle2 className="h-10 w-10 mb-2 text-emerald-400" />
+                            <p className="text-sm font-medium">All stock levels healthy</p>
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <Button
-                      onClick={() => handleViewChange("vendors")}
-                      className="bg-gradient-to-r from-[#9a6bff] to-pink-500 text-white font-black px-10 h-12 rounded-[2px] shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95 shrink-0 uppercase tracking-widest text-[10px]"
-                    >
-                      <span className="relative z-10">Authorize Now</span>
-                    </Button>
-                  </Card>
-                )}
-              </div>
-            )}
+                  </div>
+
+                  {/* Vendor Approval Banner */}
+                  {stats?.pendingVendorApprovals > 0 && (
+                    <div className="bg-[#151515] text-white border border-emerald-500/20 p-6 rounded-[10px] flex flex-col lg:flex-row lg:items-center justify-between gap-6 shadow-lg relative overflow-hidden">
+                      <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-emerald-400 to-sky-500" />
+                      <div className="flex items-center gap-4 pl-4">
+                        <div className="h-12 w-12 rounded-[10px] bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                          <AlertCircle className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-black tracking-tight flex items-center gap-3">
+                            Pending Approvals
+                            <span className="flex h-2 w-2 relative">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                          </h3>
+                          <p className="text-gray-400 text-sm mt-1">
+                            <strong className="text-white">{stats.pendingVendorApprovals}</strong> vendor profiles awaiting authorization.
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => handleViewChange("vendors")}
+                        className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-8 h-11 rounded-[10px] shadow-lg transition-all hover:scale-105 active:scale-95 shrink-0 text-sm"
+                      >
+                        Authorize Now
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+
 
             {/* View Logic for Inventory and Orders omitted for brevity as they haven't changed */}
             {/* Keeping full implementation for reliability */}
@@ -1818,7 +1746,7 @@ const AdminDashboardContent = () => {
                 <header className="flex items-center justify-between gap-6 mb-12">
                   <div className="flex flex-col">
                     <h1
-                      className={`${THEME.typography.headings.h1} uppercase leading-none mb-3 bg-clip-text text-transparent ${THEME.gradients.brand} pb-1`}
+                      className={`${THEME.typography.headings.h1} uppercase leading-none mb-3 bg-clip-text text-transparent ${THEME.gradients.adminBrand} pb-1`}
                     >
                       Product Inventory
                     </h1>
@@ -1827,16 +1755,16 @@ const AdminDashboardContent = () => {
                     </p>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="group flex items-center bg-white hover:bg-stone-50 transition-all duration-300 rounded-xl border border-stone-100 hover:border-pink-200 hover:shadow-md px-3 py-1.5 w-fit cursor-pointer animate-in fade-in slide-in-from-right-2 h-14">
-                      <div className="flex items-center justify-center h-8 w-8 rounded-xl bg-stone-50 group-hover:bg-pink-50 transition-colors border border-stone-100 mr-3">
-                        <Filter className="h-[14px] w-[14px] text-stone-400 group-hover:text-pink-600 transition-colors" />
+                    <div className="group flex items-center bg-white hover:bg-stone-50 transition-all duration-300 rounded-[10px] border border-stone-100 hover:border-emerald-200 hover:shadow-md px-3 py-1.5 w-fit cursor-pointer animate-in fade-in slide-in-from-right-2 h-14">
+                      <div className="flex items-center justify-center h-8 w-8 rounded-[10px] bg-stone-50 group-hover:bg-emerald-50 transition-colors border border-stone-100 mr-3">
+                        <Filter className="h-[14px] w-[14px] text-stone-400 group-hover:text-emerald-600 transition-colors" />
                       </div>
                       <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest mr-1">
                         Category:
                       </span>
                       <div className="relative flex items-center min-w-[140px]">
                         <select
-                          className="appearance-none bg-transparent border-none text-stone-900 font-bold text-xs focus:ring-0 cursor-pointer py-1 pl-2 pr-8 w-full hover:text-pink-600 transition-colors outline-none"
+                          className="appearance-none bg-transparent border-none text-stone-900 font-bold text-xs focus:ring-0 cursor-pointer py-1 pl-2 pr-8 w-full hover:text-emerald-600 transition-colors outline-none"
                           value={selectedCategory}
                           onChange={(e) => setSelectedCategory(e.target.value)}
                         >
@@ -1847,14 +1775,14 @@ const AdminDashboardContent = () => {
                             </option>
                           ))}
                         </select>
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none bg-stone-100 group-hover:bg-indigo-100 rounded-[2px] p-1 transition-colors">
-                          <ChevronRight className="h-3 w-3 text-stone-500 group-hover:text-indigo-600 rotate-90 transition-transform" />
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none bg-stone-100 group-hover:bg-indigo-100 rounded-[10px] p-1 transition-colors">
+                          <ChevronRight className="h-3 w-3 text-stone-500 group-hover:text-emerald-600 rotate-90 transition-transform" />
                         </div>
                       </div>
                     </div>
                     <Button
                       onClick={handleCreateProductClick}
-                      className="bg-stone-900 text-white rounded-xl h-14 px-10 font-black uppercase tracking-widest text-[10px] flex items-center gap-3 shadow-2xl shadow-stone-900/10 hover:bg-[#ff4fa3] transition-all hover:scale-105 active:scale-95"
+                      className="bg-stone-900 text-white rounded-[10px] h-14 px-10 font-black uppercase tracking-widest text-[10px] flex items-center gap-3 shadow-2xl shadow-stone-900/10 hover:bg-[#ff4fa3] transition-all hover:scale-105 active:scale-95"
                     >
                       <Plus className="h-4 w-4" />
                       Add Product
@@ -1862,7 +1790,7 @@ const AdminDashboardContent = () => {
                   </div>
                 </header>
 
-                <Card className="border-none shadow-sm rounded-xl overflow-hidden">
+                <Card className="border-none shadow-sm rounded-[10px] overflow-hidden">
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader className="bg-stone-50">
@@ -1920,7 +1848,7 @@ const AdminDashboardContent = () => {
                             >
                               <TableCell className="p-4">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-stone-100 flex-shrink-0 border border-stone-200">
+                                  <div className="w-12 h-12 rounded-[10px] overflow-hidden bg-stone-100 flex-shrink-0 border border-stone-200">
                                     {p.imageUrls &&
                                     p.imageUrls.filter(
                                       (u) => u && u.trim() !== "",
@@ -1952,7 +1880,7 @@ const AdminDashboardContent = () => {
                                       </p>
                                       {p.specialOfferType &&
                                         p.specialOfferType !== "None" && (
-                                          <Badge className="h-4 px-2 text-[7px] font-black uppercase tracking-tighter bg-indigo-950 text-white border-none rounded-[2px] shrink-0">
+                                          <Badge className="h-4 px-2 text-[7px] font-black uppercase tracking-tighter bg-indigo-950 text-white border-none rounded-[10px] shrink-0">
                                             {p.specialOfferType}
                                           </Badge>
                                         )}
@@ -1983,7 +1911,7 @@ const AdminDashboardContent = () => {
                               <TableCell className="p-4">
                                 <Badge
                                   variant="outline"
-                                  className="rounded-xl font-semibold text-[10px] uppercase tracking-wider border-stone-200 text-stone-500 bg-stone-50"
+                                  className="rounded-[10px] font-semibold text-[10px] uppercase tracking-wider border-stone-200 text-stone-500 bg-stone-50"
                                 >
                                   {p.category?.name || "—"}
                                 </Badge>
@@ -2007,7 +1935,7 @@ const AdminDashboardContent = () => {
                                       return (
                                         <Badge
                                           variant="outline"
-                                          className="rounded-xl text-[10px] text-stone-400"
+                                          className="rounded-[10px] text-[10px] text-stone-400"
                                         >
                                           None
                                         </Badge>
@@ -2016,7 +1944,7 @@ const AdminDashboardContent = () => {
                                     if (vendorsList.length === 1) {
                                       const bv = vendorsList[0];
                                       return (
-                                        <div className="flex items-center gap-1.5 bg-stone-50 hover:bg-stone-100 transition-colors border border-stone-100 rounded-xl px-2.5 py-1">
+                                        <div className="flex items-center gap-1.5 bg-stone-50 hover:bg-stone-100 transition-colors border border-stone-100 rounded-[10px] px-2.5 py-1">
                                           <span className="text-[10px] font-black tracking-wide text-stone-900/80 truncate max-w-[90px]">
                                             {bv.vendor?.businessName ||
                                               "Unknown"}
@@ -2026,7 +1954,7 @@ const AdminDashboardContent = () => {
                                     }
 
                                     return (
-                                      <div className="flex items-center gap-1.5 bg-pink-50/50 hover:bg-pink-100/50 transition-colors border border-pink-100/60 rounded-xl px-2.5 py-1">
+                                      <div className="flex items-center gap-1.5 bg-emerald-50/50 hover:bg-pink-100/50 transition-colors border border-emerald-100/60 rounded-[10px] px-2.5 py-1">
                                         <span className="text-[10px] font-black tracking-wide text-pink-900 truncate max-w-[90px]">
                                           {vendorsList.length} Vendors
                                         </span>
@@ -2044,7 +1972,7 @@ const AdminDashboardContent = () => {
                                     p.stock < 10
                                       ? "text-rose-500"
                                       : "text-stone-600",
-                                    "px-3 py-1 bg-stone-50 rounded-xl border border-stone-100",
+                                    "px-3 py-1 bg-stone-50 rounded-[10px] border border-stone-100",
                                   )}
                                 >
                                   {p.stock}
@@ -2054,9 +1982,9 @@ const AdminDashboardContent = () => {
                                 <span
                                   className={cn(
                                     p.onlineStock < 10
-                                      ? "text-pink-500"
+                                      ? "text-rose-500"
                                       : "text-emerald-600",
-                                    "px-3 py-1 bg-pink-50/30 rounded-xl border border-pink-100/50 text-[10px]",
+                                    "px-3 py-1 bg-emerald-50/30 rounded-[10px] border border-emerald-100/50 text-[10px]",
                                   )}
                                 >
                                   {p.onlineStock}
@@ -2065,7 +1993,7 @@ const AdminDashboardContent = () => {
                               <TableCell className="p-4 text-center">
                                 <Badge
                                   className={cn(
-                                    "rounded-xl font-black px-3 border-none text-[9px] uppercase tracking-wider",
+                                    "rounded-[10px] font-black px-3 border-none text-[9px] uppercase tracking-wider",
                                     p.status === "ACTIVE"
                                       ? "bg-emerald-50 text-emerald-600"
                                       : "bg-stone-100 text-stone-400",
@@ -2081,7 +2009,7 @@ const AdminDashboardContent = () => {
                                       e.stopPropagation();
                                       handleEditProduct(p);
                                     }}
-                                    className="p-2 text-stone-400 hover:text-pink-600 hover:bg-pink-50 rounded-xl transition-colors"
+                                    className="p-2 text-stone-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-[10px] transition-colors"
                                   >
                                     <Pencil className="h-4 w-4" />
                                   </button>
@@ -2093,7 +2021,7 @@ const AdminDashboardContent = () => {
                                         handleDeleteProduct(bv.id),
                                       );
                                     }}
-                                    className="p-2 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
+                                    className="p-2 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-[10px] transition-colors"
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </button>
@@ -2115,7 +2043,7 @@ const AdminDashboardContent = () => {
                 <header className="flex items-center justify-between">
                   <div className="flex flex-col">
                     <h1
-                      className={`${THEME.typography.headings.h1} uppercase leading-none mb-3 bg-clip-text text-transparent ${THEME.gradients.brand} pb-1`}
+                      className={`${THEME.typography.headings.h1} uppercase leading-none mb-3 bg-clip-text text-transparent ${THEME.gradients.adminBrand} pb-1`}
                     >
                       Special Offer Curation
                     </h1>
@@ -2124,9 +2052,9 @@ const AdminDashboardContent = () => {
                       order values.
                     </p>
                   </div>
-                  <div className="flex items-center gap-3 bg-indigo-50/50 p-2 rounded-[2px] border border-indigo-100/50">
-                    <div className="h-2 w-2 rounded-[2px] bg-emerald-500 animate-pulse" />
-                    <span className="text-[10px] font-bold text-indigo-900 uppercase tracking-widest">
+                  <div className="flex items-center gap-3 bg-emerald-50/50 p-2 rounded-[10px] border border-indigo-100/50">
+                    <div className="h-2 w-2 rounded-[10px] bg-emerald-500 animate-pulse" />
+                    <span className="text-[10px] font-bold text-[#151515] uppercase tracking-widest">
                       Live in Checkout
                     </span>
                   </div>
@@ -2142,7 +2070,7 @@ const AdminDashboardContent = () => {
                       <div key={slotName} className="space-y-6">
                         <div className="flex items-center gap-4 px-2">
                           <div
-                            className={`h-11 w-11 rounded-xl bg-stone-900 flex items-center justify-center text-white shadow-xl shadow-stone-200`}
+                            className={`h-11 w-11 rounded-[10px] bg-stone-900 flex items-center justify-center text-white shadow-xl shadow-stone-200`}
                           >
                             <Sparkles className="h-5 w-5" />
                           </div>
@@ -2165,10 +2093,10 @@ const AdminDashboardContent = () => {
                               className="relative group/slot h-full flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500"
                             >
                               <div
-                                className={`absolute -inset-1 bg-linear-to-r from-pink-500 to-purple-600 ${THEME.borders.radius.xl} blur opacity-5 group-hover/slot:opacity-20 transition duration-1000 group-hover/slot:duration-200`}
+                                className={`absolute -inset-1 bg-linear-to-r from-emerald-500 to-teal-600 ${THEME.borders.radius.xl} blur opacity-5 group-hover/slot:opacity-20 transition duration-1000 group-hover/slot:duration-200`}
                               ></div>
                               <Card
-                                className={`relative bg-white border border-stone-200/50 ${THEME.borders.radius.xl} overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex-1 flex flex-col p-3 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 hover:border-pink-100 group/card`}
+                                className={`relative bg-white border border-stone-200/50 ${THEME.borders.radius.xl} overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex-1 flex flex-col p-3 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 hover:border-emerald-100 group/card`}
                               >
                                 <div
                                   className={`aspect-16/10 w-full ${THEME.borders.radius.xl} overflow-hidden bg-stone-50 border border-stone-100/50 relative mb-3 group/img shrink-0`}
@@ -2208,7 +2136,7 @@ const AdminDashboardContent = () => {
                                         });
                                         setIsQuickAddOpen(true);
                                       }}
-                                      className="h-8 px-4 rounded-[2px] bg-white shadow-lg text-indigo-600 hover:bg-indigo-600 hover:text-white font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105"
+                                      className="h-8 px-4 rounded-[10px] bg-white shadow-lg text-emerald-600 hover:bg-emerald-600 hover:text-white font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105"
                                     >
                                       Edit Deal
                                     </Button>
@@ -2219,7 +2147,7 @@ const AdminDashboardContent = () => {
                                           specialOfferType: "None",
                                         })
                                       }
-                                      className="h-8 w-8 p-0 rounded-[2px] shadow-lg font-black bg-white text-rose-500 hover:bg-rose-500 hover:text-white transition-all hover:scale-105"
+                                      className="h-8 w-8 p-0 rounded-[10px] shadow-lg font-black bg-white text-rose-500 hover:bg-rose-500 hover:text-white transition-all hover:scale-105"
                                     >
                                       <Trash2 size={14} strokeWidth={3} />
                                     </Button>
@@ -2242,7 +2170,7 @@ const AdminDashboardContent = () => {
                           {/* Add New Slot card specific to THIS section */}
                           <div className="relative group/slot h-full flex flex-col animate-in zoom-in duration-500">
                             <Card
-                              className={`relative bg-stone-50/30 border-stone-200/60 border-dashed border-2 ${THEME.borders.radius.xl} overflow-hidden flex-1 flex flex-col transition-all duration-300 hover:border-indigo-300 hover:bg-pink-50/10`}
+                              className={`relative bg-stone-50/30 border-stone-200/60 border-dashed border-2 ${THEME.borders.radius.xl} overflow-hidden flex-1 flex flex-col transition-all duration-300 hover:border-indigo-300 hover:bg-emerald-50/10`}
                             >
                               <CardContent className="p-5 flex-1 flex flex-col items-center justify-center space-y-4">
                                 <div
@@ -2260,7 +2188,7 @@ const AdminDashboardContent = () => {
                                     });
                                     setIsQuickAddOpen(true);
                                   }}
-                                  className={`h-12 w-12 ${THEME.borders.radius.xl} bg-white border border-stone-200 flex items-center justify-center group/add cursor-pointer hover:bg-pink-600 hover:border-pink-600 hover:shadow-lg hover:shadow-pink-500/20 hover:scale-105 transition-all duration-300 shadow-sm`}
+                                  className={`h-12 w-12 ${THEME.borders.radius.xl} bg-white border border-stone-200 flex items-center justify-center group/add cursor-pointer hover:bg-emerald-600 hover:border-pink-600 hover:shadow-lg hover:shadow-pink-500/20 hover:scale-105 transition-all duration-300 shadow-sm`}
                                 >
                                   <Plus className="h-5 w-5 text-stone-400 group-hover/add:text-white transition-colors" />
                                 </div>
@@ -2281,8 +2209,8 @@ const AdminDashboardContent = () => {
                   })}
                 </div>
 
-                <div className="bg-stone-50/80 border border-stone-100 rounded-[2px] p-6 flex items-start gap-4 shrink-0">
-                  <div className="h-8 w-8 rounded-[2px] bg-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
+                <div className="bg-stone-50/80 border border-stone-100 rounded-[10px] p-6 flex items-start gap-4 shrink-0">
+                  <div className="h-8 w-8 rounded-[10px] bg-indigo-100 flex items-center justify-center text-emerald-600 shrink-0">
                     <Info className="h-4 w-4" />
                   </div>
                   <div className="space-y-1">
@@ -2304,7 +2232,7 @@ const AdminDashboardContent = () => {
               <div className="space-y-8 animate-in fade-in">
                 <header>
                   <h1
-                    className={`${THEME.typography.headings.h1} bg-clip-text text-transparent ${THEME.gradients.brand} pb-1`}
+                    className={`${THEME.typography.headings.h1} bg-clip-text text-transparent ${THEME.gradients.adminBrand} pb-1`}
                   >
                     Order Transmissions
                   </h1>
@@ -2321,38 +2249,38 @@ const AdminDashboardContent = () => {
                   className="space-y-6"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <TabsList className="bg-stone-50 p-1.5 rounded-[2px] border border-stone-100 gap-2 h-auto w-fit">
+                    <TabsList className="bg-stone-50 p-1.5 rounded-[10px] border border-stone-100 gap-2 h-auto w-fit">
                       <TabsTrigger
                         value="online"
-                        className="rounded-xl px-10 h-10 data-[state=active]:bg-stone-900 data-[state=active]:text-white font-black text-[10px] uppercase tracking-widest transition-all"
+                        className="rounded-[10px] px-10 h-10 data-[state=active]:bg-stone-900 data-[state=active]:text-white font-black text-[10px] uppercase tracking-widest transition-all"
                       >
                         Online
                       </TabsTrigger>
                       <TabsTrigger
                         value="pre-order"
-                        className="rounded-xl px-10 h-10 data-[state=active]:bg-stone-900 data-[state=active]:text-white font-black text-[10px] uppercase tracking-widest transition-all"
+                        className="rounded-[10px] px-10 h-10 data-[state=active]:bg-stone-900 data-[state=active]:text-white font-black text-[10px] uppercase tracking-widest transition-all"
                       >
                         Pre-Order
                       </TabsTrigger>
                       <TabsTrigger
                         value="offline"
-                        className="rounded-xl px-10 h-10 data-[state=active]:bg-stone-900 data-[state=active]:text-white font-black text-[10px] uppercase tracking-widest transition-all"
+                        className="rounded-[10px] px-10 h-10 data-[state=active]:bg-stone-900 data-[state=active]:text-white font-black text-[10px] uppercase tracking-widest transition-all"
                       >
                         Offline
                       </TabsTrigger>
                     </TabsList>
 
                     {selectedOrderTab === "offline" && (
-                      <div className="group flex items-center bg-stone-50/80 hover:bg-white transition-all duration-300 rounded-[2px] border border-stone-200/60 hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/5 px-2 py-1.5 w-fit cursor-pointer animate-in fade-in slide-in-from-right-2">
-                        <div className="flex items-center justify-center h-8 w-8 rounded-[2px] bg-white group-hover:bg-indigo-50 transition-colors shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] border border-stone-100 mr-3">
-                          <Filter className="h-[14px] w-[14px] text-stone-400 group-hover:text-indigo-600 transition-colors" />
+                      <div className="group flex items-center bg-stone-50/80 hover:bg-white transition-all duration-300 rounded-[10px] border border-stone-200/60 hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/5 px-2 py-1.5 w-fit cursor-pointer animate-in fade-in slide-in-from-right-2">
+                        <div className="flex items-center justify-center h-8 w-8 rounded-[10px] bg-white group-hover:bg-emerald-50 transition-colors shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] border border-stone-100 mr-3">
+                          <Filter className="h-[14px] w-[14px] text-stone-400 group-hover:text-emerald-600 transition-colors" />
                         </div>
                         <span className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider mr-1">
                           Origin Node:
                         </span>
                         <div className="relative flex items-center min-w-[140px]">
                           <select
-                            className="appearance-none bg-transparent border-none text-stone-900 font-bold text-xs focus:ring-0 cursor-pointer py-1 pl-2 pr-8 w-full hover:text-pink-600 transition-colors outline-none"
+                            className="appearance-none bg-transparent border-none text-stone-900 font-bold text-xs focus:ring-0 cursor-pointer py-1 pl-2 pr-8 w-full hover:text-emerald-600 transition-colors outline-none"
                             value={selectedOutletFilter}
                             onChange={(e) =>
                               setSelectedOutletFilter(e.target.value)
@@ -2365,8 +2293,8 @@ const AdminDashboardContent = () => {
                               </option>
                             ))}
                           </select>
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none bg-stone-100 group-hover:bg-indigo-100 rounded-[2px] p-1 transition-colors">
-                            <ChevronRight className="h-3 w-3 text-stone-500 group-hover:text-indigo-600 rotate-90 transition-transform" />
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none bg-stone-100 group-hover:bg-indigo-100 rounded-[10px] p-1 transition-colors">
+                            <ChevronRight className="h-3 w-3 text-stone-500 group-hover:text-emerald-600 rotate-90 transition-transform" />
                           </div>
                         </div>
                       </div>
@@ -2377,7 +2305,7 @@ const AdminDashboardContent = () => {
                     value="online"
                     className="animate-in slide-in-from-bottom-2 duration-500"
                   >
-                    <Card className="border-none shadow-sm rounded-xl overflow-hidden">
+                    <Card className="border-none shadow-sm rounded-[10px] overflow-hidden">
                       <Table>
                         <TableHeader className="bg-stone-50/50">
                           <TableRow className="border-stone-100 hover:bg-transparent h-16">
@@ -2441,7 +2369,7 @@ const AdminDashboardContent = () => {
                                     </span>
                                   </TableCell>
                                   <TableCell className="px-8">
-                                    <span className="font-extrabold text-indigo-900 text-base">
+                                    <span className="font-extrabold text-[#151515] text-base">
                                       {o.customerName}
                                     </span>
                                   </TableCell>
@@ -2452,8 +2380,8 @@ const AdminDashboardContent = () => {
                                   </TableCell>
                                   <TableCell className="px-8">
                                     <div className="flex items-center gap-2">
-                                      <div className="h-1.5 w-1.5 rounded-[2px] bg-amber-400 animate-pulse" />
-                                      <span className="font-bold text-indigo-900/60 text-[10px] uppercase tracking-widest">
+                                      <div className="h-1.5 w-1.5 rounded-[10px] bg-amber-400 animate-pulse" />
+                                      <span className="font-bold text-[#151515]/60 text-[10px] uppercase tracking-widest">
                                         {o.destination}
                                       </span>
                                     </div>
@@ -2467,7 +2395,7 @@ const AdminDashboardContent = () => {
                                     </span>
                                   </TableCell>
                                   <TableCell className="px-8 text-center">
-                                    <div className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 rounded-xl px-3.5 py-1.5 ring-1 ring-amber-500/20">
+                                    <div className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 rounded-[10px] px-3.5 py-1.5 ring-1 ring-amber-500/20">
                                       <Coins className="h-3.5 w-3.5" />
                                       <span className="text-xs font-black">
                                         {o.rewardPointsEarned || 0}
@@ -2478,7 +2406,7 @@ const AdminDashboardContent = () => {
                                     <Badge
                                       variant="outline"
                                       className={cn(
-                                        "text-[9px] font-black uppercase tracking-[0.15em] px-4 py-1.5 rounded-xl border-none shadow-sm",
+                                        "text-[9px] font-black uppercase tracking-[0.15em] px-4 py-1.5 rounded-[10px] border-none shadow-sm",
                                         o.status === "DELIVERED" ||
                                           o.status === "COMPLETED"
                                           ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-500/20"
@@ -2499,7 +2427,7 @@ const AdminDashboardContent = () => {
                     value="pre-order"
                     className="animate-in slide-in-from-bottom-2 duration-500"
                   >
-                    <Card className="border-none shadow-sm rounded-xl overflow-hidden">
+                    <Card className="border-none shadow-sm rounded-[10px] overflow-hidden">
                       <Table>
                         <TableHeader className="bg-stone-50/50">
                           <TableRow className="border-stone-100 hover:bg-transparent h-16">
@@ -2563,7 +2491,7 @@ const AdminDashboardContent = () => {
                                     </span>
                                   </TableCell>
                                   <TableCell className="px-8">
-                                    <span className="font-extrabold text-indigo-900 text-base">
+                                    <span className="font-extrabold text-[#151515] text-base">
                                       {o.customerName}
                                     </span>
                                   </TableCell>
@@ -2573,7 +2501,7 @@ const AdminDashboardContent = () => {
                                     </span>
                                   </TableCell>
                                   <TableCell className="px-8">
-                                    <span className="font-bold text-indigo-900/40 text-[10px] uppercase tracking-widest bg-stone-100/50 px-2.5 py-1 rounded-xl border border-stone-200/50">
+                                    <span className="font-bold text-[#151515]/40 text-[10px] uppercase tracking-widest bg-stone-100/50 px-2.5 py-1 rounded-[10px] border border-stone-200/50">
                                       {o.destination}
                                     </span>
                                   </TableCell>
@@ -2586,7 +2514,7 @@ const AdminDashboardContent = () => {
                                     </span>
                                   </TableCell>
                                   <TableCell className="px-8 text-center">
-                                    <div className="inline-flex items-center gap-1.5 bg-purple-50 text-purple-700 rounded-xl px-3.5 py-1.5 ring-1 ring-purple-500/20">
+                                    <div className="inline-flex items-center gap-1.5 bg-purple-50 text-purple-700 rounded-[10px] px-3.5 py-1.5 ring-1 ring-purple-500/20">
                                       <Coins className="h-3.5 w-3.5" />
                                       <span className="text-xs font-black">
                                         {o.rewardPointsEarned || 0}
@@ -2597,7 +2525,7 @@ const AdminDashboardContent = () => {
                                     <Badge
                                       variant="outline"
                                       className={cn(
-                                        "text-[9px] font-black uppercase tracking-[0.15em] px-4 py-1.5 rounded-xl border-none shadow-sm",
+                                        "text-[9px] font-black uppercase tracking-[0.15em] px-4 py-1.5 rounded-[10px] border-none shadow-sm",
                                         "bg-purple-50 text-purple-600 ring-1 ring-purple-500/20",
                                       )}
                                     >
@@ -2616,7 +2544,7 @@ const AdminDashboardContent = () => {
                     value="offline"
                     className="animate-in slide-in-from-bottom-2 duration-500"
                   >
-                    <Card className="border-none shadow-[0_8px_30px_rgba(0,0,0,0.02)] rounded-[2px] overflow-hidden bg-white">
+                    <Card className="border-none shadow-[0_8px_30px_rgba(0,0,0,0.02)] rounded-[10px] overflow-hidden bg-white">
                       <Table>
                         <TableHeader className="bg-stone-50/50">
                           <TableRow className="border-stone-100 hover:bg-transparent h-16">
@@ -2669,11 +2597,11 @@ const AdminDashboardContent = () => {
                                 onClick={() =>
                                   fetchOrderDetail(o.id, "Offline")
                                 }
-                                className="border-stone-50/50 h-[5.5rem] hover:bg-pink-50/20 transition-all duration-300 cursor-pointer group"
+                                className="border-stone-50/50 h-[5.5rem] hover:bg-emerald-50/20 transition-all duration-300 cursor-pointer group"
                               >
                                 <TableCell className="px-8">
                                   <div className="flex flex-col">
-                                    <Badge className="w-fit bg-slate-100 group-hover:bg-indigo-600 text-slate-600 group-hover:text-white text-[9px] font-mono font-black uppercase tracking-widest rounded-[2px] px-2.5 py-1.5 transition-all shadow-sm border border-slate-200 group-hover:border-indigo-600">
+                                    <Badge className="w-fit bg-slate-100 group-hover:bg-emerald-600 text-slate-600 group-hover:text-white text-[9px] font-mono font-black uppercase tracking-widest rounded-[10px] px-2.5 py-1.5 transition-all shadow-sm border border-slate-200 group-hover:border-indigo-600">
                                       {o.orderNumber}
                                     </Badge>
                                     <span className="text-[8px] font-mono font-black text-slate-300 uppercase tracking-widest mt-2 ml-0.5">
@@ -2715,7 +2643,7 @@ const AdminDashboardContent = () => {
                                   </div>
                                 </TableCell>
                                 <TableCell className="px-8 text-center">
-                                  <div className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 rounded-xl px-3.5 py-1.5 ring-1 ring-amber-500/20 shadow-sm border border-amber-100 group-hover:scale-110 transition-transform">
+                                  <div className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 rounded-[10px] px-3.5 py-1.5 ring-1 ring-amber-500/20 shadow-sm border border-amber-100 group-hover:scale-110 transition-transform">
                                     <Coins className="h-3.5 w-3.5" />
                                     <span className="text-xs font-black">
                                       {o.rewardPointsEarned || 0}
@@ -2723,8 +2651,8 @@ const AdminDashboardContent = () => {
                                   </div>
                                 </TableCell>
                                 <TableCell className="px-8 text-center">
-                                  <Badge className="bg-slate-50 text-slate-500 border border-slate-200 text-[9px] font-black uppercase tracking-[0.3em] px-4 py-2 rounded-xl shadow-sm group-hover:bg-emerald-50 group-hover:text-emerald-700 group-hover:border-emerald-200 transition-all">
-                                    <div className="h-1.5 w-1.5 bg-slate-300 group-hover:bg-emerald-500 rounded-xl mr-2.5 transition-colors" />
+                                  <Badge className="bg-slate-50 text-slate-500 border border-slate-200 text-[9px] font-black uppercase tracking-[0.3em] px-4 py-2 rounded-[10px] shadow-sm group-hover:bg-emerald-50 group-hover:text-emerald-700 group-hover:border-emerald-200 transition-all">
+                                    <div className="h-1.5 w-1.5 bg-slate-300 group-hover:bg-emerald-500 rounded-[10px] mr-2.5 transition-colors" />
                                     ARCHIVED
                                   </Badge>
                                 </TableCell>
@@ -2744,7 +2672,7 @@ const AdminDashboardContent = () => {
                 <header className="flex items-center justify-between gap-6 mb-12">
                   <div className="flex flex-col">
                     <h1
-                      className={`${THEME.typography.headings.h1} uppercase leading-none mb-3 bg-clip-text text-transparent ${THEME.gradients.brand} pb-1`}
+                      className={`${THEME.typography.headings.h1} uppercase leading-none mb-3 bg-clip-text text-transparent ${THEME.gradients.adminBrand} pb-1`}
                     >
                       Registered Vendors
                     </h1>
@@ -2754,13 +2682,13 @@ const AdminDashboardContent = () => {
                   </div>
                   <Button
                     onClick={() => setIsAddVendorOpen(true)}
-                    className="rounded-xl h-14 px-8 shadow-2xl shadow-stone-900/40 hover:bg-[#1a0b2e] font-black uppercase tracking-widest text-[10px] bg-stone-900 text-white transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
+                    className="rounded-[10px] h-14 px-8 shadow-2xl shadow-stone-900/40 hover:bg-[#1a0b2e] font-black uppercase tracking-widest text-[10px] bg-stone-900 text-white transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
                   >
                     <UserPlus className="h-4 w-4" /> Add Direct Vendor
                   </Button>
                 </header>
 
-                <Card className="border-none shadow-[0_8px_30px_rgba(0,0,0,0.04)] rounded-xl overflow-hidden bg-white">
+                <Card className="border-none shadow-[0_8px_30px_rgba(0,0,0,0.04)] rounded-[10px] overflow-hidden bg-white">
                   <Table>
                     <TableHeader className="bg-stone-50">
                       <TableRow className="border-stone-100 py-4 hover:bg-transparent">
@@ -2800,7 +2728,7 @@ const AdminDashboardContent = () => {
                             key={v.id}
                             className="border-stone-50 hover:bg-stone-50/30"
                           >
-                            <TableCell className="p-6 font-bold text-indigo-900">
+                            <TableCell className="p-6 font-bold text-[#151515]">
                               {v.businessName}
                             </TableCell>
                             <TableCell className="p-6 font-medium text-stone-500">
@@ -2817,7 +2745,7 @@ const AdminDashboardContent = () => {
                             <TableCell className="p-6 text-center">
                               <Badge
                                 className={cn(
-                                  "rounded-xl font-black text-[9px] uppercase tracking-[0.2em] px-3 py-1 border-none shadow-sm flex items-center gap-2 w-fit mx-auto",
+                                  "rounded-[10px] font-black text-[9px] uppercase tracking-[0.2em] px-3 py-1 border-none shadow-sm flex items-center gap-2 w-fit mx-auto",
                                   v.approvalStatus === "APPROVED"
                                     ? "bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20"
                                     : v.approvalStatus === "PENDING"
@@ -2827,7 +2755,7 @@ const AdminDashboardContent = () => {
                               >
                                 <span
                                   className={cn(
-                                    "h-1.5 w-1.5 rounded-xl animate-pulse",
+                                    "h-1.5 w-1.5 rounded-[10px] animate-pulse",
                                     v.approvalStatus === "APPROVED"
                                       ? "bg-emerald-500"
                                       : v.approvalStatus === "PENDING"
@@ -2843,7 +2771,7 @@ const AdminDashboardContent = () => {
                                 {v.approvalStatus === "PENDING" && (
                                   <Button
                                     size="sm"
-                                    className="h-8 bg-emerald-600 hover:bg-emerald-700 text-xs font-bold rounded-xl"
+                                    className="h-8 bg-emerald-600 hover:bg-emerald-700 text-xs font-bold rounded-[10px]"
                                     onClick={async () => {
                                       await fetch(
                                         `${API_URL}/admin/vendors/${v.id}/approve`,
@@ -2875,7 +2803,7 @@ const AdminDashboardContent = () => {
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent
                                     align="end"
-                                    className="w-[160px] rounded-xl font-bold bg-white text-xs"
+                                    className="w-[160px] rounded-[10px] font-bold bg-white text-xs"
                                   >
                                     <DropdownMenuItem
                                       onClick={() => fetchVendorDetail(v.id)}
@@ -2910,13 +2838,13 @@ const AdminDashboardContent = () => {
 
                   <div className="flex gap-3">
                     {/* Time Filter */}
-                    <div className="group flex items-center bg-stone-50 hover:bg-white transition-all duration-300 rounded-xl border border-stone-200/60 hover:border-indigo-200 px-3 py-2 w-fit cursor-pointer animate-in fade-in zoom-in-95">
+                    <div className="group flex items-center bg-stone-50 hover:bg-white transition-all duration-300 rounded-[10px] border border-stone-200/60 hover:border-indigo-200 px-3 py-2 w-fit cursor-pointer animate-in fade-in zoom-in-95">
                       <span className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider mr-2">
                         Range:
                       </span>
                       <div className="relative flex items-center min-w-[100px]">
                         <select
-                          className="appearance-none bg-transparent border-none text-stone-900 font-bold text-xs focus:ring-0 cursor-pointer py-1 pl-1 pr-8 w-full hover:text-pink-600 outline-none truncate"
+                          className="appearance-none bg-transparent border-none text-stone-900 font-bold text-xs focus:ring-0 cursor-pointer py-1 pl-1 pr-8 w-full hover:text-emerald-600 outline-none truncate"
                           value={selectedTimeRange}
                           onChange={(e) =>
                             handleVendorAnalyticsFilterChange(
@@ -2931,19 +2859,19 @@ const AdminDashboardContent = () => {
                           <option value="1y">1 Year</option>
                         </select>
                         <div className="absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none">
-                          <ChevronRight className="h-3 w-3 text-stone-500 group-hover:text-pink-600 transition-colors rotate-90" />
+                          <ChevronRight className="h-3 w-3 text-stone-500 group-hover:text-emerald-600 transition-colors rotate-90" />
                         </div>
                       </div>
                     </div>
 
                     {/* Vendor Filter */}
-                    <div className="group flex items-center bg-stone-50 hover:bg-white transition-all duration-300 rounded-xl border border-stone-200/60 hover:border-indigo-200 px-3 py-2 w-fit cursor-pointer animate-in fade-in zoom-in-95">
+                    <div className="group flex items-center bg-stone-50 hover:bg-white transition-all duration-300 rounded-[10px] border border-stone-200/60 hover:border-indigo-200 px-3 py-2 w-fit cursor-pointer animate-in fade-in zoom-in-95">
                       <span className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider mr-2">
                         Source:
                       </span>
                       <div className="relative flex items-center min-w-[130px]">
                         <select
-                          className="appearance-none bg-transparent border-none text-stone-900 font-bold text-xs focus:ring-0 cursor-pointer py-1 pl-1 pr-8 w-full hover:text-pink-600 outline-none truncate"
+                          className="appearance-none bg-transparent border-none text-stone-900 font-bold text-xs focus:ring-0 cursor-pointer py-1 pl-1 pr-8 w-full hover:text-emerald-600 outline-none truncate"
                           value={selectedAnalyticsVendor}
                           onChange={(e) =>
                             handleVendorAnalyticsFilterChange(
@@ -2960,7 +2888,7 @@ const AdminDashboardContent = () => {
                           ))}
                         </select>
                         <div className="absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none">
-                          <ChevronRight className="h-3 w-3 text-stone-500 group-hover:text-pink-600 transition-colors rotate-90" />
+                          <ChevronRight className="h-3 w-3 text-stone-500 group-hover:text-emerald-600 transition-colors rotate-90" />
                         </div>
                       </div>
                     </div>
@@ -2968,9 +2896,9 @@ const AdminDashboardContent = () => {
                 </header>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  <div className="p-6 bg-white rounded-xl shadow-sm border border-stone-100/40 group hover:shadow-xl transition-all duration-500">
+                  <div className="p-6 bg-white rounded-[10px] shadow-sm border border-stone-100/40 group hover:shadow-xl transition-all duration-500">
                     <div className="flex items-center justify-between mb-3">
-                      <div className="h-8 w-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                      <div className="h-8 w-8 rounded-[10px] bg-blue-50 text-blue-600 flex items-center justify-center">
                         <ShoppingCart className="h-4 w-4" />
                       </div>
                       <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold text-[9px]">
@@ -2990,9 +2918,9 @@ const AdminDashboardContent = () => {
                     </p>
                   </div>
 
-                  <div className="p-6 bg-white rounded-xl shadow-sm border border-stone-100/40 group hover:shadow-xl transition-all duration-500">
+                  <div className="p-6 bg-white rounded-[10px] shadow-sm border border-stone-100/40 group hover:shadow-xl transition-all duration-500">
                     <div className="flex items-center justify-between mb-3">
-                      <div className="h-8 w-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                      <div className="h-8 w-8 rounded-[10px] bg-emerald-50 text-emerald-600 flex items-center justify-center">
                         <DollarSign className="h-4 w-4" />
                       </div>
                       <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold text-[9px]">
@@ -3011,12 +2939,12 @@ const AdminDashboardContent = () => {
                     </p>
                   </div>
 
-                  <div className="p-6 bg-white rounded-xl shadow-sm border border-stone-100/40 group hover:shadow-xl transition-all duration-500">
+                  <div className="p-6 bg-white rounded-[10px] shadow-sm border border-stone-100/40 group hover:shadow-xl transition-all duration-500">
                     <div className="flex items-center justify-between mb-3">
-                      <div className="h-8 w-8 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center">
+                      <div className="h-8 w-8 rounded-[10px] bg-emerald-50 text-emerald-600 flex items-center justify-center">
                         <TrendingUp className="h-4 w-4" />
                       </div>
-                      <Badge className="bg-pink-50 text-pink-600 border-none font-bold text-[9px]">
+                      <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold text-[9px]">
                         PEAK
                       </Badge>
                     </div>
@@ -3033,10 +2961,10 @@ const AdminDashboardContent = () => {
                 </div>
 
                 <div className="grid grid-cols-12 gap-8">
-                  <Card className="col-span-8 p-10 rounded-xl border border-stone-100/40 shadow-sm bg-white overflow-hidden relative group">
+                  <Card className="col-span-8 p-10 rounded-[10px] border border-stone-100/40 shadow-sm bg-white overflow-hidden relative group">
                     <div className="flex items-center justify-between">
                       <h3 className="text-[11px] font-bold text-stone-500 uppercase tracking-widest flex items-center gap-3">
-                        <span className="h-1.5 w-1.5 rounded-xl bg-emerald-500" />
+                        <span className="h-1.5 w-1.5 rounded-[10px] bg-emerald-500" />
                         Revenue Distribution
                       </h3>
                     </div>
@@ -3044,10 +2972,10 @@ const AdminDashboardContent = () => {
                     <RevenueReport />
                   </Card>
 
-                  <Card className="col-span-4 p-10 rounded-xl border border-stone-100/40 shadow-sm bg-white overflow-hidden relative group">
+                  <Card className="col-span-4 p-10 rounded-[10px] border border-stone-100/40 shadow-sm bg-white overflow-hidden relative group">
                     <div className="flex items-center justify-between mb-8">
                       <h3 className="text-[11px] font-bold text-stone-500 uppercase tracking-widest flex items-center gap-3">
-                        <span className="h-1.5 w-1.5 rounded-xl bg-blue-500" />
+                        <span className="h-1.5 w-1.5 rounded-[10px] bg-blue-500" />
                         Product Sales Performance
                       </h3>
                     </div>
@@ -3075,9 +3003,9 @@ const AdminDashboardContent = () => {
                                   </span>
                                 </div>
                               </div>
-                              <div className="h-1.5 w-full bg-stone-50 rounded-xl overflow-hidden">
+                              <div className="h-1.5 w-full bg-stone-50 rounded-[10px] overflow-hidden">
                                 <div
-                                  className="h-full bg-stone-900 rounded-xl transition-all duration-1000 ease-out group-hover/item:bg-blue-500 shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
+                                  className="h-full bg-stone-900 rounded-[10px] transition-all duration-1000 ease-out group-hover/item:bg-blue-500 shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
                                   style={{ width: `${Math.max(2, s.p)}%` }}
                                 />
                               </div>
@@ -3113,7 +3041,7 @@ const AdminDashboardContent = () => {
                   </p>
                 </header>
 
-                <Card className="border-none shadow-sm rounded-xl overflow-hidden">
+                <Card className="border-none shadow-sm rounded-[10px] overflow-hidden">
                   <Table>
                     <TableHeader className="bg-stone-50">
                       <TableRow className="border-stone-100 py-4 hover:bg-transparent">
@@ -3193,7 +3121,7 @@ const AdminDashboardContent = () => {
                             <TableCell className="p-6 text-right">
                               <Badge
                                 variant="outline"
-                                className="rounded-xl font-black text-purple-900 bg-stone-50 border-stone-100"
+                                className="rounded-[10px] font-black text-purple-900 bg-stone-50 border-stone-100"
                               >
                                 {c.rewardPoints} points
                               </Badge>
@@ -3215,7 +3143,7 @@ const AdminDashboardContent = () => {
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent
                                     align="end"
-                                    className="w-[160px] rounded-xl font-bold bg-white text-xs"
+                                    className="w-[160px] rounded-[10px] font-bold bg-white text-xs"
                                   >
                                     <DropdownMenuItem
                                       onClick={() => fetchCustomerDetail(c.id)}
@@ -3275,12 +3203,12 @@ const AdminDashboardContent = () => {
                               </div>
                               <Badge
                                 variant="outline"
-                                className="rounded-xl border-stone-200 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 bg-white"
+                                className="rounded-[10px] border-stone-200 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 bg-white"
                               >
                                 Required Node
                               </Badge>
                             </div>
-                            <div className="grid grid-cols-3 gap-6 bg-white p-6 rounded-xl border border-stone-100 shadow-sm transition-all hover:shadow-md">
+                            <div className="grid grid-cols-3 gap-6 bg-white p-6 rounded-[10px] border border-stone-100 shadow-sm transition-all hover:shadow-md">
                               <div className="col-span-3 space-y-2">
                                 <Label
                                   className={`${THEME.typography.micro.default} ${THEME.colors.text.primary} ml-1`}
@@ -3312,7 +3240,7 @@ const AdminDashboardContent = () => {
                                     onClick={() =>
                                       setIsAddingNewBrand(!isAddingNewBrand)
                                     }
-                                    className="text-[10px] font-black uppercase tracking-wider text-pink-600 hover:text-indigo-800 transition-colors px-1"
+                                    className="text-[10px] font-black uppercase tracking-wider text-emerald-600 hover:text-indigo-800 transition-colors px-1"
                                   >
                                     {isAddingNewBrand
                                       ? "Select Existing"
@@ -3379,7 +3307,7 @@ const AdminDashboardContent = () => {
                                         !isAddingNewCategory,
                                       )
                                     }
-                                    className="text-[10px] font-black uppercase tracking-wider text-pink-600 hover:text-indigo-800 transition-colors px-1"
+                                    className="text-[10px] font-black uppercase tracking-wider text-emerald-600 hover:text-indigo-800 transition-colors px-1"
                                   >
                                     {isAddingNewCategory
                                       ? "Select Existing"
@@ -3475,7 +3403,7 @@ const AdminDashboardContent = () => {
                                         ],
                                       })
                                     }
-                                    className={`h-8 px-4 text-[10px] uppercase font-black tracking-wider text-indigo-900 bg-pink-50 border border-pink-100 hover:bg-pink-100 ${THEME.borders.radius.sm} transition-all flex items-center gap-1.5`}
+                                    className={`h-8 px-4 text-[10px] uppercase font-black tracking-wider text-[#151515] bg-emerald-50 border border-emerald-100 hover:bg-pink-100 ${THEME.borders.radius.sm} transition-all flex items-center gap-1.5`}
                                   >
                                     <Plus className="h-3 w-3" /> Add Vendor
                                   </button>
@@ -3553,7 +3481,7 @@ const AdminDashboardContent = () => {
                                               vendors: newVs,
                                             });
                                           }}
-                                          className="rounded-xl h-12 border-0 bg-white shadow-sm font-black text-stone-900 pl-12 pr-4"
+                                          className="rounded-[10px] h-12 border-0 bg-white shadow-sm font-black text-stone-900 pl-12 pr-4"
                                           placeholder="0"
                                         />
                                       </div>
@@ -3571,7 +3499,7 @@ const AdminDashboardContent = () => {
                                                 vendors: newVs,
                                               });
                                             }}
-                                            className="w-12 h-12 flex items-center justify-center text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                                            className="w-12 h-12 flex items-center justify-center text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-[10px] transition-all"
                                           >
                                             <Trash2 className="h-4 w-4" />
                                           </button>
@@ -3630,10 +3558,10 @@ const AdminDashboardContent = () => {
                                   placeholder="Hydrating, Korea, Glow"
                                 />
                               </div>
-                              <div className="col-span-3 bg-white rounded-xl border border-stone-100 shadow-sm transition-all hover:shadow-md overflow-hidden">
+                              <div className="col-span-3 bg-white rounded-[10px] border border-stone-100 shadow-sm transition-all hover:shadow-md overflow-hidden">
                                 <div className="p-8 border-b border-stone-50 bg-stone-50/30">
                                   <div className="flex items-center gap-4">
-                                    <div className="h-10 w-10 rounded-xl bg-stone-900 flex items-center justify-center shadow-lg shadow-stone-900/20">
+                                    <div className="h-10 w-10 rounded-[10px] bg-stone-900 flex items-center justify-center shadow-lg shadow-stone-900/20">
                                       <BookOpen className="h-5 w-5 text-white" />
                                     </div>
                                     <div>
@@ -3672,7 +3600,7 @@ const AdminDashboardContent = () => {
                                             description: e.target.value,
                                           })
                                         }
-                                        className="flex min-h-[150px] w-full rounded-xl border border-stone-200 bg-stone-50/50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 transition-all"
+                                        className="flex min-h-[150px] w-full rounded-[10px] border border-stone-200 bg-stone-50/50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 transition-all"
                                         placeholder="Enter comprehensive product story..."
                                       />
                                     </AccordionContent>
@@ -3697,7 +3625,7 @@ const AdminDashboardContent = () => {
                                             howToUse: e.target.value,
                                           })
                                         }
-                                        className="flex min-h-[150px] w-full rounded-xl border border-stone-200 bg-stone-50/50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 transition-all"
+                                        className="flex min-h-[150px] w-full rounded-[10px] border border-stone-200 bg-stone-50/50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 transition-all"
                                         placeholder="Step-by-step application protocol..."
                                       />
                                     </AccordionContent>
@@ -3722,7 +3650,7 @@ const AdminDashboardContent = () => {
                                             whyWeLoveIt: e.target.value,
                                           })
                                         }
-                                        className="flex min-h-[120px] w-full rounded-xl border border-stone-200 bg-stone-50/50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 transition-all"
+                                        className="flex min-h-[120px] w-full rounded-[10px] border border-stone-200 bg-stone-50/50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 transition-all"
                                         placeholder="Summary of primary skin outcomes..."
                                       />
 
@@ -3739,7 +3667,7 @@ const AdminDashboardContent = () => {
                                                 { icon: "✨", text: "" },
                                               ])
                                             }
-                                            className="flex items-center gap-2 text-[8px] font-black uppercase tracking-widest text-emerald-600 border border-emerald-100 bg-emerald-50/50 px-3 py-1 rounded-xl hover:bg-emerald-600 hover:text-white transition-all"
+                                            className="flex items-center gap-2 text-[8px] font-black uppercase tracking-widest text-emerald-600 border border-emerald-100 bg-emerald-50/50 px-3 py-1 rounded-[10px] hover:bg-emerald-600 hover:text-white transition-all"
                                           >
                                             <Plus className="h-3 w-3" /> Add
                                             Outcome
@@ -3762,7 +3690,7 @@ const AdminDashboardContent = () => {
                                                       e.target.value;
                                                     setProductBenefits(u);
                                                   }}
-                                                  className="appearance-none rounded-xl h-12 border border-stone-200 bg-stone-50 font-bold w-16 text-center text-lg cursor-pointer hover:border-stone-300 transition-colors focus:outline-none focus:ring-2 focus:ring-stone-900"
+                                                  className="appearance-none rounded-[10px] h-12 border border-stone-200 bg-stone-50 font-bold w-16 text-center text-lg cursor-pointer hover:border-stone-300 transition-colors focus:outline-none focus:ring-2 focus:ring-stone-900"
                                                 >
                                                   {[
                                                     "✨",
@@ -3796,7 +3724,7 @@ const AdminDashboardContent = () => {
                                                       e.target.value;
                                                     setProductBenefits(u);
                                                   }}
-                                                  className="rounded-xl h-12 border-stone-200 bg-stone-50 font-bold px-5 flex-1 focus:ring-stone-900 transition-all"
+                                                  className="rounded-[10px] h-12 border-stone-200 bg-stone-50 font-bold px-5 flex-1 focus:ring-stone-900 transition-all"
                                                   placeholder="e.g., 72h Hydration"
                                                 />
                                                 {productBenefits.length > 1 && (
@@ -3809,7 +3737,7 @@ const AdminDashboardContent = () => {
                                                         ),
                                                       )
                                                     }
-                                                    className="h-12 w-12 flex items-center justify-center rounded-xl text-stone-300 hover:text-rose-500 hover:bg-rose-50 border border-stone-100 transition-all"
+                                                    className="h-12 w-12 flex items-center justify-center rounded-[10px] text-stone-300 hover:text-rose-500 hover:bg-rose-50 border border-stone-100 transition-all"
                                                   >
                                                     <Trash2 className="h-4 w-4" />
                                                   </button>
@@ -3841,7 +3769,7 @@ const AdminDashboardContent = () => {
                                             ingredients: e.target.value,
                                           })
                                         }
-                                        className="flex min-h-[150px] w-full rounded-xl border border-stone-200 bg-stone-50/50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 transition-all"
+                                        className="flex min-h-[150px] w-full rounded-[10px] border border-stone-200 bg-stone-50/50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 transition-all"
                                         placeholder="Full formulation list (INCI format)..."
                                       />
                                     </AccordionContent>
@@ -3866,7 +3794,7 @@ const AdminDashboardContent = () => {
                                             additionalInfo: e.target.value,
                                           })
                                         }
-                                        className="flex min-h-[150px] w-full rounded-xl border border-stone-200 bg-stone-50/50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 transition-all"
+                                        className="flex min-h-[150px] w-full rounded-[10px] border border-stone-200 bg-stone-50/50 px-6 py-5 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 transition-all"
                                         placeholder="Regulatory details, pH level, shelf life etc..."
                                       />
                                     </AccordionContent>
@@ -3876,10 +3804,10 @@ const AdminDashboardContent = () => {
                             </div>
                           </div>
 
-                          <div className="bg-stone-50/80 backdrop-blur-sm rounded-xl border border-stone-100 shadow-sm p-10 space-y-8 transition-all hover:shadow-md">
+                          <div className="bg-stone-50/80 backdrop-blur-sm rounded-[10px] border border-stone-100 shadow-sm p-10 space-y-8 transition-all hover:shadow-md">
                             <div className="flex items-center justify-between border-b border-stone-200/60 pb-6">
                               <div className="flex items-center gap-4">
-                                <div className="h-10 w-10 rounded-xl bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
+                                <div className="h-10 w-10 rounded-[10px] bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
                                   <Star className="h-5 w-5 text-white" />
                                 </div>
                                 <div>
@@ -3893,7 +3821,7 @@ const AdminDashboardContent = () => {
                               </div>
                               <Badge
                                 variant="outline"
-                                className="text-[8px] font-black uppercase tracking-widest px-2 py-0 border-stone-200 text-stone-400 bg-white rounded-xl"
+                                className="text-[8px] font-black uppercase tracking-widest px-2 py-0 border-stone-200 text-stone-400 bg-white rounded-[10px]"
                               >
                                 Active States
                               </Badge>
@@ -3974,7 +3902,7 @@ const AdminDashboardContent = () => {
                                     <div className="flex items-center gap-4 relative z-10">
                                       <div
                                         className={cn(
-                                          "h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-500 group-hover:scale-105",
+                                          "h-10 w-10 rounded-[10px] flex items-center justify-center transition-all duration-500 group-hover:scale-105",
                                           isActive
                                             ? "bg-white/10 text-white"
                                             : cn(flag.bg, flag.color),
@@ -4033,9 +3961,9 @@ const AdminDashboardContent = () => {
 
                         {/* Right Column */}
                         <div className="col-span-4 space-y-8">
-                          <div className="bg-stone-50/80 backdrop-blur-sm rounded-xl border border-stone-100 shadow-sm p-10 space-y-8 transition-all hover:shadow-md">
+                          <div className="bg-stone-50/80 backdrop-blur-sm rounded-[10px] border border-stone-100 shadow-sm p-10 space-y-8 transition-all hover:shadow-md">
                             <div className="flex items-center gap-4 border-b border-stone-200/60 pb-6">
-                              <div className="h-10 w-10 rounded-xl bg-rose-600 flex items-center justify-center shadow-lg shadow-rose-500/20">
+                              <div className="h-10 w-10 rounded-[10px] bg-rose-600 flex items-center justify-center shadow-lg shadow-rose-500/20">
                                 <ImageIcon className="h-5 w-5 text-white" />
                               </div>
                               <div>
@@ -4060,7 +3988,7 @@ const AdminDashboardContent = () => {
                                     .getElementById("primaryImageFP")
                                     .click()
                                 }
-                                className="relative h-52 rounded-xl border-2 border-dashed border-stone-100 bg-stone-50/50 flex flex-col items-center justify-center cursor-pointer group hover:bg-white hover:border-emerald-500/30 transition-all overflow-hidden"
+                                className="relative h-52 rounded-[10px] border-2 border-dashed border-stone-100 bg-stone-50/50 flex flex-col items-center justify-center cursor-pointer group hover:bg-white hover:border-emerald-500/30 transition-all overflow-hidden"
                               >
                                 {imageFiles.primary ? (
                                   <>
@@ -4086,7 +4014,7 @@ const AdminDashboardContent = () => {
                                       className="h-full w-full object-cover"
                                     />
                                     <div className="absolute inset-0 bg-[#1a0b2e]/40 opacity-0 group-hover:opacity-100 flex flex-col gap-2 items-center justify-center transition-opacity">
-                                      <span className="text-white text-[10px] font-black uppercase tracking-widest bg-stone-900/80 px-3 py-1 rounded-xl">
+                                      <span className="text-white text-[10px] font-black uppercase tracking-widest bg-stone-900/80 px-3 py-1 rounded-[10px]">
                                         Overwrite Image
                                       </span>
                                     </div>
@@ -4118,7 +4046,7 @@ const AdminDashboardContent = () => {
                             </div>
                             <div className="flex flex-col gap-3">
                               <div
-                                className="flex items-center gap-3 p-4 bg-stone-50 rounded-xl border border-stone-100 cursor-pointer"
+                                className="flex items-center gap-3 p-4 bg-stone-50 rounded-[10px] border border-stone-100 cursor-pointer"
                                 onClick={() =>
                                   setHasMultipleImages(!hasMultipleImages)
                                 }
@@ -4156,14 +4084,14 @@ const AdminDashboardContent = () => {
                                       .map((url, idx) => (
                                         <div
                                           key={`exist-${idx}`}
-                                          className="aspect-square rounded-xl overflow-hidden relative group border border-stone-100 hover:border-indigo-400 transition-all"
+                                          className="aspect-square rounded-[10px] overflow-hidden relative group border border-stone-100 hover:border-indigo-400 transition-all"
                                         >
                                           <img
                                             src={getMediaUrl(url)}
                                             className="h-full w-full object-cover"
                                           />
                                           <div className="absolute inset-0 bg-[#1a0b2e]/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                            <span className="text-white text-[8px] font-black uppercase tracking-widest bg-indigo-950/80 px-2 py-1 rounded-[2px]">
+                                            <span className="text-white text-[8px] font-black uppercase tracking-widest bg-indigo-950/80 px-2 py-1 rounded-[10px]">
                                               Existing
                                             </span>
                                           </div>
@@ -4172,7 +4100,7 @@ const AdminDashboardContent = () => {
                                   {imageFiles.additional.map((file, idx) => (
                                     <div
                                       key={idx}
-                                      className="aspect-square rounded-xl overflow-hidden relative group border border-stone-100"
+                                      className="aspect-square rounded-[10px] overflow-hidden relative group border border-stone-100"
                                     >
                                       <img
                                         src={URL.createObjectURL(file)}
@@ -4271,7 +4199,7 @@ const AdminDashboardContent = () => {
                                       price: e.target.value,
                                     })
                                   }
-                                  className="rounded-xl h-14 border-stone-200 bg-white font-bold px-6 focus:ring-stone-900 transition-all"
+                                  className="rounded-[10px] h-14 border-stone-200 bg-white font-bold px-6 focus:ring-stone-900 transition-all"
                                   placeholder="0.00"
                                 />
                               </div>
@@ -4291,7 +4219,7 @@ const AdminDashboardContent = () => {
                                       discountPrice: e.target.value,
                                     })
                                   }
-                                  className="rounded-xl h-14 border-stone-200 bg-white font-bold px-6 focus:ring-stone-900 transition-all"
+                                  className="rounded-[10px] h-14 border-stone-200 bg-white font-bold px-6 focus:ring-stone-900 transition-all"
                                   placeholder="Optional"
                                 />
                               </div>
@@ -4425,7 +4353,7 @@ const AdminDashboardContent = () => {
                     <div className="p-10 space-y-12">
                       {/* Top Line Analytics Grid */}
                       <div className="grid grid-cols-3 gap-8">
-                        <div className="p-8 bg-white rounded-[2px] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-emerald-500/10 transition-all duration-500">
+                        <div className="p-8 bg-white rounded-[10px] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-emerald-500/10 transition-all duration-500">
                           <div className="flex items-center justify-between mb-4">
                             <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">
                               Transaction Credits
@@ -4442,7 +4370,7 @@ const AdminDashboardContent = () => {
                           </p>
                           <div className="absolute bottom-0 right-0 h-1.5 w-0 bg-emerald-500 group-hover:w-full transition-all duration-700" />
                         </div>
-                        <div className="p-8 bg-white rounded-[2px] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-indigo-950/10 transition-all duration-500">
+                        <div className="p-8 bg-white rounded-[10px] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-indigo-950/10 transition-all duration-500">
                           <div className="flex items-center justify-between mb-4">
                             <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">
                               Activity Events
@@ -4458,7 +4386,7 @@ const AdminDashboardContent = () => {
                             Confirmed Shipments
                           </p>
                         </div>
-                        <div className="p-8 bg-white rounded-[2px] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-indigo-950/10 transition-all duration-500">
+                        <div className="p-8 bg-white rounded-[10px] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-indigo-950/10 transition-all duration-500">
                           <div className="flex items-center justify-between mb-4">
                             <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">
                               Node Creation
@@ -4530,7 +4458,7 @@ const AdminDashboardContent = () => {
                                 .map((addr) => (
                                   <div
                                     key={addr.id}
-                                    className="p-6 rounded-xl border border-stone-100 bg-white shadow-sm group hover:border-emerald-500/20 hover:shadow-xl transition-all duration-300"
+                                    className="p-6 rounded-[10px] border border-stone-100 bg-white shadow-sm group hover:border-emerald-500/20 hover:shadow-xl transition-all duration-300"
                                   >
                                     <div className="flex justify-between items-start mb-4">
                                       <Badge
@@ -4545,7 +4473,7 @@ const AdminDashboardContent = () => {
                                       "{addr.line1}"
                                     </p>
                                     <p className="text-[11px] font-medium text-stone-400 mt-2 flex items-center gap-2">
-                                      <span className="h-1 w-1 rounded-xl bg-stone-200" />
+                                      <span className="h-1 w-1 rounded-[10px] bg-stone-200" />
                                       {addr.city.toUpperCase()},{" "}
                                       {addr.state.toUpperCase()}
                                     </p>
@@ -4562,13 +4490,13 @@ const AdminDashboardContent = () => {
                               <span className="h-px w-8 bg-stone-900" />
                               Transmission Registry
                             </h3>
-                            <span className="text-[9px] font-black text-emerald-600 px-4 py-1.5 bg-emerald-50 rounded-xl flex items-center gap-2 border border-emerald-100">
-                              <div className="h-1.5 w-1.5 bg-emerald-500 rounded-xl animate-pulse" />
+                            <span className="text-[9px] font-black text-emerald-600 px-4 py-1.5 bg-emerald-50 rounded-[10px] flex items-center gap-2 border border-emerald-100">
+                              <div className="h-1.5 w-1.5 bg-emerald-500 rounded-[10px] animate-pulse" />
                               {selectedUser.orders?.length || 0} EVENTS SYNCED
                             </span>
                           </header>
 
-                          <div className="overflow-hidden rounded-xl border border-stone-100 shadow-xl bg-white">
+                          <div className="overflow-hidden rounded-[10px] border border-stone-100 shadow-xl bg-white">
                             <Table>
                               <TableHeader className="bg-stone-50/50">
                                 <TableRow className="border-stone-100 hover:bg-transparent h-14">
@@ -4615,7 +4543,7 @@ const AdminDashboardContent = () => {
                                       <TableCell className="px-8">
                                         <Badge
                                           className={cn(
-                                            "rounded-xl font-black text-[9px] uppercase tracking-widest px-3 py-1 border-none shadow-sm transition-all",
+                                            "rounded-[10px] font-black text-[9px] uppercase tracking-widest px-3 py-1 border-none shadow-sm transition-all",
                                             order.status === "DELIVERED"
                                               ? "bg-emerald-500 text-white shadow-emerald-500/20"
                                               : "bg-stone-900 text-white shadow-stone-900/20",
@@ -4656,14 +4584,14 @@ const AdminDashboardContent = () => {
                     <div className="flex gap-3">
                       <Badge
                         variant="outline"
-                        className="bg-white border-stone-200 text-stone-400 font-black text-[8px] rounded-xl px-3 py-1 uppercase tracking-widest"
+                        className="bg-white border-stone-200 text-stone-400 font-black text-[8px] rounded-[10px] px-3 py-1 uppercase tracking-widest"
                       >
                         End-to-End Encrypted Dossier
                       </Badge>
                     </div>
                     <Button
                       onClick={() => setIsDetailOpen(false)}
-                      className="bg-stone-900 hover:bg-[#1a0b2e] font-black uppercase tracking-[0.2em] text-[10px] rounded-xl px-12 h-12 shadow-2xl shadow-stone-900/40"
+                      className="bg-stone-900 hover:bg-[#1a0b2e] font-black uppercase tracking-[0.2em] text-[10px] rounded-[10px] px-12 h-12 shadow-2xl shadow-stone-900/40"
                     >
                       Close Session
                     </Button>
@@ -4691,7 +4619,7 @@ const AdminDashboardContent = () => {
             {detailLoading ? (
               <div className="h-[600px] flex items-center justify-center bg-white/80 backdrop-blur-md">
                 <div className="flex flex-col items-center gap-6">
-                  <div className="h-12 w-12 animate-spin rounded-xl border-[3px] border-stone-100 border-t-stone-900 shadow-xl" />
+                  <div className="h-12 w-12 animate-spin rounded-[10px] border-[3px] border-stone-100 border-t-stone-900 shadow-xl" />
                   <div className="space-y-1 text-center">
                     <p className="text-[10px] font-black text-stone-900 uppercase tracking-[0.3em]">
                       Syncing Partner Node
@@ -4709,7 +4637,7 @@ const AdminDashboardContent = () => {
                   <header
                     className={`p-10 ${THEME.colors.background.accentSolid} text-white flex items-center justify-between shrink-0 relative overflow-hidden ring-1 ring-white/10`}
                   >
-                    <div className="absolute top-0 right-0 p-16 opacity-10 blur-3xl bg-blue-500 rounded-xl -mr-16 -mt-16" />
+                    <div className="absolute top-0 right-0 p-16 opacity-10 blur-3xl bg-blue-500 rounded-[10px] -mr-16 -mt-16" />
                     <div className="relative z-10 flex items-center gap-8">
                       <div className="relative group">
                         <Avatar className="h-20 w-20 ring-4 ring-white/10 shadow-2xl transition-transform duration-500 group-hover:scale-105">
@@ -4719,13 +4647,13 @@ const AdminDashboardContent = () => {
                         </Avatar>
                         <div
                           className={cn(
-                            "absolute -bottom-1 -right-1 h-6 w-6 rounded-xl border-4 border-indigo-900 flex items-center justify-center",
+                            "absolute -bottom-1 -right-1 h-6 w-6 rounded-[10px] border-4 border-indigo-900 flex items-center justify-center",
                             selectedVendor.approvalStatus === "APPROVED"
                               ? "bg-emerald-500"
                               : "bg-amber-500",
                           )}
                         >
-                          <div className="h-1.5 w-1.5 bg-white rounded-xl animate-pulse" />
+                          <div className="h-1.5 w-1.5 bg-white rounded-[10px] animate-pulse" />
                         </div>
                       </div>
                       <div className="space-y-1.5">
@@ -4739,7 +4667,7 @@ const AdminDashboardContent = () => {
                         </div>
                         <div className="flex items-center gap-4 text-stone-400">
                           <span className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                            <span className="h-1.5 w-1.5 rounded-xl bg-purple-900" />
+                            <span className="h-1.5 w-1.5 rounded-[10px] bg-purple-900" />
                             Protocol: VND-
                             {selectedVendor.id.slice(0, 8).toUpperCase()}
                           </span>
@@ -4752,14 +4680,14 @@ const AdminDashboardContent = () => {
                     <div className="flex items-center gap-3 relative z-10">
                       <Button
                         variant="outline"
-                        className="h-11 rounded-xl border-purple-900 text-white hover:bg-white hover:text-stone-900 bg-transparent text-[10px] font-black uppercase tracking-[0.2em] px-8 transition-all duration-300"
+                        className="h-11 rounded-[10px] border-purple-900 text-white hover:bg-white hover:text-stone-900 bg-transparent text-[10px] font-black uppercase tracking-[0.2em] px-8 transition-all duration-300"
                       >
                         Audit Partner
                       </Button>
                       <Button
                         onClick={() => setIsVendorDetailOpen(false)}
                         variant="ghost"
-                        className="h-11 w-11 text-stone-400 hover:text-white rounded-xl bg-white/5 border border-white/5 hover:border-white/20 transition-all"
+                        className="h-11 w-11 text-stone-400 hover:text-white rounded-[10px] bg-white/5 border border-white/5 hover:border-white/20 transition-all"
                       >
                         <X className="h-5 w-5" />
                       </Button>
@@ -4769,7 +4697,7 @@ const AdminDashboardContent = () => {
                   <ScrollArea className="flex-1 bg-white/40 backdrop-blur-sm">
                     <div className="p-10 space-y-12">
                       <div className="grid grid-cols-3 gap-8">
-                        <div className="p-8 bg-white rounded-[2px] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-emerald-500/10 transition-all duration-500">
+                        <div className="p-8 bg-white rounded-[10px] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-emerald-500/10 transition-all duration-500">
                           <div className="flex items-center justify-between mb-4">
                             <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">
                               Gross Revenue
@@ -4787,7 +4715,7 @@ const AdminDashboardContent = () => {
                           </p>
                           <div className="absolute bottom-0 right-0 h-1.5 w-0 bg-emerald-500 group-hover:w-full transition-all duration-700" />
                         </div>
-                        <div className="p-8 bg-white rounded-[2px] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-blue-900/10 transition-all duration-500">
+                        <div className="p-8 bg-white rounded-[10px] border border-stone-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-blue-900/10 transition-all duration-500">
                           <div className="flex items-center justify-between mb-4">
                             <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">
                               Inventory Nodes
@@ -4803,7 +4731,7 @@ const AdminDashboardContent = () => {
                             Live Catalog Items
                           </p>
                         </div>
-                        <div className="p-8 bg-indigo-950 rounded-[2px] shadow-2xl shadow-indigo-950/20 text-white relative overflow-hidden group">
+                        <div className="p-8 bg-indigo-950 rounded-[10px] shadow-2xl shadow-indigo-950/20 text-white relative overflow-hidden group">
                           <div className="flex items-center justify-between mb-4">
                             <p className="text-[10px] font-black text-stone-500 uppercase tracking-[0.2em]">
                               Sales Events
@@ -4827,8 +4755,8 @@ const AdminDashboardContent = () => {
                               Merchant Intelligence
                             </h3>
                             <div className="space-y-4">
-                              <div className="flex items-center gap-5 p-5 rounded-xl bg-stone-50 border border-stone-100/50 group hover:bg-white hover:shadow-lg transition-all duration-300">
-                                <div className="h-11 w-11 rounded-xl bg-white flex items-center justify-center shadow-sm text-stone-400 group-hover:text-blue-500 transition-colors">
+                              <div className="flex items-center gap-5 p-5 rounded-[10px] bg-stone-50 border border-stone-100/50 group hover:bg-white hover:shadow-lg transition-all duration-300">
+                                <div className="h-11 w-11 rounded-[10px] bg-white flex items-center justify-center shadow-sm text-stone-400 group-hover:text-blue-500 transition-colors">
                                   <Mail className="h-5 w-5" />
                                 </div>
                                 <div className="overflow-hidden space-y-0.5">
@@ -4840,8 +4768,8 @@ const AdminDashboardContent = () => {
                                   </p>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-5 p-5 rounded-xl bg-stone-50 border border-stone-100/50 group hover:bg-white hover:shadow-lg transition-all duration-300">
-                                <div className="h-11 w-11 rounded-xl bg-white flex items-center justify-center shadow-sm text-stone-400 group-hover:text-emerald-500 transition-colors">
+                              <div className="flex items-center gap-5 p-5 rounded-[10px] bg-stone-50 border border-stone-100/50 group hover:bg-white hover:shadow-lg transition-all duration-300">
+                                <div className="h-11 w-11 rounded-[10px] bg-white flex items-center justify-center shadow-sm text-stone-400 group-hover:text-emerald-500 transition-colors">
                                   <Phone className="h-5 w-5" />
                                 </div>
                                 <div className="space-y-0.5">
@@ -4865,7 +4793,7 @@ const AdminDashboardContent = () => {
                               {selectedVendor.products?.map((p) => (
                                 <div
                                   key={p.id}
-                                  className="flex items-center gap-4 p-4 rounded-xl bg-white border border-stone-100 shadow-sm"
+                                  className="flex items-center gap-4 p-4 rounded-[10px] bg-white border border-stone-100 shadow-sm"
                                 >
                                   <Avatar className="h-10 w-10">
                                     <AvatarFallback className="bg-stone-50 text-[10px] font-black">
@@ -4893,8 +4821,8 @@ const AdminDashboardContent = () => {
                               <span className="h-px w-8 bg-stone-900" />
                               Sales Transmission Registry
                             </h3>
-                            <span className="text-[9px] font-black text-emerald-600 px-4 py-1.5 bg-emerald-50 rounded-xl flex items-center gap-2 border border-emerald-100">
-                              <div className="h-1.5 w-1.5 bg-emerald-500 rounded-xl animate-pulse" />
+                            <span className="text-[9px] font-black text-emerald-600 px-4 py-1.5 bg-emerald-50 rounded-[10px] flex items-center gap-2 border border-emerald-100">
+                              <div className="h-1.5 w-1.5 bg-emerald-500 rounded-[10px] animate-pulse" />
                               {selectedVendor.orders?.length || 0} SALES EVENT
                               SYNCED
                             </span>
@@ -4968,7 +4896,7 @@ const AdminDashboardContent = () => {
                     <div className="flex gap-3">
                       <Badge
                         variant="outline"
-                        className="bg-white border-stone-200 text-stone-400 font-black text-[8px] rounded-xl px-3 py-1 uppercase tracking-widest"
+                        className="bg-white border-stone-200 text-stone-400 font-black text-[8px] rounded-[10px] px-3 py-1 uppercase tracking-widest"
                       >
                         Secure Merchant Node: Audit Link Active
                       </Badge>
@@ -4977,13 +4905,13 @@ const AdminDashboardContent = () => {
                       <Button
                         onClick={() => setIsVendorDetailOpen(false)}
                         variant="outline"
-                        className="font-black uppercase tracking-[0.2em] text-[10px] rounded-xl px-8 h-12 border-stone-200"
+                        className="font-black uppercase tracking-[0.2em] text-[10px] rounded-[10px] px-8 h-12 border-stone-200"
                       >
                         De-Authorize
                       </Button>
                       <Button
                         onClick={() => setIsVendorDetailOpen(false)}
-                        className="bg-stone-900 hover:bg-[#1a0b2e] font-black uppercase tracking-[0.2em] text-[10px] rounded-xl px-12 h-12 shadow-2xl shadow-stone-900/40"
+                        className="bg-stone-900 hover:bg-[#1a0b2e] font-black uppercase tracking-[0.2em] text-[10px] rounded-[10px] px-12 h-12 shadow-2xl shadow-stone-900/40"
                       >
                         Secure Session
                       </Button>
@@ -4997,8 +4925,8 @@ const AdminDashboardContent = () => {
 
         {/* Manual Offline Sale Registry */}
         <Dialog open={isManualOrderOpen} onOpenChange={setIsManualOrderOpen}>
-          <DialogContent className="sm:max-w-2xl rounded-[2px] p-10 border-none shadow-2xl bg-white relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-12 opacity-[0.03] blur-2xl bg-emerald-500 rounded-[2px] -mr-8 -mt-8" />
+          <DialogContent className="sm:max-w-2xl rounded-[10px] p-10 border-none shadow-2xl bg-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-12 opacity-[0.03] blur-2xl bg-emerald-500 rounded-[10px] -mr-8 -mt-8" />
             <DialogHeader className="mb-8">
               <DialogTitle className="text-3xl font-black text-stone-900 tracking-tighter uppercase">
                 Record Manual Transmission
@@ -5054,7 +4982,7 @@ const AdminDashboardContent = () => {
                   <select
                     name="vendorId"
                     required
-                    className="w-full h-12 bg-stone-50 border-stone-100 rounded-xl px-4 text-sm font-bold focus:ring-2 focus:ring-stone-900 transition-all outline-none"
+                    className="w-full h-12 bg-stone-50 border-stone-100 rounded-[10px] px-4 text-sm font-bold focus:ring-2 focus:ring-stone-900 transition-all outline-none"
                     onChange={async (e) => {
                       const vid = e.target.value;
                       if (!vid) {
@@ -5089,12 +5017,12 @@ const AdminDashboardContent = () => {
                     name="mobile"
                     placeholder="+91 XXXXX XXXXX"
                     required
-                    className="h-12 bg-stone-50 border-stone-100 rounded-xl px-4 text-sm font-bold shadow-none"
+                    className="h-12 bg-stone-50 border-stone-100 rounded-[10px] px-4 text-sm font-bold shadow-none"
                   />
                 </div>
               </div>
 
-              <div className="p-8 bg-stone-50 rounded-[2px] border border-stone-100 space-y-6">
+              <div className="p-8 bg-stone-50 rounded-[10px] border border-stone-100 space-y-6">
                 <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.3em]">
                   Transmission Details
                 </p>
@@ -5106,7 +5034,7 @@ const AdminDashboardContent = () => {
                     <select
                       name="productId"
                       required
-                      className="w-full h-10 bg-white border-none rounded-xl text-xs font-bold shadow-sm px-3 outline-none"
+                      className="w-full h-10 bg-white border-none rounded-[10px] text-xs font-bold shadow-sm px-3 outline-none"
                       onChange={(e) => {
                         const p = manualOrderProducts.find(
                           (prod) => prod.id === e.target.value,
@@ -5134,7 +5062,7 @@ const AdminDashboardContent = () => {
                       type="number"
                       defaultValue="1"
                       required
-                      className="h-10 bg-white border-none rounded-xl text-xs font-bold shadow-sm"
+                      className="h-10 bg-white border-none rounded-[10px] text-xs font-bold shadow-sm"
                     />
                   </div>
                   <div className="col-span-3 space-y-2">
@@ -5146,7 +5074,7 @@ const AdminDashboardContent = () => {
                       type="number"
                       placeholder="0.00"
                       required
-                      className="h-10 bg-white border-none rounded-xl text-xs font-bold shadow-sm"
+                      className="h-10 bg-white border-none rounded-[10px] text-xs font-bold shadow-sm"
                     />
                   </div>
                 </div>
@@ -5158,7 +5086,7 @@ const AdminDashboardContent = () => {
                     Status
                   </p>
                   <div className="flex items-center gap-2 mt-1">
-                    <div className="h-2 w-2 rounded-xl bg-emerald-500 animate-pulse" />
+                    <div className="h-2 w-2 rounded-[10px] bg-emerald-500 animate-pulse" />
                     <span className="text-xl font-black text-stone-900">
                       LIVE SESSION
                     </span>
@@ -5169,13 +5097,13 @@ const AdminDashboardContent = () => {
                     type="button"
                     onClick={() => setIsManualOrderOpen(false)}
                     variant="ghost"
-                    className="h-12 rounded-xl px-8 text-[10px] font-black uppercase tracking-widest"
+                    className="h-12 rounded-[10px] px-8 text-[10px] font-black uppercase tracking-widest"
                   >
                     Abort
                   </Button>
                   <Button
                     type="submit"
-                    className="h-12 bg-stone-900 hover:bg-[#1a0b2e] text-white rounded-xl px-12 text-[10px] font-black uppercase tracking-widest shadow-2xl shadow-stone-900/20"
+                    className="h-12 bg-stone-900 hover:bg-[#1a0b2e] text-white rounded-[10px] px-12 text-[10px] font-black uppercase tracking-widest shadow-2xl shadow-stone-900/20"
                   >
                     Commit Sync
                   </Button>
@@ -5192,17 +5120,17 @@ const AdminDashboardContent = () => {
             onClick={() => setSelectedTopProduct(null)}
           >
             <div
-              className="bg-white rounded-xl p-6 w-[90%] max-w-sm shadow-2xl animate-in zoom-in-95 duration-300 relative"
+              className="bg-white rounded-[10px] p-6 w-[90%] max-w-sm shadow-2xl animate-in zoom-in-95 duration-300 relative"
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={() => setSelectedTopProduct(null)}
-                className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center rounded-xl hover:bg-stone-100 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center rounded-[10px] hover:bg-stone-100 transition-colors cursor-pointer"
               >
                 <X className="h-4 w-4 text-stone-500" />
               </button>
               <div className="flex flex-col items-center mt-2">
-                <div className="w-48 h-48 rounded-xl bg-stone-50 border border-stone-100/50 mb-6 overflow-hidden flex items-center justify-center p-2">
+                <div className="w-48 h-48 rounded-[10px] bg-stone-50 border border-stone-100/50 mb-6 overflow-hidden flex items-center justify-center p-2">
                   {selectedTopProduct.image ? (
                     <img
                       src={selectedTopProduct.image}
@@ -5216,7 +5144,7 @@ const AdminDashboardContent = () => {
                 <h3 className="text-xl font-bold text-stone-900 text-center leading-tight mb-2">
                   {selectedTopProduct.label}
                 </h3>
-                <div className="flex items-center gap-6 mt-4 bg-stone-50 px-8 py-3.5 rounded-xl border border-stone-100">
+                <div className="flex items-center gap-6 mt-4 bg-stone-50 px-8 py-3.5 rounded-[10px] border border-stone-100">
                   <div className="text-center">
                     <span className="block text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-0.5">
                       Revenue
@@ -5240,7 +5168,7 @@ const AdminDashboardContent = () => {
           </div>
         )}
         <Dialog open={isOrderOpen} onOpenChange={setIsOrderOpen}>
-          <DialogContent className="sm:max-w-6xl rounded-xl p-0 overflow-hidden border-none shadow-[0_0_100px_rgba(0,0,0,0.4)] bg-stone-50/50 backdrop-blur-3xl ring-1 ring-white/10">
+          <DialogContent className="sm:max-w-6xl rounded-[10px] p-0 overflow-hidden border-none shadow-[0_0_100px_rgba(0,0,0,0.4)] bg-stone-50/50 backdrop-blur-3xl ring-1 ring-white/10">
             <DialogHeader className="sr-only">
               <DialogTitle>
                 Order Detail: {selectedOrder?.orderNumber || "Loading..."}
@@ -5251,23 +5179,23 @@ const AdminDashboardContent = () => {
             </DialogHeader>
             {detailLoading ? (
               <div className="h-[600px] flex items-center justify-center">
-                <div className="h-10 w-10 animate-spin rounded-xl border-4 border-stone-200 border-t-stone-900" />
+                <div className="h-10 w-10 animate-spin rounded-[10px] border-4 border-stone-200 border-t-stone-900" />
               </div>
             ) : (
               selectedOrder && (
                 <div className="flex flex-col max-h-[90vh]">
                   <header className="p-10 bg-gradient-to-br from-indigo-950 via-[#0a0a0c] to-indigo-900 text-white relative overflow-hidden shrink-0 border-b border-white/5 shadow-2xl">
-                    <div className="absolute top-0 right-0 p-64 bg-indigo-500/10 blur-[150px] rounded-[2px] -mr-32 -mt-32" />
-                    <div className="absolute bottom-0 left-0 p-32 bg-amber-500/5 blur-[80px] rounded-[2px] -ml-16 -mb-16" />
+                    <div className="absolute top-0 right-0 p-64 bg-emerald-500/10 blur-[150px] rounded-[10px] -mr-32 -mt-32" />
+                    <div className="absolute bottom-0 left-0 p-32 bg-amber-500/5 blur-[80px] rounded-[10px] -ml-16 -mb-16" />
                     <div className="flex justify-between items-end relative z-10">
                       <div className="space-y-6">
                         <div className="flex items-center gap-4">
                           <Badge
                             className={cn(
-                              "text-[9px] font-black uppercase tracking-[0.3em] px-4 py-1.5 border-none rounded-[2px] shadow-lg",
+                              "text-[9px] font-black uppercase tracking-[0.3em] px-4 py-1.5 border-none rounded-[10px] shadow-lg",
                               selectedOrder.status === "DELIVERED"
                                 ? "bg-emerald-500 text-white"
-                                : "bg-pink-600 text-white",
+                                : "bg-emerald-600 text-white",
                             )}
                           >
                             {selectedOrder.status}
@@ -5285,7 +5213,7 @@ const AdminDashboardContent = () => {
                             {selectedOrder.orderNumber}
                           </h2>
                         </div>
-                        <div className="flex items-center gap-8 text-white/50 font-black text-[11px] uppercase tracking-[0.3em] mt-8 bg-white/5 backdrop-blur-md px-6 py-3 rounded-[2px] border border-white/10 inline-flex shadow-inner">
+                        <div className="flex items-center gap-8 text-white/50 font-black text-[11px] uppercase tracking-[0.3em] mt-8 bg-white/5 backdrop-blur-md px-6 py-3 rounded-[10px] border border-white/10 inline-flex shadow-inner">
                           <span className="flex items-center gap-2.5">
                             <Calendar className="h-3.5 w-3.5 text-indigo-400" />
                             {new Date(
@@ -5306,12 +5234,12 @@ const AdminDashboardContent = () => {
                         </div>
                       </div>
                       <div className="text-right flex flex-col items-end gap-3">
-                        <div className="bg-white/5 backdrop-blur-md p-6 rounded-[2px] border border-white/10 shadow-2xl ring-1 ring-white/5">
+                        <div className="bg-white/5 backdrop-blur-md p-6 rounded-[10px] border border-white/10 shadow-2xl ring-1 ring-white/5">
                           <p className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-3">
                             Settlement Quantum
                           </p>
                           <p className="text-5xl font-mono font-black text-white leading-none tracking-tighter flex items-start gap-2">
-                            <span className="text-2xl text-pink-500 mt-1">
+                            <span className="text-2xl text-rose-500 mt-1">
                               &#8377;
                             </span>
                             {parseFloat(
@@ -5332,13 +5260,13 @@ const AdminDashboardContent = () => {
                             Customer Identity & Destination Profile
                           </h3>
                           <div className="space-y-4">
-                            <div className="bg-white p-6 rounded-[2px] border border-stone-100 shadow-sm transition-all hover:shadow-md">
+                            <div className="bg-white p-6 rounded-[10px] border border-stone-100 shadow-sm transition-all hover:shadow-md">
                               <h4 className="text-[10px] font-black text-indigo-950 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                                <span className="h-1.5 w-1.5 bg-indigo-600 rounded-[2px]" />
+                                <span className="h-1.5 w-1.5 bg-emerald-600 rounded-[10px]" />
                                 Operational Identity
                               </h4>
                               <div className="flex items-center gap-5">
-                                <div className="h-14 w-14 rounded-xl bg-pink-50 border border-pink-100 flex items-center justify-center text-pink-600 shadow-inner">
+                                <div className="h-14 w-14 rounded-[10px] bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shadow-inner">
                                   <User className="h-7 w-7" />
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -5365,12 +5293,12 @@ const AdminDashboardContent = () => {
                               (selectedOrder.customer?.addresses &&
                                 selectedOrder.customer.addresses.length >
                                   0)) && (
-                              <div className="bg-stone-900 p-6 rounded-xl text-white shadow-2xl shadow-stone-900/20 relative overflow-hidden group border border-white/5">
+                              <div className="bg-stone-900 p-6 rounded-[10px] text-white shadow-2xl shadow-stone-900/20 relative overflow-hidden group border border-white/5">
                                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                                   <Navigation className="h-16 w-16 rotate-12" />
                                 </div>
                                 <h4 className="text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-4 flex items-center gap-2 relative z-10">
-                                  <div className="h-1.5 w-1.5 bg-indigo-400 rounded-[2px] animate-pulse" />
+                                  <div className="h-1.5 w-1.5 bg-indigo-400 rounded-[10px] animate-pulse" />
                                   Shipping Protocol
                                 </h4>
                                 {(() => {
@@ -5397,7 +5325,7 @@ const AdminDashboardContent = () => {
                                           Verified Destination
                                         </span>
                                         {!selectedOrder.shippingAddress && (
-                                          <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest bg-amber-400/10 px-2 py-0.5 rounded-[2px] border border-amber-400/20">
+                                          <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest bg-amber-400/10 px-2 py-0.5 rounded-[10px] border border-amber-400/20">
                                             Registry Default
                                           </span>
                                         )}
@@ -5415,7 +5343,7 @@ const AdminDashboardContent = () => {
                             <span className="h-px w-6 bg-stone-900/10" />
                             Settlement Summary
                           </h3>
-                          <div className="p-8 bg-white rounded-xl border border-stone-200 shadow-sm hover:shadow-md transition-all space-y-5">
+                          <div className="p-8 bg-white rounded-[10px] border border-stone-200 shadow-sm hover:shadow-md transition-all space-y-5">
                             <div className="space-y-3 pb-5 border-b border-stone-50">
                               <div className="flex justify-between items-center text-[10px] font-bold text-stone-400 uppercase tracking-widest leading-none">
                                 <span>Transaction Subtotal</span>
@@ -5441,7 +5369,7 @@ const AdminDashboardContent = () => {
                               )}
 
                               {selectedOrder.rewardPointsUsed > 0 && (
-                                <div className="flex justify-between items-center text-[10px] font-black text-pink-600 uppercase tracking-widest leading-none">
+                                <div className="flex justify-between items-center text-[10px] font-black text-emerald-600 uppercase tracking-widest leading-none">
                                   <span>Loyalty Redemption</span>
                                   <span className="font-mono text-xs">
                                     - &#8377;
@@ -5484,9 +5412,9 @@ const AdminDashboardContent = () => {
                             {selectedOrder.items?.map((item, idx) => (
                               <div
                                 key={idx}
-                                className="flex gap-6 p-6 bg-white rounded-xl border border-stone-100 hover:border-[#d1408e]/30 transition-all duration-300 group shadow-sm hover:shadow-xl"
+                                className="flex gap-6 p-6 bg-white rounded-[10px] border border-stone-100 hover:border-[#d1408e]/30 transition-all duration-300 group shadow-sm hover:shadow-xl"
                               >
-                                <div className="h-28 w-28 bg-stone-50 rounded-xl border border-stone-100 overflow-hidden flex items-center justify-center relative p-3 shrink-0">
+                                <div className="h-28 w-28 bg-stone-50 rounded-[10px] border border-stone-100 overflow-hidden flex items-center justify-center relative p-3 shrink-0">
                                   {(() => {
                                     const fallbackProduct = (
                                       groupedProducts || []
@@ -5526,7 +5454,7 @@ const AdminDashboardContent = () => {
                                       </div>
                                     );
                                   })()}
-                                  <div className="absolute top-1.5 right-1.5 bg-indigo-950 text-white text-[11px] font-black px-2.5 py-1 rounded-[2px] shadow-2xl z-20">
+                                  <div className="absolute top-1.5 right-1.5 bg-indigo-950 text-white text-[11px] font-black px-2.5 py-1 rounded-[10px] shadow-2xl z-20">
                                     {item.quantity}
                                   </div>
                                 </div>
@@ -5537,7 +5465,7 @@ const AdminDashboardContent = () => {
                                       {item.name}
                                     </h4>
                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                                      <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest bg-stone-100 px-2 py-0.5 rounded-[2px]">
+                                      <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest bg-stone-100 px-2 py-0.5 rounded-[10px]">
                                         REF:{" "}
                                         {item.productId?.slice(0, 8) ||
                                           "MANUAL"}
@@ -5564,14 +5492,14 @@ const AdminDashboardContent = () => {
                                         return (
                                           <div className="flex items-center gap-2">
                                             {isLinked ? (
-                                              <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-xl ring-1 ring-emerald-500/20 animate-pulse">
+                                              <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-[10px] ring-1 ring-emerald-500/20 animate-pulse">
                                                 <ShieldCheck className="h-3 w-3" />
                                                 <span className="text-[9px] font-black uppercase tracking-widest">
                                                   Registry Verified
                                                 </span>
                                               </div>
                                             ) : (
-                                              <div className="flex items-center gap-1.5 px-3 py-1 bg-stone-50 text-stone-400 rounded-xl ring-1 ring-stone-500/10">
+                                              <div className="flex items-center gap-1.5 px-3 py-1 bg-stone-50 text-stone-400 rounded-[10px] ring-1 ring-stone-500/10">
                                                 <AlertCircle className="h-3 w-3" />
                                                 <span className="text-[9px] font-black uppercase tracking-widest">
                                                   Unverified Entry
@@ -5620,7 +5548,7 @@ const AdminDashboardContent = () => {
                     <Button
                       onClick={() => printThermalReceipt(selectedOrder)}
                       variant="outline"
-                      className="rounded-xl px-8 h-12 font-bold uppercase tracking-[0.2em] text-[10px] border-stone-200 text-stone-900 hover:bg-pink-50 transition-all gap-2.5 shadow-sm active:scale-95"
+                      className="rounded-[10px] px-8 h-12 font-bold uppercase tracking-[0.2em] text-[10px] border-stone-200 text-stone-900 hover:bg-emerald-50 transition-all gap-2.5 shadow-sm active:scale-95"
                     >
                       <Printer className="h-4 w-4" /> Print Audit Dossier
                     </Button>
@@ -5632,7 +5560,7 @@ const AdminDashboardContent = () => {
         </Dialog>
         {/* Add Direct Vendor Modal */}
         <Dialog open={isAddVendorOpen} onOpenChange={setIsAddVendorOpen}>
-          <DialogContent className="sm:max-w-2xl rounded-[2px] p-0 overflow-hidden border-none shadow-2xl">
+          <DialogContent className="sm:max-w-2xl rounded-[10px] p-0 overflow-hidden border-none shadow-2xl">
             <form
               onSubmit={handleAddVendor}
               className="flex flex-col max-h-[90vh]"
@@ -5645,7 +5573,7 @@ const AdminDashboardContent = () => {
                 </DialogDescription>
               </DialogHeader>
               <header className="p-10 bg-stone-900 text-white relative overflow-hidden shrink-0">
-                <div className="absolute top-0 right-0 p-24 bg-gradient-to-br from-emerald-500/20 to-transparent blur-3xl rounded-xl -mr-12 -mt-12" />
+                <div className="absolute top-0 right-0 p-24 bg-gradient-to-br from-emerald-500/20 to-transparent blur-3xl rounded-[10px] -mr-12 -mt-12" />
                 <div className="relative z-10">
                   <h2 className="text-3xl font-black uppercase tracking-tight leading-none">
                     Vendor Creation
@@ -5672,7 +5600,7 @@ const AdminDashboardContent = () => {
                           })
                         }
                         required
-                        className="h-12 bg-stone-50 border-stone-100 rounded-xl"
+                        className="h-12 bg-stone-50 border-stone-100 rounded-[10px]"
                       />
                     </div>
                     <div className="space-y-2">
@@ -5688,7 +5616,7 @@ const AdminDashboardContent = () => {
                           })
                         }
                         required
-                        className="h-12 bg-stone-50 border-stone-100 rounded-xl"
+                        className="h-12 bg-stone-50 border-stone-100 rounded-[10px]"
                       />
                     </div>
                     <div className="space-y-2">
@@ -5704,7 +5632,7 @@ const AdminDashboardContent = () => {
                           })
                         }
                         required
-                        className="h-12 bg-stone-50 border-stone-100 rounded-xl"
+                        className="h-12 bg-stone-50 border-stone-100 rounded-[10px]"
                       />
                     </div>
                     <div className="space-y-2">
@@ -5720,7 +5648,7 @@ const AdminDashboardContent = () => {
                             email: e.target.value,
                           })
                         }
-                        className="h-12 bg-stone-50 border-stone-100 rounded-xl"
+                        className="h-12 bg-stone-50 border-stone-100 rounded-[10px]"
                       />
                     </div>
                     <div className="col-span-2 space-y-2">
@@ -5738,7 +5666,7 @@ const AdminDashboardContent = () => {
                           })
                         }
                         required
-                        className="h-12 bg-stone-50 border-stone-100 rounded-xl"
+                        className="h-12 bg-stone-50 border-stone-100 rounded-[10px]"
                       />
                     </div>
                     <div className="col-span-2 space-y-2">
@@ -5755,7 +5683,7 @@ const AdminDashboardContent = () => {
                         }
                         required
                         placeholder="e.g. 123 Main St, City, State, Zip"
-                        className="w-full min-h-[100px] p-4 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all resize-y"
+                        className="w-full min-h-[100px] p-4 bg-stone-50 border border-stone-200 rounded-[10px] text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all resize-y"
                       />
                     </div>
                   </div>
@@ -5767,14 +5695,14 @@ const AdminDashboardContent = () => {
                   type="button"
                   onClick={() => setIsAddVendorOpen(false)}
                   variant="ghost"
-                  className="rounded-xl px-8 h-12 font-black uppercase tracking-widest text-[10px]"
+                  className="rounded-[10px] px-8 h-12 font-black uppercase tracking-widest text-[10px]"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="bg-emerald-600 text-white rounded-xl px-12 h-12 font-black uppercase tracking-widest text-[10px] shadow-xl hover:bg-emerald-700"
+                  className="bg-emerald-600 text-white rounded-[10px] px-12 h-12 font-black uppercase tracking-widest text-[10px] shadow-xl hover:bg-emerald-700"
                 >
                   Issue Authority
                 </Button>
@@ -5788,7 +5716,7 @@ const AdminDashboardContent = () => {
             className={`max-w-lg p-0 overflow-hidden border-none ${THEME.borders.radius.xl} bg-white/80 backdrop-blur-3xl ${THEME.shadows.xl}`}
           >
             <header className="p-6 bg-gradient-to-br from-indigo-950 via-indigo-900 to-indigo-800 text-white flex flex-col gap-1 shrink-0 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-24 bg-white/5 blur-3xl rounded-[2px] -mr-12 -mt-12" />
+              <div className="absolute top-0 right-0 p-24 bg-white/5 blur-3xl rounded-[10px] -mr-12 -mt-12" />
               <div className="flex items-center justify-between relative z-10">
                 <h2 className="text-lg font-black uppercase tracking-tighter flex items-center gap-3">
                   <div
@@ -5823,7 +5751,7 @@ const AdminDashboardContent = () => {
                     onClick={() =>
                       document.getElementById("quick-image-input").click()
                     }
-                    className={`h-44 w-full border-2 border-dashed border-stone-200 ${THEME.borders.radius.lg} flex flex-col items-center justify-center cursor-pointer hover:border-pink-500 hover:bg-pink-50/20 hover:shadow-2xl hover:shadow-pink-500/10 transition-all duration-500 overflow-hidden group/img bg-stone-50/50`}
+                    className={`h-44 w-full border-2 border-dashed border-stone-200 ${THEME.borders.radius.lg} flex flex-col items-center justify-center cursor-pointer hover:border-pink-500 hover:bg-emerald-50/20 hover:shadow-2xl hover:shadow-pink-500/10 transition-all duration-500 overflow-hidden group/img bg-stone-50/50`}
                   >
                     {quickAddImage ? (
                       <img
@@ -5846,7 +5774,7 @@ const AdminDashboardContent = () => {
                         <div
                           className={`h-12 w-12 ${THEME.borders.radius.md} bg-white flex items-center justify-center shadow-lg group-hover/img:scale-110 group-hover/img:rotate-12 transition-all duration-500 mx-auto`}
                         >
-                          <Camera className="h-6 w-6 text-stone-300 group-hover/img:text-pink-600" />
+                          <Camera className="h-6 w-6 text-stone-300 group-hover/img:text-emerald-600" />
                         </div>
                         <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest block">
                           Select Product Media
@@ -5930,7 +5858,7 @@ const AdminDashboardContent = () => {
                         categoryName: e.target.value,
                       })
                     }
-                    className={`h-11 bg-white/50 border-stone-200 rounded-xl font-black text-stone-900 px-5 focus-visible:ring-pink-500 transition-all shadow-sm text-xs`}
+                    className={`h-11 bg-white/50 border-stone-200 rounded-[10px] font-black text-stone-900 px-5 focus-visible:ring-pink-500 transition-all shadow-sm text-xs`}
                   />
                 </div>
 
@@ -5949,7 +5877,7 @@ const AdminDashboardContent = () => {
                         price: e.target.value,
                       })
                     }
-                    className={`h-11 bg-white/50 border-stone-200 rounded-xl font-black text-pink-600 px-5 focus-visible:ring-pink-500 transition-all shadow-sm text-xs`}
+                    className={`h-11 bg-white/50 border-stone-200 rounded-[10px] font-black text-emerald-600 px-5 focus-visible:ring-pink-500 transition-all shadow-sm text-xs`}
                   />
                 </div>
 
@@ -5967,7 +5895,7 @@ const AdminDashboardContent = () => {
                         stock: e.target.value,
                       })
                     }
-                    className={`h-11 bg-stone-50 border-stone-200 rounded-xl font-black text-stone-900 px-5 focus-visible:ring-pink-500 transition-all shadow-sm text-xs`}
+                    className={`h-11 bg-stone-50 border-stone-200 rounded-[10px] font-black text-stone-900 px-5 focus-visible:ring-pink-500 transition-all shadow-sm text-xs`}
                   />
                 </div>
               </div>
@@ -5984,7 +5912,7 @@ const AdminDashboardContent = () => {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className={`h-11 px-10 bg-[#ff4fa3] text-white font-black uppercase tracking-[0.2em] text-[9px] rounded-xl shadow-xl shadow-pink-100 hover:bg-[#e0458f] hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 flex items-center gap-2`}
+                  className={`h-11 px-10 bg-[#ff4fa3] text-white font-black uppercase tracking-[0.2em] text-[9px] rounded-[10px] shadow-xl shadow-pink-100 hover:bg-[#e0458f] hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 flex items-center gap-2`}
                 >
                   {loading ? (
                     <div className="h-3 w-3 border-2 border-white border-t-transparent animate-spin rounded-full" />
