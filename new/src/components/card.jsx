@@ -53,7 +53,6 @@ const ProductCard = React.memo(
             loading="lazy"
             decoding="async"
             onError={(event) => {
-
               event.currentTarget.onerror = null;
               event.currentTarget.src = "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=600&q=80";
             }}
@@ -65,7 +64,7 @@ const ProductCard = React.memo(
               {points} POINTS
             </div>
             <div className="bg-[#ff3b8f] text-white text-[9px] font-black px-2 py-0.5 rounded shadow-md uppercase tracking-widest">
-              25% OFF
+              {Math.round(((mrp - price) / mrp) * 100)}% OFF
             </div>
           </div>
 

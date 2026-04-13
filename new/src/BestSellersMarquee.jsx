@@ -44,8 +44,16 @@ const BestSellersMarquee = React.memo(function BestSellersMarquee({
 
   const marqueeItems = useMemo(() => {
     if (mappedProducts.length === 0) return [];
-    // 3x is enough for a smooth looping marquee
-    return [...mappedProducts, ...mappedProducts, ...mappedProducts];
+    
+    // For a smooth marquee with few items, we fill the array to a minimum count
+    // so that the same item doesn't appear immediately next to itself too often.
+    let baseSet = [...mappedProducts];
+    while (baseSet.length < 10 && mappedProducts.length > 0) {
+      baseSet = [...baseSet, ...mappedProducts];
+    }
+
+    // 3x is used to match the CSS animation which shifts -33.33%
+    return [...baseSet, ...baseSet, ...baseSet];
   }, [mappedProducts]);
 
   useEffect(() => {
