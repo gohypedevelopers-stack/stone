@@ -129,11 +129,11 @@ const BestSellersMarquee = React.memo(function BestSellersMarquee({
         </div>
       </div>
 
-      <div className={`relative ${isMarqueeActive ? 'cursor-grab active:cursor-grabbing' : ''} overflow-hidden`} ref={containerRef}>
+      <div className={`relative ${isMarqueeActive ? 'cursor-grab active:cursor-grabbing' : 'overflow-x-auto no-scrollbar'} overflow-hidden`} ref={containerRef}>
         <motion.div
           ref={contentRef}
-          className={`flex ${isMarqueeActive ? 'gap-10 py-12 px-6 w-max' : 'gap-6 justify-center flex-wrap px-6'} py-12`}
-          drag={isMarqueeActive ? "x" : false}
+          className={`flex ${isMarqueeActive ? 'gap-10 py-12 px-6 w-max' : 'gap-6 justify-start py-12 px-6'}`}
+          drag={isMarqueeActive ? "x" : "x"}
           dragConstraints={constraints}
           dragElastic={0.1}
           onDragStart={() => {
@@ -148,7 +148,7 @@ const BestSellersMarquee = React.memo(function BestSellersMarquee({
           }}
         >
           {/* We use a simple flex row. The CSS animation is paused when dragging. */}
-          <div className={`flex ${isMarqueeActive ? 'gap-10 animate-smooth-marquee-slow pause-on-hover px-10' : 'gap-8 flex-wrap justify-center'} ${isDragging ? "[animation-play-state:paused]" : ""}`}>
+          <div className={`flex ${isMarqueeActive ? 'gap-10 animate-smooth-marquee-slow pause-on-hover px-10' : 'gap-8 justify-start'} ${isDragging ? "[animation-play-state:paused]" : ""}`}>
 
             {marqueeItems.map((product, idx) => (
               <div
