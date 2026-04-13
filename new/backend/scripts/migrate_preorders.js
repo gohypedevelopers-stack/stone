@@ -4,12 +4,14 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+const baseUrl = process.env.BASE_URL || (process.env.NODE_ENV === 'production' ? "https://stone-backend.vercel.app" : "http://localhost:5000");
+
 const PREORDER_PRODUCTS = [
     {
         id: "po1",
         name: "Luminous Silk Foundation",
         tag: "Exclusive",
-        image: "http://localhost:5000/assets/COMINGSOON/G.jpg",
+        image: `${baseUrl}/assets/COMINGSOON/G.jpg`,
         unlockDate: "10 Mar, 10:00 AM",
         stockLeft: 42,
         totalStock: 100,
@@ -27,7 +29,7 @@ const PREORDER_PRODUCTS = [
         id: "po2",
         name: "Velvet Blur Lip Tint",
         tag: "Exclusive",
-        image: "http://localhost:5000/assets/COMINGSOON/H.jpg",
+        image: `${baseUrl}/assets/COMINGSOON/H.jpg`,
         unlockDate: "15 Mar, 12:00 PM",
         stockLeft: 12,
         totalStock: 50,
@@ -45,7 +47,7 @@ const PREORDER_PRODUCTS = [
         id: "po3",
         name: "Crystal Glow Serum",
         tag: "Exclusive",
-        image: "http://localhost:5000/assets/COMINGSOON/I.jpg",
+        image: `${baseUrl}/assets/COMINGSOON/I.jpg`,
         unlockDate: "20 Mar, 09:00 AM",
         stockLeft: 85,
         totalStock: 200,
@@ -63,7 +65,7 @@ const PREORDER_PRODUCTS = [
         id: "po4",
         name: "Moonlight Night Cream",
         tag: "Exclusive",
-        image: "http://localhost:5000/assets/COMINGSOON/J.jpg",
+        image: `${baseUrl}/assets/COMINGSOON/J.jpg`,
         unlockDate: "25 Mar, 08:00 PM",
         stockLeft: 20,
         totalStock: 60,
@@ -81,7 +83,7 @@ const PREORDER_PRODUCTS = [
         id: "po5",
         name: "Rose Quartz Roller",
         tag: "Exclusive",
-        image: "http://localhost:5000/assets/COMINGSOON/G.jpg", 
+        image: `${baseUrl}/assets/COMINGSOON/G.jpg`, 
         unlockDate: "28 Mar, 10:00 AM",
         stockLeft: 5,
         totalStock: 30,

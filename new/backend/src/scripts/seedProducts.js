@@ -93,7 +93,8 @@ async function main() {
                 console.warn("Could not find source image:", sourceImagePath);
             }
 
-            const imageUrl = `http://localhost:5000/uploads/products/${encodeURIComponent(filename)}`;
+            const baseUrl = process.env.BASE_URL || (process.env.NODE_ENV === 'production' ? "https://stone-backend.vercel.app" : "http://localhost:5000");
+            const imageUrl = `${baseUrl}/uploads/products/${encodeURIComponent(filename)}`;
 
             const existingProd = await prisma.product.findFirst({ where: { name: prod.name } });
             if (!existingProd) {
