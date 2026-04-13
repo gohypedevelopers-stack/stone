@@ -45,18 +45,30 @@ const BestSellersMarquee = React.memo(function BestSellersMarquee({
   const marqueeItems = useMemo(() => {
     if (mappedProducts.length === 0) return [];
     
-    // For a smooth marquee with few items, we fill the array to a minimum count
-    // so that the same item doesn't appear immediately next to itself too often.
+    // If we only have a few products, don't repeat them at all.
+    // We'll show them in a static grid instead.
+    if (mappedProducts.length < 5) {
+      return mappedProducts;
+    }
+
+    // Otherwise, create a smooth loop by filling the set
     let baseSet = [...mappedProducts];
-    while (baseSet.length < 10 && mappedProducts.length > 0) {
+    while (baseSet.length < 10) {
       baseSet = [...baseSet, ...mappedProducts];
     }
 
-    // 3x is used to match the CSS animation which shifts -33.33%
+    // Triple for the CSS animation loop
     return [...baseSet, ...baseSet, ...baseSet];
   }, [mappedProducts]);
 
+  const isMarqueeActive = useMemo(() => mappedProducts.length >= 5, [mappedProducts]);
+
   useEffect(() => {
+    if (!isMarqueeActive) {
+      setConstraints({ left: 0, right: 0 });
+      return;
+    }
+
     const updateConstraints = () => {
       if (containerRef.current && contentRef.current) {
         const totalContentWidth = contentRef.current.scrollWidth;
@@ -73,7 +85,7 @@ const BestSellersMarquee = React.memo(function BestSellersMarquee({
     if (containerRef.current) observer.observe(containerRef.current);
     
     return () => observer.disconnect();
-  }, [marqueeItems]);
+  }, [marqueeItems, isMarqueeActive]);
 
   const [isDragging, setIsDragging] = useState(false);
 
@@ -117,11 +129,11 @@ const BestSellersMarquee = React.memo(function BestSellersMarquee({
         </div>
       </div>
 
-      <div className="relative cursor-grab active:cursor-grabbing overflow-hidden" ref={containerRef}>
+      <div className={`relative ${isMarqueeActive ? 'cursor-grab active:cursor-grabbing' : ''} overflow-hidden`} ref={containerRef}>
         <motion.div
           ref={contentRef}
-          className="flex gap-10 py-12 px-6 w-max"
-          drag="x"
+          className={`flex ${isMarqueeActive ? 'gap-10 py-12 px-6 w-max' : 'gap-6 justify-center flex-wrap px-6'} py-12`}
+          drag={isMarqueeActive ? "x" : false}
           dragConstraints={constraints}
           dragElastic={0.1}
           onDragStart={() => {
@@ -136,7 +148,7 @@ const BestSellersMarquee = React.memo(function BestSellersMarquee({
           }}
         >
           {/* We use a simple flex row. The CSS animation is paused when dragging. */}
-          <div className={`flex gap-10 animate-smooth-marquee-slow pause-on-hover px-10 ${isDragging ? "[animation-play-state:paused]" : ""}`}>
+          <div className={`flex ${isMarqueeActive ? 'gap-10 animate-smooth-marquee-slow pause-on-hover px-10' : 'gap-8 flex-wrap justify-center'} ${isDragging ? "[animation-play-state:paused]" : ""}`}>
 
             {marqueeItems.map((product, idx) => (
               <div
@@ -161,8 +173,12 @@ const BestSellersMarquee = React.memo(function BestSellersMarquee({
           </div>
         </motion.div>
 
-        <div className="absolute inset-y-0 left-0 w-32 bg-linear-to-r from-white via-white/80 to-transparent z-10 pointer-events-none" />
-        <div className="absolute inset-y-0 right-0 w-32 bg-linear-to-l from-white via-white/80 to-transparent z-10 pointer-events-none" />
+        {isMarqueeActive && (
+          <>
+            <div className="absolute inset-y-0 left-0 w-32 bg-linear-to-r from-white via-white/80 to-transparent z-10 pointer-events-none" />
+            <div className="absolute inset-y-0 right-0 w-32 bg-linear-to-l from-white via-white/80 to-transparent z-10 pointer-events-none" />
+          </>
+        )}
       </div>
     </section>
   );
