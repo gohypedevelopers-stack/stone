@@ -1,7 +1,13 @@
 const LIVE_URL = "https://stone-backend.vercel.app";
 const LOCAL_URL = "http://localhost:5000";
 
-export const SERVER_URL = import.meta.env.VITE_APP_API_URL || (import.meta.env.DEV ? LOCAL_URL : LIVE_URL);
+const isProd = import.meta.env.MODE === 'production' || !import.meta.env.DEV;
+const envUrl = import.meta.env.VITE_APP_API_URL;
+
+// In production, force live URL unless envUrl is explicitly a non-localhost production URL
+export const SERVER_URL = isProd 
+  ? (envUrl && !envUrl.includes('localhost') ? envUrl : LIVE_URL)
+  : (envUrl || LOCAL_URL);
 export const API_URL = `${SERVER_URL}/api`;
 
 const parseResponseBody = async (response) => {
