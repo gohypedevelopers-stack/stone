@@ -1,4 +1,7 @@
-export const SERVER_URL = import.meta.env.VITE_APP_API_URL || "https://stone-backend.vercel.app";
+const LIVE_URL = "https://stone-backend.vercel.app";
+const LOCAL_URL = "http://localhost:5000";
+
+export const SERVER_URL = import.meta.env.VITE_APP_API_URL || (import.meta.env.DEV ? LOCAL_URL : LIVE_URL);
 export const API_URL = `${SERVER_URL}/api`;
 
 const parseResponseBody = async (response) => {

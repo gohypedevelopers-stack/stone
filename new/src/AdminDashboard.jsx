@@ -56,6 +56,8 @@ import {
   Download,
   LogOut,
   ChevronDown,
+  Globe,
+  Store,
 } from "lucide-react";
 import { toast } from "sonner";
 import AdminLogin from "./AdminLogin";
@@ -137,6 +139,92 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { API_URL, SERVER_URL } from "@/utils/api";
+
+const QuickRestockDialog = ({ open, onOpenChange, product, onRestock, loading }) => {
+  const [online, setOnline] = useState(0);
+  const [retail, setRetail] = useState(0);
+
+  useEffect(() => {
+    if (open) {
+      setOnline(0);
+      setRetail(0);
+    }
+  }, [open]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden border-none shadow-2xl rounded-3xl">
+        <header className="p-8 bg-linear-to-br from-stone-900 to-black text-white relative">
+          <div className="absolute top-0 right-0 p-16 bg-white/5 blur-3xl -mr-8 -mt-8 rounded-full" />
+          <div className="relative z-10 flex items-center gap-4">
+            <div className="h-12 w-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+              <Package className="h-6 w-6 text-rose-400" />
+            </div>
+            <div>
+              <h2 className="text-xl font-black uppercase tracking-tight italic">Inventory Refill</h2>
+              <p className="text-stone-400 text-[10px] font-bold uppercase tracking-widest mt-1">Restocking Module for {product?.name}</p>
+            </div>
+          </div>
+        </header>
+
+        <div className="p-8 space-y-6 bg-white">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">Online (E-Com)</Label>
+              <div className="relative group">
+                <Input 
+                  type="number"
+                  value={online}
+                  onChange={(e) => setOnline(parseInt(e.target.value) || 0)}
+                  className="h-14 bg-stone-50 border-stone-100 focus:border-rose-300 focus:ring-rose-200/50 rounded-2xl font-black text-lg transition-all"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-stone-300 uppercase tracking-widest pointer-events-none">Units</span>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">Retail (Outlet)</Label>
+              <div className="relative group">
+                <Input 
+                  type="number"
+                  value={retail}
+                  onChange={(e) => setRetail(parseInt(e.target.value) || 0)}
+                  className="h-14 bg-stone-50 border-stone-100 focus:border-rose-300 focus:ring-rose-200/50 rounded-2xl font-black text-lg transition-all"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-stone-300 uppercase tracking-widest pointer-events-none">Units</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl flex items-start gap-4">
+            <div className="h-8 w-8 rounded-xl bg-white flex items-center justify-center text-emerald-500 shrink-0 shadow-sm">
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <p className="text-[11px] font-medium text-emerald-900 leading-relaxed">
+              Updates will synchronize across all nodes immediately. Ensure stock count matches physical inventory.
+            </p>
+          </div>
+        </div>
+
+        <footer className="p-6 bg-stone-50 border-t border-stone-100 flex justify-end gap-3 rounded-b-3xl">
+          <Button 
+            variant="ghost" 
+            onClick={() => onOpenChange(false)}
+            className="rounded-full px-8 h-12 font-black uppercase tracking-widest text-[10px] hover:bg-white transition-all"
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={() => onRestock(online, retail)}
+            disabled={loading}
+            className="bg-stone-900 hover:bg-black text-white rounded-full px-10 h-12 font-black uppercase tracking-widest text-[11px] shadow-xl shadow-stone-200 transition-all hover:scale-105 active:scale-95"
+          >
+            {loading ? <Spinner className="h-4 w-4" /> : "Authorize Restock"}
+          </Button>
+        </footer>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const AdminDashboardContent = () => {
   const { user, logout } = useAuth();
@@ -257,6 +345,12 @@ const AdminDashboardContent = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [brands, setBrands] = useState([]);
   const [isAddingNewBrand, setIsAddingNewBrand] = useState(false);
+  
+  // Out of Stock / Restock States
+  const [isRestockOpen, setIsRestockOpen] = useState(false);
+  const [selectedRestockProduct, setSelectedRestockProduct] = useState(null);
+  const [restockAmount, setRestockAmount] = useState({ online: 0, retail: 0 });
+  const [inlineStockChanges, setInlineStockChanges] = useState({}); // { productId: { online: 0, retail: 0 } }
 
 
 
@@ -312,6 +406,67 @@ const AdminDashboardContent = () => {
     navigate("/admin/add-product");
   };
 
+
+  const handleRestockSubmit = async (onlineAdd, retailAdd) => {
+    if (!selectedRestockProduct) return;
+    setLoading(true);
+    try {
+      const resp = await fetch(`${API_URL}/admin/products/${selectedRestockProduct.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...selectedRestockProduct,
+          onlineStock: (selectedRestockProduct.onlineStock || 0) + onlineAdd,
+          stock: (selectedRestockProduct.stock || 0) + retailAdd,
+        }),
+      });
+      const data = await resp.json();
+      if (data.success) {
+        toast.success(`Inventory synchronized for ${selectedRestockProduct.name}`);
+        setIsRestockOpen(false);
+        fetchDataForView("inventory"); // Refresh products
+      } else {
+        toast.error(data.message || "Failed to update stock");
+      }
+    } catch (err) {
+      toast.error("Network instability detected.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInlineRestock = async (product, onlineAdd, retailAdd) => {
+    if (!product) return;
+    setLoading(true);
+    try {
+      const resp = await fetch(`${API_URL}/admin/products/${product.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...product,
+          onlineStock: (product.onlineStock || 0) + onlineAdd,
+          stock: (product.stock || 0) + retailAdd,
+        }),
+      });
+      const data = await resp.json();
+      if (data.success) {
+        toast.success(`Stock Synchronized`);
+        setInlineStockChanges(prev => {
+          const next = { ...prev };
+          delete next[product.id];
+          return next;
+        });
+        fetchDataForView("inventory"); // Refresh products
+      } else {
+        toast.error(data.message || "Update Failed");
+      }
+    } catch (err) {
+      toast.error("Network instability");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCreateProductClick = () => {
     setEditingProductId(null);
     const newProd = {
@@ -357,9 +512,8 @@ const AdminDashboardContent = () => {
     const normalized = String(url).trim();
 
     if (
-      normalized.startsWith("http://localhost:5000/") ||
-      normalized.startsWith("https://localhost:5000/") ||
-      normalized.startsWith("https://stone-backend.vercel.app/")
+      normalized.includes("localhost:5000") ||
+      normalized.includes("stone-backend.vercel.app")
     ) {
       return normalized.replace(/^https?:\/\/(localhost:5000|stone-backend\.vercel\.app)/i, SERVER_URL);
     }
@@ -984,23 +1138,25 @@ const AdminDashboardContent = () => {
           (d.onlineAmount || 0) * 0.4,
         ),
       ),
-      1,
+      1
     );
 
     const getPoints = (data, field) =>
       data.map((d, i) => ({
-        x: data.length > 1 ? (i / (data.length - 1)) * 100 : 50,
+        // Map 0-1 range to 5-95 range for horizontal breathing room
+        x: data.length > 1 ? (5 + (i / (data.length - 1)) * 90) : 50,
         y: 100 - ((d[field] || 0) / maxAmt) * 100,
       }));
 
     const earningsPoints = getPoints(rawData, "onlineAmount");
     const expensesPoints = getPoints(rawData, "offlineAmount");
 
-    // Function to generate straight line path
+    // Dynamic bar width calculation
+    const barWidth = rawData.length > 0 ? (50 / rawData.length) : 4;
+
     const getLinePath = (points) => {
       if (!points || points.length === 0) return "";
       let d = `M ${points[0].x},${points[0].y}`;
-
       for (let i = 1; i < points.length; i++) {
         d += ` L ${points[i].x},${points[i].y}`;
       }
@@ -1008,151 +1164,191 @@ const AdminDashboardContent = () => {
     };
 
     return (
-      <div className="w-full h-80 mt-6 relative group/chart cursor-crosshair" onMouseLeave={() => setHoverIndex(null)}>
-        <svg
-          viewBox="0 -10 100 110"
-          preserveAspectRatio="none"
-          className="w-full h-full overflow-visible"
-        >
-          {/* Horizontal Grid */}
-          {[0, 25, 50, 75, 100].map((y) => (
-            <line
-              key={y}
-              x1="0"
-              y1={y}
-              x2="100"
-              y2={y}
-              stroke="#f1f5f9"
-              strokeWidth="0.5"
-              vectorEffect="non-scaling-stroke"
-            />
-          ))}
-
-          {/* Interaction Vertical Line */}
-          {hoverIndex !== null && (
-             <line 
-                x1={rawData.length > 1 ? (hoverIndex / (rawData.length - 1)) * 100 : 50} 
-                y1="-10" 
-                x2={rawData.length > 1 ? (hoverIndex / (rawData.length - 1)) * 100 : 50} 
-                y2="100" 
-                stroke="#cbd5e1" 
-                strokeDasharray="4,4" 
-                strokeWidth="1" 
-                vectorEffect="non-scaling-stroke"
-             />
-          )}
-
-          {/* Paths */}
-
-          <path
-            d={getLinePath(expensesPoints)}
-            fill="none"
-            stroke={COLORS.expenses}
-            strokeWidth="2.5"
-            vectorEffect="non-scaling-stroke"
-            strokeLinecap="round"
-            className="transition-all duration-1000"
-          />
-          <path
-            d={getLinePath(earningsPoints)}
-            fill="none"
-            stroke={COLORS.earnings}
-            strokeWidth="2.5"
-            vectorEffect="non-scaling-stroke"
-            strokeLinecap="round"
-            className="transition-all duration-1000"
-          />
-
-        </svg>
-
-        {/* HTML Based X-Axis Labels to prevent text stretching */}
-        <div className="absolute left-0 right-0 -bottom-6 h-5 pointer-events-none z-0">
-          {rawData.map((d, i) => {
-            const step = Math.max(1, Math.floor(rawData.length / 6));
-            if (i % step !== 0 && i !== rawData.length - 1) return null;
-            const x = rawData.length > 1 ? (i / (rawData.length - 1)) * 100 : 50;
-            return (
-              <div
-                key={`html-label-${i}`}
-                className="absolute text-[8px] font-bold text-stone-400/80 uppercase tracking-[0.15em] whitespace-nowrap"
-                style={{ left: `${x}%`, transform: 'translateX(-50%)' }}
-              >
-                {d.label}
+      <div className="w-full relative group/chart cursor-crosshair pb-8 pt-14" onMouseLeave={() => setHoverIndex(null)}>
+        {/* Split Grid Container with balanced gap */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          
+          {/* Left Chart: Online Sales Analysis */}
+          <div className="relative bg-white/40 px-6 pt-6 pb-14 rounded-2xl border border-gray-100/50 backdrop-blur-sm shadow-sm transition-all hover:shadow-md">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_12px] shadow-purple-500" style={{ backgroundColor: COLORS.earnings }} />
+                <span className="text-[12px] font-black text-stone-600 uppercase tracking-widest">Online Sales Analysis</span>
               </div>
-            );
-          })}
-        </div>
-
-        {/* Hover Interaction Circles */}
-        {rawData.map((d, i) => {
-          const x = rawData.length > 1 ? (i / (rawData.length - 1)) * 100 : 50;
-          const yOnline = 100 - ((d.onlineAmount || 0) / maxAmt) * 100;
-          const yOffline = 100 - ((d.offlineAmount || 0) / maxAmt) * 100;
-
-          return (
-            <div
-              key={`interact-${i}`}
-              onMouseEnter={() => setHoverIndex(i)}
-              className="absolute top-0 bottom-0 w-[5%] -ml-[2.5%] z-10"
-              style={{ left: `${x}%` }}
-            >
-               {hoverIndex === i && (
-                 <>
-                  <div 
-                    className="absolute w-2.5 h-2.5 rounded-full bg-white border-[3px] shadow-lg z-20 -ml-[5px]"
-                    style={{ left: "50%", top: `${yOnline}%`, borderColor: COLORS.earnings }}
-                  />
-                  <div 
-                    className="absolute w-2.5 h-2.5 rounded-full bg-white border-[3px] shadow-lg z-20 -ml-[5px]"
-                    style={{ left: "50%", top: `${yOffline}%`, borderColor: COLORS.expenses }}
-                  />
-                 </>
-               )}
+              <div className="text-[10px] font-black text-stone-300 uppercase tracking-widest">Revenue Range</div>
             </div>
-          );
-        })}
-
-        {/* Improved Dark Tooltip */}
-        {hoverIndex !== null && (
-          <div 
-            className="absolute z-50 pointer-events-none transition-all duration-200"
-            style={{ 
-              left: `${rawData.length > 1 ? (hoverIndex / (rawData.length - 1)) * 100 : 50}%`,
-              top: `${100 - ((rawData[hoverIndex].onlineAmount || 0) / maxAmt) * 100}%`,
-              transform: "translate(-50%, -120%)"
-            }}
-          >
-            <div className="bg-[#0f172a] text-white rounded-[10px] py-4 px-5 shadow-2xl relative min-w-[180px] border border-white/10 backdrop-blur-md">
-               <div className="flex flex-col gap-2">
-                 <div className="flex items-center justify-between gap-4">
-                   <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: COLORS.earnings }} />
-                      <span className="text-[10px] font-black text-stone-400 uppercase tracking-wider">Online</span>
-                   </div>
-                   <span className="text-xs font-black tabular-nums">{formatMoney(rawData[hoverIndex].onlineAmount)}</span>
-                 </div>
-                 
-                 <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: COLORS.expenses }} />
-                      <span className="text-[10px] font-black text-stone-400 uppercase tracking-wider">Offline</span>
-                   </div>
-                   <span className="text-xs font-black tabular-nums">{formatMoney(rawData[hoverIndex].offlineAmount)}</span>
-                 </div>
-
-                 <div className="h-px bg-white/10 my-1" />
-
-                 <div className="flex items-center justify-between gap-4">
-                   <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Aggregate</span>
-                   <span className="text-sm font-black text-[#9a6bff] tabular-nums">
-                      {formatMoney((rawData[hoverIndex].onlineAmount || 0) + (rawData[hoverIndex].offlineAmount || 0))}
-                   </span>
-                 </div>
-               </div>
-               <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 border-x-[6px] border-t-[6px] border-x-transparent border-t-[#0f172a]" />
+            <div className="h-64 relative px-2">
+              <svg viewBox="0 -15 100 125" preserveAspectRatio="none" className="w-full h-full overflow-visible">
+                <defs>
+                  <linearGradient id="barGradientSplit" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={COLORS.earnings} stopOpacity="1" />
+                    <stop offset="100%" stopColor={COLORS.earnings} stopOpacity="0.2" />
+                  </linearGradient>
+                </defs>
+                {/* Horizontal Grid */}
+                {[0, 25, 50, 75, 100].map((y) => (
+                  <line key={y} x1="0" y1={y} x2="100" y2={y} stroke="#f1f5f9" strokeWidth="0.5" vectorEffect="non-scaling-stroke" />
+                ))}
+                {/* Interaction Line */}
+                {hoverIndex !== null && (() => {
+                  const xPos = rawData.length > 1 ? (5 + (hoverIndex / (rawData.length - 1)) * 90) : 50;
+                  return (
+                    <line 
+                      x1={xPos} 
+                      y1="-15" 
+                      x2={xPos} 
+                      y2="100" 
+                      stroke={COLORS.earnings} 
+                      strokeOpacity="0.15"
+                      strokeWidth="4" 
+                      vectorEffect="non-scaling-stroke" 
+                    />
+                  );
+                })()}
+                {/* Bars */}
+                {earningsPoints.map((p, i) => (
+                  <rect key={`bar-${i}`} x={p.x - barWidth / 2} y={p.y} width={barWidth} height={100 - p.y} fill="url(#barGradientSplit)" fillOpacity={hoverIndex === i ? 1 : 0.8} rx="2" className="transition-all duration-300" onMouseEnter={() => setHoverIndex(i)} />
+                ))}
+              </svg>
+              {/* Refined X-Axis Labels */}
+              <div className="absolute left-0 right-0 -bottom-10 h-6 pointer-events-none">
+                 {rawData.map((d, i) => {
+                    const step = Math.max(1, Math.floor(rawData.length / 4));
+                    if (i % step !== 0 && i !== rawData.length - 1) return null;
+                    const xPercent = rawData.length > 1 ? (8 + (i / (rawData.length - 1)) * 84) : 50;
+                    return (
+                      <span 
+                        key={i} 
+                        className="absolute text-[9px] font-black text-stone-400/80 uppercase tracking-widest whitespace-nowrap"
+                        style={{ left: `${xPercent}%`, transform: 'translateX(-50%)' }}
+                      >
+                        {d.label}
+                      </span>
+                    );
+                 })}
+              </div>
             </div>
           </div>
-        )}
+
+          {/* Right Chart: Offline Sales Analysis */}
+          <div className="relative bg-white/40 px-6 pt-6 pb-14 rounded-2xl border border-gray-100/50 backdrop-blur-sm shadow-sm transition-all hover:shadow-md">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_12px] shadow-orange-500" style={{ backgroundColor: COLORS.expenses }} />
+                <span className="text-[12px] font-black text-stone-600 uppercase tracking-widest">Offline Sales Analysis</span>
+              </div>
+              <div className="text-[10px] font-black text-stone-300 uppercase tracking-widest">Revenue Range</div>
+            </div>
+            <div className="h-64 relative px-2">
+              <svg viewBox="0 -15 100 125" preserveAspectRatio="none" className="w-full h-full overflow-visible">
+                {/* Horizontal Grid */}
+                {[0, 25, 50, 75, 100].map((y) => (
+                  <line key={y} x1="0" y1={y} x2="100" y2={y} stroke="#f1f5f9" strokeWidth="0.5" vectorEffect="non-scaling-stroke" />
+                ))}
+                {/* Interaction Line */}
+                {hoverIndex !== null && (() => {
+                  const xPos = rawData.length > 1 ? (5 + (hoverIndex / (rawData.length - 1)) * 90) : 50;
+                  return (
+                    <line 
+                      x1={xPos} 
+                      y1="-15" 
+                      x2={xPos} 
+                      y2="100" 
+                      stroke={COLORS.expenses} 
+                      strokeOpacity="0.15"
+                      strokeWidth="4" 
+                      vectorEffect="non-scaling-stroke" 
+                    />
+                  );
+                })()}
+                {/* Line Path */}
+                <path d={getLinePath(expensesPoints)} fill="none" stroke={COLORS.expenses} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" className="transition-all duration-1000" style={{ filter: "drop-shadow(0 4px 6px rgba(253, 126, 20, 0.25))" }} />
+                {/* Data Points */}
+                {expensesPoints.map((p, i) => (
+                  <circle key={`dot-${i}`} cx={p.x} cy={p.y} r={hoverIndex === i ? "2.5" : "1.5"} fill="white" stroke={COLORS.expenses} strokeWidth="2.5" vectorEffect="non-scaling-stroke" className="transition-all duration-200" onMouseEnter={() => setHoverIndex(i)} />
+                ))}
+              </svg>
+               {/* Refined X-Axis Labels */}
+               <div className="absolute left-0 right-0 -bottom-10 h-6 pointer-events-none">
+                 {rawData.map((d, i) => {
+                    const step = Math.max(1, Math.floor(rawData.length / 4));
+                    if (i % step !== 0 && i !== rawData.length - 1) return null;
+                    const xPercent = rawData.length > 1 ? (8 + (i / (rawData.length - 1)) * 84) : 50;
+                    return (
+                      <span 
+                        key={i} 
+                        className="absolute text-[9px] font-black text-stone-400/80 uppercase tracking-widest whitespace-nowrap"
+                        style={{ left: `${xPercent}%`, transform: 'translateX(-50%)' }}
+                      >
+                        {d.label}
+                      </span>
+                    );
+                 })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Redesigned Tooltip (Floating Glass Header with Edge Containment) */}
+        {hoverIndex !== null && (() => {
+          const progress = hoverIndex / (rawData.length - 1 || 1);
+          const xPercent = rawData.length > 1 ? (8 + progress * 84) : 50; // Use 8-92% range for even more room
+          
+          // Dynamic transform to prevent edge clipping (0% at start, -50% middle, -100% at end)
+          const translateX = progress < 0.2 ? "0%" : progress > 0.8 ? "-100%" : "-50%";
+          const leftOffset = progress < 0.2 ? "0" : progress > 0.8 ? "0" : "0"; // No extra offset needed with % transform
+
+          return (
+            <div 
+              className="absolute z-50 pointer-events-none transition-all duration-300 ease-out"
+              style={{ 
+                left: `${xPercent}%`,
+                top: "12px",
+                transform: `translateX(${translateX})`
+              }}
+            >
+              <div className="bg-white/95 backdrop-blur-xl border border-stone-200/60 shadow-[0_12px_40px_rgb(0,0,0,0.12)] rounded-full px-6 py-3 flex items-center gap-6 min-w-max border-b-2 border-b-emerald-500/20">
+                 {/* Label & Context */}
+                 <div className="flex flex-col pr-6 border-r border-stone-100">
+                   <span className="text-[10px] font-black text-stone-900 uppercase tracking-widest leading-none mb-1.5">{rawData[hoverIndex].label}</span>
+                   <div className="flex items-center gap-1.5 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 w-fit">
+                      <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-[7px] font-black text-emerald-600 uppercase">Synced Data</span>
+                   </div>
+                 </div>
+                 
+                 {/* Data Points (Horizontal) */}
+                 <div className="flex items-center gap-10">
+                   <div className="flex items-center gap-2.5">
+                      <div className="w-2 h-2 rounded-full shadow-[0_0_8px] shadow-purple-400" style={{ backgroundColor: COLORS.earnings }} />
+                      <div className="flex flex-col">
+                        <span className="text-[8px] font-black text-stone-400 uppercase tracking-tighter">Online</span>
+                        <span className="text-sm font-black text-stone-800 tabular-nums leading-none mt-0.5">{formatMoney(rawData[hoverIndex].onlineAmount)}</span>
+                      </div>
+                   </div>
+                   
+                   <div className="flex items-center gap-2.5">
+                      <div className="w-2 h-2 rounded-full shadow-[0_0_8px] shadow-orange-400" style={{ backgroundColor: COLORS.expenses }} />
+                      <div className="flex flex-col">
+                        <span className="text-[8px] font-black text-stone-400 uppercase tracking-tighter">Offline</span>
+                        <span className="text-sm font-black text-stone-800 tabular-nums leading-none mt-0.5">{formatMoney(rawData[hoverIndex].offlineAmount)}</span>
+                      </div>
+                   </div>
+                 </div>
+
+                 {/* Aggregated Total (Enhanced Right Section) */}
+                 <div className="flex items-center gap-5 pl-8 border-l-2 border-emerald-500/10 ml-2">
+                    <div className="flex flex-col items-end">
+                      <span className="text-[8px] font-black text-emerald-600/60 uppercase tracking-widest leading-none mb-1">Total Revenue</span>
+                      <span className="text-lg font-black text-emerald-500 tabular-nums drop-shadow-sm leading-none">
+                         {formatMoney((rawData[hoverIndex].onlineAmount || 0) + (rawData[hoverIndex].offlineAmount || 0))}
+                      </span>
+                    </div>
+                 </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     );
   };
@@ -1369,6 +1565,28 @@ const AdminDashboardContent = () => {
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
+                          isActive={activeView === "out-of-stock"}
+                          onClick={() => handleViewChange("out-of-stock")}
+                          className={cn(
+                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-full transition-all duration-200",
+                            activeView === "out-of-stock"
+                              ? "bg-rose-50 text-rose-700 font-semibold"
+                              : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
+                          )}
+                        >
+                          {activeView === "out-of-stock" && (
+                            <div className="h-1.5 w-1.5 rounded-full bg-rose-600 mr-2" />
+                          )}
+                          <div className="flex items-center gap-2">
+                             Stock Alerts
+                             {products.filter(p => (p.onlineStock || 0) <= 0 || (p.stock || 0) <= 0).length > 0 && (
+                               <span className="flex h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+                             )}
+                          </div>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton
                           isActive={activeView === "vendor-analytics"}
                           onClick={() => handleViewChange("vendor-analytics")}
                           className={cn(
@@ -1543,6 +1761,160 @@ const AdminDashboardContent = () => {
               {activeView === "offline-billing" && <VendorOfflineBilling />}
               {activeView === "points" && <PointsSettings />}
               {activeView === "coupons" && <AdminCouponManager />}
+              {activeView === "out-of-stock" && (
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-500">
+                  <header className="flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <h1 className={`${THEME.typography.headings.h1} bg-clip-text text-transparent bg-linear-to-r from-rose-600 to-rose-400 pb-1`}>
+                        Inventory Depletion Controls
+                      </h1>
+                      <p className="text-stone-400 text-xs font-bold uppercase tracking-widest mt-1">
+                        Critical tracking for products with zero or near-zero stock levels.
+                      </p>
+                    </div>
+                    <div className="bg-rose-50 border border-rose-100 rounded-xl px-4 py-2 flex items-center gap-3">
+                      <div className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+                      <span className="text-[10px] font-black text-rose-900 uppercase tracking-widest">Live Alert Feed</span>
+                    </div>
+                  </header>
+
+                  <Card className="border-none shadow-[0_20px_50px_rgba(0,0,0,0.03)] rounded-2xl overflow-hidden bg-white/70 backdrop-blur-xl">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader className="bg-gray-50/50">
+                          <TableRow className="border-stone-100 h-16">
+                            <TableHead className="px-8 text-[10px] font-black text-stone-400 uppercase tracking-widest">Product Module</TableHead>
+                            <TableHead className="px-8 text-[10px] font-black text-stone-400 uppercase tracking-widest text-center">Online Res.</TableHead>
+                            <TableHead className="px-8 text-[10px] font-black text-stone-400 uppercase tracking-widest text-center">Retail Res.</TableHead>
+                            <TableHead className="px-8 text-[10px] font-black text-stone-400 uppercase tracking-widest text-center">Status</TableHead>
+                            <TableHead className="px-8 text-right text-[10px] font-black text-stone-400 uppercase tracking-widest">Command</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {products.filter(p => (p.onlineStock || 0) <= 0 || (p.stock || 0) <= 0).length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={5} className="h-64 text-center">
+                                <div className="flex flex-col items-center justify-center gap-4">
+                                  <div className="h-16 w-16 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500">
+                                    <CheckCircle2 className="h-8 w-8" />
+                                  </div>
+                                  <div>
+                                    <h4 className="text-sm font-black text-stone-900 uppercase tracking-tighter">Inventory Optimized</h4>
+                                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1">No critical stock depletions detected.</p>
+                                  </div>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            products.filter(p => (p.onlineStock || 0) <= 0 || (p.stock || 0) <= 0).map((p) => (
+                              <TableRow key={p.id} className="border-stone-50 hover:bg-stone-50/50 transition-all duration-300">
+                                <TableCell className="px-8 py-5">
+                                  <div className="flex items-center gap-4">
+                                    <div className="h-12 w-12 rounded-xl bg-stone-100 border border-stone-200 overflow-hidden shrink-0">
+                                      {p.imageUrls?.[0] ? (
+                                        <img src={getMediaUrl(p.imageUrls[0])} className="w-full h-full object-cover" alt="" />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-[10px] font-black text-stone-300">IMG</div>
+                                      )}
+                                    </div>
+                                    <div className="flex flex-col min-w-0">
+                                      <span className="font-black text-stone-900 text-sm truncate uppercase tracking-tight">{p.name}</span>
+                                      <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">{p.brand || 'OMW Skincare'}</span>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="px-8 text-center">
+                                  <div className="flex flex-col items-center gap-2">
+                                    <span className={cn(
+                                      "px-3 py-1 rounded-full border text-[10px] font-black transition-all",
+                                      (p.onlineStock || 0) <= 0 
+                                        ? "bg-rose-50 border-rose-100 text-rose-600 shadow-sm" 
+                                        : "bg-emerald-50 border-emerald-100 text-emerald-600"
+                                    )}>
+                                      {(p.onlineStock || 0)} Units Current
+                                    </span>
+                                    <div className="relative w-24">
+                                      <Input 
+                                        type="number"
+                                        placeholder="+ Add"
+                                        value={inlineStockChanges[p.id]?.online || ""}
+                                        onChange={(e) => setInlineStockChanges(prev => ({
+                                          ...prev,
+                                          [p.id]: { ...(prev[p.id] || { online: 0, retail: 0 }), online: parseInt(e.target.value) || 0 }
+                                        }))}
+                                        className="h-8 bg-stone-50 border-stone-200 focus:border-rose-300 rounded-lg text-xs font-black text-center"
+                                      />
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="px-8 text-center">
+                                  <div className="flex flex-col items-center gap-2">
+                                    <span className={cn(
+                                      "px-3 py-1 rounded-full border text-[10px] font-black transition-all",
+                                      (p.stock || 0) <= 0 
+                                        ? "bg-rose-50 border-rose-100 text-rose-600 shadow-sm" 
+                                        : "bg-emerald-50 border-emerald-100 text-emerald-600"
+                                    )}>
+                                      {(p.stock || 0)} Units Current
+                                    </span>
+                                    <div className="relative w-24">
+                                      <Input 
+                                        type="number"
+                                        placeholder="+ Add"
+                                        value={inlineStockChanges[p.id]?.retail || ""}
+                                        onChange={(e) => setInlineStockChanges(prev => ({
+                                          ...prev,
+                                          [p.id]: { ...(prev[p.id] || { online: 0, retail: 0 }), retail: parseInt(e.target.value) || 0 }
+                                        }))}
+                                        className="h-8 bg-stone-50 border-stone-200 focus:border-rose-300 rounded-lg text-xs font-black text-center"
+                                      />
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="px-8 text-center">
+                                  {inlineStockChanges[p.id] && (inlineStockChanges[p.id].online > 0 || inlineStockChanges[p.id].retail > 0) ? (
+                                    <Badge className="bg-emerald-100 text-emerald-700 border-none rounded-full px-3 text-[9px] font-black uppercase tracking-widest animate-pulse">
+                                      Ready to Sync
+                                    </Badge>
+                                  ) : (
+                                    <Badge className="bg-rose-100 text-rose-700 border-none rounded-full px-3 text-[9px] font-black uppercase tracking-widest">
+                                      Depleted
+                                    </Badge>
+                                  )}
+                                </TableCell>
+                                <TableCell className="px-8 text-right">
+                                  <div className="flex items-center justify-end gap-2">
+                                    {(inlineStockChanges[p.id]?.online > 0 || inlineStockChanges[p.id]?.retail > 0) && (
+                                       <Button 
+                                         onClick={() => handleInlineRestock(p, inlineStockChanges[p.id]?.online || 0, inlineStockChanges[p.id]?.retail || 0)}
+                                         disabled={loading}
+                                         className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-10 w-10 p-0 shadow-lg shadow-emerald-200 transition-all hover:scale-110 active:scale-90"
+                                       >
+                                         <Check className="h-5 w-5" />
+                                       </Button>
+                                    )}
+                                    <Button 
+                                      variant="outline"
+                                      onClick={() => {
+                                        setSelectedRestockProduct(p);
+                                        setRestockAmount({ online: 0, retail: 0 });
+                                        setIsRestockOpen(true);
+                                      }}
+                                      className="border-stone-200 text-stone-600 hover:bg-stone-50 rounded-xl h-10 w-10 p-0"
+                                    >
+                                      <Maximize2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </Card>
+                </div>
+              )}
               {activeView === "overview" && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
                   {/* KPI Grid — Vendor-style compact cards */}
@@ -1575,9 +1947,36 @@ const AdminDashboardContent = () => {
                       icon={Users}
                       trend="+8.9%"
                       trendUp
-                      color="indigo"
+                      color="teal"
                     />
                   </div>
+
+                  {/* Out of Stock Alert Strip */}
+                  {(() => {
+                    const outOfStockCount = products.filter(p => (p.onlineStock || 0) <= 0 || (p.stock || 0) <= 0).length;
+                    if (outOfStockCount === 0) return null;
+                    return (
+                      <div className="bg-rose-50 border border-rose-100 p-4 rounded-2xl flex items-center justify-between animate-in zoom-in duration-500">
+                        <div className="flex items-center gap-4">
+                          <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-rose-500">
+                            <AlertTriangle className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-black text-rose-900 uppercase tracking-tighter">Critical Inventory Alert</h3>
+                            <p className="text-[10px] font-bold text-rose-400 uppercase tracking-widest mt-0.5">
+                              {outOfStockCount} Product{outOfStockCount !== 1 ? 's are' : ' is'} currently out of stock and requires immediate attention.
+                            </p>
+                          </div>
+                        </div>
+                        <Button 
+                          onClick={() => handleViewChange("out-of-stock")}
+                          className="bg-rose-600 hover:bg-rose-700 text-white rounded-full px-6 h-9 text-[10px] uppercase font-black tracking-widest shadow-lg shadow-rose-200"
+                        >
+                          View Details
+                        </Button>
+                      </div>
+                    );
+                  })()}
 
                   {/* Revenue + Recent Activity Row */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1599,22 +1998,55 @@ const AdminDashboardContent = () => {
                         </div>
                       </div>
 
-                      {/* Online / Offline Breakdown Cards */}
-                      <div className="grid grid-cols-2 gap-4 mb-6">
-                        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-5 rounded-[10px]">
-                          <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-2">Online Sales</p>
-                          <p className="text-2xl font-black text-[#151515]">{formatMoney(stats?.totalOnlineRevenue || 0)}</p>
-                          <p className="text-xs text-gray-500 mt-1">{stats?.totalOrders || 0} orders</p>
+                      {/* Online / Offline Breakdown Cards (Half-Half) */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                        {/* Online Sales Card */}
+                        <div className="relative overflow-hidden bg-gradient-to-br from-purple-50 to-white p-6 rounded-[10px] border border-purple-100/50 shadow-sm transition-all hover:shadow-md group">
+                           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                             <Globe className="h-10 w-10 text-purple-600" />
+                           </div>
+                           <div className="relative z-10">
+                             <div className="flex items-center gap-2 mb-3">
+                               <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center">
+                                 <Globe className="h-3 w-3 text-purple-600" />
+                               </div>
+                               <span className="text-[10px] font-black text-purple-600 uppercase tracking-[0.2em]">Online Sales</span>
+                             </div>
+                             <p className="text-2xl font-black text-[#151515]">{formatMoney(stats?.totalOnlineRevenue || 0)}</p>
+                             <div className="flex items-center gap-2 mt-2">
+                               <span className="text-[10px] font-bold text-gray-500">{stats?.totalOrders || 0} orders</span>
+                               <span className="w-1 h-1 rounded-full bg-gray-300" />
+                               <span className="text-[10px] font-bold text-purple-500">Live Traffic</span>
+                             </div>
+                           </div>
                         </div>
-                        <div className="bg-gradient-to-br from-sky-50 to-sky-100/50 p-5 rounded-[10px]">
-                          <p className="text-xs font-bold text-sky-600 uppercase tracking-wider mb-2">Offline Sales</p>
-                          <p className="text-2xl font-black text-[#151515]">{formatMoney(stats?.totalOfflineRevenue || 0)}</p>
-                          <p className="text-xs text-gray-500 mt-1">In-store transactions</p>
+
+                        {/* Offline Sales Card */}
+                        <div className="relative overflow-hidden bg-gradient-to-br from-orange-50 to-white p-6 rounded-[10px] border border-orange-100/50 shadow-sm transition-all hover:shadow-md group">
+                           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                             <Store className="h-10 w-10 text-orange-600" />
+                           </div>
+                           <div className="relative z-10">
+                             <div className="flex items-center gap-2 mb-3">
+                               <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center">
+                                 <Store className="h-3 w-3 text-orange-600" />
+                               </div>
+                               <span className="text-[10px] font-black text-orange-600 uppercase tracking-[0.2em]">Offline Sales</span>
+                             </div>
+                             <p className="text-2xl font-black text-[#151515]">{formatMoney(stats?.totalOfflineRevenue || 0)}</p>
+                             <div className="flex items-center gap-2 mt-2">
+                               <span className="text-[10px] font-bold text-gray-500">Direct Sales</span>
+                               <span className="w-1 h-1 rounded-full bg-gray-300" />
+                               <span className="text-[10px] font-bold text-orange-500">In-store</span>
+                             </div>
+                           </div>
                         </div>
                       </div>
 
-                      {/* Revenue Chart */}
-                      <RevenueReport />
+                      {/* Revenue Chart Section */}
+                      <div className="bg-gray-50/50 rounded-[10px] p-4 border border-gray-100/50">
+                        <RevenueReport />
+                      </div>
                     </div>
 
                     {/* Recent Activity Feed */}
@@ -6026,6 +6458,14 @@ const AdminDashboardContent = () => {
             </form>
           </DialogContent>
         </Dialog>
+
+        <QuickRestockDialog 
+          open={isRestockOpen}
+          onOpenChange={setIsRestockOpen}
+          product={selectedRestockProduct}
+          onRestock={handleRestockSubmit}
+          loading={loading}
+        />
       </div>
     </SidebarProvider>
   );

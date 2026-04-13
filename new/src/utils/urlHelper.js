@@ -28,10 +28,10 @@ export const resolveImage = (img) => {
     }
     
     // 1. Handle absolute URLs (Cloudinary, Unsplash, etc.)
+    // If it's already a full URL pointing to our backend (old domain or localhost), normalize it
     if (
-        normalized.startsWith("http://localhost:5000/") ||
-        normalized.startsWith("https://localhost:5000/") ||
-        normalized.startsWith("https://stone-backend.vercel.app/")
+        normalized.includes("localhost:5000") ||
+        normalized.includes("stone-backend.vercel.app")
     ) {
         return normalized.replace(/^https?:\/\/(localhost:5000|stone-backend\.vercel\.app)/i, SERVER_URL);
     }

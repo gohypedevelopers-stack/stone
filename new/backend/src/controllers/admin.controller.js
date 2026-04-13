@@ -1,6 +1,7 @@
 import prisma from "../lib/prisma.js";
 import { sendError, sendSuccess } from "../utils/http.js";
 import { calculateRewardPoints } from "./settings.controller.js";
+import env from "../config/env.js";
 
 export const getAdminVendorAnalytics = async (req, res) => {
   try {
@@ -781,7 +782,7 @@ export const seedFrontendProducts = async (req, res) => {
                     fs.copyFileSync(sourceImagePath, destImagePath);
                 }
 
-                const imageUrl = `http://localhost:5000/uploads/products/${encodeURIComponent(filename)}`;
+                const imageUrl = `${env.baseUrl}/uploads/products/${encodeURIComponent(filename)}`;
 
                 const existingProd = await prisma.product.findFirst({ where: { name: prod.name } });
                 if (!existingProd) {

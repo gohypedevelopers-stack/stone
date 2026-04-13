@@ -8,6 +8,7 @@ const env = {
   clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
   databaseUrl: process.env.DATABASE_URL || "",
   directUrl: process.env.DIRECT_URL || "",
+  baseUrl: process.env.BASE_URL || (process.env.NODE_ENV === 'production' ? "https://stone-backend.vercel.app" : `http://localhost:${process.env.PORT || 5000}`),
 };
 
 export default env;
