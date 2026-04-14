@@ -26,23 +26,33 @@ export const syncCart = async (req, res) => {
       where: { customerId }
     });
 
-    if (existingCart && Array.isArray(existingCart.items)) {
-      // Create a deterministic digest of the cart contents
-      const getDigest = (itemsList) => 
-        itemsList
-          .filter(item => item && item.id)
-          .map(item => ({ id: String(item.id), qty: Number(item.qty) }))
-          .sort((a, b) => a.id.localeCompare(b.id));
+    if (existingCart) {
+      // Hyper-Robust normalization: ensuring we compare only what matters (ID + Qty)
+      const getDigest = (raw) => {
+        try {
+          const list = typeof raw === "string" ? JSON.parse(raw) : raw;
+          if (!Array.isArray(list)) return "[]";
+          return JSON.stringify(
+            list
+              .filter(i => i && i.id)
+              .map(i => ({ id: String(i.id), qty: Number(i.qty) }))
+              .sort((a, b) => a.id.localeCompare(b.id))
+          );
+        } catch (e) {
+          return "[]";
+        }
+      };
 
-      const oldDigest = JSON.stringify(getDigest(existingCart.items));
-      const newDigest = JSON.stringify(getDigest(items));
+      const oldD = getDigest(existingCart.items);
+      const newD = getDigest(items);
       
-      if (oldDigest === newDigest) {
-        console.log(`[Protocol-Sync] IDLE: No core changes for ${customerId}. Persistence preserved.`);
-        return sendSuccess(res, existingCart, "Sync skipped (Cart stable)");
+      if (oldD === newD) {
+        console.log(`[Protocol-Sync] IDLE for ${customerId}. (Digest: ${oldD.slice(0,40)}...)`);
+        return sendSuccess(res, existingCart, "Sync skipped (Stable)");
       } else {
-        console.log(`[Protocol-Sync] ACTIVITY: Core change detected for ${customerId}. Updating timestamp.`);
-        console.log(`[Protocol-Sync] Old: ${oldDigest} | New: ${newDigest}`);
+        console.log(`[Protocol-Sync] ACTIVITY for ${customerId}.`);
+        console.log(`[Protocol-Sync] OLD: ${oldD}`);
+        console.log(`[Protocol-Sync] NEW: ${newD}`);
       }
     }
 
