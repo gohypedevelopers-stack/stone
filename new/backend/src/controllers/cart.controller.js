@@ -21,16 +21,28 @@ export const syncCart = async (req, res) => {
       return sendSuccess(res, null, "Cart cleared");
     }
 
-    // Content-Aware Sync: Check if items actually changed to prevent timestamp reset on reload
+    // Hyper-Robust Content-Aware Sync: Prevents timer resets on page reloads
     const existingCart = await prisma.cart.findUnique({
       where: { customerId }
     });
 
-    if (existingCart) {
-      const isSame = JSON.stringify(existingCart.items) === JSON.stringify(items);
-      if (isSame) {
-        console.log(`[Protocol-Sync] No changes detected for customer: ${customerId}. Preserving timestamp.`);
-        return sendSuccess(res, existingCart, "Cart sync skipped (no changes)");
+    if (existingCart && Array.isArray(existingCart.items)) {
+      // Create a deterministic digest of the cart contents
+      const getDigest = (itemsList) => 
+        itemsList
+          .filter(item => item && item.id)
+          .map(item => ({ id: String(item.id), qty: Number(item.qty) }))
+          .sort((a, b) => a.id.localeCompare(b.id));
+
+      const oldDigest = JSON.stringify(getDigest(existingCart.items));
+      const newDigest = JSON.stringify(getDigest(items));
+      
+      if (oldDigest === newDigest) {
+        console.log(`[Protocol-Sync] IDLE: No core changes for ${customerId}. Persistence preserved.`);
+        return sendSuccess(res, existingCart, "Sync skipped (Cart stable)");
+      } else {
+        console.log(`[Protocol-Sync] ACTIVITY: Core change detected for ${customerId}. Updating timestamp.`);
+        console.log(`[Protocol-Sync] Old: ${oldDigest} | New: ${newDigest}`);
       }
     }
 
@@ -47,10 +59,9 @@ export const syncCart = async (req, res) => {
       }
     });
 
-    console.log(`[Protocol-Sync] Cart content change detected for customer: ${customerId}. (Items: ${items.length})`);
-    return sendSuccess(res, cart, "Cart synced");
+    return sendSuccess(res, cart, "Cart synced (Active)");
   } catch (error) {
-    console.error("Error syncing cart:", error);
+    console.error("Critical Sync Error:", error);
     return sendError(res, "Failed to sync cart", 500);
   }
 };
