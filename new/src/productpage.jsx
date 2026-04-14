@@ -845,7 +845,7 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
         }
     };
 
-    const stockStatus = product.onlineStock !== undefined ? product.onlineStock : (product.inStock ? 12 : 0);
+    const stockStatus = product.stock !== undefined ? product.stock : (product.inStock ? 12 : 0);
     const soldCount = product.soldCount || 842; // Fallback to 842 if not provided by API
 
     return (
@@ -913,9 +913,9 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
                                     {stockStatus} in stock
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-1.5 text-rose-600 bg-rose-50 px-3 py-1.5 rounded-full border border-rose-100 uppercase font-black">
-                                    <X size={12} strokeWidth={3} />
-                                    Out of stock
+                                <div className="flex items-center gap-1.5 text-purple-600 bg-purple-50 px-3 py-1.5 rounded-full border border-purple-100 uppercase font-black">
+                                    <Sparkles size={12} className="fill-purple-600/10" />
+                                    Pre-order available
                                 </div>
                             )}
                             <div className="flex items-center gap-1.5 text-teal-600 bg-teal-50 px-3 py-1.5 rounded-full border border-teal-100">
@@ -928,10 +928,14 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
                         <div className="flex items-center justify-between mb-8 pb-8 border-b border-gray-100">
                             <div className="flex flex-col">
                                 <span className="text-3xl font-[1000] text-[#1a1a1a]">Rs. {fullProduct.price}</span>
-                                <div className="flex items-center gap-2 mt-1">
-                                    <span className="text-xs text-gray-400 line-through">Rs. {Math.round(fullProduct.price * 1.5)}</span>
-                                    <span className="text-xs font-black text-emerald-600">30% OFF</span>
-                                </div>
+                                {fullProduct.mrp && Number(fullProduct.mrp) > Number(fullProduct.price) && (
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-xs text-gray-400 line-through">Rs. {fullProduct.mrp}</span>
+                                        <span className="text-xs font-black text-emerald-600">
+                                            {Math.round(((fullProduct.mrp - fullProduct.price) / fullProduct.mrp) * 100)}% OFF
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                             
                             <div className="flex flex-col items-end gap-2">
@@ -954,11 +958,11 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
                             {/* Add to Cart */}
                             <button 
                                 onClick={handleAddToCart}
-                                className="flex-1 h-14 bg-linear-to-r from-[#ff4fa3] to-[#ff1a8c] text-white font-black text-xs uppercase tracking-[0.25em] rounded-[4px] shadow-2xl shadow-[#ff4fa3]/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 relative overflow-hidden group/btn"
+                                className={`flex-1 h-14 font-black text-xs uppercase tracking-[0.25em] rounded-[4px] shadow-2xl transition-all flex items-center justify-center gap-3 relative overflow-hidden group/btn ${stockStatus > 0 ? "bg-linear-to-r from-[#ff4fa3] to-[#ff1a8c] text-white shadow-[#ff4fa3]/30" : "bg-purple-600 text-white shadow-purple-200"}`}
                             >
                                 <div className="absolute inset-0 bg-white opacity-0 group-hover/btn:opacity-10 transition-opacity" />
                                 <ShoppingCart size={18} fill="white" className="relative z-10" />
-                                <span className="relative z-10">Add to Cart</span>
+                                <span className="relative z-10">{stockStatus > 0 ? "Add to Cart" : "Pre-Order Now"}</span>
                             </button>
                             
                             {/* Wishlist */}

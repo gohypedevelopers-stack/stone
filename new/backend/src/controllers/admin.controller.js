@@ -416,10 +416,68 @@ export const approveVendor = async (req, res) => {
 
 export const getAdminCustomers = async (req, res) => {
   try {
+    const { segment } = req.query;
+
+    if (segment) {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const allCustomers = await prisma.customer.findMany({
+        include: {
+          orders: { select: { id: true, createdAt: true } },
+          cart: { select: { id: true, items: true, updatedAt: true } },
+        },
+      });
+
+      let filteredIds = [];
+
+      if (segment === "added-to-companies" || segment === "not-added-to-companies") {
+        const allVendors = await prisma.vendor.findMany({
+          include: {
+            orders: { select: { customerId: true } },
+            offlinePurchases: { select: { customerId: true } },
+          },
+        });
+        const customerIdsWithCompany = new Set();
+        allVendors.forEach((v) => {
+          v.orders.forEach((o) => { if (o.customerId) customerIdsWithCompany.add(o.customerId); });
+          v.offlinePurchases.forEach((p) => { if (p.customerId) customerIdsWithCompany.add(p.customerId); });
+        });
+
+        if (segment === "added-to-companies") {
+          filteredIds = allCustomers.filter(c => customerIdsWithCompany.has(c.id)).map(c => c.id);
+        } else {
+          filteredIds = allCustomers.filter(c => !customerIdsWithCompany.has(c.id)).map(c => c.id);
+        }
+      } else if (segment === "purchased-at-least-once") {
+        filteredIds = allCustomers.filter(c => c.orders.length >= 1).map(c => c.id);
+      } else if (segment === "email-subscribers") {
+        filteredIds = allCustomers.filter(c => c.email && c.email.trim() !== "").map(c => c.id);
+      } else if (segment === "abandoned-checkouts-30d") {
+        filteredIds = allCustomers.filter(c => {
+          if (!c.cart) return false;
+          const items = Array.isArray(c.cart.items) ? c.cart.items : [];
+          if (items.length === 0) return false;
+          const cartAge = new Date(c.cart.updatedAt);
+          return cartAge >= thirtyDaysAgo && c.orders.every(o => new Date(o.createdAt) < cartAge);
+        }).map(c => c.id);
+      } else if (segment === "purchased-more-than-once") {
+        filteredIds = allCustomers.filter(c => c.orders.length > 1).map(c => c.id);
+      } else if (segment === "never-purchased") {
+        filteredIds = allCustomers.filter(c => c.orders.length === 0).map(c => c.id);
+      }
+
+      const customers = await prisma.customer.findMany({
+        where: { id: { in: filteredIds } },
+        orderBy: { createdAt: "desc" },
+      });
+      return sendSuccess(res, customers, `Customers in segment ${segment} fetched`);
+    }
+
     const customers = await prisma.customer.findMany({
       orderBy: { createdAt: "desc" },
     });
-    return sendSuccess(res, customers, "Customers fetched");
+    return sendSuccess(res, customers, "All customers fetched");
   } catch (error) {
     return sendError(res, error.message, 500);
   }
@@ -1031,6 +1089,145 @@ export const getAdminBrands = async (req, res) => {
     return sendSuccess(res, allBrands, "Brands fetched");
   } catch (error) {
     console.error("ERROR FETCHING ADMIN BRANDS:", error);
+    return sendError(res, error.message, 500);
+  }
+};
+
+export const assignOrderToVendor = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { vendorId } = req.body;
+
+    if (!vendorId) {
+      return sendError(res, "Vendor ID is required", 400);
+    }
+
+    const order = await prisma.order.findUnique({ where: { id } });
+    if (!order) {
+      return sendError(res, "Order not found", 404);
+    }
+
+    const vendor = await prisma.vendor.findUnique({ where: { id: vendorId } });
+    if (!vendor) {
+      return sendError(res, "Vendor not found", 404);
+    }
+
+    const updatedOrder = await prisma.order.update({
+      where: { id },
+      data: {
+        vendorId,
+        status: "CONFIRMED",
+        trackingEvents: {
+          create: {
+            status: "CONFIRMED",
+            note: `Order assigned to vendor: ${vendor.businessName} for fulfillment.`
+          }
+        }
+      },
+      include: {
+        vendor: true,
+        items: true,
+        trackingEvents: true
+      }
+    });
+
+    return sendSuccess(res, updatedOrder, `Order successfully assigned to ${vendor.businessName}`);
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
+export const getCustomerSegments = async (req, res) => {
+  try {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // Fetch all customers with their orders, carts, and vendor associations
+    const allCustomers = await prisma.customer.findMany({
+      include: {
+        orders: { select: { id: true, createdAt: true } },
+        cart: { select: { id: true, items: true, updatedAt: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Fetch all vendors to check customer-company associations
+    const allVendors = await prisma.vendor.findMany({
+      include: {
+        orders: { select: { customerId: true } },
+        offlinePurchases: { select: { customerId: true } },
+      },
+    });
+
+    // Build a set of customer IDs that have been associated with a vendor (company)
+    const customerIdsWithCompany = new Set();
+    allVendors.forEach((v) => {
+      v.orders.forEach((o) => { if (o.customerId) customerIdsWithCompany.add(o.customerId); });
+      v.offlinePurchases.forEach((p) => { if (p.customerId) customerIdsWithCompany.add(p.customerId); });
+    });
+
+    const now = new Date();
+
+    const segments = [
+      {
+        id: "added-to-companies",
+        name: "Customers added to companies",
+        description: "Customers who have transacted with at least one vendor",
+        count: allCustomers.filter((c) => customerIdsWithCompany.has(c.id)).length,
+        updatedAt: now,
+      },
+      {
+        id: "not-added-to-companies",
+        name: "Customers not added to companies",
+        description: "Customers with no vendor transactions",
+        count: allCustomers.filter((c) => !customerIdsWithCompany.has(c.id)).length,
+        updatedAt: now,
+      },
+      {
+        id: "purchased-at-least-once",
+        name: "Customers who have purchased at least once",
+        description: "Customers with one or more completed orders",
+        count: allCustomers.filter((c) => c.orders.length >= 1).length,
+        updatedAt: now,
+      },
+      {
+        id: "email-subscribers",
+        name: "Email subscribers",
+        description: "Customers who have provided an email address",
+        count: allCustomers.filter((c) => c.email && c.email.trim() !== "").length,
+        updatedAt: now,
+      },
+      {
+        id: "abandoned-checkouts-30d",
+        name: "Abandoned checkouts in the last 30 days",
+        description: "Customers with active carts not checked out in 30 days",
+        count: allCustomers.filter((c) => {
+          if (!c.cart) return false;
+          const items = Array.isArray(c.cart.items) ? c.cart.items : [];
+          if (items.length === 0) return false;
+          const cartAge = new Date(c.cart.updatedAt);
+          return cartAge >= thirtyDaysAgo && c.orders.every((o) => new Date(o.createdAt) < cartAge);
+        }).length,
+        updatedAt: now,
+      },
+      {
+        id: "purchased-more-than-once",
+        name: "Customers who have purchased more than once",
+        description: "Returning customers with 2+ orders",
+        count: allCustomers.filter((c) => c.orders.length > 1).length,
+        updatedAt: now,
+      },
+      {
+        id: "never-purchased",
+        name: "Customers who haven't purchased",
+        description: "Registered customers with zero orders",
+        count: allCustomers.filter((c) => c.orders.length === 0).length,
+        updatedAt: now,
+      },
+    ];
+
+    return sendSuccess(res, { segments, totalCustomers: allCustomers.length }, "Customer segments fetched");
+  } catch (error) {
     return sendError(res, error.message, 500);
   }
 };

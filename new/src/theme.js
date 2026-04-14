@@ -85,19 +85,19 @@ export const THEME = {
     // Rounding used universally across dashboard and storefront
     // Original sharp rounding for storefront (restored)
     radius: {
-      sm: "rounded-[2px]",
-      md: "rounded-[2px]",
-      lg: "rounded-[2px]",
-      xl: "rounded-[2px]",
-      pill: "rounded-[2px]"
+      sm: "rounded-[5px]",
+      md: "rounded-[5px]",
+      lg: "rounded-[5px]",
+      xl: "rounded-[5px]",
+      pill: "rounded-[5px]"
     },
 
     // New hyper-rounded tokens strictly for Admin Dashboard
     adminRadius: {
-      card: "rounded-3xl",      // 24px
-      button: "rounded-full",   // pill
-      input: "rounded-2xl",     // 16px
-      inner: "rounded-xl"       // 12px
+      card: "rounded-[5px]",      // 5px
+      button: "rounded-[5px]",    // 5px
+      input: "rounded-[5px]",     // 5px
+      inner: "rounded-[5px]"       // 5px
     },
 
     // Standard Line strokes

@@ -103,8 +103,8 @@ export const createOrder = async (req, res) => {
         };
       }
 
-      if (quantity > product.onlineStock) {
-        throw new Error(`Insufficient online stock for product ${product.name}`);
+      if (quantity > product.stock) {
+        throw new Error(`Insufficient stock for product ${product.name}`);
       }
 
       const unitPrice = Number(product.discountPrice || product.price);
@@ -199,7 +199,7 @@ export const createOrder = async (req, res) => {
           await tx.product.update({
             where: { id: item.product.id },
             data: {
-              onlineStock: {
+              stock: {
                 decrement: item.quantity,
               },
             },
@@ -245,6 +245,9 @@ export const createOrder = async (req, res) => {
 
       return createdOrder;
     });
+
+    // Clear the customer's cart after successful order
+    await prisma.cart.deleteMany({ where: { customerId } });
 
     return sendSuccess(res, formatOrder(order), "Order created", 201);
   } catch (error) {

@@ -195,14 +195,14 @@ export default function UpcomingDropsManager() {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12 min-h-[60vh]">
-        <div className="animate-spin h-8 w-8 border-4 border-indigo-600 border-t-transparent rounded-[2px]" />
+        <div className="animate-spin h-8 w-8 border-4 border-indigo-600 border-t-transparent rounded-[5px]" />
       </div>
     );
   }
 
   if (!sectionConfig) {
     return (
-      <div className="p-8 text-center border border-dashed border-stone-300 rounded-[2px] bg-stone-50">
+      <div className="p-8 text-center border border-dashed border-stone-300 rounded-[5px] bg-stone-50">
         <h3 className="text-lg font-bold text-stone-900 mb-2">Upcoming Drops Section Missing</h3>
         <p className="text-stone-500 text-sm">
           Please add the "Upcoming Drops" section from the Homepage Builder first.
@@ -227,14 +227,14 @@ export default function UpcomingDropsManager() {
           <Button 
             variant="outline" 
             onClick={handleCreateCustom}
-            className="rounded-[2px] font-bold h-10 border-stone-200 text-stone-700"
+            className="rounded-[5px] font-bold h-10 border-stone-200 text-stone-700"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Custom Drop
           </Button>
           <Button 
             onClick={handleSave} 
-            className="rounded-[2px] font-bold h-10 bg-[#151515] hover:bg-black text-white shadow-xl shadow-stone-900/20"
+            className="rounded-[5px] font-bold h-10 bg-[#151515] hover:bg-black text-white shadow-xl shadow-stone-900/20"
           >
             <Save className="h-4 w-4 mr-2" />
             Save Changes
@@ -244,7 +244,7 @@ export default function UpcomingDropsManager() {
 
 
       {dropList.length === 0 ? (
-        <div className="bg-white rounded-[2px] border border-stone-200 p-16 text-center shadow-sm">
+        <div className="bg-white rounded-[5px] border border-stone-200 p-16 text-center shadow-sm">
           <Sparkles className="h-16 w-16 text-pink-200 mx-auto mb-4" />
           <h3 className="text-xl font-bold text-stone-800 mb-2">No Upcoming Drops</h3>
           <p className="text-stone-500 mb-6 max-w-sm mx-auto">
@@ -254,28 +254,28 @@ export default function UpcomingDropsManager() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {dropList.map((item, index) => (
-            <div key={item.id} className="group relative bg-white border border-stone-200 rounded-[2px] shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-300 flex flex-col overflow-hidden">
+            <div key={item.id} className="group relative bg-white border border-stone-200 rounded-[5px] shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-300 flex flex-col overflow-hidden">
               
               <div className="absolute top-3 right-3 flex gap-1.5 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
-                <button onClick={() => { setEditingItem({ ...item }); setIsCreating(false); }} className="w-8 h-8 rounded-[2px] bg-white border border-stone-200 text-stone-600 shadow-sm flex items-center justify-center hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors">
+                <button onClick={() => { setEditingItem({ ...item }); setIsCreating(false); }} className="w-8 h-8 rounded-[5px] bg-white border border-stone-200 text-stone-600 shadow-sm flex items-center justify-center hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors">
                   <Edit3 className="h-4 w-4" />
                 </button>
-                <button onClick={() => removeItem(item.id)} className="w-8 h-8 rounded-[2px] bg-white border border-stone-200 text-stone-600 shadow-sm flex items-center justify-center hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-colors">
+                <button onClick={() => removeItem(item.id)} className="w-8 h-8 rounded-[5px] bg-white border border-stone-200 text-stone-600 shadow-sm flex items-center justify-center hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-colors">
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
 
               <div className="absolute top-3 left-3 flex gap-1.5 z-20">
-                <Badge className={`rounded-[2px] font-black text-[9px] px-2 py-1 uppercase tracking-wider border-none shadow-sm ${item.showOnline !== false ? 'bg-emerald-500 text-white' : 'bg-stone-300 text-stone-500'}`}>
+                <Badge className={`rounded-[5px] font-black text-[9px] px-2 py-1 uppercase tracking-wider border-none shadow-sm ${item.showOnline !== false ? 'bg-emerald-500 text-white' : 'bg-stone-300 text-stone-500'}`}>
                   {item.showOnline !== false ? 'Online' : 'Hidden'}
                 </Badge>
               </div>
 
               <div className="flex gap-1.5 absolute top-14 right-3 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
-                 <button onClick={(e) => moveItem(e, index, "up")} disabled={index === 0} className="w-8 h-8 rounded-[2px] bg-white border border-stone-200 text-stone-600 shadow-sm flex items-center justify-center hover:bg-stone-50 disabled:opacity-30 transition-colors">
+                 <button onClick={(e) => moveItem(e, index, "up")} disabled={index === 0} className="w-8 h-8 rounded-[5px] bg-white border border-stone-200 text-stone-600 shadow-sm flex items-center justify-center hover:bg-stone-50 disabled:opacity-30 transition-colors">
                     <MoveUp className="h-4 w-4" />
                  </button>
-                 <button onClick={(e) => moveItem(e, index, "down")} disabled={index === dropList.length - 1} className="w-8 h-8 rounded-[2px] bg-white border border-stone-200 text-stone-600 shadow-sm flex items-center justify-center hover:bg-stone-50 disabled:opacity-30 transition-colors">
+                 <button onClick={(e) => moveItem(e, index, "down")} disabled={index === dropList.length - 1} className="w-8 h-8 rounded-[5px] bg-white border border-stone-200 text-stone-600 shadow-sm flex items-center justify-center hover:bg-stone-50 disabled:opacity-30 transition-colors">
                     <MoveDown className="h-4 w-4" />
                  </button>
               </div>
@@ -283,7 +283,7 @@ export default function UpcomingDropsManager() {
               <div className="aspect-4/3 w-full bg-stone-50 border-b border-stone-100 relative group-img flex items-center justify-center p-6 overflow-hidden">
                 <div className="absolute inset-0 bg-linear-to-t from-stone-900/5 to-transparent z-0 pointer-events-none" />
                 {item.imageUrl ? (
-                  <img src={getMediaUrl(item.imageUrl)} alt={item.name} className="w-full h-full object-contain rounded-[2px] relative z-10 mix-blend-multiply group-hover:scale-105 transition-transform duration-500" />
+                  <img src={getMediaUrl(item.imageUrl)} alt={item.name} className="w-full h-full object-contain rounded-[5px] relative z-10 mix-blend-multiply group-hover:scale-105 transition-transform duration-500" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center relative z-10">
                     <Package className="h-12 w-12 text-stone-300" />
@@ -295,7 +295,7 @@ export default function UpcomingDropsManager() {
                 <h3 className="font-black text-stone-900 text-[14px] line-clamp-2 mb-4 uppercase tracking-tight leading-snug">{item.name || 'Untitled Drop'}</h3>
 
                 <div className="mt-auto">
-                  <div className="flex flex-col gap-1.5 text-[11px] text-stone-600 bg-stone-50 border border-stone-200 p-3 rounded-[2px]">
+                  <div className="flex flex-col gap-1.5 text-[11px] text-stone-600 bg-stone-50 border border-stone-200 p-3 rounded-[5px]">
                     <div className="flex items-center gap-1.5 font-bold text-stone-400 uppercase tracking-widest text-[9px]">
                       <Clock className="h-3.5 w-3.5 text-pink-500" /> Expected Launch
                     </div>
@@ -321,7 +321,7 @@ export default function UpcomingDropsManager() {
       {editingItem && (
         <div className="fixed inset-0 z-110 flex items-center justify-center p-4">
            <div className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm" onClick={() => { setEditingItem(null); setIsCreating(false); }} />
-           <div className="bg-white rounded-[2px] shadow-2xl w-full max-w-lg relative animate-in zoom-in-95 duration-200 flex flex-col overflow-hidden max-h-[90vh]">
+           <div className="bg-white rounded-[5px] shadow-2xl w-full max-w-lg relative animate-in zoom-in-95 duration-200 flex flex-col overflow-hidden max-h-[90vh]">
              <div className="p-5 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
                <h3 className="font-black text-lg text-stone-900 tracking-tight uppercase">{isCreating ? "Create Custom Drop" : "Configure Drop Item"}</h3>
                <button onClick={() => { setEditingItem(null); setIsCreating(false); }} className="text-stone-400 hover:text-stone-900 transition-colors"><X className="h-5 w-5"/></button>
@@ -332,7 +332,7 @@ export default function UpcomingDropsManager() {
                 <div className="space-y-3">
                     <label className="text-[11px] font-black uppercase text-stone-500 tracking-wider">Promotion Image</label>
                     <div className="flex gap-4 items-start">
-                        <div className="w-24 h-24 rounded-[2px] border border-stone-200 bg-stone-50 shrink-0 overflow-hidden flex flex-col items-center justify-center relative group shadow-inner">
+                        <div className="w-24 h-24 rounded-[5px] border border-stone-200 bg-stone-50 shrink-0 overflow-hidden flex flex-col items-center justify-center relative group shadow-inner">
                             {editingItem.imageUrl ? (
                                 <img src={getMediaUrl(editingItem.imageUrl)} className="w-full h-full object-cover" />
                             ) : (
@@ -354,7 +354,7 @@ export default function UpcomingDropsManager() {
                                 placeholder="Or enter Image URL..." 
                                 value={editingItem.imageUrl} 
                                 onChange={(e) => setEditingItem({...editingItem, imageUrl: e.target.value})}
-                                className="rounded-[2px] text-xs h-10 shadow-sm"
+                                className="rounded-[5px] text-xs h-10 shadow-sm"
                            />
                            <p className="text-[10px] text-stone-400 font-medium italic mt-1">Click the box to upload a file directly, or paste a URL above.</p>
                         </div>
@@ -364,7 +364,7 @@ export default function UpcomingDropsManager() {
                 <div className="space-y-4">
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-black uppercase text-stone-500 tracking-wider">Product Title</label>
-                    <Input value={editingItem.name} placeholder="e.g. Sakura Silk Essence" onChange={(e) => setEditingItem({...editingItem, name: e.target.value})} className="h-11 rounded-[2px] font-bold text-[13px] shadow-sm" />
+                    <Input value={editingItem.name} placeholder="e.g. Sakura Silk Essence" onChange={(e) => setEditingItem({...editingItem, name: e.target.value})} className="h-11 rounded-[5px] font-bold text-[13px] shadow-sm" />
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
@@ -375,7 +375,7 @@ export default function UpcomingDropsManager() {
                         value={editingItem.launchDate} 
                         onChange={(e) => setEditingItem({...editingItem, launchDate: e.target.value})} 
                         onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                        className="h-11 rounded-[2px] font-medium text-[13px] shadow-sm cursor-pointer hover:border-stone-400 transition-colors" 
+                        className="h-11 rounded-[5px] font-medium text-[13px] shadow-sm cursor-pointer hover:border-stone-400 transition-colors" 
                       />
                     </div>
                     <div className="space-y-1.5 flex flex-col">
@@ -383,7 +383,7 @@ export default function UpcomingDropsManager() {
                       <div className="flex items-center flex-1">
                          <Button
                             variant="outline"
-                            className={`w-full h-11 rounded-[2px] gap-2 font-bold text-[10px] uppercase tracking-widest transition-all ${
+                            className={`w-full h-11 rounded-[5px] gap-2 font-bold text-[10px] uppercase tracking-widest transition-all ${
                               editingItem.showOnline !== false 
                                 ? 'border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100' 
                                 : 'border-stone-200 text-stone-400 hover:bg-stone-100'
@@ -405,7 +405,7 @@ export default function UpcomingDropsManager() {
                         value={editingItem.price} 
                         placeholder="e.g. 1999" 
                         onChange={(e) => setEditingItem({...editingItem, price: e.target.value})} 
-                        className="h-11 rounded-[2px] font-bold text-[13px] shadow-sm" 
+                        className="h-11 rounded-[5px] font-bold text-[13px] shadow-sm" 
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -415,7 +415,7 @@ export default function UpcomingDropsManager() {
                         value={editingItem.originalPrice} 
                         placeholder="e.g. 2999" 
                         onChange={(e) => setEditingItem({...editingItem, originalPrice: e.target.value})} 
-                        className="h-11 rounded-[2px] font-medium text-[13px] shadow-sm text-stone-400" 
+                        className="h-11 rounded-[5px] font-medium text-[13px] shadow-sm text-stone-400" 
                       />
                     </div>
                   </div>
@@ -426,7 +426,7 @@ export default function UpcomingDropsManager() {
                         value={editingItem.description} 
                         placeholder="Write a short, catchy description for the drop..." 
                         onChange={(e) => setEditingItem({...editingItem, description: e.target.value})} 
-                        className="w-full min-h-[80px] p-3 rounded-[2px] border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-black/5 resize-none shadow-sm font-medium"
+                        className="w-full min-h-[80px] p-3 rounded-[5px] border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-black/5 resize-none shadow-sm font-medium"
                     />
                   </div>
                 </div>
@@ -435,7 +435,7 @@ export default function UpcomingDropsManager() {
 
              <div className="p-5 border-t border-stone-100 bg-stone-50 flex justify-end gap-3 shrink-0">
                 <button onClick={() => { setEditingItem(null); setIsCreating(false); }} className="px-5 py-2 text-[11px] uppercase tracking-widest font-black text-stone-400 hover:text-stone-900 transition-colors">Cancel</button>
-                <Button onClick={saveEditingItem} className="bg-[#151515] text-white hover:bg-black shadow-xl shadow-stone-900/20 rounded-[2px] font-black uppercase tracking-widest text-[10px] px-8 h-11">
+                <Button onClick={saveEditingItem} className="bg-[#151515] text-white hover:bg-black shadow-xl shadow-stone-900/20 rounded-[5px] font-black uppercase tracking-widest text-[10px] px-8 h-11">
                     {isCreating ? "Confirm Creation" : "Update Validation"}
                 </Button>
              </div>

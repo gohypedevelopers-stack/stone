@@ -16,10 +16,12 @@ export default function NewArrivals({ addToCart, wishlist = [], toggleWishlist }
     const [activeFilter, setActiveFilter] = useState("Latest");
     const [timeLeft, setTimeLeft] = useState({ h: 12, m: 45, s: 0 });
 
-    // Filter products
     const filteredProducts = useMemo(() => {
         // 1. Initial filter for the page purpose
         let products = allProducts.filter(p => p.newArrival || p.tag === "New");
+
+        const isSpecial = (p) => p.category === "Special Offer" || (p.category?.name === "Special Offer") || (p.specialOfferType && p.specialOfferType !== "None");
+        products = products.filter(p => !isSpecial(p));
 
         // 2. Apply active filter
         if (activeFilter === "Price Low") {

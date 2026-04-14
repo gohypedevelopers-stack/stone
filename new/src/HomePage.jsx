@@ -18,7 +18,6 @@ import CategoryShowcase from "./CategoryShowcase.jsx";
 import ShopByOrigin from "./ShopByOrigin.jsx";
 import LimitedOfferBanner from "./LimitedOfferBanner.jsx";
 import RequestProductSection from "./RequestProductSection.jsx";
-import PreOrderSection from "./PreOrderSection.jsx";
 import LazySection from "./components/LazySection.jsx";
 
 import { useProducts } from "./context/ProductContext";
@@ -27,7 +26,7 @@ import { API_URL } from "@/utils/api";
 const STATIC_FALLBACK_ORDER = [
   "hero-slider", "upcoming-drops",
   "best-sellers", "best-brand", "special-combos", "offline-store", "hair-care-showcase", "makeup-showcase", "shop-by-origin", "shop-by-brand", "by-skin-concern", "new-arrivals",
-  "watch-and-shop", "limited-offer", "shop-by-offer", "pre-order",
+  "watch-and-shop", "limited-offer", "shop-by-offer",
   "skin-quiz", "request-product"
 ];
 
@@ -67,8 +66,14 @@ const HomePage = memo(function HomePage({
   }, []);
 
   const filteredProducts = useMemo(() => {
-    if (!query) return PRODUCTS;
-    return PRODUCTS.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()));
+    if (!query) return [];
+    return (PRODUCTS || []).filter((p) => {
+      const isSearchMatch = p.name.toLowerCase().includes(query.toLowerCase());
+      const isSpecial = p.category === "Special Offer" || 
+                        (p.category?.name === "Special Offer") ||
+                        (p.specialOfferType && p.specialOfferType !== "None");
+      return isSearchMatch && !isSpecial;
+    });
   }, [query, PRODUCTS]);
 
   const sections = useMemo(() => {
@@ -176,9 +181,6 @@ const HomePage = memo(function HomePage({
         content = <ByOffer onNavigate={onNavigate} onSelectOffer={onSelectOffer} title={section.title} maxItems={settings?.maxItems} bgColor={settings?.bgColor} />;
         break;
 
-      case "pre-order":
-        content = <PreOrderSection wishlist={wishlist} toggleWishlist={toggleWishlist} title={section.title} settings={settings} />;
-        break;
 
       case "skin-quiz":
         content = <SkinQuiz headline={settings?.headline} targetUrl={settings?.link} />;

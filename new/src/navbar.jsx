@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo } from "react";
+import React, { useState, useEffect, useMemo, memo } from "react";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -20,6 +20,8 @@ import cartIcon from "./assets/shopping-cart.png";
 
 import AnnouncementBar from "./components/AnnouncementBar";
 import ByCategory, { CATEGORY_IMAGES, categorySphere } from "./bycategory";
+import { useProducts } from "./context/ProductContext";
+import { cn } from "@/lib/utils";
 
 function SearchPlaceholder({ searchTerms }) {
   const [index, setIndex] = useState(0);
@@ -61,6 +63,19 @@ const Navbar = memo(function Navbar({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [localQuery, setLocalQuery] = useState(query);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const { products } = useProducts();
+
+  const searchResults = useMemo(() => {
+    if (!localQuery || localQuery.length < 2) return [];
+    const q = localQuery.toLowerCase();
+    return products.filter(p => 
+      p.name?.toLowerCase().includes(q) || 
+      p.brand?.toLowerCase().includes(q) ||
+      p.category?.toLowerCase().includes(q)
+    ).slice(0, 5); 
+  }, [localQuery, products]);
 
   useEffect(() => {
     setLocalQuery(query);
@@ -115,7 +130,7 @@ const Navbar = memo(function Navbar({
 
   return (
     <>
-      <div className="sticky top-0 z-50 w-full bg-white shadow-sm md:shadow-none">
+      <div className="sticky top-0 z-[60] w-full bg-white shadow-sm md:shadow-none">
         <AnnouncementBar />
         
         <header className="header relative">
@@ -159,20 +174,43 @@ const Navbar = memo(function Navbar({
             </div>
 
             {/* --- DESKTOP SEARCH: Center Block --- */}
-            <div className="hidden md:flex flex-1 max-w-xl justify-center px-4">
-              <div className="w-full flex items-center gap-3 px-5 py-2.5 rounded-[2px] border border-stone-200 bg-stone-50/50 hover:bg-white hover:border-stone-300 hover:shadow-sm transition-all relative">
+            <div className="hidden md:flex flex-1 max-w-xl justify-center px-4 relative group">
+              <div className="w-full flex items-center gap-3 px-5 py-2.5 rounded-[2px] border border-stone-200 bg-stone-50/50 hover:bg-white focus-within:bg-white focus-within:border-stone-400 focus-within:shadow-md transition-all relative">
                 <span className="w-5 h-5 grid place-items-center opacity-70" aria-hidden="true">
                   <img className="w-full h-full object-contain" src={searchIcon} alt="" />
                 </span>
-                <div className="relative w-full">
-                  {!localQuery && <SearchPlaceholder searchTerms={searchTerms} />}
+                <div className="relative w-full h-full flex items-center">
+                  {(!localQuery || localQuery.length === 0) && (
+                    <div className="absolute inset-0 z-0 pointer-events-none">
+                      <SearchPlaceholder searchTerms={searchTerms} />
+                    </div>
+                  )}
                   <input
                     className="border-none outline-none w-full text-sm bg-transparent text-stone-800 placeholder-transparent relative z-10"
                     value={localQuery}
-                    onChange={(e) => setLocalQuery(e.target.value)}
+                    onFocus={() => setShowDropdown(true)}
+                    onChange={(e) => {
+                      setLocalQuery(e.target.value);
+                      setShowDropdown(true);
+                      setActiveIndex(-1);
+                    } }
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" && localQuery.trim()) {
-                        onNavigate(`shop?q=${encodeURIComponent(localQuery.trim())}`);
+                      if (e.key === "Enter") {
+                        if (activeIndex >= 0 && searchResults[activeIndex]) {
+                          onNavigate(searchResults[activeIndex].id);
+                          setShowDropdown(false);
+                        } else if (localQuery.trim()) {
+                          onNavigate(`shop?q=${encodeURIComponent(localQuery.trim())}`);
+                          setShowDropdown(false);
+                        }
+                      } else if (e.key === "ArrowDown") {
+                        setActiveIndex(prev => Math.min(prev + 1, searchResults.length - 1));
+                        e.preventDefault();
+                      } else if (e.key === "ArrowUp") {
+                        setActiveIndex(prev => Math.max(prev - 1, -1));
+                        e.preventDefault();
+                      } else if (e.key === "Escape") {
+                        setShowDropdown(false);
                       }
                     }}
                     placeholder=""
@@ -180,6 +218,68 @@ const Navbar = memo(function Navbar({
                   />
                 </div>
               </div>
+
+              {/* Desktop Search Dropdown */}
+              <AnimatePresence>
+                {showDropdown && searchResults.length > 0 && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setShowDropdown(false)} 
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.98 }}
+                      className="absolute top-[calc(100%+12px)] left-0 right-0 bg-white/95 backdrop-blur-2xl rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-white/60 py-4 z-50 overflow-hidden"
+                    >
+                      <div className="px-5 pb-3 border-b border-stone-100/50 flex items-center justify-between">
+                        <span className="text-[10px] font-black text-stone-400 uppercase tracking-[2px]">
+                          Quick Results
+                        </span>
+                        <span className="text-[9px] font-bold text-stone-300 uppercase tracking-widest">
+                          Press Enter to Search
+                        </span>
+                      </div>
+                      <div className="max-h-[420px] overflow-y-auto custom-scrollbar">
+                        {searchResults.map((p, i) => (
+                          <button
+                            key={p.id}
+                            className={cn(
+                              "w-full flex items-center gap-5 px-5 py-3.5 text-left transition-all duration-200",
+                              activeIndex === i ? "bg-stone-50 scale-[0.99] translate-x-1" : "hover:bg-stone-50/80"
+                            )}
+                            onClick={() => {
+                              onNavigate(p.id);
+                              setShowDropdown(false);
+                            }}
+                          >
+                            <div className="w-14 h-14 rounded-xl overflow-hidden border border-stone-100 shrink-0 bg-white shadow-sm p-1">
+                              <img src={p.image} alt="" className="w-full h-full object-contain" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[15px] font-black text-stone-900 truncate tracking-tight">{p.name}</p>
+                              <p className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mt-0.5">{p.brand}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-[14px] font-black text-pink-500 tracking-tight">₹{(p.discountPrice || p.price).toLocaleString()}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                      <button 
+                        className="w-full py-4 bg-stone-900 text-[11px] font-black text-white uppercase tracking-[3px] hover:bg-stone-800 transition-all duration-300 group flex items-center justify-center gap-2"
+                        onClick={() => {
+                          onNavigate(`shop?q=${encodeURIComponent(localQuery.trim())}`);
+                          setShowDropdown(false);
+                        }}
+                      >
+                        Explore all results <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* --- ACTIONS BLOCK --- */}
@@ -325,11 +425,15 @@ const Navbar = memo(function Navbar({
                 exit={{ opacity: 0, height: 0 }}
                 className="md:hidden w-full bg-white border-b border-stone-100 overflow-hidden"
               >
-                <div className="p-4">
+                <div className="p-4 relative">
                   <div className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl border border-pink-200 bg-pink-50/30 focus-within:bg-white focus-within:border-pink-500 transition-all relative">
                     <SearchIcon size={18} className="text-pink-400" />
                     <div className="relative w-full">
-                      {!localQuery && <SearchPlaceholder searchTerms={searchTerms} />}
+                      {(!localQuery || localQuery.length === 0) && (
+                        <div className="absolute inset-0 z-0 pointer-events-none">
+                          <SearchPlaceholder searchTerms={searchTerms} />
+                        </div>
+                      )}
                       <input
                         autoFocus
                         className="border-none outline-none w-full text-base bg-transparent text-stone-800 placeholder-transparent relative z-10"
@@ -350,6 +454,48 @@ const Navbar = memo(function Navbar({
                       </button>
                     )}
                   </div>
+
+                  {/* Mobile Search Results */}
+                  <AnimatePresence>
+                    {localQuery && searchResults.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mt-4 space-y-3"
+                      >
+                        <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest px-1">Top Suggestions</p>
+                        {searchResults.map((p) => (
+                          <button
+                            key={p.id}
+                            className="w-full flex items-center gap-4 p-2 bg-white border border-stone-100 rounded-xl active:scale-[0.98] transition-all"
+                            onClick={() => {
+                              onNavigate(p.id);
+                              setIsMobileSearchOpen(false);
+                            }}
+                          >
+                            <div className="w-10 h-10 rounded-lg overflow-hidden border border-stone-50 bg-stone-50 shrink-0">
+                              <img src={p.image} alt="" className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex-1 min-w-0 text-left">
+                              <p className="text-[13px] font-black text-stone-900 truncate">{p.name}</p>
+                              <p className="text-[10px] font-bold text-stone-400 uppercase">{p.brand}</p>
+                            </div>
+                            <ArrowRight size={14} className="text-stone-300" />
+                          </button>
+                        ))}
+                        <button 
+                          className="w-full py-4 text-pink-500 font-black text-xs uppercase tracking-widest border-2 border-dashed border-pink-100 rounded-xl"
+                          onClick={() => {
+                            onNavigate(`shop?q=${encodeURIComponent(localQuery.trim())}`);
+                            setIsMobileSearchOpen(false);
+                          }}
+                        >
+                          View all results for "{localQuery}"
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </motion.div>
             )}

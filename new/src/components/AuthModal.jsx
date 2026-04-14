@@ -1,7 +1,7 @@
 import { useState, memo } from "react";
 import { useAuth } from "../context/AuthContext";
 
-const AuthModal = memo(({ isOpen, onClose }) => {
+const AuthModal = memo(({ isOpen, onClose, onSuccess }) => {
   const { login, register } = useAuth();
   const [isRegistering, setIsRegistering] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -37,6 +37,7 @@ const AuthModal = memo(({ isOpen, onClose }) => {
     }
 
     if (result.success) {
+      if (onSuccess) onSuccess();
       onClose();
     } else {
       setError(result.message);

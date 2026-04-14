@@ -78,10 +78,10 @@ const ProductCard = React.memo(
           </button>
 
           {/* Stock Status Badge */}
-          <div className={`absolute bottom-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg shadow-sm ${product.inStock ? "bg-white" : "bg-rose-50 border border-rose-100"}`}>
-            <div className={`w-1 h-1 rounded-full animate-pulse ${product.inStock ? "bg-green-500" : "bg-rose-500"}`} />
-            <span className={`text-[8px] font-black tracking-widest uppercase ${product.inStock ? "text-stone-900" : "text-rose-600"}`}>
-              {product.inStock ? "IN STOCK" : "OUT OF STOCK"}
+          <div className={`absolute bottom-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg shadow-sm ${product.stock > 0 ? "bg-white" : "bg-purple-50 border border-purple-100"}`}>
+            <div className={`w-1 h-1 rounded-full animate-pulse ${product.stock > 0 ? "bg-green-500" : "bg-purple-500"}`} />
+            <span className={`text-[8px] font-black tracking-widest uppercase ${product.stock > 0 ? "text-stone-900" : "text-purple-600"}`}>
+              {product.stock > 0 ? "IN STOCK" : "PRE-ORDER NOW"}
             </span>
           </div>
         </div>
@@ -127,9 +127,9 @@ const ProductCard = React.memo(
             {/* Add to Cart Button */}
             <button
               onClick={handleAddToCart}
-              className="w-full mt-4 py-3 rounded-lg bg-[#151515] text-white font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-300 hover:bg-[#ff3b8f] hover:shadow-2xl hover:shadow-[#ff3b8f]/30 active:scale-[0.98] flex items-center justify-center gap-2"
+              className={`w-full mt-4 py-3 rounded-lg font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-2 ${product.stock > 0 ? "bg-[#151515] text-white hover:bg-[#ff3b8f] hover:shadow-2xl hover:shadow-[#ff3b8f]/30" : "bg-purple-600 text-white hover:bg-purple-700 shadow-md"}`}
             >
-              <ShoppingBag size={14} /> Add to Cart
+              <ShoppingBag size={14} /> {product.stock > 0 ? "Add to Cart" : "Pre-Order"}
             </button>
           </div>
         </div>

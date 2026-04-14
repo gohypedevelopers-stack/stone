@@ -29,6 +29,19 @@ model Customer {
   offlinePurchases   OfflinePurchase[]
   orders             Order[]
   rewardTransactions RewardTransaction[]
+  cart               Cart?
+}
+
+model Cart {
+  id         String   @id @default(cuid())
+  customerId String   @unique
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  items      Json     @default("[]")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([updatedAt])
 }
 
 model Address {
@@ -94,7 +107,6 @@ model Product {
   price                Decimal               @db.Decimal(10, 2)
   discountPrice        Decimal?              @db.Decimal(10, 2)
   stock                Int                   @default(0)
-  onlineStock          Int                   @default(0)
   status               ProductStatus         @default(ACTIVE)
   featured             Boolean               @default(false)
   discounted           Boolean               @default(false)

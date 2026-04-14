@@ -25,7 +25,7 @@ const CartDrawer = memo(function CartDrawer({
         />
       )}
       
-      <aside className={`fixed top-0 right-0 w-[min(420px,92vw)] h-[100vh] bg-white shadow-[-20px_0_60px_rgba(0,0,0,0.15)] transform transition-transform duration-300 z-50 flex flex-col pt-10 ${isOpen ? "translate-x-0" : "translate-x-[110%]"}`} aria-label="Shopping cart">
+      <aside className={`fixed top-0 right-0 w-[min(420px,92vw)] h-[100vh] bg-white shadow-[-20px_0_60px_rgba(0,0,0,0.15)] transform transition-transform duration-300 z-50 flex flex-col ${isOpen ? "translate-x-0" : "translate-x-[110%]"}`} aria-label="Shopping cart">
       <div className="p-[16px] border-b border-line-custom flex items-start justify-between gap-[12px]">
         <div>
           <div className="font-bold">Your Cart</div>
@@ -66,7 +66,14 @@ const CartDrawer = memo(function CartDrawer({
                     </div>
                   <div>
                     <div className="font-[650] text-[13px]">{it.name}</div>
-                    <div className="text-[12px] text-muted-custom mt-[2px]">{formatINR(it.price)}</div>
+                    <div className="flex items-center gap-2 mt-[2px]">
+                      <div className="text-[12px] text-muted-custom ">{formatINR(it.price)}</div>
+                      {it.stock <= 0 && (
+                        <span className="text-[9px] font-black text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded-[4px] uppercase tracking-wider">
+                          Pre-Order
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-[10px] mt-[6px]">
                       <button className="h-[28px] w-[28px] rounded-[2px] border border-line-custom bg-white cursor-pointer" onClick={() => decQty(it.id)} aria-label="Decrease quantity">−</button>
                       <span className="text-[13px] min-w-[16px] text-center">{it.qty}</span>

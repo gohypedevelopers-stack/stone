@@ -21,8 +21,6 @@ import BrandPage from "./BrandPage.jsx";
 import AllBrandsPage from "./AllBrandsPage.jsx";
 import SkinConcernPage from "./SkinConcernPage.jsx";
 import ShopByOfferPage from "./ShopByOfferPage.jsx";
-import PreOrderProductPage from "./PreOrderProductPage.jsx";
-import PreOrderListPage from "./PreOrderListPage";
 import AllCategoriesPage from "./AllCategoriesPage.jsx";
 import WishlistDrawer from "./WishlistDrawer.jsx";
 import CartPage from "./CartPage.jsx";
@@ -76,7 +74,20 @@ export default function App() {
   }); // Array of full product objects
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isRewardsOpen, setIsRewardsOpen] = useState(false);
-  
+  const { products: PRODUCTS, dynamicCategories } = useProducts();
+  const isSpecialItem = useCallback((p) => {
+    if (!p) return false;
+    return (
+      p.category?.name === "Special Offer" ||
+      p.category === "Special Offer" ||
+      (p.specialOfferType &&
+        p.specialOfferType !== "None" &&
+        p.specialOfferType !== "Gift")
+    );
+  }, []);
+
+  const freeDeliveryThreshold = 999;
+  const supportPhone = "+91 90000 00000";
 
   // Global Smooth Scroll (Lenis)
   useEffect(() => {
@@ -107,16 +118,88 @@ export default function App() {
     };
   }, [location.pathname]);
 
-
-  // Sync Cart to localStorage
   useEffect(() => {
     localStorage.setItem("omw_cart", JSON.stringify(cart));
-  }, [cart]);
+
+    // Auto-remove excess special products if regular products are removed
+    const cartWithData = cart.map((c) => ({
+      ...c,
+      productData: c.productData || PRODUCTS.find((p) => p.id === c.id),
+    }));
+
+    const regularItems = cartWithData.filter(
+      (c) => !isSpecialItem(c.productData),
+    );
+    const specialItems = cartWithData.filter((c) =>
+      isSpecialItem(c.productData),
+    );
+
+    const totalRegularQty = regularItems.reduce((sum, x) => sum + x.qty, 0);
+    const totalSpecialQty = specialItems.reduce((sum, x) => sum + x.qty, 0);
+
+    if (totalSpecialQty > totalRegularQty) {
+      let itemsToRemove = totalSpecialQty - totalRegularQty;
+      const newCart = [...cart];
+
+      // Remove from the end (most recently added)
+      for (let i = newCart.length - 1; i >= 0 && itemsToRemove > 0; i--) {
+        const item = newCart[i];
+        const pData =
+          item.productData || PRODUCTS.find((p) => p.id === item.id);
+        if (isSpecialItem(pData)) {
+          const canRemove = Math.min(item.qty, itemsToRemove);
+          item.qty -= canRemove;
+          itemsToRemove -= canRemove;
+        }
+      }
+
+      setCart(newCart.filter((c) => c.qty > 0));
+      toast.info("Deselected some deals as regular items were removed.");
+    }
+  }, [cart, PRODUCTS, isSpecialItem]);
 
   // Sync Wishlist to localStorage
   useEffect(() => {
     localStorage.setItem("omw_wishlist", JSON.stringify(wishlist));
   }, [wishlist]);
+
+  // Sync cart to backend for abandoned checkout tracking
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const syncTimeout = setTimeout(async () => {
+      try {
+        const cartPayload = cart.map((c) => {
+          const product =
+            PRODUCTS.find((p) => p.id === c.id) || c.productData || {};
+          return {
+            id: c.id,
+            qty: c.qty,
+            name: product.name || "Unknown Product",
+            price: product.discountPrice || product.price || 0,
+            image: product.imageUrls?.[0] || product.image || "",
+          };
+        });
+
+        const res = await fetch(`${API_URL}/cart/sync`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ customerId: user.id, items: cartPayload }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          console.error("Cart sync failed:", data.message);
+        } else {
+          console.log("Cart synced successfully for protocol tracking");
+        }
+      } catch (err) {
+        console.error("Critical error in cart sync protocol:", err);
+      }
+    }, 1500);
+
+    return () => clearTimeout(syncTimeout);
+  }, [cart, user, PRODUCTS]);
 
   // Scroll to top on route change
   useEffect(() => {
@@ -126,10 +209,6 @@ export default function App() {
       behavior: "instant", // Immediate jump for navigation
     });
   }, [location.pathname]);
-
-  const { products: PRODUCTS, dynamicCategories } = useProducts();
-  const freeDeliveryThreshold = 999;
-  const supportPhone = "+91 90000 00000";
 
   // Cart Logic
   const cartItems = useMemo(() => {
@@ -166,15 +245,44 @@ export default function App() {
 
   const addToCart = useCallback(
     (item) => {
+      if (!user) {
+        toast.info("Please login to save your cart & track your order");
+        setIsAuthModalOpen(true);
+      }
+
       let id = item;
       let productData = null;
 
       if (typeof item === "object" && item !== null) {
         id = item.id;
         productData = item;
+      } else {
+        productData = PRODUCTS.find((p) => p.id === id);
       }
 
+      const isSpecial = isSpecialItem(productData);
+
       setCart((prev) => {
+        // Enforce limits for Special Offers
+        if (isSpecial) {
+          const cartWithData = prev.map((c) => ({
+            ...c,
+            productData: c.productData || PRODUCTS.find((p) => p.id === c.id),
+          }));
+
+          const regularCount = cartWithData
+            .filter((c) => !isSpecialItem(c.productData))
+            .reduce((sum, x) => sum + x.qty, 0);
+          const specialCount = cartWithData
+            .filter((c) => isSpecialItem(c.productData))
+            .reduce((sum, x) => sum + x.qty, 0);
+
+          if (specialCount >= regularCount) {
+            toast.error("Add more products to unlock more special deals!");
+            return prev;
+          }
+        }
+
         const found = prev.find((x) => x.id === id);
         if (found) {
           return prev.map((x) =>
@@ -191,12 +299,17 @@ export default function App() {
       });
 
       // Auto-open cart drawer (if not on cart or checkout pages) and provide feedback
-      if (location.pathname !== "/cart" && location.pathname !== "/checkout") {
+      if (
+        user &&
+        location.pathname !== "/cart" &&
+        location.pathname !== "/checkout"
+      ) {
         setCartOpen(true);
       }
-      toast.success("Added to cart!");
+      if (!isSpecial) toast.success("Added to cart!");
+      else toast.success(`${productData?.name} added as a special deal!`);
     },
-    [setCartOpen, location.pathname],
+    [setCartOpen, location.pathname, PRODUCTS, isSpecialItem, user],
   );
 
   const decQty = useCallback((id) => {
@@ -251,11 +364,7 @@ export default function App() {
 
   // Categories Data
   const NAV_CATEGORIES = useMemo(() => {
-    const base = [
-
-
-      { key: "serums", title: "Serums", image: imgSerums },
-    ];
+    const base = [{ key: "serums", title: "Serums", image: imgSerums }];
 
     const dynamic = dynamicCategories.map((cat) => ({
       key: cat.slug,
@@ -331,6 +440,15 @@ export default function App() {
           <AuthModal
             isOpen={isAuthModalOpen}
             onClose={() => setIsAuthModalOpen(false)}
+            onSuccess={() => {
+              if (
+                cart.length > 0 &&
+                location.pathname !== "/cart" &&
+                location.pathname !== "/checkout"
+              ) {
+                setCartOpen(true);
+              }
+            }}
           />
         </>
       )}
@@ -388,15 +506,6 @@ export default function App() {
           }
         />
         <Route
-          path="/pre-orders"
-          element={
-            <PreOrderListPage
-              wishlist={wishlist}
-              toggleWishlist={toggleWishlist}
-            />
-          }
-        />
-        <Route
           path="/cart"
           element={
             <CartPage
@@ -440,16 +549,6 @@ export default function App() {
           path="/product/:id"
           element={
             <ProductPage
-              addToCart={addToCart}
-              wishlist={wishlist}
-              toggleWishlist={toggleWishlist}
-            />
-          }
-        />
-        <Route
-          path="/preorder/:id"
-          element={
-            <PreOrderProductPage
               addToCart={addToCart}
               wishlist={wishlist}
               toggleWishlist={toggleWishlist}

@@ -21,12 +21,15 @@ import {
   seedAdminCategories,
   getAdminVendorAnalytics,
   getAdminBrands,
-  resetVendorPassword
+  resetVendorPassword,
+  assignOrderToVendor,
+  getCustomerSegments
 } from "../controllers/admin.controller.js";
 import { seedAdmin, loginAdmin, getAdminProfile } from "../controllers/auth.admin.controller.js";
 import { getPointsSettings, updatePointsSettings } from "../controllers/settings.controller.js";
 import { createProduct, updateProduct, deleteProduct } from "../controllers/products.controller.js";
 import { getHomepageSections, updateHomepageSection, reorderSections } from "../controllers/homepage.controller.js";
+import { getAbandonedCarts } from "../controllers/cart.controller.js";
 
 const router = Router();
 
@@ -49,6 +52,7 @@ router.put("/products/:id", updateProduct);
 router.delete("/products/:id", deleteProduct);
 router.get("/orders", getAdminOrders);
 router.get("/orders/:id", getAdminOrderDetail);
+router.put("/orders/:id/fulfill", assignOrderToVendor);
 router.get("/vendors", getAdminVendors);
 router.get("/vendors/:id", getAdminVendorDetail);
 router.get("/vendor-analytics", getAdminVendorAnalytics);
@@ -69,5 +73,7 @@ router.delete("/categories/:id", deleteAdminCategory);
 router.get("/brands", getAdminBrands);
 router.get("/settings/points", getPointsSettings);
 router.put("/settings/points", updatePointsSettings);
+router.get("/abandoned-checkouts", getAbandonedCarts);
+router.get("/customer-segments", getCustomerSegments);
 
 export default router;

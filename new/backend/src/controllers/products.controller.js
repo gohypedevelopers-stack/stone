@@ -77,7 +77,7 @@ export const listProducts = async (req, res) => {
         vendor: true,
         category: true,
         linkedProduct: { select: { id: true, name: true, imageUrls: true, price: true } },
-        linkedDeals: { select: { id: true, name: true, imageUrls: true, price: true, discountPrice: true, specialOfferType: true, brand: true, stock: true, onlineStock: true, category: { select: { name: true } } } },
+        linkedDeals: { select: { id: true, name: true, imageUrls: true, price: true, discountPrice: true, specialOfferType: true, brand: true, stock: true, category: { select: { name: true } } } },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -160,7 +160,6 @@ export const createProduct = async (req, res) => {
       newArrival,
       bestSeller,
       trending,
-      onlineStock,
       specialOfferType,
       linkedProductId,
     } = req.body;
@@ -231,7 +230,6 @@ export const createProduct = async (req, res) => {
         newArrival: coerceBoolean(newArrival),
         bestSeller: coerceBoolean(bestSeller),
         trending: coerceBoolean(trending),
-        onlineStock: Number(onlineStock || 0),
         ingredients: ingredients || null,
         whyWeLoveIt: whyWeLoveIt || null,
         benefits: benefits || null,
@@ -305,7 +303,6 @@ export const updateProduct = async (req, res) => {
       newArrival,
       bestSeller,
       trending,
-      onlineStock,
       specialOfferType,
       linkedProductId,
     } = req.body;
@@ -337,7 +334,6 @@ export const updateProduct = async (req, res) => {
       newArrival: newArrival !== undefined ? Boolean(newArrival) : undefined,
       bestSeller: bestSeller !== undefined ? Boolean(bestSeller) : undefined,
       trending: trending !== undefined ? Boolean(trending) : undefined,
-      onlineStock: onlineStock !== undefined ? Number(onlineStock) : undefined,
       imageUrls: Array.isArray(imageUrls) ? imageUrls : undefined,
       tags: Array.isArray(tags) ? tags : undefined,
       ingredients,

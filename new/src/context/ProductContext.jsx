@@ -7,7 +7,6 @@ import { resolveImage } from "../utils/urlHelper";
 const ProductContext = createContext({
   products: [],
   apiProducts: [],
-  preorderProducts: [],
   dynamicCategories: [],
   apiCoupons: [],
   categories: [],
@@ -31,7 +30,6 @@ const getMediaUrl = (url) => {
 
 export const ProductProvider = ({ children }) => {
   const [apiProducts, setApiProducts] = useState([]);
-  const [preorderProducts, setPreorderProducts] = useState([]);
   const [apiCoupons, setApiCoupons] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,27 +47,6 @@ export const ProductProvider = ({ children }) => {
   }, []);
 
 
-  const fetchPreorders = useCallback(async () => {
-    try {
-      const { data } = await fetchJson("/homepage");
-      if (data.success) {
-        const poSection = data.data.sections.find(s => s.componentId === 'pre-order');
-        if (poSection?.settings?.preorderProducts) {
-          // Normalize: Ensure images array
-          const normalized = poSection.settings.preorderProducts.map(p => ({
-            ...p,
-            image: getMediaUrl(p.image || p.imageUrl || (Array.isArray(p.images) ? p.images[0] : "")),
-            images: Array.isArray(p.images)
-              ? p.images.map(getMediaUrl).filter(Boolean)
-              : [getMediaUrl(p.image || p.imageUrl)].filter(Boolean)
-          }));
-          setPreorderProducts(normalized);
-        }
-      }
-    } catch (err) {
-      console.error("Failed to fetch pre-orders:", err);
-    }
-  }, []);
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -92,8 +69,8 @@ export const ProductProvider = ({ children }) => {
           brand: p.brand || "OMW Skincare",
           rating: p.rating || 4.5,
           reviews: p.reviews || 120,
-          inStock: p.onlineStock > 0,
-          onlineStock: p.onlineStock || 0,
+          inStock: p.stock > 0,
+          stock: p.stock || 0,
         }));
         setApiProducts(mapped);
       } else {
@@ -145,10 +122,9 @@ export const ProductProvider = ({ children }) => {
 
   useEffect(() => {
     fetchProducts();
-    fetchPreorders();
     fetchCoupons();
     fetchCategories();
-  }, [fetchProducts, fetchPreorders, fetchCoupons, fetchCategories]);
+  }, [fetchProducts, fetchCoupons, fetchCategories]);
 
 
   // Merge static products with API products
@@ -157,23 +133,18 @@ export const ProductProvider = ({ children }) => {
     return apiProducts;
   }, [apiProducts]);
 
-  // Dynamic Pre-orders (strictly API)
-  const finalPreorders = useMemo(() => {
-    return preorderProducts;
-  }, [preorderProducts]);
 
 
   const value = useMemo(() => ({
     products: allProducts,
     apiProducts,
-    preorderProducts: finalPreorders,
     dynamicCategories,
     categories,
     apiCoupons,
     loading,
     error,
-    refreshProducts: () => { fetchProducts(); fetchPreorders(); fetchCoupons(); fetchCategories(); }
-  }), [allProducts, apiProducts, finalPreorders, dynamicCategories, categories, apiCoupons, loading, error, fetchProducts, fetchPreorders, fetchCoupons, fetchCategories]);
+    refreshProducts: () => { fetchProducts(); fetchCoupons(); fetchCategories(); }
+  }), [allProducts, apiProducts, dynamicCategories, categories, apiCoupons, loading, error, fetchProducts, fetchCoupons, fetchCategories]);
 
 
   return (

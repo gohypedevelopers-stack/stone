@@ -11,6 +11,7 @@ import analyticsRoutes from "./analytics.routes.js";
 import notificationsRoutes from "./notifications.routes.js";
 import uploadRoutes from "./upload.routes.js";
 import couponRoutes from "./coupon.routes.js";
+import cartRoutes from "./cart.routes.js";
 import { getPublicCategories } from "../controllers/admin.controller.js";
 
 const router = Router();
@@ -37,5 +38,6 @@ router.use("/analytics", analyticsRoutes);
 router.use("/notifications", notificationsRoutes);
 router.use("/upload", uploadRoutes);
 router.use("/coupons", couponRoutes);
+router.use("/cart", cartRoutes);
 
 export default router;

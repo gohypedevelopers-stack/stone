@@ -21,6 +21,9 @@ export default function BestSellers({ addToCart, wishlist = [], toggleWishlist }
     const filteredProducts = useMemo(() => {
         // 1. Initial filter for the page purpose: Show Best Sellers
         let products = allProducts.filter(p => p.bestSeller || p.featured || p.tag === "Best Seller");
+
+        const isSpecial = (p) => p.category === "Special Offer" || (p.category?.name === "Special Offer") || (p.specialOfferType && p.specialOfferType !== "None");
+        products = products.filter(p => !isSpecial(p));
  
         // 2. Apply Category/Status Filter
         if (activeFilter !== "All") {
