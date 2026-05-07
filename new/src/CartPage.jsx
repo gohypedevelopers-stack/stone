@@ -372,7 +372,7 @@ export default function CartPage({
       typeof item.maxQty === "number" ? Math.max(1, item.maxQty) : Infinity,
     );
     const q = Math.max(min, Math.min(max, nextQty));
-    updateQty?.(item.id, q);
+    updateQty?.(item.id, q, item.isFree);
   };
 
   const handleApplyPromo = async (codeFromDrawer) => {
@@ -638,7 +638,7 @@ export default function CartPage({
                         selected={isSelected(item.id)}
                         onToggle={() => toggleSelect(item.id)}
                         onUpdateQty={handleQty}
-                        onRemove={() => removeFromCart(item.id)}
+                        onRemove={() => removeFromCart(item.id, item.isFree)}
                         onWishlist={() => moveToWishlist(item)}
                         onItemClick={() => handleItemClick(item)}
                       />
@@ -664,7 +664,7 @@ export default function CartPage({
                         selected={isSelected(item.id)}
                         onToggle={() => toggleSelect(item.id)}
                         onUpdateQty={handleQty}
-                        onRemove={() => removeFromCart(item.id)}
+                        onRemove={() => removeFromCart(item.id, item.isFree)}
                         onWishlist={() => moveToWishlist(item)}
                         isPreOrder
                         cardClassName="bg-white/70 hover:bg-white border border-white/40"
@@ -1230,7 +1230,7 @@ function CartItem({
                 {item.name}
               </h3>
               <p className="text-xs text-stone-500 font-semibold truncate">
-                {item.tag || "Standard Size"}
+                {item.isFree ? "Gift Item" : (item.tag || "Standard Size")}
               </p>
             </div>
 

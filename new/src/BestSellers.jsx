@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProducts } from "./context/ProductContext";
 import ProductCard from "./components/card.jsx";
+import { isInCategoryGroup } from "./utils/categoryMapping";
 import {
     Star, Heart, ShoppingBag, Eye, X, Filter, ChevronDown, Check,
     Truck, ShieldCheck, RefreshCw, Zap
@@ -30,7 +31,7 @@ export default function BestSellers({ addToCart, wishlist = [], toggleWishlist }
             if (activeFilter === "Trending") {
                 products = products.filter(p => p.trending || p.tag === "Trending");
             } else {
-                products = products.filter(p => p.category === activeFilter);
+                products = products.filter(p => isInCategoryGroup(p.category, activeFilter));
             }
         }
 

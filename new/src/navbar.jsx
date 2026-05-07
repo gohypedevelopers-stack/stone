@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, memo } from "react";
+import React, { useState, useEffect, useMemo, memo, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -62,6 +62,88 @@ const Navbar = memo(function Navbar({
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  
+  // Mouse drag for category bar (High-performance No-render implementation)
+  const navRef = useRef(null);
+  const innerRef = useRef(null);
+  const isDraggingRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
+  const dragDistanceRef = useRef(0);
+  const velocityRef = useRef(0);
+  const lastTimeRef = useRef(0);
+  const rafIdRef = useRef(null);
+  const containerOffsetRef = useRef(0);
+
+  // Pre-warm layout to avoid reflow on first drag
+  const preWarmLayout = () => {
+    if (navRef.current) {
+      containerOffsetRef.current = navRef.current.offsetLeft;
+    }
+  };
+
+  const handleMouseDown = (e) => {
+    if (!navRef.current) return;
+    if (e.button !== 0) return; // Only left click
+
+    preWarmLayout();
+    isDraggingRef.current = true;
+    startXRef.current = e.pageX - containerOffsetRef.current;
+    scrollLeftRef.current = navRef.current.scrollLeft;
+    dragDistanceRef.current = 0;
+    velocityRef.current = 0;
+    lastTimeRef.current = performance.now();
+
+    if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+
+    navRef.current.style.scrollBehavior = 'auto';
+    navRef.current.classList.add('cursor-grabbing', 'select-none');
+    navRef.current.classList.remove('cursor-grab');
+    if (innerRef.current) innerRef.current.style.pointerEvents = 'none';
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDraggingRef.current || !navRef.current) return;
+    
+    // Use movementX if available for hardware-accelerated precision
+    if (e.movementX !== undefined) {
+      navRef.current.scrollLeft -= e.movementX * 1.5;
+      velocityRef.current = e.movementX;
+    } else {
+      // Fallback for older browsers
+      const x = e.pageX - containerOffsetRef.current;
+      const walk = (x - startXRef.current) * 1.5;
+      navRef.current.scrollLeft = scrollLeftRef.current - walk;
+    }
+    
+    const now = performance.now();
+    lastTimeRef.current = now;
+    dragDistanceRef.current += Math.abs(e.movementX || 0);
+  };
+
+  const applyMomentum = () => {
+    if (!navRef.current || Math.abs(velocityRef.current) < 0.2) {
+      if (navRef.current) {
+        navRef.current.style.scrollBehavior = 'smooth';
+        navRef.current.classList.remove('cursor-grabbing', 'select-none');
+        navRef.current.classList.add('cursor-grab');
+        if (innerRef.current) innerRef.current.style.pointerEvents = 'auto';
+      }
+      return;
+    }
+
+    navRef.current.scrollLeft -= velocityRef.current;
+    velocityRef.current *= 0.95; // Friction
+    rafIdRef.current = requestAnimationFrame(applyMomentum);
+  };
+
+  const onDragEnd = () => {
+    if (isDraggingRef.current) {
+      isDraggingRef.current = false;
+      applyMomentum();
+    }
+  };
+
   const [localQuery, setLocalQuery] = useState(query);
   const [showDropdown, setShowDropdown] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -69,12 +151,79 @@ const Navbar = memo(function Navbar({
 
   const searchResults = useMemo(() => {
     if (!localQuery || localQuery.length < 2) return [];
-    const q = localQuery.toLowerCase();
-    return products.filter(p => 
-      p.name?.toLowerCase().includes(q) || 
-      p.brand?.toLowerCase().includes(q) ||
-      p.category?.toLowerCase().includes(q)
-    ).slice(0, 5); 
+    const q = localQuery.toLowerCase().trim();
+    
+    // Simple synonym/typo map for better UX
+    const synonyms = {
+      "mostriser": "moisturizer",
+      "mosturizer": "moisturizer",
+      "serum": "serums",
+      "sunscreen": "sunblock",
+    };
+
+    const expandedQuery = synonyms[q] || q;
+
+    return products
+      .map(p => {
+        let score = 0;
+        const name = (p.name || "").toLowerCase();
+        const brand = (p.brand || "").toLowerCase();
+        
+        // Normalize tags
+        const rawTags = Array.isArray(p.tags) ? p.tags : (typeof p.tags === 'string' ? p.tags.split(',') : []);
+        const tags = rawTags.map(t => String(t).toLowerCase().trim()).filter(Boolean);
+        if (p.tag) tags.push(p.tag.toLowerCase().trim());
+
+        const queryWords = [q, expandedQuery].filter(Boolean);
+        
+        // Check Name
+        const nameWords = name.split(/[\s-]+/);
+        queryWords.forEach(qw => {
+          if (name === qw) score += 100;
+          else if (nameWords.some(word => word.startsWith(qw))) score += 80;
+          else if (qw.length > 3 && name.includes(qw)) score += 40;
+        });
+
+        // Check Brand
+        queryWords.forEach(qw => {
+          if (brand.includes(qw)) score += 20;
+        });
+        
+        // Check Tags
+        const matchedTags = tags.filter(t => {
+          return queryWords.some(qw => {
+            const tagWords = t.split(/[\s-]+/);
+            if (t === qw) return true;
+            if (tagWords.some(word => word.startsWith(qw))) return true;
+            if (qw.length > 3 && t.includes(qw)) return true;
+            return false;
+          });
+        });
+
+        if (matchedTags.length > 0) {
+          score += 50;
+          if (tags.some(t => queryWords.includes(t))) score += 30;
+        }
+
+        return { ...p, _score: score, _matchedTags: [...new Set(matchedTags)] };
+      })
+      .filter(p => p._score > 0)
+      .sort((a, b) => b._score - a._score)
+      .reduce((acc, p) => {
+        // Group by base name to avoid showing 5 variants of the same cream
+        const baseName = (p.name || "").split(/ shade| no\.| #| vol\.| \d+/i)[0].trim().toLowerCase();
+        const brand = (p.brand || "").toLowerCase();
+        const key = `${brand}-${baseName}`;
+        if (!acc.find(item => {
+          const itemBase = (item.name || "").split(/ shade| no\.| #| vol\.| \d+/i)[0].trim().toLowerCase();
+          const itemBrand = (item.brand || "").toLowerCase();
+          return `${itemBrand}-${itemBase}` === key;
+        })) {
+          acc.push(p);
+        }
+        return acc;
+      }, [])
+      .slice(0, 8); 
   }, [localQuery, products]);
 
   useEffect(() => {
@@ -200,7 +349,13 @@ const Navbar = memo(function Navbar({
                           onNavigate(searchResults[activeIndex].id);
                           setShowDropdown(false);
                         } else if (localQuery.trim()) {
-                          onNavigate(`shop?q=${encodeURIComponent(localQuery.trim())}`);
+                          const currentParams = new URLSearchParams(window.location.search);
+                          const newParams = new URLSearchParams();
+                          if (window.location.pathname.includes("/shop")) {
+                            currentParams.forEach((val, key) => { if (key !== "q") newParams.set(key, val); });
+                          }
+                          newParams.set("q", localQuery.trim());
+                          onNavigate(`shop?${newParams.toString()}`);
                           setShowDropdown(false);
                         }
                       } else if (e.key === "ArrowDown") {
@@ -221,7 +376,7 @@ const Navbar = memo(function Navbar({
 
               {/* Desktop Search Dropdown */}
               <AnimatePresence>
-                {showDropdown && searchResults.length > 0 && (
+                {showDropdown && localQuery.length >= 2 && (
                   <>
                     <div 
                       className="fixed inset-0 z-40" 
@@ -238,44 +393,73 @@ const Navbar = memo(function Navbar({
                           Quick Results
                         </span>
                         <span className="text-[9px] font-bold text-stone-300 uppercase tracking-widest">
-                          Press Enter to Search
+                          {searchResults.length > 0 ? "Press Enter to Search" : "No Matches Found"}
                         </span>
                       </div>
                       <div className="max-h-[420px] overflow-y-auto custom-scrollbar">
-                        {searchResults.map((p, i) => (
-                          <button
-                            key={p.id}
-                            className={cn(
-                              "w-full flex items-center gap-5 px-5 py-3.5 text-left transition-all duration-200",
-                              activeIndex === i ? "bg-stone-50 scale-[0.99] translate-x-1" : "hover:bg-stone-50/80"
-                            )}
-                            onClick={() => {
-                              onNavigate(p.id);
-                              setShowDropdown(false);
-                            }}
-                          >
-                            <div className="w-14 h-14 rounded-xl overflow-hidden border border-stone-100 shrink-0 bg-white shadow-sm p-1">
-                              <img src={p.image} alt="" className="w-full h-full object-contain" />
+                        {searchResults.length > 0 ? (
+                          searchResults.map((p, i) => (
+                            <button
+                              key={p.id}
+                              className={cn(
+                                "w-full flex items-center gap-5 px-5 py-3.5 text-left transition-all duration-200",
+                                activeIndex === i ? "bg-stone-50 scale-[0.99] translate-x-1" : "hover:bg-stone-50/80"
+                              )}
+                              onClick={() => {
+                                onNavigate(p.id);
+                                setShowDropdown(false);
+                              }}
+                            >
+                              <div className="w-14 h-14 rounded-xl overflow-hidden border border-stone-100 shrink-0 bg-white shadow-sm p-1">
+                                <img src={p.image} alt="" className="w-full h-full object-contain" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[15px] font-black text-stone-900 truncate tracking-tight">{p.name}</p>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <p className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">{p.brand}</p>
+                                  {p._matchedTags && p._matchedTags.length > 0 && (
+                                    <div className="flex gap-1">
+                                      {p._matchedTags.slice(0, 2).map((tag, idx) => (
+                                        <span key={idx} className="text-[9px] px-1.5 py-0.5 bg-pink-50 text-pink-500 font-bold rounded-[2px] uppercase">
+                                          {tag}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className="text-[14px] font-black text-pink-500 tracking-tight">₹{(p.discountPrice || p.price).toLocaleString()}</p>
+                              </div>
+                            </button>
+                          ))
+                        ) : (
+                          <div className="px-8 py-12 text-center">
+                            <div className="w-12 h-12 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                              <SearchIcon size={20} className="text-stone-300" />
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-[15px] font-black text-stone-900 truncate tracking-tight">{p.name}</p>
-                              <p className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mt-0.5">{p.brand}</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-[14px] font-black text-pink-500 tracking-tight">₹{(p.discountPrice || p.price).toLocaleString()}</p>
-                            </div>
-                          </button>
-                        ))}
+                            <p className="text-sm font-black text-stone-800 tracking-tight">No results for "{localQuery}"</p>
+                            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1">Try checking for typos or searching by category</p>
+                          </div>
+                        )}
                       </div>
-                      <button 
-                        className="w-full py-4 bg-stone-900 text-[11px] font-black text-white uppercase tracking-[3px] hover:bg-stone-800 transition-all duration-300 group flex items-center justify-center gap-2"
-                        onClick={() => {
-                          onNavigate(`shop?q=${encodeURIComponent(localQuery.trim())}`);
-                          setShowDropdown(false);
-                        }}
-                      >
-                        Explore all results <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                      </button>
+                      {searchResults.length > 0 && (
+                        <button 
+                          className="w-full py-4 bg-stone-900 text-[11px] font-black text-white uppercase tracking-[3px] hover:bg-stone-800 transition-all duration-300 group flex items-center justify-center gap-2"
+                          onClick={() => {
+                            const currentParams = new URLSearchParams(window.location.search);
+                            const newParams = new URLSearchParams();
+                            if (window.location.pathname.includes("/shop")) {
+                              currentParams.forEach((val, key) => { if (key !== "q") newParams.set(key, val); });
+                            }
+                            newParams.set("q", localQuery.trim());
+                            onNavigate(`shop?${newParams.toString()}`);
+                            setShowDropdown(false);
+                          }}
+                        >
+                          Explore all results <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                        </button>
+                      )}
                     </motion.div>
                   </>
                 )}
@@ -374,18 +558,7 @@ const Navbar = memo(function Navbar({
                           >
                             My Orders
                           </button>
-                          <button
-                            className="w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-pink-50 hover:text-pink-600 rounded-lg transition-colors font-bold"
-                            onClick={() => { onNavigate("admin"); setShowProfileMenu(false); }}
-                          >
-                            Admin Dashboard
-                          </button>
-                          <button
-                            className="w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition-colors font-bold"
-                            onClick={() => { onNavigate("vendor-dashboard"); setShowProfileMenu(false); }}
-                          >
-                            Vendor Dashboard
-                          </button>
+                          {/* Admin and Vendor links removed per user request */}
                           <div className="h-px bg-stone-100 my-1 mx-2" />
                           <button
                             className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg transition-colors font-black"
@@ -441,7 +614,13 @@ const Navbar = memo(function Navbar({
                         onChange={(e) => setLocalQuery(e.target.value)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && localQuery.trim()) {
-                            onNavigate(`shop?q=${encodeURIComponent(localQuery.trim())}`);
+                            const currentParams = new URLSearchParams(window.location.search);
+                            const newParams = new URLSearchParams();
+                            if (window.location.pathname.includes("/shop")) {
+                              currentParams.forEach((val, key) => { if (key !== "q") newParams.set(key, val); });
+                            }
+                            newParams.set("q", localQuery.trim());
+                            onNavigate(`shop?${newParams.toString()}`);
                             setIsMobileSearchOpen(false);
                           }
                         }}
@@ -487,7 +666,13 @@ const Navbar = memo(function Navbar({
                         <button 
                           className="w-full py-4 text-pink-500 font-black text-xs uppercase tracking-widest border-2 border-dashed border-pink-100 rounded-xl"
                           onClick={() => {
-                            onNavigate(`shop?q=${encodeURIComponent(localQuery.trim())}`);
+                            const currentParams = new URLSearchParams(window.location.search);
+                            const newParams = new URLSearchParams();
+                            if (window.location.pathname.includes("/shop")) {
+                              currentParams.forEach((val, key) => { if (key !== "q") newParams.set(key, val); });
+                            }
+                            newParams.set("q", localQuery.trim());
+                            onNavigate(`shop?${newParams.toString()}`);
                             setIsMobileSearchOpen(false);
                           }}
                         >
@@ -621,10 +806,27 @@ const Navbar = memo(function Navbar({
 
     {location.pathname === "/" && (
       <nav
-        className="border-b border-stone-100 bg-white relative overflow-x-auto no-scrollbar py-3 md:py-4 scroll-smooth"
+        ref={navRef}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={onDragEnd}
+        onMouseLeave={onDragEnd}
+        onMouseEnter={preWarmLayout}
+        className={cn(
+          "border-b border-stone-100 bg-white relative overflow-x-auto no-scrollbar py-3 md:py-4 transform-gpu optimize-gpu will-change-scroll touch-pan-x cursor-grab backface-hidden",
+        )}
         aria-label="Primary categories"
       >
-        <div className="flex items-center gap-6 md:gap-12 px-4 md:px-10 w-max min-w-full justify-center">
+        <div 
+          ref={innerRef}
+          className={cn(
+            "flex items-center gap-6 md:gap-12 px-4 md:px-10 w-max min-w-full justify-center transition-none",
+          )}
+        >
+
+
+
+
           {categories.map((c) => {
             const isDirectLink = ["New Arrivals", "Best Sellers"].includes(c.title);
             const targetView = c.title === "New Arrivals" ? "new-arrivals" : "best-sellers";
@@ -635,28 +837,31 @@ const Navbar = memo(function Navbar({
                   className="flex flex-col items-center gap-2.5 md:gap-3 text-stone-900 cursor-pointer hover:text-pink-500 transition-all group"
                   href={isDirectLink ? `#${targetView}` : "#"}
                   onClick={(e) => {
-                    e.preventDefault();
+                    if (dragDistanceRef.current > 10) {
+                      e.preventDefault();
+                      return;
+                    }
+
+
                     if (isDirectLink) {
                       onNavigate(targetView);
                     } else {
                       onNavigate(`category/${c.title}`);
                     }
                   }}
+
                 >
-                  <div className="w-[100px] h-[80px] md:w-[140px] md:h-[110px] rounded-[24px] md:rounded-[32px] overflow-hidden border border-stone-50 shadow-sm group-hover:shadow-lg transition-all duration-300 group-hover:-translate-y-1 optimize-gpu shrink-0">
+                  <div className="w-[100px] h-[80px] md:w-[140px] md:h-[110px] rounded-[24px] md:rounded-[32px] overflow-hidden border border-stone-50 shadow-sm group-hover:shadow-lg transition-all duration-300 group-hover:-translate-y-1 optimize-gpu shrink-0 transform-gpu translate-z-0">
                     <img
                       src={c.image || CATEGORY_IMAGES[c.title] || categorySphere}
                       alt={c.title}
+                      decoding="async"
+                      loading="eager"
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                   </div>
-                  <div className="flex items-center gap-1.5 font-black text-[10px] md:text-[12px] uppercase tracking-[0.05em] text-center whitespace-nowrap">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-pink-50 text-pink-600 font-bold text-xs uppercase tracking-wider border border-pink-100/50">
                     {c.title}
-                    {!isDirectLink && (
-                      <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg" className="mt-0.5 opacity-60 group-hover:rotate-180 transition-transform duration-300">
-                        <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    )}
                   </div>
                 </a>
               </div>

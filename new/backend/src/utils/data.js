@@ -33,7 +33,7 @@ export const formatEnumOutput = (value) => {
     return value;
   }
 
-  return value.toLowerCase();
+  return value.toUpperCase();
 };
 
 export const serializePrisma = (value) => {

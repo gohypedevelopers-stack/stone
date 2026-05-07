@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, Routes, Route, Link, Navigate } from "react-router-dom";
 import {
   LayoutDashboard, ShoppingCart, Package, FileText, Settings, Search,
   Bell, ChevronDown, ChevronRight, TrendingUp, TrendingDown, MoreVertical,
   Plus, Minus, Trash2, Printer, Check, AlertTriangle, BarChart3, History,
-  Eye, X, Clock, CheckCircle2, Truck, MapPin, RefreshCw, Edit3, ArrowRight,
-  IndianRupee, Users, Store, Receipt, Box, Filter, ChevronUp, LogOut
+  Eye, X, Clock, CheckCircle2, Truck, MapPin, RefreshCw, Edit3, ArrowRight, Loader2,
+  IndianRupee, Users, Store, Receipt, Box, Filter, ChevronUp, LogOut, ArrowRightLeft
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -15,6 +15,27 @@ import {
 import { printThermalReceipt } from "@/utils/printReceipt";
 import { API_URL, SERVER_URL } from "@/utils/api";
 import VendorLogin from "./VendorLogin";
+import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import OutletInventoryWorkspace from "@/components/outlet/OutletInventoryWorkspace";
 
 // ─── Constants ─────────────────────────────────────────────────────────
 const BRAND_PURPLE = "#9a6bff";
@@ -34,10 +55,13 @@ const SIDEBAR_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "orders", label: "Orders", icon: ShoppingCart },
   { id: "products", label: "Products", icon: Package },
+  { id: "scanner", label: "Scan & Stock", icon: Package },
+  { id: "outlet-inventory", label: "Outlet Inventory", icon: Store },
   { id: "billing", label: "Offline Billing", icon: Receipt },
   { id: "offline-history", label: "Offline History", icon: History },
   { id: "analytics", label: "Analytics", icon: BarChart3 },
   { id: "stock-alerts", label: "Stock Alerts", icon: AlertTriangle },
+  { id: "stock-transfers", label: "Stock Transfers", icon: ArrowRightLeft },
   { id: "notifications", label: "Notifications", icon: Bell },
   { id: "settings", label: "Settings", icon: Settings },
 ];
@@ -55,7 +79,9 @@ const statusLabel = (s) => String(s).replace(/_/g, " ").replace(/\b\w/g, (c) => 
 // ─── Main Component ────────────────────────────────────────────────────
 export default function VendorDashboard() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const location = useLocation();
+  const currentPath = location.pathname.split("/").filter(Boolean).pop() || "dashboard";
+  const activeTab = SIDEBAR_ITEMS.some(item => item.id === currentPath) ? currentPath : "dashboard";
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
@@ -75,6 +101,7 @@ export default function VendorDashboard() {
   const [vendorOrders, setVendorOrders] = useState([]);
   const [offlinePurchases, setOfflinePurchases] = useState([]);
   const [analytics, setAnalytics] = useState(null);
+  const [stockTransfers, setStockTransfers] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -95,6 +122,11 @@ export default function VendorDashboard() {
   const [productSearch, setProductSearch] = useState("");
   const [editingStock, setEditingStock] = useState(null);
   const [newStockValue, setNewStockValue] = useState("");
+
+  // Transfer Detail State
+  const [isTransferDetailOpen, setIsTransferDetailOpen] = useState(false);
+  const [viewingTransfer, setViewingTransfer] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const profileRef = useRef(null);
 
@@ -148,7 +180,7 @@ export default function VendorDashboard() {
           const aData = await aRes.json();
           const pData = await pRes.json();
           if (aData.success) setAnalytics(aData.data);
-          if (pData.success) setVendorProducts(pData.data);
+          if (pData.success) setVendorProductsWithDeduplication(pData.data);
           break;
         case "orders":
           const oRes = await fetch(`${API_URL}/vendors/${vid}/orders`);
@@ -160,7 +192,7 @@ export default function VendorDashboard() {
         case "stock-alerts":
           const prRes = await fetch(`${API_URL}/vendors/${vid}/products`);
           const prData = await prRes.json();
-          if (prData.success) setVendorProducts(prData.data);
+          if (prData.success) setVendorProductsWithDeduplication(prData.data);
           break;
         case "offline-history":
           const ohRes = await fetch(`${API_URL}/vendors/${vid}/offline-purchases`);
@@ -172,12 +204,35 @@ export default function VendorDashboard() {
           const nData = await nRes.json();
           if (nData.success) setNotifications(nData.data);
           break;
+        case "stock-transfers":
+          const stRes = await fetch(`${API_URL}/stock-transfers?vendorId=${vid}`);
+          const stData = await stRes.json();
+          if (stData.success) setStockTransfers(stData.data);
+          break;
       }
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const setVendorProductsWithDeduplication = (products) => {
+    if (!Array.isArray(products)) {
+      setVendorProducts([]);
+      return;
+    }
+    const grouped = products.reduce((acc, p) => {
+      const key = p.name;
+      if (!acc[key]) {
+        acc[key] = { ...p };
+      } else {
+        acc[key].stock = (acc[key].stock || 0) + (p.stock || 0);
+        if (p.status === "ACTIVE") acc[key].status = "ACTIVE";
+      }
+      return acc;
+    }, {});
+    setVendorProducts(Object.values(grouped));
   };
 
   const handleVendorChange = (v) => {
@@ -317,6 +372,50 @@ export default function VendorDashboard() {
     }
   };
 
+  const fetchTransferDetail = async (id) => {
+    setDetailLoading(true);
+    setIsTransferDetailOpen(true);
+    try {
+      const resp = await fetch(`${API_URL}/stock-transfers/${id}`);
+      const data = await resp.json();
+      if (data.success) {
+        setViewingTransfer(data.data);
+      } else {
+        toast.error("Failed to fetch transfer protocol");
+        setIsTransferDetailOpen(false);
+      }
+    } catch (err) {
+      toast.error("Decryption failed: Node unreachable");
+      setIsTransferDetailOpen(false);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const updateTransferStatus = async (id, status) => {
+    const isGlobalAction = !isTransferDetailOpen;
+    try {
+      const res = await fetch(`${API_URL}/stock-transfers/${id}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Transfer status updated to ${statusLabel(status)}`);
+        fetchTabData("stock-transfers");
+        // If modal is open, refresh its data
+        if (!isGlobalAction) {
+          fetchTransferDetail(id);
+        }
+      } else {
+        toast.error(data.message || "Failed to update transfer");
+      }
+    } catch (err) {
+      toast.error("Error updating transfer status");
+    }
+  };
+
   // ─── Computed Data ──────────────────────────────────────────────────
   const activeProducts = useMemo(
     () => vendorProducts.filter((p) => p.status === "ACTIVE"),
@@ -446,9 +545,9 @@ export default function VendorDashboard() {
             const isActive = activeTab === item.id;
             const Icon = item.icon;
             return (
-              <button
+              <Link
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                to={`/vendor-dashboard/${item.id}`}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-[2px] transition-all text-left ${
                   isActive
                     ? "bg-[#9a6bff] text-white shadow-md shadow-[#9a6bff]/20"
@@ -468,7 +567,7 @@ export default function VendorDashboard() {
                     {lowStockProducts.length}
                   </span>
                 )}
-              </button>
+              </Link>
             );
           })}
         </div>
@@ -495,7 +594,7 @@ export default function VendorDashboard() {
           </div>
           <div className="flex items-center gap-4">
             <button
-              onClick={() => setActiveTab("notifications")}
+              onClick={() => navigate("/vendor-dashboard/notifications")}
               className="relative text-gray-500 hover:text-[#151515] p-1.5 hover:bg-gray-100 rounded-[2px] transition-colors"
             >
               <Bell className="h-5 w-5" />
@@ -532,13 +631,13 @@ export default function VendorDashboard() {
                   </div>
                   <div className="p-1">
                     <button
-                      onClick={() => { setActiveTab("settings"); setIsProfileDropdownOpen(false); }}
+                      onClick={() => { navigate("/vendor-dashboard/settings"); setIsProfileDropdownOpen(false); }}
                       className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-bold text-gray-600 hover:text-[#9a6bff] hover:bg-purple-50 transition-colors rounded-[2px]"
                     >
                       <Store className="h-4 w-4" /> Store Profile
                     </button>
                     <button
-                      onClick={() => { setActiveTab("settings"); setIsProfileDropdownOpen(false); }}
+                      onClick={() => { navigate("/vendor-dashboard/settings"); setIsProfileDropdownOpen(false); }}
                       className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-bold text-gray-600 hover:text-[#9a6bff] hover:bg-purple-50 transition-colors rounded-[2px]"
                     >
                       <Settings className="h-4 w-4" /> Account Settings
@@ -563,15 +662,17 @@ export default function VendorDashboard() {
 
         {/* Page Content */}
         <div className="p-6 max-w-7xl mx-auto">
-          {loading && !analytics && activeTab === "dashboard" ? (
-            <div className="flex items-center justify-center h-64">
-              <RefreshCw className="h-8 w-8 animate-spin text-[#9a6bff]" />
-            </div>
-          ) : (
-            <>
-              {/* ═══ DASHBOARD TAB ═══ */}
-              {activeTab === "dashboard" && (
+          <Routes>
+            <Route index element={<Navigate to="/vendor-dashboard/dashboard" replace />} />
+            <Route path="/dashboard" element={
+              loading && !analytics ? (
+                <div className="flex items-center justify-center h-64">
+                  <RefreshCw className="h-8 w-8 animate-spin text-[#9a6bff]" />
+                </div>
+              ) : (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+
+
                   {/* KPI Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <KPICard
@@ -758,29 +859,29 @@ export default function VendorDashboard() {
                                 {p.stock === 0 ? "OUT" : `${p.stock} left`}
                               </span>
                               <button
-                                onClick={() => { setEditingStock(p.id); setNewStockValue(String(p.stock)); setActiveTab("stock-alerts"); }}
-                                className="text-xs bg-[#9a6bff] text-white px-2 py-1 rounded-[2px] font-bold hover:bg-purple-600"
-                              >
-                                Restock
-                              </button>
-                            </div>
+                              onClick={() => { setEditingStock(p.id); setNewStockValue(String(p.stock)); navigate("/vendor-dashboard/stock-alerts"); }}
+                              className="text-xs bg-[#9a6bff] text-white px-2 py-1 rounded-[2px] font-bold hover:bg-purple-600"
+                            >
+                              Restock
+                            </button>
                           </div>
-                        ))}
-                        {lowStockProducts.length === 0 && (
-                          <div className="flex flex-col items-center justify-center py-8 text-gray-400">
-                            <CheckCircle2 className="h-10 w-10 mb-2 text-emerald-400" />
-                            <p className="text-sm font-medium">All stock levels healthy</p>
-                          </div>
-                        )}
-                      </div>
+                        </div>
+                      ))}
+                      {lowStockProducts.length === 0 && (
+                        <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+                          <CheckCircle2 className="h-10 w-10 mb-2 text-emerald-400" />
+                          <p className="text-sm font-medium">All stock levels healthy</p>
+                        </div>
+                      )}
                     </div>
                   </div>
+                  </div>
                 </div>
-              )}
+              )
+            } />
 
-              {/* ═══ ORDERS TAB ═══ */}
-              {activeTab === "orders" && (
-                <div className="space-y-4 animate-in fade-in duration-500">
+            <Route path="/orders" element={
+              <div className="space-y-4 animate-in fade-in duration-500">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <h2 className="text-2xl font-black text-[#151515]">Order Management</h2>
@@ -897,11 +998,10 @@ export default function VendorDashboard() {
                     </div>
                   </div>
                 </div>
-              )}
+            } />
 
-              {/* ═══ PRODUCTS TAB ═══ */}
-              {activeTab === "products" && (
-                <div className="space-y-4 animate-in fade-in duration-500">
+            <Route path="/products" element={
+              <div className="space-y-4 animate-in fade-in duration-500">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <h2 className="text-2xl font-black text-[#151515]">Product Catalog</h2>
@@ -1005,10 +1105,12 @@ export default function VendorDashboard() {
                     </div>
                   </div>
                 </div>
-              )}
+            } />
 
-              {/* ═══ OFFLINE BILLING TAB ═══ */}
-              {activeTab === "billing" && (
+            <Route path="/scanner" element={<OutletInventoryWorkspace currentVendor={currentVendor} />} />
+            <Route path="/outlet-inventory" element={<OutletInventoryWorkspace currentVendor={currentVendor} />} />
+
+            <Route path="/billing" element={
                 <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-500">
                   <div className="flex items-center justify-between mb-2">
                     <div>
@@ -1180,10 +1282,9 @@ export default function VendorDashboard() {
                     </div>
                   )}
                 </div>
-              )}
+            } />
 
-              {/* ═══ OFFLINE HISTORY TAB ═══ */}
-              {activeTab === "offline-history" && (
+            <Route path="/offline-history" element={
                 <div className="space-y-4 animate-in fade-in duration-500">
                   <div>
                     <h2 className="text-2xl font-black text-[#151515]">Offline Purchase History</h2>
@@ -1231,10 +1332,9 @@ export default function VendorDashboard() {
                     </div>
                   </div>
                 </div>
-              )}
+            } />
 
-              {/* ═══ ANALYTICS TAB ═══ */}
-              {activeTab === "analytics" && (
+            <Route path="/analytics" element={
                 <div className="space-y-6 animate-in fade-in duration-500">
                   <h2 className="text-2xl font-black text-[#151515]">Sales Analytics</h2>
 
@@ -1324,11 +1424,10 @@ export default function VendorDashboard() {
                     </div>
                   )}
                 </div>
-              )}
+            } />
 
-              {/* ═══ STOCK ALERTS TAB ═══ */}
-              {activeTab === "stock-alerts" && (
-                <div className="space-y-4 animate-in fade-in duration-500">
+            <Route path="/stock-alerts" element={
+              <div className="space-y-4 animate-in fade-in duration-500">
                   <div className="flex items-center justify-between">
                     <div>
                       <h2 className="text-2xl font-black text-[#151515]">Stock Alerts</h2>
@@ -1404,11 +1503,183 @@ export default function VendorDashboard() {
                     </div>
                   )}
                 </div>
-              )}
+            } />
 
-              {/* ═══ NOTIFICATIONS TAB ═══ */}
-              {activeTab === "notifications" && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 max-w-4xl mx-auto">
+            <Route path="/stock-transfers" element={
+              <div className="space-y-6 animate-in fade-in duration-500">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-black text-[#151515]">Stock Logistics</h2>
+                      <p className="text-sm text-gray-500 mt-1">Manage incoming and outgoing outlet transfers</p>
+                    </div>
+                    <button
+                      onClick={() => fetchTabData("stock-transfers")}
+                      className="text-xs bg-white text-[#151515] font-bold px-3 py-2 rounded-[2px] border border-gray-200 hover:bg-gray-50 transition-colors flex items-center gap-1.5"
+                    >
+                      <RefreshCw className="h-3 w-3 text-gray-400" /> Sync Logistics
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Incoming Transfers */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 px-1">
+                        <div className="w-8 h-8 rounded-[2px] bg-emerald-50 flex items-center justify-center border border-emerald-100">
+                          <Truck className="h-4 w-4 text-emerald-600" />
+                        </div>
+                        <h3 className="font-black text-[#151515] uppercase tracking-tight italic">Incoming <span className="text-emerald-600">Shipments</span></h3>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {stockTransfers.filter(t => t.destinationVendorId === currentVendor?.id).length === 0 ? (
+                          <div className="bg-white p-12 rounded-[2px] border border-gray-100 text-center text-gray-400 text-sm italic">
+                            No incoming shipments recorded
+                          </div>
+                        ) : (
+                          stockTransfers.filter(t => t.destinationVendorId === currentVendor?.id).map(t => (
+                            <div 
+                              key={t.id} 
+                              onClick={() => fetchTransferDetail(t.id)}
+                              className="bg-white p-5 rounded-[2px] border border-gray-100 shadow-sm hover:border-[#9a6bff]/30 hover:shadow-md transition-all cursor-pointer group"
+                            >
+                              <div className="flex items-center justify-between mb-4">
+                                <div>
+                                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Ref: #{t.id.slice(-6).toUpperCase()}</span>
+                                  <div className="text-sm font-black text-[#151515] mt-0.5">From: {t.sourceVendor?.businessName}</div>
+                                </div>
+                                <div className={`text-[10px] font-black uppercase px-2 py-1 rounded-[2px] border ${
+                                  t.status === "DISPATCHED" ? "bg-amber-50 text-amber-600 border-amber-100" :
+                                  t.status === "COMPLETED" ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                                  "bg-gray-50 text-gray-500 border-gray-100"
+                                }`}>
+                                  {statusLabel(t.status)}
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-4 text-xs font-bold text-gray-500 mb-3 bg-gray-50/50 p-2 rounded-[2px]">
+                                <div className="flex items-center gap-1.5"><Clock className="h-3 w-3" /> {new Date(t.createdAt).toLocaleDateString()}</div>
+                                <div className="flex items-center gap-1.5"><Box className="h-3 w-3" /> {t.items?.length} SKUs</div>
+                              </div>
+
+                              <div className="space-y-1.5 mb-4 px-1">
+                                {t.items?.map((item, idx) => (
+                                  <div key={idx} className="flex items-center justify-between text-[11px] border-b border-gray-50 pb-1.5 last:border-0">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-1 h-3 bg-emerald-400 rounded-full" />
+                                      <span className="font-bold text-[#151515] truncate max-w-[160px]">
+                                        {item.product?.name || vendorProducts.find(p => p.id === item.productId)?.name || 'Unidentified Item'}
+                                      </span>
+                                    </div>
+                                    <span className="font-black text-gray-400 tabular-nums">×{item.quantity}</span>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {t.status === "DISPATCHED" && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); updateTransferStatus(t.id, "COMPLETED"); }}
+                                  className="w-full bg-[#151515] text-white h-10 rounded-[2px] font-black text-[11px] uppercase tracking-widest hover:bg-black transition-all shadow-lg shadow-gray-200"
+                                >
+                                  Confirm Receipt & Add to Stock
+                                </button>
+                              )}
+                              {t.status === "COMPLETED" && (
+                                <div className="flex items-center justify-center gap-2 text-emerald-600 font-black text-[10px] uppercase tracking-widest pt-2">
+                                  <CheckCircle2 className="h-4 w-4" /> Stock Successfully Registered
+                                </div>
+                              )}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Outgoing Transfers */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 px-1">
+                        <div className="w-8 h-8 rounded-[2px] bg-indigo-50 flex items-center justify-center border border-indigo-100">
+                          <ArrowRight className="h-4 w-4 text-indigo-600" />
+                        </div>
+                        <h3 className="font-black text-[#151515] uppercase tracking-tight italic">Outgoing <span className="text-indigo-600">Dispatches</span></h3>
+                      </div>
+
+                      <div className="space-y-3">
+                        {stockTransfers.filter(t => t.sourceVendorId === currentVendor?.id).length === 0 ? (
+                          <div className="bg-white p-12 rounded-[2px] border border-gray-100 text-center text-gray-400 text-sm italic">
+                            No outgoing dispatches recorded
+                          </div>
+                        ) : (
+                          stockTransfers.filter(t => t.sourceVendorId === currentVendor?.id).map(t => (
+                            <div 
+                              key={t.id} 
+                              onClick={() => fetchTransferDetail(t.id)}
+                              className="bg-white p-5 rounded-[2px] border border-gray-100 shadow-sm hover:border-[#9a6bff]/30 hover:shadow-md transition-all cursor-pointer group"
+                            >
+                              <div className="flex items-center justify-between mb-4">
+                                <div>
+                                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Ref: #{t.id.slice(-6).toUpperCase()}</span>
+                                  <div className="text-sm font-black text-[#151515] mt-0.5">To: {t.destinationVendor?.businessName}</div>
+                                </div>
+                                <div className={`text-[10px] font-black uppercase px-2 py-1 rounded-[2px] border ${
+                                  t.status === "APPROVED" ? "bg-indigo-50 text-indigo-600 border-indigo-100" :
+                                  t.status === "PENDING" ? "bg-amber-50 text-amber-600 border-amber-100" :
+                                  t.status === "DISPATCHED" ? "bg-blue-50 text-blue-600 border-blue-100" :
+                                  t.status === "COMPLETED" ? "bg-emerald-50 text-emerald-700 border-emerald-100" :
+                                  "bg-gray-50 text-gray-500 border-gray-100"
+                                }`}>
+                                  {statusLabel(t.status)}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-4 text-xs font-bold text-gray-500 mb-3 bg-gray-50/50 p-2 rounded-[2px]">
+                                <div className="flex items-center gap-1.5"><Clock className="h-3 w-3" /> {new Date(t.createdAt).toLocaleDateString()}</div>
+                                <div className="flex items-center gap-1.5"><Box className="h-3 w-3" /> {t.items?.length} SKUs</div>
+                              </div>
+
+                              <div className="space-y-1.5 mb-4 px-1">
+                                {t.items?.map((item, idx) => (
+                                  <div key={idx} className="flex items-center justify-between text-[11px] border-b border-gray-50 pb-1.5 last:border-0">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-1 h-3 bg-indigo-400 rounded-full" />
+                                      <span className="font-bold text-[#151515] truncate max-w-[160px]">
+                                        {item.product?.name || vendorProducts.find(p => p.id === item.productId)?.name || 'Unidentified Item'}
+                                      </span>
+                                    </div>
+                                    <span className="font-black text-gray-400 tabular-nums">×{item.quantity}</span>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {t.status === "APPROVED" && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); updateTransferStatus(t.id, "DISPATCHED"); }}
+                                  className="w-full bg-indigo-600 text-white h-10 rounded-[2px] font-black text-[11px] uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+                                >
+                                  Mark as Dispatched (Reduce Stock)
+                                </button>
+                              )}
+                              {t.status === "PENDING" && (
+                                <div className="bg-amber-50 text-amber-800 p-3 rounded-[2px] text-[10px] font-bold flex items-start gap-2 leading-relaxed">
+                                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                                  Awaiting admin approval before you can dispatch this stock.
+                                </div>
+                              )}
+                              {t.status === "COMPLETED" && (
+                                <div className="flex items-center justify-center gap-2 text-emerald-600 font-black text-[10px] uppercase tracking-widest pt-2">
+                                  <CheckCircle2 className="h-4 w-4" /> Shipment Delivered & Confirmed
+                                </div>
+                              )}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              } />
+
+            <Route path="/notifications" element={
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 max-w-4xl mx-auto">
                   <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-gray-100">
                     <div className="space-y-1">
                       <div className="flex items-center gap-3">
@@ -1524,11 +1795,10 @@ export default function VendorDashboard() {
                     </div>
                   )}
                 </div>
-              )}
+            } />
 
-              {/* ═══ SETTINGS TAB ═══ */}
-              {activeTab === "settings" && (
-                <div className="space-y-6 animate-in fade-in duration-500 max-w-2xl">
+            <Route path="/settings" element={
+              <div className="space-y-6 animate-in fade-in duration-500 max-w-2xl">
                   <div>
                     <h2 className="text-2xl font-black text-[#151515]">Store Settings</h2>
                     <p className="text-sm text-gray-500 mt-1">Your store profile and information</p>
@@ -1565,23 +1835,20 @@ export default function VendorDashboard() {
                         <label className="text-xs font-black text-gray-500 uppercase tracking-wider block mb-1">Email</label>
                         <p className="text-sm font-semibold text-[#151515] bg-gray-50 px-3 py-2.5 rounded-[2px]">{currentVendor?.email || "—"}</p>
                       </div>
-                      <div>
-                        <label className="text-xs font-black text-gray-500 uppercase tracking-wider block mb-1">Business Category</label>
-                        <p className="text-sm font-semibold text-[#151515] bg-gray-50 px-3 py-2.5 rounded-[2px]">{currentVendor?.businessCategory || "—"}</p>
-                      </div>
+                    <div>
+                      <label className="text-xs font-black text-gray-500 uppercase tracking-wider block mb-1">Business Category</label>
+                      <p className="text-sm font-semibold text-[#151515] bg-gray-50 px-3 py-2.5 rounded-[2px]">{currentVendor?.businessCategory || "—"}</p>
                     </div>
+                    <div>
+                      <label className="text-xs font-black text-gray-500 uppercase tracking-wider block mb-1">Assigned Outlet</label>
+                      <p className="text-sm font-semibold text-[#151515] bg-gray-50 px-3 py-2.5 rounded-[2px]">{currentVendor?.outlet?.name || "Not assigned"}</p>
+                    </div>
+                  </div>
 
                     <div>
                       <label className="text-xs font-black text-gray-500 uppercase tracking-wider block mb-1">Store Address</label>
                       <p className="text-sm font-semibold text-[#151515] bg-gray-50 px-3 py-2.5 rounded-[2px]">{currentVendor?.storeAddress || "—"}</p>
                     </div>
-
-                    {currentVendor?.checkoutQR && (
-                      <div>
-                        <label className="text-xs font-black text-gray-500 uppercase tracking-wider block mb-2">Payment QR Code</label>
-                        <img src={currentVendor.checkoutQR} className="w-40 h-40 rounded-[2px] border border-gray-200" alt="QR Code" />
-                      </div>
-                    )}
                   </div>
 
                   <div className="bg-white p-6 rounded-[2px] border border-gray-100">
@@ -1602,11 +1869,208 @@ export default function VendorDashboard() {
                     </div>
                   </div>
                 </div>
-              )}
-            </>
-          )}
+              } />
+            </Routes>
         </div>
       </main>
+
+      {/* ═══ VENDOR LOGISTICS PROTOCOL DETAIL ═══ */}
+      <Dialog open={isTransferDetailOpen} onOpenChange={setIsTransferDetailOpen}>
+        <DialogContent className="sm:max-w-[1000px] w-[95vw] p-0 overflow-hidden border-none rounded-[32px] bg-white shadow-[0_32px_120px_-20px_rgba(0,0,0,0.1)] flex flex-col max-h-[92vh] ring-1 ring-stone-200/50 [&>button]:hidden">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Stock Transfer Details</DialogTitle>
+            <DialogDescription>Itemized shipment manifest and logistics timeline.</DialogDescription>
+          </DialogHeader>
+
+          {detailLoading || !viewingTransfer ? (
+            <div className="p-24 flex flex-col items-center justify-center space-y-6">
+              <div className="relative">
+                <div className="absolute inset-0 bg-indigo-500 blur-xl opacity-20 rounded-full animate-pulse" />
+                <Loader2 className="h-10 w-10 animate-spin text-indigo-600 relative z-10" />
+              </div>
+              <p className="text-sm font-semibold tracking-wide text-stone-500 uppercase">Synchronizing Logistics...</p>
+            </div>
+          ) : (
+            <>
+              {/* Premium Header */}
+              <div className="relative overflow-hidden bg-white border-b border-stone-100 p-8 shrink-0">
+                <div className="absolute top-0 right-0 p-32 bg-indigo-500 opacity-[0.03] blur-[100px] -mr-20 -mt-20 pointer-events-none" />
+                <div className="absolute bottom-0 left-0 p-32 bg-emerald-500 opacity-[0.03] blur-[100px] -ml-20 -mb-20 pointer-events-none" />
+                
+                <div className="relative z-10 flex items-start justify-between">
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-3 mb-1">
+                      <Badge variant="secondary" className="px-3 py-1 font-semibold text-xs tracking-wider uppercase bg-indigo-50 border-none text-indigo-700 shadow-sm rounded">
+                        Transfer {viewingTransfer.id.slice(-8).toUpperCase()}
+                      </Badge>
+                    </div>
+                    <h2 className="text-3xl font-bold tracking-tight text-stone-900 mt-2">
+                      Stock Transfer Details
+                    </h2>
+                    <p className="text-sm font-medium text-stone-500 mt-2 flex items-center gap-2">
+                      Initiated on {new Date(viewingTransfer.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  
+                  <button 
+                    onClick={() => setIsTransferDetailOpen(false)}
+                    className="h-10 w-10 rounded-xl bg-white border border-stone-200 shadow-sm flex items-center justify-center text-stone-400 hover:text-stone-900 hover:border-stone-300 transition-all focus:outline-none focus:ring-2 focus:ring-stone-200 focus:ring-offset-2"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+
+              <ScrollArea className="flex-1 bg-stone-50/50">
+                <div className="p-8 pb-12">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                    
+                    {/* Left Column: Items */}
+                    <div className="space-y-6">
+                      <h3 className="text-sm font-bold text-stone-900 flex items-center gap-2 mb-4">
+                        <Package className="h-4 w-4 text-stone-400" /> Items List
+                      </h3>
+                      
+                      <div className="space-y-4">
+                        {viewingTransfer.items?.map((item, idx) => (
+                          <div key={idx} className="group relative overflow-hidden bg-white rounded-[20px] border border-stone-200/60 shadow-sm hover:shadow-md transition-all p-4">
+                            <div className="flex items-start gap-4">
+                              <div className="h-16 w-16 rounded-xl bg-stone-50 border border-stone-100 flex items-center justify-center overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
+                                {item.product?.image || item.product?.imageUrls?.[0] ? (
+                                  <img src={getMediaUrl(item.product.image || item.product.imageUrls[0])} className="w-full h-full object-cover" />
+                                ) : (
+                                  <Box className="h-6 w-6 text-stone-300" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0 pt-0.5">
+                                <p className="text-[11px] font-bold tracking-widest text-stone-400 mb-1 truncate">
+                                  {item.product?.category?.name || "Treatment mask"}
+                                </p>
+                                <p className="text-sm font-bold text-stone-900 leading-tight truncate">
+                                  {item.product?.name || item.product?.product?.name || "Unknown Item"}
+                                </p>
+                                <p className="text-xs font-bold text-indigo-600 mt-2">
+                                  Qty: {item.quantity}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Right Column: Logistics */}
+                    <div className="space-y-8">
+                      {/* Routing Details */}
+                      <div>
+                        <h3 className="text-sm font-bold text-stone-900 mb-4 flex items-center gap-2">
+                          <Store className="h-4 w-4 text-stone-400" /> Routing Details
+                        </h3>
+                        <div className="bg-white rounded-[20px] border border-stone-200/60 shadow-sm p-6 relative overflow-hidden">
+                          <div className="absolute top-0 left-0 w-1 h-full bg-stone-200" />
+                          <div className="space-y-6">
+                            <div className="relative">
+                              <p className="text-[10px] font-bold tracking-widest text-stone-400 uppercase mb-1">From Outlet</p>
+                              <p className="text-sm font-bold text-stone-900">{viewingTransfer.sourceVendor?.businessName || "OMW Global Center"}</p>
+                            </div>
+                            <div className="flex items-center text-stone-300">
+                              <ArrowRight className="h-4 w-4" />
+                            </div>
+                            <div className="relative">
+                              <p className="text-[10px] font-bold tracking-widest text-stone-400 uppercase mb-1">To Destination</p>
+                              <p className="text-sm font-bold text-stone-900">{viewingTransfer.destinationVendor?.businessName || "XYZ Retail Delhi"}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Status Tracking */}
+                      <div>
+                        <h3 className="text-sm font-bold text-stone-900 mb-4 flex items-center gap-2">
+                          <History className="h-4 w-4 text-stone-400" /> Status Tracking
+                        </h3>
+                        
+                        <div className={cn(
+                          "px-4 py-4 rounded-[16px] text-center font-bold text-sm shadow-sm border",
+                          viewingTransfer.status === "COMPLETED" ? "bg-emerald-50 text-emerald-700 border-emerald-100" :
+                          viewingTransfer.status === "DISPATCHED" ? "bg-amber-50 text-amber-700 border-amber-100" :
+                          viewingTransfer.status === "APPROVED" ? "bg-indigo-50 text-indigo-700 border-indigo-100" :
+                          "bg-stone-50 text-stone-700 border-stone-200"
+                        )}>
+                          {statusLabel(viewingTransfer.status)}
+                        </div>
+
+                        <div className="mt-8 space-y-4 px-2">
+                          {[
+                            { step: "PENDING", label: "Created:", date: viewingTransfer.createdAt },
+                            { step: "DISPATCHED", label: "Dispatched:", date: viewingTransfer.dispatchedAt, color: "text-indigo-600" },
+                            { step: "COMPLETED", label: "Received:", date: viewingTransfer.receivedAt, color: "text-emerald-600" }
+                          ].map((phase, idx) => {
+                            if (!phase.date) return null;
+                            return (
+                              <div key={idx} className="flex items-center justify-between border-b border-stone-100 pb-3 last:border-0 last:pb-0">
+                                <span className="text-sm text-stone-500 font-medium">{phase.label}</span>
+                                <span className={cn("text-sm font-bold tabular-nums", phase.color || "text-stone-900")}>
+                                  {new Date(phase.date).toLocaleDateString()}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+              </ScrollArea>
+              
+              {/* Contextual Actions Footer */}
+              <div className="p-6 bg-white border-t border-stone-100 flex items-center justify-between sticky bottom-0 z-10 shrink-0">
+                <div className="flex-1">
+                  {viewingTransfer.status === "PENDING" && viewingTransfer.sourceVendorId === currentVendor?.id && (
+                    <div className="flex items-center gap-2 text-amber-600 font-semibold px-2 w-fit">
+                      <AlertTriangle className="h-4 w-4" />
+                      <span className="text-xs uppercase tracking-wider">Awaiting Authorization</span>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <Button 
+                    onClick={() => setIsTransferDetailOpen(false)}
+                    variant="outline"
+                    className="font-bold text-stone-600 bg-white border-stone-200 shadow-sm px-6 rounded-xl"
+                  >
+                    Close
+                  </Button>
+                  
+                  {/* Vendor Actions */}
+                  {currentVendor?.id && (
+                    <>
+                      {viewingTransfer.status === "DISPATCHED" && viewingTransfer.destinationVendorId === currentVendor?.id && (
+                        <Button
+                          onClick={() => updateTransferStatus(viewingTransfer.id, "COMPLETED")}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 rounded-xl shadow-lg shadow-emerald-600/20"
+                        >
+                          <CheckCircle2 className="h-4 w-4 mr-2" /> Confirm Receipt
+                        </Button>
+                      )}
+                      {viewingTransfer.status === "APPROVED" && viewingTransfer.sourceVendorId === currentVendor?.id && (
+                        <Button
+                          onClick={() => updateTransferStatus(viewingTransfer.id, "DISPATCHED")}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-8 rounded-xl shadow-lg shadow-indigo-600/20"
+                        >
+                          <Truck className="h-4 w-4 mr-2" /> Dispatch Inventory
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -33,9 +33,10 @@ const ProductCard = React.memo(
 
     // Correct Pricing Logic
     const price = product.price || 0;
-    const mrp = product.originalPrice || Math.round(price * 1.45); // Standard 45% markup for luxury
+    const mrp = product.originalPrice || 0; 
     const points = product.points || Math.round(price * 0.03);
-    const resolvedImage = resolveImage(product.image) || "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=600&q=80";
+    const productImg = product.image || product.imageUrls?.[0] || product.productImage;
+    const resolvedImage = resolveImage(productImg) || "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=600&q=80";
 
     return (
       <div
@@ -63,10 +64,13 @@ const ProductCard = React.memo(
             <div className="bg-[#151515] text-white text-[9px] font-black px-2.5 py-1 rounded-lg shadow-md tracking-widest uppercase">
               {points} POINTS
             </div>
-            <div className="bg-[#ff3b8f] text-white text-[9px] font-black px-2 py-0.5 rounded shadow-md uppercase tracking-widest">
-              {Math.round(((mrp - price) / mrp) * 100)}% OFF
-            </div>
+            {mrp > price && (
+              <div className="bg-[#ff3b8f] text-white text-[9px] font-black px-2 py-0.5 rounded shadow-md uppercase tracking-widest">
+                {Math.round(((mrp - price) / mrp) * 100)}% OFF
+              </div>
+            )}
           </div>
+
 
           {/* Heart/Wishlist */}
           <button
@@ -87,7 +91,7 @@ const ProductCard = React.memo(
         </div>
 
         {/* Content Section */}
-        <div className="flex flex-col flex-grow p-4 space-y-3">
+        <div className="flex flex-col flex-grow p-3 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400">
               {(() => {
@@ -102,32 +106,45 @@ const ProductCard = React.memo(
             </span>
           </div>
 
-          <h3 className="text-[15px] font-black text-[#151515] leading-[1.1] tracking-tight group-hover:text-[#ff3b8f] transition-colors uppercase line-clamp-2">
+          <h3 className="text-[16px] md:text-[18px] font-black text-[#151515] leading-[1.2] tracking-tight group-hover:text-[#ff3b8f] transition-colors uppercase line-clamp-2">
             {product.name}
           </h3>
 
           <div className="mt-auto pt-1">
             <div className="flex flex-col">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-[20px] font-medium text-[#CC0C39] leading-none">
-                  -{Math.round(((mrp - price) / mrp) * 100)}%
-                </span>
+              {mrp > price && (
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-[20px] font-medium text-[#CC0C39] leading-none">
+                    -{Math.round(((mrp - price) / mrp) * 100)}%
+                  </span>
+                  <div className="flex items-start">
+                    <span className="text-[12px] font-bold text-[#151515] mt-0.5 pr-0.5">₹</span>
+                    <span className="text-[28px] font-black text-[#151515] tracking-tight leading-none">
+                      {price.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              )}
+              {mrp <= price && (
                 <div className="flex items-start">
                   <span className="text-[12px] font-bold text-[#151515] mt-0.5 pr-0.5">₹</span>
-                  <span className="text-[26px] font-black text-[#151515] tracking-tight leading-none">
+                  <span className="text-[28px] font-black text-[#151515] tracking-tight leading-none">
                     {price.toLocaleString()}
                   </span>
                 </div>
-              </div>
-              <div className="text-[11px] text-stone-400 mt-0.5 font-medium">
-                M.R.P.: <span className="line-through">₹{mrp.toLocaleString()}</span>
-              </div>
+              )}
+              {mrp > price && (
+                <div className="text-[11px] text-stone-400 mt-0.5 font-medium">
+                  M.R.P.: <span className="line-through">₹{mrp.toLocaleString()}</span>
+                </div>
+              )}
             </div>
+
 
             {/* Add to Cart Button */}
             <button
               onClick={handleAddToCart}
-              className={`w-full mt-4 py-3 rounded-lg font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-2 ${product.stock > 0 ? "bg-[#151515] text-white hover:bg-[#ff3b8f] hover:shadow-2xl hover:shadow-[#ff3b8f]/30" : "bg-purple-600 text-white hover:bg-purple-700 shadow-md"}`}
+              className={`w-full mt-3 py-3 rounded-lg font-black text-[10px] md:text-[11px] uppercase tracking-[0.2em] transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-2 ${product.stock > 0 ? "bg-[#151515] text-white hover:bg-[#ff3b8f] hover:shadow-2xl hover:shadow-[#ff3b8f]/30" : "bg-purple-600 text-white hover:bg-purple-700 shadow-md"}`}
             >
               <ShoppingBag size={14} /> {product.stock > 0 ? "Add to Cart" : "Pre-Order"}
             </button>

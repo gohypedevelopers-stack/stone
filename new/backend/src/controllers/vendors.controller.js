@@ -30,7 +30,6 @@ const buildVendorDashboard = async (vendors) => {
       by: ["vendorId"],
       where: {
         vendorId: { in: vendorIds },
-        stock: { lte: 5 },
       },
       _count: { _all: true },
     }),
@@ -83,14 +82,21 @@ export const createVendor = async (req, res) => {
       category,
       identityDocument,
       approvalStatus,
+      password,
     } = req.body;
 
     if (!businessName || !ownerName || !(storeAddress || address) || !contactNumber || !(businessCategory || category)) {
       return sendError(
         res,
-        "Business name, store address, contact number, and business category are required",
+        "Business name, owner name, store address, contact number, and business category are required",
         400,
       );
+    }
+
+    let hashedPassword = null;
+    if (password) {
+      const bcrypt = await import("bcryptjs");
+      hashedPassword = await bcrypt.default.hash(password, 10);
     }
 
     const vendor = await prisma.vendor.create({
@@ -103,22 +109,26 @@ export const createVendor = async (req, res) => {
         businessCategory: businessCategory || category,
         identityDocument: identityDocument || null,
         approvalStatus: normalizeEnumInput(approvalStatus) || "PENDING",
+        password: hashedPassword,
       },
     });
 
+    const serializedVendor = serializePrisma({
+      ...vendor,
+      approvalStatus: formatEnumOutput(vendor.approvalStatus),
+      analytics: {
+        totalOrders: 0,
+        totalRevenue: 0,
+        totalProducts: 0,
+        lowStockCount: 0,
+      },
+    });
+    delete serializedVendor.password;
+
     return sendSuccess(
       res,
-      serializePrisma({
-        ...vendor,
-        approvalStatus: formatEnumOutput(vendor.approvalStatus),
-        analytics: {
-          totalOrders: 0,
-          totalRevenue: 0,
-          totalProducts: 0,
-          lowStockCount: 0,
-        },
-      }),
-      "Vendor submitted for approval",
+      serializedVendor,
+      "Vendor created successfully",
       201,
     );
   } catch (error) {
@@ -147,14 +157,38 @@ export const getVendorProducts = async (req, res) => {
     const { vendorId } = req.params;
     const { status, search } = req.query;
 
-    const where = { vendorId };
-    if (status) where.status = normalizeEnumInput(status);
+    const vendor = await prisma.vendor.findUnique({
+      where: { id: vendorId },
+      select: { outletId: true }
+    });
+
+    const where = {
+      OR: [
+        { vendorId },
+        { stockRecords: { some: { vendorId } } },
+        vendor?.outletId ? { outletInventories: { some: { outletId: vendor.outletId } } } : null,
+      ].filter(Boolean),
+    };
+    
+    if (status) {
+      where.status = normalizeEnumInput(status);
+    } else {
+      // By default, hide archived products to avoid cluttering the dashboard
+      where.status = { not: "ARCHIVED" };
+    }
+
+    const include = {
+      category: true,
+      stockRecords: { where: { vendorId } },
+    };
+
+    if (vendor?.outletId) {
+      include.outletInventories = { where: { outletId: vendor.outletId } };
+    }
 
     let products = await prisma.product.findMany({
       where,
-      include: {
-        category: true,
-      },
+      include,
       orderBy: { createdAt: "desc" },
     });
 
@@ -165,7 +199,16 @@ export const getVendorProducts = async (req, res) => {
       );
     }
 
-    return sendSuccess(res, serializePrisma(products), "Vendor products fetched");
+    const serializedProducts = serializePrisma(products).map(p => {
+      const vendorStock = (p.stockRecords || []).reduce((sum, sr) => sum + (sr.quantity || 0), 0);
+      const outletStock = (p.outletInventories || []).reduce((sum, oi) => sum + (oi.quantity || 0), 0);
+      return {
+        ...p,
+        stock: vendorStock + outletStock
+      };
+    });
+
+    return sendSuccess(res, serializedProducts, "Vendor products fetched");
   } catch (error) {
     return sendError(res, error.message, 500);
   }
@@ -295,7 +338,13 @@ export const updateVendorProduct = async (req, res) => {
     const { vendorId, productId } = req.params;
 
     const existing = await prisma.product.findFirst({
-      where: { id: productId, vendorId },
+      where: {
+        id: productId,
+        OR: [
+          { vendorId },
+          { stockRecords: { some: { vendorId } } }
+        ]
+      },
     });
 
     if (!existing) {
@@ -304,18 +353,32 @@ export const updateVendorProduct = async (req, res) => {
 
     const { stock, description, status } = req.body;
 
-    const data = {};
-    if (stock !== undefined) data.stock = Number(stock);
-    if (description !== undefined) data.description = description;
-    if (status !== undefined) data.status = normalizeEnumInput(status);
+    await prisma.$transaction(async (tx) => {
+      // 1. Handle stock update via VendorStock record
+      if (stock !== undefined) {
+        await tx.vendorStock.upsert({
+          where: { productId_vendorId: { productId, vendorId } },
+          update: { quantity: Number(stock) },
+          create: { productId, vendorId, quantity: Number(stock) },
+        });
+      }
 
-    const product = await prisma.product.update({
-      where: { id: productId },
-      data,
-      include: { category: true },
+      // 2. Handle product level updates (only if vendor owns the product record)
+      if (existing.vendorId === vendorId) {
+        const productData = {};
+        if (description !== undefined) productData.description = description;
+        if (status !== undefined) productData.status = normalizeEnumInput(status);
+
+        if (Object.keys(productData).length > 0) {
+          await tx.product.update({
+            where: { id: productId },
+            data: productData,
+          });
+        }
+      }
     });
 
-    return sendSuccess(res, serializePrisma(product), "Product updated");
+    return sendSuccess(res, null, "Product updated successfully");
   } catch (error) {
     return sendError(res, error.message, 500);
   }
@@ -351,11 +414,19 @@ export const getVendorAnalytics = async (req, res) => {
     const vendor = await prisma.vendor.findUnique({ where: { id: vendorId } });
     if (!vendor) return sendError(res, "Vendor not found", 404);
 
-    // Parallel queries
+    // Low stock products
+    const lowStockProductsInclude = {
+      category: true,
+      stockRecords: { where: { vendorId } },
+    };
+    if (vendor.outletId) {
+      lowStockProductsInclude.outletInventories = { where: { outletId: vendor.outletId } };
+    }
+
     const [
       orderStats,
       productCount,
-      lowStockProducts,
+      allProducts,
       recentOrders,
       offlinePurchases,
       topProducts,
@@ -368,12 +439,27 @@ export const getVendorAnalytics = async (req, res) => {
         _sum: { totalAmount: true },
       }),
       // Total products
-      prisma.product.count({ where: { vendorId } }),
-      // Low stock products (stock <= 5)
+      prisma.product.count({
+        where: {
+          OR: [
+            { vendorId },
+            { stockRecords: { some: { vendorId } } },
+            vendor.outletId ? { outletInventories: { some: { outletId: vendor.outletId } } } : null,
+          ].filter(Boolean)
+        }
+      }),
+      // Get products to filter for low stock
       prisma.product.findMany({
-        where: { vendorId, stock: { lte: 5 }, status: "ACTIVE" },
-        include: { category: true },
-        orderBy: { stock: "asc" },
+        where: {
+          OR: [
+            { vendorId },
+            { stockRecords: { some: { vendorId } } },
+            vendor.outletId ? { outletInventories: { some: { outletId: vendor.outletId } } } : null,
+          ].filter(Boolean),
+          status: "ACTIVE"
+        },
+        include: lowStockProductsInclude,
+        orderBy: { updatedAt: "desc" },
       }),
       // Recent 10 orders
       prisma.order.findMany({
@@ -410,24 +496,44 @@ export const getVendorAnalytics = async (req, res) => {
       }),
     ]);
 
+    // Calculate actual stock and filter for low stock
+    const productsWithStock = allProducts.map(p => {
+      const vStock = (p.stockRecords || []).reduce((sum, sr) => sum + (sr.quantity || 0), 0);
+      const oStock = (p.outletInventories || []).reduce((sum, oi) => sum + (oi.quantity || 0), 0);
+      return { ...p, stock: vStock + oStock };
+    });
+
+    const filteredLowStock = productsWithStock.filter(p => p.stock <= 5);
+
     // Resolve product names for top products
     const topProductIds = topProducts.map((p) => p.productId).filter(Boolean);
+    const topProductInclude = {
+      category: { select: { name: true } },
+      stockRecords: { where: { vendorId } },
+    };
+    if (vendor.outletId) {
+      topProductInclude.outletInventories = { where: { outletId: vendor.outletId } };
+    }
+
     const productDetails = topProductIds.length > 0
       ? await prisma.product.findMany({
           where: { id: { in: topProductIds } },
-          select: { id: true, name: true, imageUrls: true, price: true, stock: true },
+          include: topProductInclude,
         })
       : [];
     const productMap = new Map(productDetails.map((p) => [p.id, p]));
 
     const resolvedTopProducts = topProducts.map((tp) => {
       const product = productMap.get(tp.productId);
+      const vStock = (product?.stockRecords || []).reduce((sum, sr) => sum + (sr.quantity || 0), 0);
+      const oStock = (product?.outletInventories || []).reduce((sum, oi) => sum + (oi.quantity || 0), 0);
+      
       return {
         productId: tp.productId,
         name: product?.name || "Unknown",
         image: product?.imageUrls?.[0] || null,
         price: product?.price || 0,
-        stock: product?.stock || 0,
+        stock: vStock + oStock,
         totalSold: tp._sum.quantity || 0,
         totalRevenue: tp._sum.lineTotal || 0,
       };
@@ -444,6 +550,48 @@ export const getVendorAnalytics = async (req, res) => {
       status: formatEnumOutput(e.status),
       count: e._count._all,
     }));
+
+    // Data for Revenue Chart (Daily trend for last 7 days)
+    const last7Days = new Date();
+    last7Days.setHours(0, 0, 0, 0);
+    last7Days.setDate(last7Days.getDate() - 6);
+
+    const [trendOrders, trendOffline] = await Promise.all([
+      prisma.order.findMany({
+        where: { vendorId, createdAt: { gte: last7Days } },
+        select: { createdAt: true, totalAmount: true }
+      }),
+      prisma.offlinePurchase.findMany({
+        where: { vendorId, createdAt: { gte: last7Days } },
+        select: { createdAt: true, amount: true }
+      })
+    ]);
+
+    const graphData = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(last7Days);
+      d.setDate(d.getDate() + i);
+      const dayLabel = d.toLocaleDateString("en-US", { weekday: "short" });
+      
+      const dayStart = new Date(d);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(d);
+      dayEnd.setHours(23, 59, 59, 999);
+
+      const onlineAmt = trendOrders
+        .filter(o => o.createdAt >= dayStart && o.createdAt <= dayEnd)
+        .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+      const offlineAmt = trendOffline
+        .filter(p => p.createdAt >= dayStart && p.createdAt <= dayEnd)
+        .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+      graphData.push({
+        day: dayLabel,
+        onlineAmount: onlineAmt,
+        offlineAmount: offlineAmt,
+        total: onlineAmt + offlineAmt,
+      });
+    }
 
     return sendSuccess(
       res,
@@ -463,7 +611,7 @@ export const getVendorAnalytics = async (req, res) => {
         },
         totalProducts: productCount,
         totalCustomers: customerIds.length,
-        lowStockProducts: lowStockProducts.map((p) => ({
+        lowStockProducts: filteredLowStock.map((p) => ({
           id: p.id,
           name: p.name,
           stock: p.stock,
@@ -480,6 +628,7 @@ export const getVendorAnalytics = async (req, res) => {
           createdAt: o.createdAt,
           itemCount: o.items?.length || 0,
         })),
+        graphData,
       }),
       "Vendor analytics fetched",
     );

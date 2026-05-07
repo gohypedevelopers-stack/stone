@@ -32,6 +32,7 @@ export const ProductProvider = ({ children }) => {
   const [apiProducts, setApiProducts] = useState([]);
   const [apiCoupons, setApiCoupons] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -54,25 +55,69 @@ export const ProductProvider = ({ children }) => {
       const { data: result } = await fetchJson("/products");
       
       if (result.success) {
-        // Map backend products to frontend format
-        const mapped = result.data.map(p => ({
-          ...p,
-          id: p.id,
-          image: p.imageUrls?.[0] 
-            ? getMediaUrl(p.imageUrls[0]) 
-            : 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=800&q=80',
-          imageUrls: Array.isArray(p.imageUrls) 
-            ? p.imageUrls.map(getMediaUrl) 
-            : [p.image ? getMediaUrl(p.image) : ""].filter(Boolean),
-          tag: p.bestSeller ? "Best Seller" : p.newArrival ? "New Arrival" : p.trending ? "Trending" : p.category?.name || "New",
-          category: p.category?.name || "Uncategorized",
-          brand: p.brand || "OMW Skincare",
-          rating: p.rating || 4.5,
-          reviews: p.reviews || 120,
-          inStock: p.stock > 0,
-          stock: p.stock || 0,
-        }));
-        setApiProducts(mapped);
+        // Map backend products to frontend format and filter out test/junk data
+        const mapped = result.data
+          .filter(p => {
+            const brand = (p.brand || "").toUpperCase();
+            
+            // Exclude only the known "HELLO" test brand, but allow generic names like "PRODUCT"
+            const isTestBrand = brand === "HELLO";
+            
+            return !isTestBrand;
+          })
+          .map(p => {
+            const basePrice = Number(p.price) || 0;
+            const discountPrice = Number(p.discountPrice) || 0;
+            const hasDiscount = discountPrice > 0 && discountPrice < basePrice;
+
+            return {
+              ...p,
+              id: p.id,
+              // Use discountPrice as the primary price if available, otherwise basePrice
+              price: hasDiscount ? discountPrice : basePrice,
+              // Map base price to originalPrice for UI strike-through
+              originalPrice: hasDiscount ? basePrice : 0,
+              image: p.imageUrls?.[0] 
+                ? getMediaUrl(p.imageUrls[0]) 
+                : 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=800&q=80',
+              imageUrls: Array.isArray(p.imageUrls) 
+                ? p.imageUrls.map(getMediaUrl) 
+                : [p.image ? getMediaUrl(p.image) : ""].filter(Boolean),
+              tags: Array.isArray(p.tags) ? p.tags.map(t => String(t).trim()) : (typeof p.tags === 'string' ? p.tags.split(',').map(t => t.trim()) : []),
+              tag: p.bestSeller ? "Best Seller" : p.newArrival ? "New Arrival" : p.trending ? "Trending" : p.category?.name || "New",
+              category: p.category?.name || "Rituals",
+              brand: p.brand || "OMW Skincare",
+              rating: p.rating || 4.5,
+              reviews: p.reviews || 120,
+              inStock: p.stock > 0,
+              stock: p.stock || 0,
+            };
+          });
+        // Deduplicate by Name & Brand to prevent multiple cards for the same product
+        const deduplicated = Object.values(
+          mapped.reduce((acc, p) => {
+            const key = `${p.brand || ""}-${p.name}`
+              .toLowerCase()
+              .replace(/\s+/g, " ")
+              .trim();
+            if (!acc[key]) {
+              acc[key] = { ...p };
+            } else {
+              // Aggregate stock and merge stock records
+              acc[key].stock = (acc[key].stock || 0) + (p.stock || 0);
+              acc[key].inStock = acc[key].stock > 0;
+              if (p.stockRecords) {
+                acc[key].stockRecords = [
+                  ...(acc[key].stockRecords || []),
+                  ...p.stockRecords,
+                ];
+              }
+            }
+            return acc;
+          }, {}),
+        );
+
+        setApiProducts(deduplicated);
       } else {
         setError(result.message);
       }
@@ -120,31 +165,70 @@ export const ProductProvider = ({ children }) => {
     }
   }, []);
 
+  const fetchSections = useCallback(async () => {
+    try {
+      const { data } = await fetchJson("/admin/homepage/sections");
+      if (data.success) {
+        setSections(data.data || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch sections:", err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchProducts();
     fetchCoupons();
     fetchCategories();
-  }, [fetchProducts, fetchCoupons, fetchCategories]);
+    fetchSections();
+  }, [fetchProducts, fetchCoupons, fetchCategories, fetchSections]);
 
-
-  // Merge static products with API products
   const allProducts = useMemo(() => {
-    // Rely only on API products
-    return apiProducts;
-  }, [apiProducts]);
+    // Include custom products from origins
+    const customProductsFromOrigins = sections.reduce((acc, section) => {
+      if (section.componentId === "shop-by-origin" && section.settings?.origins) {
+        section.settings.origins.forEach(origin => {
+          if (origin.customProducts && origin.customProducts.length > 0) {
+            const mapped = origin.customProducts.map(cp => ({
+              ...cp,
+              id: cp.id,
+              origin: origin.name,
+              // Map custom fields to expected product schema
+              image: cp.image || (cp.imageUrls && cp.imageUrls[0]) || "",
+              imageUrls: cp.imageUrls || [cp.image].filter(Boolean),
+              tag: cp.tag || origin.name,
+              category: cp.category || "Rituals",
+              brand: cp.brand || "OMW Choice",
+              // Pricing Logic
+              price: cp.discountPrice && Number(cp.discountPrice) < Number(cp.price) ? Number(cp.discountPrice) : Number(cp.price) || 0,
+              originalPrice: cp.discountPrice && Number(cp.discountPrice) < Number(cp.price) ? Number(cp.price) : 0,
+              mrp: Number(cp.price) || 0,
+              discountPrice: Number(cp.discountPrice) || null,
+              stock: Number(cp.stock) || 0,
+              inStock: Number(cp.stock) > 0,
+              isCustom: true
+            }));
+            acc.push(...mapped);
+          }
+        });
+      }
+      return acc;
+    }, []);
 
-
+    return [...apiProducts, ...customProductsFromOrigins];
+  }, [apiProducts, sections]);
 
   const value = useMemo(() => ({
     products: allProducts,
     apiProducts,
+    sections,
     dynamicCategories,
     categories,
     apiCoupons,
     loading,
     error,
-    refreshProducts: () => { fetchProducts(); fetchCoupons(); fetchCategories(); }
-  }), [allProducts, apiProducts, dynamicCategories, categories, apiCoupons, loading, error, fetchProducts, fetchCoupons, fetchCategories]);
+    refreshProducts: () => { fetchProducts(); fetchCoupons(); fetchCategories(); fetchSections(); }
+  }), [allProducts, apiProducts, sections, dynamicCategories, categories, apiCoupons, loading, error, fetchProducts, fetchCoupons, fetchCategories, fetchSections]);
 
 
   return (

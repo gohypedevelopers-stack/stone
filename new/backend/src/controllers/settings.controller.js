@@ -4,9 +4,10 @@ import { sendError, sendSuccess } from "../utils/http.js";
 const POINTS_DEFAULTS = {
   reward_points_per_amount: "2",
   reward_amount_threshold: "100",
+  platform_commission_rate: "0.15",
 };
 
-async function getSetting(key) {
+export async function getSetting(key) {
   const setting = await prisma.setting.findUnique({ where: { key } });
   return setting?.value ?? POINTS_DEFAULTS[key] ?? null;
 }

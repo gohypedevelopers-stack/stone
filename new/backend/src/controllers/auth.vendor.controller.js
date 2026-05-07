@@ -62,6 +62,7 @@ export const loginVendor = async (req, res) => {
 
     const vendor = await prisma.vendor.findUnique({
       where: { email },
+      include: { outlet: true },
     });
 
     if (!vendor) {
@@ -103,6 +104,7 @@ export const getVendorProfile = async (req, res) => {
 
     const vendor = await prisma.vendor.findUnique({
       where: { id: vendorId },
+      include: { outlet: true },
     });
 
     if (!vendor) {

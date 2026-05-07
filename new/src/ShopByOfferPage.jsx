@@ -1,89 +1,43 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import ProductCard from "./components/card";
 import { useProducts } from "./context/ProductContext";
 import { SparklesText } from "./components/ui/sparkles-text";
+import { resolveImage } from "./utils/urlHelper";
 import { ShieldCheck, RotateCcw, Lock, Clock, Flame, Tag, X, ChevronDown, Check, MousePointerClick, ShoppingBag, Gift, Wallet, TrendingUp, Filter, Package, Layers, Plus, Zap, Calendar, Siren, Stars, Hourglass, AlertCircle, Timer } from "lucide-react";
 
 function formatINR(amount) {
     return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(amount);
 }
 
-const OFFERS = [
-    {
-        id: "for-you",
-        label: "For You",
-        sub: "Curated picks for you",
-        badge: "Special",
-        gradient: "linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)",
-    },
-    {
-        id: "price-crash",
-        label: "Price Crash",
-        sub: "Massive savings today",
-        badge: "Hot",
-        gradient: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
-    },
-    {
-        id: "summer-specials",
-        label: "Summer Specials",
-        sub: "Stay fresh this season",
-        gradient: "linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)",
-    },
-    {
-        id: "min-60-off",
-        label: "Min 60% Off",
-        sub: "Deepest discounts ever",
-        badge: "Value",
-        gradient: "linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)",
-    },
-    {
-        id: "whats-new",
-        label: "What's New",
-        sub: "Latest arrivals",
-        badge: "New",
-        gradient: "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)",
-    },
-    {
-        id: "bogo",
-        label: "Buy 1 Get 1",
-        sub: "Double the beauty",
-        badge: "Limited",
-        gradient: "linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)",
-    },
-    {
-        id: "combo-deals",
-        label: "Combo Deals",
-        sub: "Complete routine bundles",
-        badge: "Bundle",
-        gradient: "linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)",
-    },
-    {
-        id: "weekend-specials",
-        label: "Weekend Specials",
-        sub: "Flash sale live now",
-        gradient: "linear-gradient(135deg, #FF9A8B 0%, #FF6A88 55%, #FF99AC 100%)",
-    },
-];
-
-const FAQS = [
-    {
-        q: "How do I apply the Buy 1 Get 1 offer?",
-        a: "Simply add two eligible products from the BOGO collection to your cart. The lower-priced item will automatically be free at checkout.",
-    },
-    {
-        q: "Can I combine multiple offers?",
-        a: "Generally, only one promotional code or automatic offer applies per order, unless specified otherwise (e.g., free shipping + discount).",
-    },
-    {
-        q: "Are the products authentic?",
-        a: "Yes! 100% of our products are sourced directly from brands or authorized distributors. We guarantee authenticity.",
-    },
-];
-
 export default function ShopByOfferPage({ initialOffer = "for-you", addToCart }) {
     const navigate = useNavigate();
-    const { products: allProducts } = useProducts();
+    const { products: allProducts, sections } = useProducts();
+    
+    // Dynamically derive OFFERS and FAQS from homepage sections if available
+    const offerSection = sections.find(s => s.componentId === 'shop-by-offer');
+    
+    const OFFERS = (offerSection?.settings?.offers?.length > 0) 
+        ? offerSection.settings.offers 
+        : [
+            { id: "for-you", label: "For You", sub: "Curated picks for you", badge: "Special", gradient: "linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)" },
+            { id: "price-crash", label: "Price Crash", sub: "Massive savings today", badge: "Hot", gradient: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)" },
+            { id: "summer-specials", label: "Summer Specials", sub: "Stay fresh this season", gradient: "linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)" },
+            { id: "min-60-off", label: "Min 60% Off", sub: "Deepest discounts ever", badge: "Value", gradient: "linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)" },
+            { id: "whats-new", label: "What's New", sub: "Latest arrivals", badge: "New", gradient: "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)" },
+            { id: "bogo", label: "Buy 1 Get 1", sub: "Double the beauty", badge: "Limited", gradient: "linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)" },
+            { id: "combo-deals", label: "Combo Deals", sub: "Complete routine bundles", badge: "Bundle", gradient: "linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)" },
+            { id: "weekend-specials", label: "Weekend Specials", sub: "Flash sale live now", gradient: "linear-gradient(135deg, #FF9A8B 0%, #FF6A88 55%, #FF99AC 100%)" }
+        ];
+
+    const FAQS = (offerSection?.settings?.faqs?.length > 0)
+        ? offerSection.settings.faqs
+        : [
+            { q: "How do I apply the Buy 1 Get 1 offer?", a: "Simply add two eligible products from the BOGO collection to your cart. The lower-priced item will automatically be free at checkout." },
+            { q: "Can I combine multiple offers?", a: "Generally, only one promotional code or automatic offer applies per order, unless specified otherwise (e.g., free shipping + discount)." },
+            { q: "Are the products authentic?", a: "Yes! 100% of our products are sourced directly from brands or authorized distributors. We guarantee authenticity." }
+        ];
+
     const [selectedOfferId, setSelectedOfferId] = useState(initialOffer);
     const [sortBy, setSortBy] = useState("recommended");
 
@@ -108,9 +62,9 @@ export default function ShopByOfferPage({ initialOffer = "for-you", addToCart })
         if (selectedOfferId === "for-you") {
             list = list.filter(p => p.featured);
         } else if (selectedOfferId === "price-crash") {
-            list = list.filter(p => p.discounted || p.discountPrice);
+            list = list.filter(p => (Number(p.originalPrice) > Number(p.price)) || p.discounted || p.discountPrice);
         } else if (selectedOfferId === "whats-new") {
-            list = list.filter(p => p.newArrival);
+            list = list.filter(p => p.newArrival === true || p.newArrival === "true" || p.tag === "New Arrival" || (p.tags && p.tags.some(t => String(t).toLowerCase().includes('new'))));
         } else if (selectedOfferId === "bogo") {
             list = list.filter(p => p.specialOfferType?.toLowerCase() === "bogo");
         } else if (selectedOfferId === "combo-deals") {
@@ -119,11 +73,13 @@ export default function ShopByOfferPage({ initialOffer = "for-you", addToCart })
             list = list.filter(p => p.specialOfferType?.toLowerCase().includes("summer"));
         } else if (selectedOfferId === "min-60-off") {
             list = list.filter(p => {
-                if (p.price && p.discountPrice) {
-                    const discount = ((Number(p.price) - Number(p.discountPrice)) / Number(p.price)) * 100;
+                const mrp = Number(p.originalPrice) || Number(p.mrp) || 0;
+                const price = Number(p.price) || 0;
+                if (mrp > price) {
+                    const discount = ((mrp - price) / mrp) * 100;
                     return discount >= 60;
                 }
-                return p.price <= 499; // Fallback for "Budget"
+                return price <= 499; // Fallback for "Budget"
             });
         } else if (selectedOfferId === "weekend-specials") {
             list = list.filter(p => p.specialOfferType?.toLowerCase() === "weekend");
@@ -144,58 +100,40 @@ export default function ShopByOfferPage({ initialOffer = "for-you", addToCart })
 
     // --- Price Crash (formerly Flat 20%) Specific Layout ---
     if (selectedOfferId === "price-crash" || selectedOfferId === "flat-20") {
-        const displayProducts = filteredProducts.map(p => ({
-            ...p,
-            salePrice: p.discountPrice || Math.floor(Number(p.price) * 0.8),
-            savings: p.discountPrice ? (Number(p.price) - Number(p.discountPrice)) : Math.floor(Number(p.price) * 0.2)
-        }));
+        const displayProducts = filteredProducts.map(p => {
+            const price = Number(p.price) || 0;
+            const originalPrice = Number(p.originalPrice) || Number(p.mrp) || price;
+            return {
+                ...p,
+                salePrice: price,
+                savings: originalPrice > price ? (originalPrice - price) : 0
+            };
+        }).filter(p => p.savings > 0);
 
-        // Mock countdown
-        const [timeLeft, setTimeLeft] = useState({ h: 12, m: 30, s: 45 });
+
+
+        const scrollRef = useRef(null);
+
+        const scroll = (direction) => {
+            if (scrollRef.current) {
+                const { scrollLeft, clientWidth } = scrollRef.current;
+                const scrollTo = direction === 'left' ? scrollLeft - clientWidth : scrollLeft + clientWidth;
+                scrollRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
+            }
+        };
 
         return (
             <div className="min-h-screen bg-[#faf9f8] font-sans text-[#1b1b1b]">
-                {/* Hero Section */}
-                <div className="relative overflow-hidden bg-[linear-gradient(135deg,#fff0f5,#e6e6fa,#ffe4e1)] py-8 px-6 text-center">
-                    <div className="relative z-10 max-w-4xl mx-auto">
-                        <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase mb-6 shadow-sm text-pink-600 border border-pink-100">
-                            <Flame size={14} fill="currentColor" /> Sitewide Savings
-                        </div>
-                        <h1 className="text-5xl md:text-7xl font-bold mb-4 tracking-tight text-[#1b1b1b]">
-                            Flat 20% Off
-                        </h1>
-                        <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-2xl mx-auto font-light leading-relaxed">
-                            Enjoy instant savings on skincare & makeup essentials. No code required.
-                        </p>
-
-                        {/* Countdown / Urgency */}
-                        <div className="inline-flex items-center gap-6 bg-white px-8 py-4 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.06)]">
-                            <div className="text-left">
-                                <div className="text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-1">Offer Ends In</div>
-                                <div className="flex items-center gap-2 font-mono text-xl font-bold text-brand1">
-                                    <Clock size={20} className="text-pink-500" />
-                                    <span>{timeLeft.h}h : {timeLeft.m}m : {timeLeft.s}s</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {/* Decorative Elements */}
-                    <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                        <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-pink-300/20 rounded-full blur-[120px]" />
-                        <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-purple-300/20 rounded-full blur-[120px]" />
-                    </div>
-                </div>
-
                 {/* Sticky Offer Bar */}
-                <div className="sticky top-[96px] z-40 bg-white/90 backdrop-blur-xl border-y border-gray-100 shadow-sm transition-all duration-300">
-                    <div className="max-w-[1720px] mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <div className="hidden md:flex items-center gap-2 text-sm font-medium text-gray-900 bg-green-50 px-3 py-1 rounded-full border border-green-100">
-                                <Check size={14} className="text-green-600" />
-                                Discount Applied
+                <div className="sticky top-[96px] z-40 bg-white/90 backdrop-blur-xl border-y border-stone-100 shadow-sm transition-all duration-300">
+                    <div className="max-w-[1720px] mx-auto px-4 md:px-8 h-20 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2 text-sm font-black text-stone-900 bg-pink-50 px-4 py-2 rounded-full border border-pink-100">
+                                <Check size={14} className="text-pink-600" />
+                                <span className="uppercase tracking-widest text-[10px]">Price Crash Applied</span>
                             </div>
-                            <span className="text-sm text-gray-500">
-                                You’re viewing <strong className="text-gray-900">{displayProducts.length}</strong> eligible products
+                            <span className="hidden md:block text-sm text-stone-400 font-medium">
+                                <strong className="text-stone-900">{displayProducts.length}</strong> products matching this offer
                             </span>
                         </div>
 
@@ -212,55 +150,18 @@ export default function ShopByOfferPage({ initialOffer = "for-you", addToCart })
                                 </select>
                                 <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
                             </div>
-                            <button
-                                onClick={() => setSelectedOfferId(null)} // Or go back to all offers
-                                className="text-sm font-medium text-gray-500 hover:text-red-500 transition-colors underline decoration-transparent hover:decoration-current"
-                            >
-                                View All Offers
-                            </button>
+
                         </div>
                     </div>
                 </div>
 
                 <div className="max-w-[1720px] mx-auto px-4 md:px-8 py-12 space-y-16">
 
-                    {/* Featured Deals */}
-                    <section>
-                        <h2 className="flex items-center gap-2 text-2xl font-bold mb-8">
-                            <Tag className="text-pink-500" /> Featured High-Value Picks
-                        </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {displayProducts.slice(0, 3).map((p) => (
-                                <div key={p.id} className="relative group bg-white rounded-3xl p-6 border border-gray-100 shadow-[0_8px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-300">
-                                    <div className="flex gap-6">
-                                        <div className="w-1/3 aspect-square bg-gray-50 rounded-2xl overflow-hidden p-2">
-                                            <img src={p.image} alt={p.name} className="w-full h-full object-contain mix-blend-multiply" />
-                                        </div>
-                                        <div className="flex-1 flex flex-col justify-center">
-                                            <div className="text-xs font-bold text-red-500 uppercase tracking-wider mb-1">Save {formatINR(p.savings)}</div>
-                                            <h3 className="font-bold text-lg leading-tight mb-2 line-clamp-2">{p.name}</h3>
-                                            <div className="flex items-baseline gap-2 mb-4">
-                                                <span className="text-2xl font-bold text-pink-600">{formatINR(p.salePrice)}</span>
-                                                <span className="text-sm text-gray-400 line-through">{formatINR(p.price)}</span>
-                                            </div>
-                                            <button
-                                                onClick={() => addToCart(p)}
-                                                className="w-full bg-[#1b1b1b] text-white py-3 rounded-xl text-sm font-bold hover:bg-black transition-colors shadow-lg shadow-black/10"
-                                            >
-                                                Add to Cart
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
+
 
                     {/* Main Grid */}
                     <section>
-                        <h2 className="text-2xl font-bold mb-8">Shop All 20% Off</h2>
-                        {/* Using the same grid denseness as requested previously */}
-                        <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-x-4 gap-y-10">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-16">
                             {displayProducts.map((p) => (
                                 <ProductCard
                                     key={p.id}
@@ -277,43 +178,73 @@ export default function ShopByOfferPage({ initialOffer = "for-you", addToCart })
                         </div>
                     </section>
 
-                    {/* Trust Elements */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-12 border-t border-gray-100 mt-12">
-                        <div className="flex flex-col items-center text-center gap-3 p-6 bg-blue-50/50 rounded-2xl">
-                            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-                                <ShieldCheck size={24} />
+                    {/* Trust Bar */}
+                    <div className="max-w-5xl mx-auto py-12 px-8 bg-white border border-stone-100 rounded-[2rem] shadow-[0_10px_30px_rgba(0,0,0,0.02)] mt-16">
+                        <div className="flex flex-col md:flex-row items-center justify-around gap-8 md:gap-4">
+                            <div className="flex items-center gap-4 group">
+                                <div className="w-14 h-14 bg-stone-50 rounded-2xl flex items-center justify-center text-stone-900 group-hover:bg-stone-900 group-hover:text-white transition-all duration-300">
+                                    <ShieldCheck size={24} strokeWidth={2} />
+                                </div>
+                                <div>
+                                    <h3 className="font-black text-xs uppercase tracking-widest text-stone-900">100% Authentic</h3>
+                                    <p className="text-[10px] text-stone-400 font-bold uppercase tracking-wider mt-0.5">Verified Brands</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="font-bold text-sm">100% Authentic Listings</h3>
-                                <p className="text-xs text-gray-500 mt-1">Sourced directly from verified brands</p>
+
+                            <div className="hidden md:block w-px h-10 bg-stone-100"></div>
+
+                            <div className="flex items-center gap-4 group">
+                                <div className="w-14 h-14 bg-stone-50 rounded-2xl flex items-center justify-center text-stone-900 group-hover:bg-stone-900 group-hover:text-white transition-all duration-300">
+                                    <RotateCcw size={24} strokeWidth={2} />
+                                </div>
+                                <div>
+                                    <h3 className="font-black text-xs uppercase tracking-widest text-stone-900">Easy Returns</h3>
+                                    <p className="text-[10px] text-stone-400 font-bold uppercase tracking-wider mt-0.5">30-Day Policy</p>
+                                </div>
                             </div>
-                        </div>
-                        <div className="flex flex-col items-center text-center gap-3 p-6 bg-pink-50/50 rounded-2xl">
-                            <div className="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center text-pink-600">
-                                <RotateCcw size={24} />
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-sm">Easy Returns</h3>
-                                <p className="text-xs text-gray-500 mt-1">Hassle-free 30-day return policy</p>
-                            </div>
-                        </div>
-                        <div className="flex flex-col items-center text-center gap-3 p-6 bg-green-50/50 rounded-2xl">
-                            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600">
-                                <Lock size={24} />
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-sm">Secure Payments</h3>
-                                <p className="text-xs text-gray-500 mt-1">Encrypted SSL checkout protection</p>
+
+                            <div className="hidden md:block w-px h-10 bg-stone-100"></div>
+
+                            <div className="flex items-center gap-4 group">
+                                <div className="w-14 h-14 bg-stone-50 rounded-2xl flex items-center justify-center text-stone-900 group-hover:bg-stone-900 group-hover:text-white transition-all duration-300">
+                                    <Lock size={24} strokeWidth={2} />
+                                </div>
+                                <div>
+                                    <h3 className="font-black text-xs uppercase tracking-widest text-stone-900">Secure Pay</h3>
+                                    <p className="text-[10px] text-stone-400 font-bold uppercase tracking-wider mt-0.5">SSL Protected</p>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Recommendations Carousel (Generic reuse for now) */}
-                    <section>
-                        <h3 className="text-xl font-bold mb-6">Pair with These Offers</h3>
-                        <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-                            {allProducts.slice(8, 14).map(p => (
-                                <div key={p.id} className="min-w-[160px] w-[160px]">
+                    {/* Recommendations Carousel */}
+                    <section className="bg-white rounded-[3rem] p-8 md:p-12 border border-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.02)]">
+                        <div className="flex items-center justify-between mb-10">
+                            <div>
+                                <h3 className="text-2xl md:text-3xl font-black text-stone-900 uppercase tracking-tighter">Recommended For You</h3>
+                                <p className="text-sm text-stone-400 font-medium mt-1">Complete your ritual with these essentials</p>
+                            </div>
+                            <div className="hidden md:flex gap-2">
+                                <button 
+                                    onClick={() => scroll('left')}
+                                    className="w-10 h-10 rounded-full border border-stone-100 flex items-center justify-center text-stone-400 hover:text-stone-900 hover:border-stone-900 transition-all"
+                                >
+                                    <ChevronDown className="rotate-90" size={20} />
+                                </button>
+                                <button 
+                                    onClick={() => scroll('right')}
+                                    className="w-10 h-10 rounded-full border border-stone-100 flex items-center justify-center text-stone-400 hover:text-stone-900 hover:border-stone-900 transition-all"
+                                >
+                                    <ChevronDown className="-rotate-90" size={20} />
+                                </button>
+                            </div>
+                        </div>
+                        <div 
+                            ref={scrollRef}
+                            className="flex gap-6 overflow-x-auto pb-6 no-scrollbar snap-x scroll-smooth"
+                        >
+                            {allProducts.slice(8, 16).map(p => (
+                                <div key={p.id} className="min-w-[280px] md:min-w-[320px] snap-start">
                                     <ProductCard
                                         product={p}
                                         onAddToCart={() => addToCart(p)}
@@ -487,24 +418,26 @@ export default function ShopByOfferPage({ initialOffer = "for-you", addToCart })
             </div>
         );
     }
-
     // --- Min 60% Off / Under 499 Specific Layout ---
     if (selectedOfferId === "min-60-off" || selectedOfferId === "under-499") {
         const displayProducts = filteredProducts;
+        const isSixtyOff = selectedOfferId === "min-60-off";
 
         return (
             <div className="min-h-screen bg-[#f8f9fa] font-sans text-[#1b1b1b]">
                 {/* Hero Section */}
-                <div className="relative overflow-hidden bg-[linear-gradient(120deg,#e0c3fc_0%,#8ec5fc_100%)] py-16 px-6 text-center">
+                <div className={`relative overflow-hidden py-16 px-6 text-center ${isSixtyOff ? "bg-[linear-gradient(120deg,#84fab0_0%,#8fd3f4_100%)]" : "bg-[linear-gradient(120deg,#e0c3fc_0%,#8ec5fc_100%)]"}`}>
                     <div className="relative z-10 max-w-4xl mx-auto">
                         <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase mb-6 text-white border border-white/30 shadow-sm">
-                            <Wallet size={14} /> Budget Friendly
+                            {isSixtyOff ? <Zap size={14} /> : <Wallet size={14} />} {isSixtyOff ? "Value Deals" : "Budget Friendly"}
                         </div>
-                        <h1 className="text-5xl md:text-7xl font-bold mb-4 tracking-tight text-white drop-shadow-sm">
-                            Under ₹499
+                        <h1 className="text-5xl md:text-7xl font-bold mb-4 tracking-tight text-white drop-shadow-sm uppercase">
+                            {isSixtyOff ? "Min 60% Off" : "Under ₹499"}
                         </h1>
                         <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto font-medium leading-relaxed">
-                            Budget-friendly beauty essentials you’ll love. Great finds without stretching your wallet.
+                            {isSixtyOff 
+                                ? "Deepest discounts on top beauty brands. Grab these massive savings before they're gone!" 
+                                : "Budget-friendly beauty essentials you’ll love. Great finds without stretching your wallet."}
                         </p>
                     </div>
                     {/* Decorative Elements */}
@@ -551,17 +484,17 @@ export default function ShopByOfferPage({ initialOffer = "for-you", addToCart })
                 </div>
 
                 <div className="max-w-[1720px] mx-auto px-4 md:px-8 py-12 space-y-16">
-
-                    {/* Top Picks Under 499 */}
+                    {/* Top Picks Section */}
                     <section>
                         <h2 className="flex items-center gap-2 text-2xl font-bold mb-8">
-                            <TrendingUp className="text-blue-500" /> Top Picks Under ₹499
+                            <TrendingUp className={isSixtyOff ? "text-green-500" : "text-blue-500"} /> 
+                            {isSixtyOff ? "Steal Deals: 60% & Above" : "Top Picks Under ₹499"}
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {displayProducts.slice(0, 3).map((p) => (
                                 <div key={p.id} className="relative group bg-white rounded-3xl p-6 border border-gray-100 shadow-[0_8px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-300">
-                                    <div className="absolute top-4 left-4 z-10 bg-blue-100 text-blue-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                                        Great Value
+                                    <div className={`absolute top-4 left-4 z-10 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider ${isSixtyOff ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}>
+                                        {isSixtyOff ? "Mega Discount" : "Great Value"}
                                     </div>
                                     <div className="flex gap-6">
                                         <div className="w-1/3 aspect-square bg-gray-50 rounded-2xl overflow-hidden p-2">

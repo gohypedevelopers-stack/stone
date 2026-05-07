@@ -1,21 +1,41 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { MapPin, ChevronRight, ExternalLink, Navigation } from "lucide-react";
 
 export default function OfflineStore() {
-   const stores = [
-      {
-         name: "Ontario Mills Boutique",
-         address: "1 Mills Cir. Ste 503A. Ontario, CA 91764. Located at Ontario Mills",
-         active: true,
-         distance: "1.2 km away"
-      },
-      {
-         name: "Outlets at Orange – Coming Soon",
-         address: "20 City Blvd W, Orange, CA 92868, United States",
-         active: false,
-         distance: null
-      }
-   ];
+   const [stores, setStores] = useState(() => {
+      const saved = localStorage.getItem("omw_offline_stores");
+      if (saved) return JSON.parse(saved);
+      return [
+         {
+            name: "Ontario Mills Boutique",
+            address: "1 Mills Cir. Ste 503A. Ontario, CA 91764. Located at Ontario Mills",
+            active: true,
+            distance: "1.2 km away"
+         },
+         {
+            name: "Outlets at Orange – Coming Soon",
+            address: "20 City Blvd W, Orange, CA 92868, United States",
+            active: false,
+            distance: null
+         }
+      ];
+   });
+
+   useEffect(() => {
+      const handleStorageChange = () => {
+         const saved = localStorage.getItem("omw_offline_stores");
+         if (saved) setStores(JSON.parse(saved));
+      };
+
+      window.addEventListener('storage', handleStorageChange);
+      // Also listen for custom events if admin is on the same tab (unlikely but good for dev)
+      window.addEventListener('omw_offline_stores_updated', handleStorageChange);
+      
+      return () => {
+         window.removeEventListener('storage', handleStorageChange);
+         window.removeEventListener('omw_offline_stores_updated', handleStorageChange);
+      };
+   }, []);
 
    return (
       <section className="section py-24 bg-[#F8F9FA]">

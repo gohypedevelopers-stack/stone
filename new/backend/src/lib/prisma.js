@@ -1,11 +1,11 @@
-import "dotenv/config"; // Schema Heartbeat: Updated specialOfferType
+import "dotenv/config"; // Schema Heartbeat: Added origin field support
 import { PrismaPg } from "@prisma/adapter-pg";
 import pkg from "@prisma/client";
 const { PrismaClient } = pkg;
 import pg from "pg";
 
 const globalForPrisma = globalThis;
-const connectionString = process.env.DATABASE_URL;
+const connectionString = process.env.DATABASE_URL?.replace(/^["']|["']$/g, "");
 
 const pool = new pg.Pool({
   connectionString,

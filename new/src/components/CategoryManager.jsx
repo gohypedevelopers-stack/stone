@@ -64,9 +64,10 @@ const CategoryRow = memo(({ cat, onToggleStatus, onEdit, onDelete, canDrag }) =>
         zIndex: 50
       }}
       className={cn(
-        "group flex items-center border-b border-stone-100 bg-white will-change-transform",
+        "group flex items-center border-b border-stone-100 bg-white hover:bg-stone-50/60 transition-all will-change-transform",
         !cat.isActive && "opacity-60 bg-stone-50/20"
       )}
+      style={{ contain: "layout paint" }}
     >
       <div className="pl-4 py-4 w-12 flex-shrink-0 text-center">
         {canDrag ? (
@@ -122,7 +123,7 @@ const CategoryRow = memo(({ cat, onToggleStatus, onEdit, onDelete, canDrag }) =>
       </div>
 
       <div className="px-4 py-3 w-32 flex-shrink-0 text-right">
-        <div className="flex justify-end gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex justify-end gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
           <Button 
             variant="ghost" 
             size="icon" 
@@ -416,78 +417,14 @@ export default function CategoryManager() {
                 className="relative"
               >
                   {filteredCategories.map((cat) => (
-                    <Reorder.Item 
-                      key={cat.id} 
-                      value={cat} 
-                      as="div"
-                      className={cn(
-                        "group hover:bg-stone-50/60 border-b border-stone-100 transition-all flex items-center",
-                        !cat.isActive && "opacity-60 bg-stone-50/20"
-                      )}
-                    >
-                      <div className="pl-4 py-3 w-12 text-center flex-shrink-0">
-                        <GripVertical className="h-4 w-4 text-stone-300 group-hover:text-stone-400 cursor-grab active:cursor-grabbing mx-auto" />
-                      </div>
-                      <div className="px-4 py-3 flex-shrink-0">
-                        <div className="h-11 w-11 rounded-[5px] overflow-hidden border border-stone-200 bg-stone-100 shadow-sm ring-2 ring-white ring-offset-0 transition-transform group-hover:scale-105 flex items-center justify-center">
-                          {cat.imageUrl || CATEGORY_IMAGES[cat.name] ? (
-                            <img 
-                              src={cat.imageUrl || CATEGORY_IMAGES[cat.name] || categorySphere} 
-                              alt={cat.name} 
-                              className="h-full w-full object-cover" 
-                            />
-                          ) : (
-                            <div className={cn(
-                              "h-full w-full flex items-center justify-center font-black text-sm transition-colors",
-                              getBackgroundColor(cat.name)
-                            )}>
-                              {getInitial(cat.name)}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="px-4 py-3 flex-1 min-w-0">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-stone-950 text-sm">{cat.name}</span>
-                          <span className="text-[10px] font-mono text-stone-400 tracking-tight">/{cat.slug}</span>
-                        </div>
-                      </div>
-                      <div className="px-4 py-3 w-32 flex-shrink-0">
-                        <div className="flex items-center gap-2.5">
-                          <Switch 
-                            checked={cat.isActive} 
-                            onCheckedChange={() => toggleStatus(cat)}
-                            className="scale-90"
-                          />
-                          <span className={cn(
-                            "text-[10px] font-bold uppercase tracking-tight",
-                            cat.isActive ? "text-stone-900" : "text-stone-400"
-                          )}>
-                            {cat.isActive ? "Active" : "Hidden"}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="px-4 py-3 w-32 flex-shrink-0 text-right">
-                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-[5px]"
-                            onClick={() => openEditDialog(cat)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-stone-400 hover:text-pink-600 hover:bg-pink-50 rounded-[5px]"
-                            onClick={() => handleDelete(cat.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </Reorder.Item>
+                    <CategoryRow 
+                      key={cat.id}
+                      cat={cat}
+                      onToggleStatus={toggleStatus}
+                      onEdit={openEditDialog}
+                      onDelete={handleDelete}
+                      canDrag={!searchQuery}
+                    />
                   ))}
               </Reorder.Group>
             )}

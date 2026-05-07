@@ -35,7 +35,8 @@ import {
   ArrowLeft, 
   Layout,
   Search,
-  ChevronRight
+  ChevronRight,
+  Globe
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { motion, AnimatePresence } from "framer-motion";
@@ -64,6 +65,8 @@ import NewArrivalsSection from "../NewArrivalsSection.jsx";
 import LimitedOfferBanner from "../LimitedOfferBanner.jsx";
 import RequestProductSection from "../RequestProductSection.jsx";
 import PreOrderSection from "../PreOrderSection.jsx";
+import PromotionalBanner from "../PromotionalBanner.jsx";
+import ShopByOrigin from "../ShopByOrigin.jsx";
 import { THEME } from "../theme.js";
 import { API_URL, SERVER_URL } from "@/utils/api";
 
@@ -76,6 +79,8 @@ const getSectionIcon = (id) => {
   if (id === 'shop-by-brand') return <Star className="h-5 w-5" />;
   if (id === 'watch-and-shop') return <PlaySquare className="h-5 w-5" />;
   if (id === 'shop-by-offer') return <Tag className="h-5 w-5" />;
+  if (id === 'promotional-banner') return <LayoutTemplate className="h-5 w-5" />;
+  if (id === 'shop-by-origin') return <Globe className="h-5 w-5" />;
   return <Sparkles className="h-5 w-5" />;
 };
 
@@ -248,6 +253,14 @@ export function HomepageManager({ openComponentId }) {
     if (section.componentId === 'shop-by-category' && (!initialSettings.categories || initialSettings.categories.length === 0)) {
       initialSettings.categories = [...DEFAULT_CATEGORY_DATA];
     }
+    if (section.componentId === 'promotional-banner') {
+      if (!initialSettings.title) initialSettings.title = "Popular Sun Protection & Hydration";
+      if (!initialSettings.subtitle) initialSettings.subtitle = "Trusted SPF for your fun in the sun";
+      if (!initialSettings.products) initialSettings.products = [];
+    }
+    if (section.componentId === 'shop-by-origin' && (!initialSettings.origins || initialSettings.origins.length === 0)) {
+      initialSettings.origins = [];
+    }
 
     setDraftSettings(initialSettings);
     setSettingsOpen(true);
@@ -389,6 +402,21 @@ export function HomepageManager({ openComponentId }) {
             });
             return <UpcomingDrops onNavigate={noop} title={draftTitle} products={dropProducts} />;
           })()}
+          {componentId === "promotional-banner" && (
+            <PromotionalBanner 
+              title={draftTitle || draftSettings?.title} 
+              subtitle={draftSettings?.subtitle} 
+              products={draftSettings?.products || []} 
+              bgColor={draftSettings?.bgColor}
+            />
+          )}
+          {componentId === "shop-by-origin" && (
+            <ShopByOrigin 
+               settings={draftSettings}
+               isAdmin={true}
+               products={allProducts}
+            />
+          )}
         </div>
       </div>
     );
@@ -405,6 +433,32 @@ export function HomepageManager({ openComponentId }) {
         <p className="text-[10px] text-zinc-400">This updates the global title for this module block.</p>
       </div>
     );
+
+    if (cid === 'shop-by-origin') {
+      return (
+        <div className="space-y-6">
+          <div className="p-8 bg-emerald-50 border border-emerald-100 rounded-[2px] text-center space-y-4">
+             <Globe className="h-12 w-12 text-emerald-500 mx-auto" />
+             <h3 className="font-black text-stone-900 uppercase tracking-tighter">Region Management Protocol</h3>
+             <p className="text-xs text-stone-500 max-w-sm mx-auto">
+                Regional rituals and Origin hubs are managed in a dedicated interface for better precision and product mapping.
+             </p>
+             <Button 
+                onClick={() => {
+                   setSettingsOpen(false);
+                   // We assume the AdminDashboard handles the view change via a prop or custom event
+                   // Since we can't easily change activeView from here without a shared parent state,
+                   // we'll provide a direct link if possible, or just instruct the user.
+                   window.dispatchEvent(new CustomEvent('changeAdminView', { detail: 'shop-by-origin' }));
+                }}
+                className="bg-[#151515] text-white hover:bg-black rounded-[2px] font-black uppercase tracking-widest text-[10px] px-8 h-12"
+             >
+                Open Regional Hub Manager
+             </Button>
+          </div>
+        </div>
+      );
+    }
 
     if (cid === 'hero-slider') {
       const slides = draftSettings.slides || [];
@@ -1283,43 +1337,10 @@ export function HomepageManager({ openComponentId }) {
       );
     }
 
-    if (cid === 'shop-by-brand') {
-      // ALWAYS build the full brand list from ALL sources, applying saved overrides
-      const savedBrands = (draftSettings.brands || []).map(b =>
-        typeof b === 'string' ? { name: b, logo: '' } : b
-      );
+    if (cid === 'shop-by-origin') {
+      const origins = draftSettings.origins || [];
 
-      // Merge ALL brands: BRANDS constant + allBrands from DB + any custom saved brands
-      const hiddenBrands = draftSettings.hiddenBrands || [];
-      const allNames = new Set([...BRANDS.map(b => b.name), ...allBrands, ...savedBrands.map(b => b.name)]);
-      const brandsList = Array.from(allNames)
-        .filter(name => !hiddenBrands.includes(name))
-        .map(name => {
-          const saved = savedBrands.find(b => b.name === name);
-          if (saved) return saved;
-          const fromConst = BRANDS.find(b => b.name === name);
-          if (fromConst) return fromConst;
-          return { name, logo: '' };
-        }).sort((a, b) => a.name.localeCompare(b.name));
-
-      const filteredBrands = brandsList.filter(b => b.name.toLowerCase().includes(pickerSearch.toLowerCase()));
-
-      const updateBrand = (brandName, field, value) => {
-        // Update the saved overrides
-        const newSaved = [...savedBrands];
-        const idx = newSaved.findIndex(b => b.name === brandName);
-        if (idx > -1) {
-          newSaved[idx] = { ...newSaved[idx], [field]: value };
-        } else {
-          // Add as a new override
-          const original = BRANDS.find(b => b.name === brandName) || { name: brandName, logo: '' };
-          newSaved.push({ ...original, [field]: value });
-        }
-        setDraftSettings({ ...draftSettings, brands: newSaved });
-      };
-
-
-      const handleBrandLogoUpload = async (brandName, e) => {
+      const handleHeroUpload = async (originId, e) => {
         const file = e.target.files[0];
         if (!file) return;
         const formData = new FormData();
@@ -1330,11 +1351,277 @@ export function HomepageManager({ openComponentId }) {
           if (data.success) {
             let newUrl = data.data[0];
             if (newUrl.startsWith('/')) newUrl = `${SERVER_URL}${newUrl}`;
-            updateBrand(brandName, 'logo', newUrl);
+            const newOrigins = [...origins];
+            const idx = newOrigins.findIndex(o => o.id === originId);
+            if (idx > -1) {
+              newOrigins[idx] = { ...newOrigins[idx], heroImage: newUrl };
+              setDraftSettings({ ...draftSettings, origins: newOrigins });
+            }
           }
         } catch (err) {
-          console.error("Brand logo upload failed:", err);
+          console.error("Hero image upload failed:", err);
         }
+      };
+
+      const updateOrigin = (originId, field, value) => {
+        const newOrigins = [...origins];
+        const idx = newOrigins.findIndex(o => o.id === originId);
+        if (idx > -1) {
+          newOrigins[idx] = { ...newOrigins[idx], [field]: value };
+          setDraftSettings({ ...draftSettings, origins: newOrigins });
+        }
+      };
+
+      const addOrigin = () => {
+        const newId = `origin_${Date.now()}`;
+        const newOrigin = {
+          id: newId,
+          name: "New Region",
+          title: "New Rituals",
+          subtitle: "Brief description",
+          heroImage: "",
+          productIds: []
+        };
+        setDraftSettings({ ...draftSettings, origins: [...origins, newOrigin] });
+      };
+
+      const deleteOrigin = (originId) => {
+        setDraftSettings({ ...draftSettings, origins: origins.filter(o => o.id !== originId) });
+      };
+
+      const addProductToOrigin = (originId, productId) => {
+        const newOrigins = [...origins];
+        const idx = newOrigins.findIndex(o => o.id === originId);
+        if (idx > -1) {
+          const currentIds = newOrigins[idx].productIds || [];
+          if (!currentIds.includes(productId)) {
+            newOrigins[idx].productIds = [...currentIds, productId];
+            setDraftSettings({ ...draftSettings, origins: newOrigins });
+          }
+        }
+        setShowPicker(false);
+      };
+
+      const removeProductFromOrigin = (originId, productId) => {
+        const newOrigins = [...origins];
+        const idx = newOrigins.findIndex(o => o.id === originId);
+        if (idx > -1) {
+          newOrigins[idx].productIds = (newOrigins[idx].productIds || []).filter(id => id !== productId);
+          setDraftSettings({ ...draftSettings, origins: newOrigins });
+        }
+      };
+
+      return (
+        <div className="space-y-8">
+          {renderCommonHeaderInput()}
+          
+          <div className="flex items-center justify-between pb-2 border-b border-indigo-50">
+            <div>
+              <Label className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-950">Active Regions</Label>
+              <p className="text-[10px] text-zinc-400 font-medium mt-1">Configure your curated origin collections.</p>
+            </div>
+            <Button 
+               onClick={addOrigin}
+               variant="outline" 
+               className="h-10 rounded-lg border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-bold text-[9px] uppercase tracking-widest gap-2"
+            >
+              <Plus className="h-4 w-4" /> Add Region
+            </Button>
+          </div>
+
+          <div className="space-y-6">
+            {origins.map((origin, idx) => (
+              <Card key={origin.id} className="border-zinc-200 shadow-sm overflow-hidden bg-white/50 hover:bg-white transition-all">
+                <div className="bg-zinc-50 border-b border-zinc-100 px-4 py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-6 w-6 rounded bg-indigo-100 flex items-center justify-center text-indigo-600 text-[10px] font-bold uppercase">{idx + 1}</div>
+                    <span className="text-[11px] font-black uppercase tracking-widest text-[#151515]">{origin.name}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400 hover:text-red-600 hover:bg-red-50 rounded" onClick={() => deleteOrigin(origin.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <CardContent className="p-6 space-y-6">
+                  {/* Basic Info */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                       <Label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 ml-1">Label</Label>
+                       <Input value={origin.name} onChange={e => updateOrigin(origin.id, 'name', e.target.value)} className="h-11 rounded-lg border-zinc-200 bg-white shadow-sm" placeholder="e.g. Korean" />
+                    </div>
+                    <div className="space-y-2">
+                       <Label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 ml-1">Main Heading</Label>
+                       <Input value={origin.title} onChange={e => updateOrigin(origin.id, 'title', e.target.value)} className="h-11 rounded-lg border-zinc-200 bg-white shadow-sm" placeholder="e.g. K-Beauty Rituals" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                     <Label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 ml-1">Subtitle</Label>
+                     <Input value={origin.subtitle} onChange={e => updateOrigin(origin.id, 'subtitle', e.target.value)} className="h-11 rounded-lg border-zinc-200 bg-white shadow-sm" placeholder="e.g. Science-led clinical efficacy" />
+                  </div>
+
+                  {/* Hero Image */}
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 ml-1">Hero Image</Label>
+                    <div className="flex gap-4">
+                      <div className="h-24 w-40 rounded-xl bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 relative group shadow-inner">
+                         {origin.heroImage ? (
+                           <img src={origin.heroImage} className="h-full w-full object-cover transition-transform group-hover:scale-110" />
+                         ) : (
+                           <div className="h-full w-full flex items-center justify-center text-zinc-300">
+                             <ImageIcon className="h-8 w-8" />
+                           </div>
+                         )}
+                         <label className="absolute inset-0 cursor-pointer bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                            <Upload className="h-5 w-5 text-white" />
+                            <input type="file" className="hidden" accept="image/*" onChange={(e) => handleHeroUpload(origin.id, e)} />
+                         </label>
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <Input value={origin.heroImage} onChange={e => updateOrigin(origin.id, 'heroImage', e.target.value)} className="h-11 rounded-lg border-zinc-200 bg-white text-[11px] font-mono" placeholder="Image URL (or upload)" />
+                        <p className="text-[10px] text-zinc-400 italic">Recommended: 1200x1500px portrait image.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Products */}
+                  <div className="space-y-4 pt-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-900 ml-1">Curated Products</Label>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          setActiveConfig({ cid: 'shop-by-origin', originId: origin.id });
+                          setShowPicker(true);
+                        }}
+                        className="h-8 border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold text-[9px] uppercase tracking-widest gap-2"
+                      >
+                         <Search className="h-3 w-3" /> Select Products
+                      </Button>
+                    </div>
+
+                    <div className="flex gap-3 overflow-x-auto no-scrollbar py-2 -mx-2 px-2">
+                      {(origin.productIds || []).map(pid => {
+                        const p = allProducts.find(prod => String(prod.id) === String(pid));
+                        if (!p) return null;
+                        return (
+                          <div key={pid} className="w-[120px] shrink-0 group relative animate-in zoom-in-95">
+                            <div className="aspect-square rounded-lg bg-zinc-100 border border-zinc-200 overflow-hidden shadow-sm">
+                               <img src={p.image || p.imageUrls?.[0]} className="h-full w-full object-cover" />
+                            </div>
+                            <p className="text-[9px] font-bold text-zinc-600 mt-2 truncate leading-tight">{p.name}</p>
+                            <button 
+                              onClick={() => removeProductFromOrigin(origin.id, pid)}
+                              className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="h-2.5 w-2.5" strokeWidth={4} />
+                            </button>
+                          </div>
+                        );
+                      })}
+                      {(origin.productIds || []).length === 0 && (
+                        <div className="h-20 w-full rounded-xl border border-dashed border-zinc-200 flex items-center justify-center text-[10px] font-bold text-zinc-300 uppercase tracking-widest">No products selected</div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Product Picker Modal - Specifically for Origin management */}
+          {showPicker && activeConfig?.cid === 'shop-by-origin' && (
+            <Dialog open={showPicker} onOpenChange={setShowPicker}>
+              <DialogContent className="max-w-2xl bg-white rounded-2xl p-0 overflow-hidden border-none shadow-2xl">
+                <DialogHeader className="p-8 bg-zinc-50 border-b border-zinc-100">
+                  <DialogTitle className="text-xl font-black uppercase tracking-wider text-[#151515]">Curate Highlights</DialogTitle>
+                  <DialogDescription className="text-[12px] text-zinc-500 font-medium">Select a product to add to the {origins.find(o => o.id === activeConfig.originId)?.name} rituals.</DialogDescription>
+                </DialogHeader>
+                <div className="p-8 space-y-6">
+                  <div className="relative">
+                    <Input 
+                      placeholder="Search store inventory..." 
+                      value={pickerSearch}
+                      onChange={e => setPickerSearch(e.target.value)}
+                      className="h-14 rounded-xl border-zinc-200 pl-12 text-[15px] font-medium shadow-sm focus:ring-indigo-500"
+                    />
+                    <Search className="h-5 w-5 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                    {allProducts.filter(p => p.name.toLowerCase().includes(pickerSearch.toLowerCase())).slice(0, 50).map(p => (
+                       <button 
+                        key={p.id} 
+                        onClick={() => addProductToOrigin(activeConfig.originId, p.id)}
+                        className="flex items-center gap-4 p-4 rounded-xl border border-zinc-100 bg-zinc-50/50 hover:bg-white hover:border-indigo-400 hover:shadow-lg hover:shadow-indigo-50 transition-all text-left group"
+                       >
+                         <div className="h-14 w-14 rounded-lg bg-white border border-zinc-100 overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
+                            <img src={p.image || p.imageUrls?.[0]} className="h-full w-full object-cover" />
+                         </div>
+                         <div className="flex-1 min-w-0">
+                           <p className="text-[13px] font-bold text-[#151515] truncate">{p.name}</p>
+                           <p className="text-[10px] text-indigo-500 font-black uppercase tracking-widest mt-1">{p.brand || 'OMW'}</p>
+                         </div>
+                         <div className="h-8 w-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Plus className="h-4 w-4" />
+                         </div>
+                       </button>
+                    ))}
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+
+          <div className="h-px bg-zinc-100 w-full" />
+
+          <div className="grid grid-cols-1 gap-6">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 block ml-1">Section Background</Label>
+              <Input value={draftSettings.bgColor || ''} onChange={e => setDraftSettings({ ...draftSettings, bgColor: e.target.value })} className="h-11 rounded-lg bg-zinc-50/50 border-zinc-200 shadow-sm" placeholder="#FFFFFF or transparent" />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    }
+
+    if (cid === 'promotional-banner') {
+      const selectedProducts = draftSettings.products || [];
+
+      const filteredPickerProducts = allProducts.filter(p => 
+        p.name.toLowerCase().includes(pickerSearch.toLowerCase()) ||
+        p.category?.toLowerCase().includes(pickerSearch.toLowerCase())
+      ).slice(0, 100);
+
+      const addFromCatalog = (product) => {
+        const normalize = (n) => n?.toLowerCase().replace(/[^a-z0-9]/g, '').trim() || "";
+        const prodNorm = normalize(product.name);
+        
+        if (selectedProducts.some(p => p.id === product.id || normalize(p.name) === prodNorm)) {
+          setShowPicker(false);
+          setPickerSearch("");
+          return;
+        }
+        const newP = {
+          id: product.id,
+          name: product.name,
+          imageUrl: product.image || product.imageUrls?.[0] || "",
+        };
+        setDraftSettings({ ...draftSettings, products: [...selectedProducts, newP] });
+        setShowPicker(false);
+        setPickerSearch("");
+      };
+
+      const moveProduct = (idx, dir) => {
+        const newP = [...selectedProducts];
+        if (idx + dir < 0 || idx + dir >= newP.length) return;
+        const temp = newP[idx];
+        newP[idx] = newP[idx + dir];
+        newP[idx + dir] = temp;
+        setDraftSettings({ ...draftSettings, products: newP });
       };
 
       return (
@@ -1342,110 +1629,128 @@ export function HomepageManager({ openComponentId }) {
           {renderCommonHeaderInput()}
 
           <div className="space-y-2">
-            <Label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Section Subheading</Label>
-            <Input value={draftSettings.subheading || ''} onChange={e => setDraftSettings({ ...draftSettings, subheading: e.target.value })} className="h-11 rounded-[2px] bg-zinc-50/50 border-zinc-200 focus-visible:ring-indigo-500 font-medium text-zinc-600" placeholder="Optional brief description" />
+            <Label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Banner Subtitle</Label>
+            <Input value={draftSettings.subtitle || ''} onChange={e => setDraftSettings({ ...draftSettings, subtitle: e.target.value })} className="h-12 rounded-[2px] bg-zinc-50/50 focus-visible:ring-emerald-500 shadow-inner font-medium text-zinc-600" placeholder="e.g. Trusted SPF for your fun in the sun" />
           </div>
 
-          {/* Search + Add */}
-          <div className="flex items-center gap-3">
-            <div className="relative flex-1">
-              <Input 
-                placeholder="Search brands..." 
-                value={pickerSearch}
-                onChange={e => setPickerSearch(e.target.value)}
-                className="h-10 rounded-[2px] bg-zinc-50 border-zinc-200 pl-9 text-[11px] font-medium"
-              />
-              <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+          <div className="space-y-6">
+            <div className="flex items-center justify-between px-1">
+              <div>
+                <Label className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-950">Promoted Items</Label>
+                <p className="text-[10px] text-zinc-400 font-medium mt-1">Select items to feature in this banner section.</p>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => setShowPicker(!showPicker)}
+                  variant="outline" 
+                  size="sm" 
+                  className={`h-8 rounded-[2px] border-emerald-100 text-emerald-600 hover:bg-emerald-50 font-bold text-[9px] uppercase tracking-widest gap-2 ${showPicker ? 'bg-emerald-50 ring-2 ring-emerald-500/20' : ''}`}
+                >
+                  <LayoutGrid className="h-3 w-3" /> {showPicker ? 'Close Picker' : 'Pick from Store'}
+                </Button>
+              </div>
             </div>
-            <Button 
-              onClick={() => {
-                setDraftSettings({ ...draftSettings, brands: [...brandsList, { name: "New Brand", logo: "" }] });
-              }}
-              variant="outline"
-              size="sm"
-              className="h-10 rounded-[2px] border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-bold text-[9px] uppercase tracking-widest gap-2 shrink-0"
-            >
-              <Plus className="h-3.5 w-3.5" /> Add Brand
-            </Button>
-          </div>
 
-          {/* ALL BRANDS — flat editable list */}
-          <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
-            {filteredBrands.map((brand, bIdx) => (
-              <div key={`brand-${brand.name}-${bIdx}`} className="bg-white border border-zinc-100 rounded-[2px] overflow-hidden shadow-sm hover:shadow-md transition-all">
-                <div className="p-3 flex items-center gap-3">
-                  {/* Logo */}
-                  <div className="h-12 w-16 rounded-[2px] bg-zinc-50 border border-zinc-100 flex items-center justify-center p-1 shrink-0 overflow-hidden">
-                     {brand.logo ? (
-                       <img src={brand.logo.startsWith('/uploads') ? `${SERVER_URL}${brand.logo}` : brand.logo} className="max-w-full max-h-full object-contain" />
-                     ) : (
-                       <ImageIcon className="h-5 w-5 text-zinc-200" />
-                     )}
-                  </div>
-                  {/* Name */}
-                  <div className="flex-1 min-w-0">
-                     <h4 className="text-[11px] font-black uppercase tracking-wider text-zinc-800 truncate">{brand.name}</h4>
-                  </div>
-                  {/* Actions */}
-                  <div className="flex gap-1 shrink-0">
-                     <Button size="icon" variant="ghost" className="h-7 w-7 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-[2px]" onClick={() => {
-                        const editKey = `editing_brand_${brand.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
-                        const el = document.getElementById(editKey);
-                        if (el) el.classList.toggle('hidden');
-                     }}><Edit3 className="h-3 w-3" /></Button>
-                     <Button size="icon" variant="ghost" className="h-7 w-7 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-[2px]" onClick={() => {
-                        setDraftSettings({ ...draftSettings, hiddenBrands: [...(draftSettings.hiddenBrands || []), brand.name] });
-                     }}><Trash2 className="h-3 w-3" /></Button>
-                  </div>
-
+            {showPicker && (
+              <div className="bg-emerald-50/50 border border-emerald-100 rounded-[2px] p-6 animate-in slide-in-from-top-2 duration-300">
+                <div className="relative mb-4">
+                  <Input 
+                    placeholder="Search your store catalog..." 
+                    value={pickerSearch}
+                    onChange={e => setPickerSearch(e.target.value)}
+                    className="h-11 rounded-[2px] bg-white border-emerald-200 focus-visible:ring-emerald-500 pl-10 shadow-sm"
+                  />
+                  <LayoutGrid className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-400" />
                 </div>
-                
-                {/* Inline Edit Panel */}
-                <div id={`editing_brand_${brand.name.replace(/[^a-zA-Z0-9]/g, '_')}`} className="hidden px-4 pb-4 pt-1 border-t border-zinc-50 space-y-2 bg-zinc-50/30">
-                  <div className="space-y-1">
-                    <Label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">Display Name</Label>
-                    <Input 
-                      defaultValue={brand.name} 
-                      onBlur={e => updateBrand(brand.name, 'name', e.target.value)} 
-                      className="h-8 rounded-[2px] border-zinc-100 bg-white text-[11px] font-bold" 
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">Logo</Label>
-                    <div className="flex gap-2">
-                      <Input 
-                        defaultValue={brand.logo || ''} 
-                        onBlur={e => updateBrand(brand.name, 'logo', e.target.value)} 
-                        className="h-8 rounded-[2px] border-zinc-100 bg-white text-[9px] font-medium" 
-                      />
-                      <label className="cursor-pointer shrink-0">
-                        <div className="h-8 px-3 rounded-[2px] bg-zinc-100 text-zinc-600 border border-zinc-200 hover:bg-zinc-200 flex items-center justify-center transition-all">
-                          <Upload className="h-3 w-3" />
+                <div className="grid grid-cols-1 gap-2 max-h-[240px] overflow-y-auto pr-2 custom-scrollbar">
+                  {filteredPickerProducts.length > 0 ? (
+                    filteredPickerProducts.map(product => (
+                      <button 
+                        key={product.id}
+                        onClick={() => addFromCatalog(product)}
+                        className="flex items-center gap-3 p-2 rounded-[2px] bg-white border border-emerald-100/50 hover:border-emerald-500 hover:bg-emerald-50 transition-all text-left"
+                      >
+                        <div className="h-10 w-10 rounded-[2px] bg-zinc-100 overflow-hidden shrink-0 border border-emerald-50">
+                          <img src={product.image || product.imageUrls?.[0]} className="h-full w-full object-cover" />
                         </div>
-                        <input type="file" className="hidden" accept="image/*" onChange={(e) => handleBrandLogoUpload(brand.name, e)} />
-                      </label>
-                    </div>
-                  </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12px] font-bold text-emerald-950 truncate">{product.name}</p>
+                          <p className="text-[10px] text-emerald-600 font-medium uppercase tracking-tight">Stock: {product.inventoryCount || 0}</p>
+                        </div>
+                        <Plus className="h-3.5 w-3.5 text-emerald-400" />
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-8 text-center text-emerald-400 text-[11px] font-bold uppercase tracking-widest">No products found</div>
+                  )}
                 </div>
               </div>
-            ))}
+            )}
+
+            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+              {selectedProducts.length > 0 ? selectedProducts.map((p, pIdx) => (
+                <div key={`${p.id}-${pIdx}`} className="bg-zinc-50 border border-zinc-200 rounded-[2px] p-4 transition-all hover:bg-white hover:shadow-md hover:border-indigo-100">
+                  <div className="flex items-center gap-4">
+                    <div className="flex flex-col gap-1">
+                      <button className="h-6 w-6 flex items-center justify-center rounded-[2px] hover:bg-zinc-200 text-zinc-400 hover:text-indigo-600 transition-colors" disabled={pIdx === 0} onClick={() => moveProduct(pIdx, -1)}>
+                        <ArrowUp className="h-3 w-3" />
+                      </button>
+                      <button className="h-6 w-6 flex items-center justify-center rounded-[2px] hover:bg-zinc-200 text-zinc-400 hover:text-indigo-600 transition-colors" disabled={pIdx === selectedProducts.length - 1} onClick={() => moveProduct(pIdx, 1)}>
+                        <ArrowDown className="h-3 w-3" />
+                      </button>
+                    </div>
+                    
+                    <div className="h-18 w-18 rounded-[2px] bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 shadow-inner">
+                      <img src={p.imageUrl} className="h-full w-full object-cover" />
+                    </div>
+                    
+                    <div className="flex-1 space-y-2">
+                       <Input 
+                        value={p.name} 
+                        onChange={e => {
+                          const newP = [...selectedProducts];
+                          newP[pIdx].name = e.target.value;
+                          setDraftSettings({ ...draftSettings, products: newP });
+                        }}
+                        className="h-10 rounded-[2px] bg-white border-zinc-200 focus-visible:ring-indigo-500 text-[13px] font-medium shadow-sm transition-all focus:bg-white"
+                        placeholder="Product Name"
+                      />
+                    </div>
+
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      className="h-10 w-10 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-[2px]"
+                      onClick={() => {
+                        const newP = [...selectedProducts];
+                        newP.splice(pIdx, 1);
+                        setDraftSettings({ ...draftSettings, products: newP });
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )) : (
+                <div className="py-12 px-6 border-2 border-dashed border-zinc-100 rounded-[2px] text-center bg-zinc-50/50">
+                   <LayoutGrid className="h-10 w-10 text-zinc-200 mx-auto mb-4" />
+                   <p className="text-[11px] font-black text-zinc-400 uppercase tracking-widest">No products selected</p>
+                   <p className="text-[10px] text-zinc-400 mt-2 font-medium">Use the "Pick from Store" button above to add products.</p>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="h-px bg-zinc-100 w-full" />
 
           <div className="grid grid-cols-2 gap-4">
              <div className="space-y-1">
-               <Label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">Section Background</Label>
-               <Input value={draftSettings.bgColor || ''} onChange={e => setDraftSettings({ ...draftSettings, bgColor: e.target.value })} className="h-10 rounded-[2px] bg-zinc-50/50 border-zinc-200 focus-visible:ring-indigo-500 text-[12px] font-mono" placeholder="#FFFFFF" />
-             </div>
-             <div className="space-y-1">
-               <Label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">Limit (Slider)</Label>
-               <Input type="number" value={draftSettings.maxItems || 12} onChange={e => setDraftSettings({ ...draftSettings, maxItems: Number(e.target.value) })} className="h-10 rounded-[2px] bg-zinc-50/50 border-zinc-200 focus-visible:ring-indigo-500 font-bold" />
+               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 block ml-1">Custom Background</Label>
+               <Input value={draftSettings.bgColor || ''} onChange={e => setDraftSettings({ ...draftSettings, bgColor: e.target.value })} className="h-11 rounded-[2px] bg-white border-zinc-200 focus-visible:ring-indigo-500 shadow-sm" placeholder="#FFFFFF" />
              </div>
           </div>
         </div>
       );
-
     }
 
     // Default generic configurator for Category, Brand, etc.

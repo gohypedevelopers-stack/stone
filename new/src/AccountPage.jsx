@@ -2,8 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useProducts } from "@/context/ProductContext";
 import { Package, MapPin, Store, Calendar, CreditCard, ChevronDown, ExternalLink } from "lucide-react";
-import { API_URL } from "@/utils/api";
-import { resolveImage } from "./utils/urlHelper";
+import { API_URL, getMediaUrl } from "@/utils/api";
 
 export default function AccountPage() {
   const { user } = useAuth();
@@ -37,10 +36,13 @@ export default function AccountPage() {
   // Helper to find full product info for an order item
   const findProductInfo = (itemName) => {
     if (!allGlobalProducts || !itemName) return null;
-    return allGlobalProducts.find(p => 
-      p.name?.toLowerCase() === itemName.toLowerCase() || 
-      p.brand?.toLowerCase() === itemName.toLowerCase()
-    );
+    const cleanSearch = itemName.replace(/\(Updated Fix\)/g, "").trim().toLowerCase();
+    
+    return allGlobalProducts.find(p => {
+      const pName = (p.name || "").replace(/\(Updated Fix\)/g, "").trim().toLowerCase();
+      const pBrand = (p.brand || "").toLowerCase();
+      return pName === cleanSearch || pBrand === cleanSearch;
+    });
   };
 
   if (loading) {
@@ -132,11 +134,6 @@ export default function AccountPage() {
                   </div>
                   <div className="ml-auto text-right flex flex-col gap-0.5">
                     <span className="uppercase tracking-tight opacity-70 text-[10px]">Order # {order.orderNumber || `OFF-${order.id.slice(0,8).toUpperCase()}`}</span>
-                    <div className="flex gap-2 justify-end mt-0.5 text-[12px]">
-                      <button className="text-emerald-600 hover:underline">Order Details</button>
-                      <span className="text-stone-300">|</span>
-                      <button className="text-emerald-600 hover:underline">Invoice</button>
-                    </div>
                   </div>
                 </div>
 
@@ -156,41 +153,73 @@ export default function AccountPage() {
                 <div className="p-5 space-y-5">
                   {order.items.map((item, idx) => {
                     const itemName = item.name || item.product?.name;
-                    const fullProduct = findProductInfo(itemName);
-                    const itemImage = fullProduct?.image || item.image || item.product?.image;
+                    const productId = item.productId || item.product?.id || item.id;
+                    
+                    // Helper to find full product info - prioritized by ID, then fuzzy name
+                    const fullProduct = allGlobalProducts?.find(p => p.id === productId) || 
+                                       allGlobalProducts?.find(p => {
+                                         const cleanSearch = itemName?.replace(/\(Updated Fix\)/g, "").trim().toLowerCase();
+                                         const pName = (p.name || "").replace(/\(Updated Fix\)/g, "").trim().toLowerCase();
+                                         const pBrand = (p.brand || "").toLowerCase();
+                                         return cleanSearch && (pName === cleanSearch || pBrand === cleanSearch || pName.includes(cleanSearch) || cleanSearch.includes(pName));
+                                       });
+
+                    const itemImage = item.image || 
+                                     item.product?.imageUrls?.[0] || 
+                                     item.product?.image || 
+                                     item.productImage || 
+                                     item.thumbnail || 
+                                     item.primaryImage || 
+                                     item.product_image || 
+                                     fullProduct?.imageUrls?.[0] || 
+                                     fullProduct?.image ||
+                                     fullProduct?.thumbnail ||
+                                     // Fail-safe for generic 'product' or deal-based items
+                                     (itemName?.toLowerCase().includes('product') || String(productId).startsWith('deal') ? 
+                                       allGlobalProducts?.find(p => p.specialOfferType && p.specialOfferType !== 'None')?.imageUrls?.[0] ||
+                                       allGlobalProducts?.find(p => p.name?.toLowerCase().includes('product'))?.imageUrls?.[0] : null);
 
                     return (
                       <div key={item.id || idx} className={`flex gap-5 items-start group/item ${idx !== order.items.length - 1 ? 'border-b border-stone-100 pb-5' : ''}`}>
-                        {/* Product Thumbnail - Reduced to 74px */}
-                        <div className="w-[84px] h-[84px] bg-stone-50 rounded-md overflow-hidden border border-stone-100/50 shrink-0 shadow-xs">
-                          <img 
-                            src={resolveImage(itemImage)} 
-                            className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500" 
-                            alt={itemName} 
-                          />
+                        {/* Product Thumbnail - Strictly Dynamic */}
+                        <div className="w-[84px] h-[84px] bg-stone-50 rounded-md overflow-hidden border border-stone-100/50 shrink-0 shadow-xs flex items-center justify-center">
+                          {itemImage ? (
+                            <img 
+                              src={getMediaUrl(itemImage)} 
+                              className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500" 
+                              alt={itemName}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.parentElement.innerHTML = '<div class="w-full h-full bg-stone-100 flex items-center justify-center"><svg class="w-6 h-6 text-stone-300" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"></path><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg></div>';
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-stone-100 flex items-center justify-center">
+                              <Package className="w-6 h-6 text-stone-300" />
+                            </div>
+                          )}
                         </div>
                         
                         {/* Product Details - Compacted */}
                         <div className="flex-1 min-w-0">
                           <div className="mb-2">
-                            <h5 className="text-[16px] font-bold text-blue-600 hover:text-[#ff4fa3] hover:underline cursor-pointer tracking-tight leading-snug line-clamp-1">
-                              {itemName}
+                            <h5 
+                              onClick={() => {
+                                const productId = fullProduct?.id || item.productId || item.id;
+                                if (productId) window.location.href = `/product/${productId}`;
+                              }}
+                              className="text-[16px] font-bold text-blue-600 hover:text-[#ff4fa3] hover:underline cursor-pointer tracking-tight leading-snug line-clamp-1"
+                            >
+                              {itemName.replace(/\(Updated Fix\)/g, "").trim()}
                             </h5>
-                            <p className="text-[12px] text-stone-500 font-bold mt-1">Quantity: {item.quantity}</p>
-                          </div>
-
-                          <div className="flex flex-wrap gap-x-4 gap-y-2 items-center">
-                            <p className="text-[12px] text-stone-800 font-bold">
-                              Return items: <span className="font-medium text-stone-500">Eligible through 15 April 2026</span>
-                            </p>
-                            <button className="text-[11px] font-black text-stone-900 bg-white border border-stone-300 px-4 py-1.5 rounded-full hover:bg-stone-50 shadow-xs transition-all active:scale-95">
-                              Buy it again
-                            </button>
                           </div>
                           
-                          <div className="mt-4 flex gap-3">
-                             <button className="flex items-center gap-1.5 text-[12px] font-black text-[#ff4fa3] bg-pink-50/50 border border-pink-100 px-5 py-2.5 rounded-full hover:bg-pink-100 transition-all shadow-xs">
-                               View your item
+                          <div className="mt-4 flex flex-wrap gap-3">
+                             <button 
+                               onClick={() => (window.location.href = `/product/${fullProduct?.id || item.id}?writeReview=true`)}
+                               className="flex items-center gap-1.5 text-[12px] font-black text-[#ff4fa3] bg-pink-50/50 border border-pink-100 px-5 py-2.5 rounded-full hover:bg-pink-100 transition-all shadow-xs"
+                             >
+                               Rate & Review
                              </button>
                              {order.type === 'Offline' && (
                                <div className="flex items-center gap-1.5 text-[11px] font-bold text-stone-400 px-1">
@@ -202,6 +231,36 @@ export default function AccountPage() {
                       </div>
                     );
                   })}
+                </div>
+
+                {/* Unified Order Action - WhatsApp */}
+                <div className="px-5 pb-5 pt-2 border-t border-stone-50 flex justify-end">
+                   <button 
+                     onClick={() => {
+                       const phone = order.vendor?.contactNumber || "+918287123014";
+                       const itemsList = order.items.map((item, index) => {
+                         const itemName = item.name || item.product?.name;
+                         const price = item.unitPrice || item.price || 0;
+                         return `${index + 1}. *${itemName}*\n   Price: ₹${Number(price).toLocaleString("en-IN")} | Qty: ${item.quantity || 1}`;
+                       }).join("\n");
+
+                       const total = Number(order.totalAmount || order.amount || 0);
+                       const message = [
+                         `Hi OMW, I'd like to share my order details!`,
+                         `*Order ID:* ${order.orderNumber || `OFF-${order.id.slice(0, 8).toUpperCase()}`}`,
+                         `*Status:* ${order.status.toUpperCase()}`,
+                         `\n*Products Ordered:*`,
+                         itemsList,
+                         `\n*Grand Total:* ₹${total.toLocaleString("en-IN")}`,
+                         `\nI've attached my payment confirmation for your record.`
+                       ].join("\n");
+                       window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}&lang=en`, "_blank");
+                     }}
+                     className="flex items-center gap-2 text-[13px] font-black text-white bg-emerald-600 hover:bg-emerald-700 px-6 py-3 rounded-full transition-all shadow-md shadow-emerald-100"
+                   >
+                     <Package size={16} />
+                     Share on WhatsApp
+                   </button>
                 </div>
 
                 {/* Footer Action (Offline specific) */}

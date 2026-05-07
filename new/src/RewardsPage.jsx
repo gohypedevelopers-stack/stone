@@ -11,6 +11,7 @@ import {
   TrendingUp,
   Award
 } from "lucide-react";
+import { resolveImage } from "@/utils/urlHelper";
 import { toast } from "sonner";
 import { API_URL } from "@/utils/api";
 
@@ -89,58 +90,85 @@ export default function RewardsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#faf9f6]">
+    <div className="min-h-screen bg-white">
       {/* Premium Header Section */}
-      <div className="bg-white border-b border-stone-100 pt-16 pb-24 overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-1/3 h-full bg-linear-to-bl from-amber-50/50 to-transparent pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-linear-to-tr from-pink-50/30 to-transparent rounded-[2px] blur-3xl pointer-events-none" />
+      <div className="bg-stone-50/40 border-b border-stone-100/60 pt-16 pb-20 relative overflow-hidden">
+        {/* Subtle decorative elements */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-100/20 rounded-full blur-[120px] -mr-48 -mt-48" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-stone-100/40 rounded-full blur-[100px] -ml-32 -mb-32" />
         
-        <div className="max-w-6xl mx-auto px-6 relative z-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-12">
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-700 px-3 py-1 rounded-[2px] border border-amber-100/50 shadow-sm transition-transform hover:scale-105 cursor-default">
-                <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
-                <span className="text-[9px] font-bold uppercase tracking-widest">Loyalty Member</span>
+        <div className="w-full px-8 md:px-12 lg:px-20 relative z-10">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-12">
+            <div className="flex-1 space-y-5">
+              <div className="inline-flex items-center gap-2 bg-white px-3 py-1 rounded-full border border-stone-200/60 shadow-xs transition-all hover:border-amber-200 cursor-default group">
+                <div className="w-1 h-1 rounded-full bg-amber-400 animate-pulse" />
+                <span className="text-[9px] font-bold uppercase tracking-widest text-stone-500 group-hover:text-amber-600 transition-colors">Loyalty Member</span>
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold text-stone-900 leading-tight tracking-tight">
-                Your <span className="text-amber-500">Rewards</span> <br className="hidden md:block" /> Experience
-              </h1>
-              <p className="text-stone-500 text-base font-medium max-w-sm">
-                Earning on every glow-up. Use your points for exclusive discounts and early access.
-              </p>
+              
+              <div className="space-y-3">
+                <h1 className="text-4xl md:text-5xl font-light text-stone-900 leading-[1.1] tracking-tight">
+                  Elevate Your <span className="font-semibold italic text-amber-500/90">Glow</span>
+                </h1>
+                <p className="text-stone-500 text-base md:text-lg font-light leading-relaxed max-w-xl">
+                  A refined space for your loyalty journey. Earn points with every choice and unlock exclusive beauty rituals.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-10 pt-2">
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-0.5">Tier Status</span>
+                  <span className="text-sm font-medium text-stone-800">Gold Member</span>
+                </div>
+                <div className="w-px h-8 bg-stone-200" />
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-0.5">Member Since</span>
+                  <span className="text-sm font-medium text-stone-800">May 2024</span>
+                </div>
+              </div>
             </div>
 
-            {/* Floating Points Card */}
-            <div className="relative group">
-              <div className="absolute inset-0 bg-amber-500 rounded-[2px] blur-2xl opacity-10 group-hover:opacity-20 transition-opacity" />
-              <div className="bg-stone-900 text-white p-8 rounded-[2px] shadow-xl relative border border-white/5 min-w-[280px] transition-transform hover:-translate-y-1 duration-300">
-                <div className="flex justify-between items-start mb-8">
-                  <div className="p-2.5 bg-white/5 rounded-[2px]">
-                    <Coins className="h-5 w-5 text-amber-400" />
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-0.5">Total Balance</p>
-                    <div className="text-4xl font-bold flex items-end justify-end gap-1">
-                      {balance}
-                      <span className="text-base text-amber-400 mb-1 font-medium">pts</span>
+            {/* Premium Light Card */}
+            <div className="w-full lg:w-[380px] shrink-0">
+              <div className="bg-white p-8 rounded-[32px] shadow-[0_15px_40px_-12px_rgba(0,0,0,0.05)] border border-stone-100 relative overflow-hidden group hover:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.08)] transition-all duration-500">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50/50 rounded-full blur-3xl -mr-16 -mt-16" />
+                
+                <div className="relative flex flex-col gap-8">
+                  <div className="flex justify-between items-center">
+                    <div className="h-12 w-12 bg-stone-50 rounded-xl flex items-center justify-center border border-stone-100 group-hover:bg-amber-50 group-hover:border-amber-100 transition-colors duration-500">
+                      <Coins className="h-5 w-5 text-stone-400 group-hover:text-amber-500 transition-colors" />
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-0.5">Available Balance</p>
+                      <div className="text-4xl font-semibold text-stone-900 tracking-tight">
+                        {balance.toLocaleString()}
+                        <span className="text-xs font-medium text-stone-400 ml-1.5 uppercase tracking-wide">pts</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                
-                <div className="space-y-2.5">
-                  <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
-                    <span className="text-stone-400">Next Milestone</span>
-                    <span className="text-amber-400">{nextMilestone} pts</span>
+
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-end">
+                      <div className="space-y-0.5">
+                        <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">Next Reward</p>
+                        <p className="text-sm font-medium text-stone-800">{nextMilestone} Points</p>
+                      </div>
+                      <span className="text-[10px] font-bold text-amber-500/80">{Math.round(progress)}% Complete</span>
+                    </div>
+                    
+                    <div className="relative h-2 bg-stone-100 rounded-full overflow-hidden">
+                      <div 
+                        className="absolute inset-y-0 left-0 bg-linear-to-r from-amber-400/80 to-amber-300/60 rounded-full transition-all duration-1000 ease-out"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center gap-2 pt-0.5 text-stone-400">
+                      <TrendingUp className="h-3 w-3" />
+                      <p className="text-[9px] font-medium italic">
+                        Spend ₹{(nextMilestone - balance) * 10} more to unlock your next gift
+                      </p>
+                    </div>
                   </div>
-                  <div className="h-2 bg-white/5 rounded-[2px] overflow-hidden">
-                    <div 
-                      className="h-full bg-linear-to-r from-amber-600 to-amber-400 rounded-[2px] transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(245,158,11,0.3)]"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                  <p className="text-[9px] text-stone-500 font-medium">
-                    *points are calculated based on your current tier.
-                  </p>
                 </div>
               </div>
             </div>
@@ -148,26 +176,31 @@ export default function RewardsPage() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 -mt-8 pb-24 relative z-20">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-xl font-bold text-stone-900 tracking-tight flex items-center gap-2">
-              <History className="h-5 w-5 text-amber-500" /> Activity History
-            </h2>
+      {/* Activity Section */}
+      <div className="w-full px-8 md:px-12 lg:px-20 -mt-8 pb-24 relative z-20">
+        <div className="bg-white rounded-[32px] border border-stone-100 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.03)] overflow-hidden">
+          <div className="p-8 border-b border-stone-50 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 bg-amber-50 rounded-xl flex items-center justify-center">
+                <History className="h-5 w-5 text-amber-500/80" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-stone-900 tracking-tight">Activity History</h2>
+                <p className="text-[10px] text-stone-400 font-medium tracking-widest uppercase">Member Insights • All Transactions</p>
+              </div>
+            </div>
           </div>
 
           {transactions.length === 0 ? (
-            <div className="bg-white border border-stone-100 rounded-[2px] p-12 text-center shadow-sm">
-              <div className="w-16 h-16 bg-stone-50 rounded-[2px] flex items-center justify-center mx-auto mb-4">
-                <TrendingUp className="h-6 w-6 text-stone-200" />
+            <div className="p-24 text-center">
+              <div className="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-5">
+                <Award className="h-7 w-7 text-stone-200" />
               </div>
-              <h3 className="text-lg font-bold text-stone-900 mb-1">No activity recorded yet</h3>
-              <p className="text-stone-400 max-w-xs mx-auto text-xs leading-relaxed font-medium">
-                Points will appear here once you make your first online or in-store purchase.
-              </p>
+              <h3 className="text-lg text-stone-900 font-medium mb-1">No activity yet</h3>
+              <p className="text-stone-400 text-sm max-w-sm mx-auto font-light leading-relaxed">Your rewards and points activity will appear here once you start your journey with us.</p>
             </div>
           ) : (
-            <div className="grid gap-3">
+            <div className="divide-y divide-stone-50">
               {transactions.map((tx, idx) => {
                 const details = getTransactionDetails(tx);
                 const isExpanded = expandedTxId === tx.id;
@@ -175,85 +208,91 @@ export default function RewardsPage() {
                 return (
                   <div 
                     key={tx.id} 
-                    className={`group bg-white border rounded-[2px] overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 ${
-                      isExpanded ? 'border-amber-200 ring-4 ring-amber-50/50' : 'border-stone-50 hover:border-amber-100 shadow-xs'
-                    }`}
-                    style={{ animationDelay: `${idx * 50}ms` }}
+                    className={`transition-all duration-300 ${isExpanded ? 'bg-stone-50/50' : 'hover:bg-stone-50/20'}`}
                   >
                     <div 
-                      className="p-4 flex items-center justify-between cursor-pointer"
+                      className="p-6 md:p-7 flex items-center justify-between cursor-pointer group"
                       onClick={() => setExpandedTxId(isExpanded ? null : tx.id)}
                     >
-                      <div className="flex items-center gap-4">
-                        <div className={`h-10 w-10 rounded-[2px] flex items-center justify-center transition-colors ${
-                          tx.type === 'EARNED' ? 'bg-emerald-50 text-emerald-600' : 
-                          tx.type === 'REDEEMED' ? 'bg-stone-50 text-stone-600' : 'bg-blue-50 text-blue-600'
+                      <div className="flex items-center gap-5">
+                        <div className={`h-11 w-11 rounded-xl flex items-center justify-center transition-all duration-300 shadow-xs ${
+                          tx.type === 'EARNED' ? 'bg-emerald-50 text-emerald-500 border border-emerald-100/50' : 'bg-amber-50 text-amber-500 border border-amber-100/50'
                         }`}>
                           {tx.type === 'EARNED' ? <ArrowUpRight className="h-5 w-5" /> : <Gift className="h-5 w-5" />}
                         </div>
                         <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-bold text-stone-900 text-sm">
-                              {tx.type === 'EARNED' ? 'Points Earned' : 'Points Redeemed'}
+                          <div className="flex items-center gap-3">
+                            <p className="font-semibold text-stone-800 text-sm tracking-tight">
+                              {tx.type === 'EARNED' ? 'Points Credited' : 'Points Redeemed'}
                             </p>
-                            <span className="text-[9px] bg-stone-100 text-stone-400 px-2 py-0.5 rounded-[2px] font-bold uppercase tracking-wider">{tx.source}</span>
+                            <span className="text-[8px] bg-white border border-stone-100 text-stone-400 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-widest shadow-xs">
+                              {tx.source}
+                            </span>
                           </div>
-                          <p className="text-stone-500 text-[11px] font-medium mt-0.5">{tx.note || "Loyalty rewards adjustment"}</p>
-                          <p className="text-[10px] text-stone-300 font-bold mt-1 uppercase tracking-tighter">
-                            {new Date(tx.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="text-stone-400 text-xs font-light">{tx.note || "Loyalty rewards adjustment"}</p>
+                            <span className="text-[10px] text-stone-200">•</span>
+                            <p className="text-[9px] text-stone-300 font-bold uppercase tracking-[0.1em]">
+                              {new Date(tx.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-8">
                         <div className="text-right">
-                          <p className={`text-lg font-bold ${
+                          <p className={`text-xl font-semibold tracking-tighter ${
                             tx.type === 'EARNED' ? 'text-emerald-600' : 'text-stone-900'
                           }`}>
                             {tx.type === 'EARNED' ? '+' : '-'}{tx.points}
                           </p>
-                          <p className="text-[9px] font-bold text-stone-300 uppercase tracking-widest">Points</p>
+                          <p className="text-[9px] font-bold text-stone-300 uppercase tracking-[0.2em]">Points</p>
                         </div>
-                        <div className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
-                          <ChevronRight className={`h-4 w-4 text-stone-300 group-hover:text-amber-500 ${isExpanded ? 'text-amber-500' : ''}`} />
+                        <div className={`h-8 w-8 rounded-full flex items-center justify-center transition-all duration-300 ${isExpanded ? 'bg-amber-50 text-amber-500' : 'text-stone-200 group-hover:text-stone-400'}`}>
+                          <ChevronRight className={`h-4 w-4 transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`} />
                         </div>
                       </div>
                     </div>
 
-                    {/* Expandable Content */}
                     {isExpanded && (
-                      <div className="px-14 pb-5 pt-1 bg-stone-50/30 border-t border-stone-50 animate-in slide-in-from-top-2">
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between pb-2 border-b border-stone-100/50">
-                            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Purchased Items</span>
+                      <div className="px-8 pb-8 animate-in fade-in slide-in-from-top-3">
+                        <div className="bg-white rounded-[24px] border border-stone-100 p-6 space-y-5 shadow-xs">
+                          <div className="flex items-center justify-between pb-3 border-b border-stone-50">
+                            <h4 className="text-[9px] font-bold text-stone-400 uppercase tracking-[0.3em]">Transaction Intelligence</h4>
                             {details?.vendor && (
-                              <span className="text-[10px] font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-[2px]">Store: {details.vendor}</span>
+                              <div className="flex items-center gap-1.5 text-[9px] font-semibold text-amber-600/80 bg-amber-50/50 px-2.5 py-1 rounded-full border border-amber-100/30">
+                                <span className="w-1 h-1 rounded-full bg-amber-400" />
+                                Store: {details.vendor}
+                              </div>
                             )}
                           </div>
                           
                           {details?.items ? (
-                            <div className="space-y-2">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               {details.items.map((item, i) => (
-                                <div key={i} className="flex justify-between items-center bg-white p-2.5 rounded-[2px] border border-stone-100/50 shadow-xs">
+                                <div key={i} className="flex justify-between items-center group/item p-3 rounded-xl hover:bg-stone-50 transition-colors border border-transparent hover:border-stone-100">
                                   <div className="flex items-center gap-3">
-                                    <div className="h-8 w-8 bg-stone-50 rounded-[2px] flex items-center justify-center border border-stone-100">
+                                    <div className="h-11 w-11 bg-stone-50 rounded-xl overflow-hidden border border-stone-100 flex-shrink-0 shadow-xs">
                                       {item.product?.imageUrls?.[0] ? (
-                                        <img src={item.product.imageUrls[0]} alt="" className="h-full w-full object-cover rounded-[2px]" />
+                                        <img src={resolveImage(item.product.imageUrls[0])} alt="" className="h-full w-full object-cover" />
                                       ) : (
-                                        <Star className="h-3 w-3 text-stone-300" />
+                                        <div className="h-full w-full flex items-center justify-center"><Star className="h-3 w-3 text-stone-200" /></div>
                                       )}
                                     </div>
                                     <div>
-                                      <p className="text-[12px] font-bold text-stone-800">{item.name}</p>
-                                      <p className="text-[10px] text-stone-400 font-medium">Qty: {item.quantity}</p>
+                                      <p className="text-[12px] font-medium text-stone-800 leading-tight mb-0.5">{item.name}</p>
+                                      <p className="text-[9px] text-stone-400 uppercase tracking-widest font-bold">Qty: {item.quantity}</p>
                                     </div>
                                   </div>
-                                  <p className="text-[12px] font-bold text-stone-900">₹{item.unitPrice}</p>
+                                  <div className="text-right">
+                                    <p className="text-sm font-semibold text-stone-900 tracking-tight">₹{item.unitPrice}</p>
+                                  </div>
                                 </div>
                               ))}
                             </div>
                           ) : (
-                            <div className="py-4 text-center border-2 border-dashed border-stone-100 rounded-[2px]">
-                              <p className="text-[11px] font-medium text-stone-400">Detailed item list for historical purchases is unavailable.</p>
+                            <div className="py-10 text-center border-2 border-dashed border-stone-50 rounded-[24px]">
+                              <TrendingUp className="h-7 w-7 text-stone-100 mx-auto mb-2" />
+                              <p className="text-xs font-light text-stone-400">Detailed transaction breakdown is currently unavailable.</p>
                             </div>
                           )}
                         </div>
@@ -265,7 +304,19 @@ export default function RewardsPage() {
             </div>
           )}
         </div>
+        
+        <div className="mt-12 text-center">
+          <p className="text-[9px] text-stone-400 font-bold uppercase tracking-[0.4em] flex items-center justify-center gap-3">
+            <span className="w-10 h-px bg-stone-100" />
+            <Trophy className="h-3.5 w-3.5 text-amber-300" />
+            Rewards status refreshed in real-time
+            <span className="w-10 h-px bg-stone-100" />
+          </p>
+        </div>
       </div>
+
+
     </div>
   );
+
 }

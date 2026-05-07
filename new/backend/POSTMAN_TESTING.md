@@ -1000,3 +1000,304 @@ I can implement it next with:
 - bcrypt password hashing
 - real JWT token
 - protected routes
+
+## Outlet Inventory Module
+
+The backend now supports outlet-wise independent inventory with product labels, scan flow, and stock movement history.
+
+Important:
+
+- Admin creates outlets and product labels.
+- A vendor account can be assigned to one outlet and acts as the outlet manager.
+- Outlet APIs do not accept `outletId` from the frontend.
+- For now, identify the outlet manager by passing this header:
+
+```text
+x-vendor-id: YOUR_VENDOR_ID
+```
+
+## Step 23. Create Outlet
+
+### Request
+
+```text
+POST http://localhost:5000/api/admin/outlets
+```
+
+Body:
+
+```json
+{
+  "name": "Outlet A",
+  "code": "OUTLET-A",
+  "address": "MG Road",
+  "city": "Bengaluru",
+  "state": "Karnataka",
+  "pincode": "560001",
+  "status": "ACTIVE"
+}
+```
+
+## Step 24. Get Outlets
+
+### Request
+
+```text
+GET http://localhost:5000/api/admin/outlets
+```
+
+## Step 25. Assign Outlet Manager
+
+Use an existing vendor id as outlet manager.
+
+### Request
+
+```text
+PATCH http://localhost:5000/api/admin/outlets/YOUR_OUTLET_ID/managers/YOUR_VENDOR_ID
+```
+
+## Step 26. Create Product With Inventory-Friendly Fields
+
+### Request
+
+```text
+POST http://localhost:5000/api/admin/products
+```
+
+Body:
+
+```json
+{
+  "name": "Almond Cookies",
+  "sku": "SKU-ALMOND-001",
+  "categoryName": "Snacks",
+  "description": "250g almond cookies",
+  "price": 150,
+  "defaultMrp": 150,
+  "defaultWeight": 250,
+  "unit": "g",
+  "ingredients": "Sugar, flour, almond",
+  "status": "ACTIVE",
+  "imageUrls": [],
+  "tags": []
+}
+```
+
+## Step 27. Create Product Label / Batch
+
+### Request
+
+```text
+POST http://localhost:5000/api/admin/product-labels
+```
+
+Body:
+
+```json
+{
+  "productId": "YOUR_PRODUCT_ID",
+  "batchNo": "BATCH-2026-001",
+  "mrp": 150,
+  "ingredients": "Sugar, flour, almond",
+  "productionDate": "2026-05-01",
+  "expiryDate": "2026-11-01",
+  "weight": 250,
+  "unit": "g"
+}
+```
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "message": "Product label created",
+  "data": {
+    "id": "cmbatch001",
+    "labelId": "cmbatch001",
+    "labelCode": "LABEL-AB12CD34",
+    "barcodeValue": "BAR-EF56GH78",
+    "qrValue": "LABEL-AB12CD34"
+  }
+}
+```
+
+## Step 28. Get Product Labels
+
+### Request
+
+```text
+GET http://localhost:5000/api/admin/product-labels
+```
+
+Optional filters:
+
+```text
+GET http://localhost:5000/api/admin/product-labels?productId=YOUR_PRODUCT_ID
+GET http://localhost:5000/api/admin/product-labels?status=ACTIVE
+```
+
+## Step 29. Get Label Detail
+
+### Request
+
+```text
+GET http://localhost:5000/api/admin/product-labels/YOUR_LABEL_ID
+```
+
+## Step 30. Get Printable Label Data
+
+### Request
+
+```text
+GET http://localhost:5000/api/admin/product-labels/YOUR_LABEL_ID/print
+```
+
+## Step 31. Update Label Status
+
+### Request
+
+```text
+PATCH http://localhost:5000/api/admin/product-labels/YOUR_LABEL_ID/status
+```
+
+Body:
+
+```json
+{
+  "status": "INACTIVE"
+}
+```
+
+## Step 32. Scan Product Code At Outlet
+
+### Request
+
+```text
+POST http://localhost:5000/api/outlet/scan-code
+```
+
+Headers:
+
+```text
+Content-Type: application/json
+x-vendor-id: YOUR_VENDOR_ID
+```
+
+Body:
+
+```json
+{
+  "code": "LABEL-AB12CD34"
+}
+```
+
+## Step 33. Add Stock To Assigned Outlet
+
+### Request
+
+```text
+POST http://localhost:5000/api/outlet/inventory/add
+```
+
+Headers:
+
+```text
+Content-Type: application/json
+x-vendor-id: YOUR_VENDOR_ID
+```
+
+Body:
+
+```json
+{
+  "batchId": "YOUR_BATCH_ID",
+  "quantity": 10,
+  "reason": "Received stock via barcode scan"
+}
+```
+
+## Step 34. Reduce Stock From Assigned Outlet
+
+### Request
+
+```text
+POST http://localhost:5000/api/outlet/inventory/reduce
+```
+
+Headers:
+
+```text
+Content-Type: application/json
+x-vendor-id: YOUR_VENDOR_ID
+```
+
+Body:
+
+```json
+{
+  "batchId": "YOUR_BATCH_ID",
+  "quantity": 2,
+  "reason": "Damaged stock",
+  "movementType": "DAMAGE"
+}
+```
+
+## Step 35. Get Outlet Inventory
+
+### Request
+
+```text
+GET http://localhost:5000/api/outlet/inventory
+```
+
+Headers:
+
+```text
+x-vendor-id: YOUR_VENDOR_ID
+```
+
+## Step 36. Get Outlet Stock Movement History
+
+### Request
+
+```text
+GET http://localhost:5000/api/outlet/stock-movements
+```
+
+Headers:
+
+```text
+x-vendor-id: YOUR_VENDOR_ID
+```
+
+## Step 37. Admin Get One Outlet Inventory
+
+### Request
+
+```text
+GET http://localhost:5000/api/admin/outlets/YOUR_OUTLET_ID/inventory
+```
+
+## Step 38. Admin Get Inventory Summary Across Outlets
+
+### Request
+
+```text
+GET http://localhost:5000/api/admin/inventory/summary
+```
+
+## Step 39. Admin Get Stock Movements
+
+### Request
+
+```text
+GET http://localhost:5000/api/admin/stock-movements
+```
+
+Optional filters:
+
+```text
+GET http://localhost:5000/api/admin/stock-movements?outletId=YOUR_OUTLET_ID
+GET http://localhost:5000/api/admin/stock-movements?movementType=ADD
+```

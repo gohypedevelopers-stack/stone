@@ -62,13 +62,17 @@ export const createOrder = async (req, res) => {
       rewardPointsUsed = 0,
     } = req.body;
 
-    if (!customerId || !vendorId || !Array.isArray(items) || items.length === 0) {
-      return sendError(res, "Customer, vendor, and order items are required", 400);
+    if (!customerId || !Array.isArray(items) || items.length === 0) {
+      return sendError(res, "Customer and order items are required", 400);
     }
+
+    // Policy: Online orders are always created as 'Unassigned' to allow manual admin routing.
+    // Offline orders (POS) require immediate vendor assignment.
+    const effectiveVendorId = type === "Online" ? null : vendorId;
 
     const [customer, vendor, products] = await Promise.all([
       prisma.customer.findUnique({ where: { id: customerId } }),
-      prisma.vendor.findUnique({ where: { id: vendorId } }),
+      effectiveVendorId ? prisma.vendor.findUnique({ where: { id: effectiveVendorId } }) : Promise.resolve(null),
       prisma.product.findMany({
         where: {
           id: {
@@ -82,7 +86,7 @@ export const createOrder = async (req, res) => {
       return sendError(res, "Customer not found", 404);
     }
 
-    if (!vendor) {
+    if (effectiveVendorId && !vendor) {
       return sendError(res, "Vendor not found", 404);
     }
 
@@ -92,7 +96,6 @@ export const createOrder = async (req, res) => {
       const quantity = Number(item.quantity || 1);
 
       if (!product) {
-        // Handle custom/manual/pre-order item that doesn't have a DB record
         const unitPrice = Number(item.unitPrice || 0);
         return {
           product: null,
@@ -100,11 +103,9 @@ export const createOrder = async (req, res) => {
           unitPrice,
           name: item.name || "Custom Item",
           lineTotal: unitPrice * quantity,
+          isFree: !!item.isFree,
+          offerType: item.offerType || null,
         };
-      }
-
-      if (quantity > product.stock) {
-        throw new Error(`Insufficient stock for product ${product.name}`);
       }
 
       const unitPrice = Number(product.discountPrice || product.price);
@@ -115,6 +116,8 @@ export const createOrder = async (req, res) => {
         unitPrice,
         name: product.name,
         lineTotal: unitPrice * quantity,
+        isFree: !!item.isFree,
+        offerType: item.offerType || null,
       };
     });
 
@@ -155,7 +158,7 @@ export const createOrder = async (req, res) => {
         data: {
           orderNumber: `OMW-${Date.now()}`,
           customer: { connect: { id: customerId } },
-          vendor: { connect: { id: vendorId } },
+          vendor: effectiveVendorId ? { connect: { id: effectiveVendorId } } : undefined,
           shippingAddress: finalAddressId ? { connect: { id: finalAddressId } } : undefined,
           status: "PLACED",
           type,
@@ -171,6 +174,8 @@ export const createOrder = async (req, res) => {
               quantity: item.quantity,
               unitPrice: item.unitPrice,
               lineTotal: item.lineTotal,
+              isFree: item.isFree,
+              offerType: item.offerType,
             })),
           },
           trackingEvents: {
@@ -194,16 +199,28 @@ export const createOrder = async (req, res) => {
         },
       });
 
-      for (const item of resolvedItems) {
-        if (item.product) {
-          await tx.product.update({
-            where: { id: item.product.id },
-            data: {
-              stock: {
-                decrement: item.quantity,
+      if (effectiveVendorId) {
+        for (const item of resolvedItems) {
+          if (item.product) {
+            await tx.vendorStock.upsert({
+              where: {
+                productId_vendorId: {
+                  productId: item.product.id,
+                  vendorId: effectiveVendorId
+                }
               },
-            },
-          });
+              update: {
+                quantity: {
+                  decrement: item.quantity,
+                },
+              },
+              create: {
+                 productId: item.product.id,
+                 vendorId: effectiveVendorId,
+                 quantity: 0 
+              }
+            });
+          }
         }
       }
 
@@ -300,6 +317,99 @@ export const updateOrderStatus = async (req, res) => {
     });
 
     return sendSuccess(res, formatOrder(order), "Order status updated");
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+export const fulfillOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { vendorId } = req.body;
+
+    if (!vendorId) {
+      return sendError(res, "Vendor ID is required for fulfillment", 400);
+    }
+
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: true }
+    });
+
+    if (!order) {
+      return sendError(res, "Order not found", 404);
+    }
+
+    if (order.status !== "APPROVED") {
+      return sendError(res, "Order must be APPROVED before assigning a vendor", 400);
+    }
+
+    if (order.vendorId) {
+      return sendError(res, "Order is already assigned to a vendor", 400);
+    }
+
+    // Process fulfillment in a transaction
+    const updatedOrder = await prisma.$transaction(async (tx) => {
+      // 1. Update stock for each product for the selected vendor
+      for (const item of order.items) {
+        if (item.productId) {
+          // Verify stock exists first
+          const stock = await tx.vendorStock.findUnique({
+            where: {
+              productId_vendorId: {
+                productId: item.productId,
+                vendorId: vendorId
+              }
+            }
+          });
+
+          if (!stock || stock.quantity < item.quantity) {
+            throw new Error(`Insufficient stock for product in requested vendor outlet.`);
+          }
+
+          await tx.vendorStock.update({
+            where: {
+              productId_vendorId: {
+                productId: item.productId,
+                vendorId: vendorId
+              }
+            },
+            data: {
+              quantity: { decrement: item.quantity }
+            }
+          });
+        }
+      }
+
+      // 2. Assign vendor and update status
+      return tx.order.update({
+        where: { id: orderId },
+        data: {
+          vendorId: vendorId,
+          status: "CONFIRMED", // Auto-confirm when assigned? Or keep as is.
+          trackingEvents: {
+            create: {
+              status: "CONFIRMED",
+              note: `Order assigned to vendor and confirmed.`
+            }
+          }
+        },
+        include: {
+          customer: true,
+          vendor: true,
+          shippingAddress: true,
+          items: {
+            include: {
+              product: true,
+            },
+          },
+          trackingEvents: {
+            orderBy: { createdAt: "asc" },
+          },
+        }
+      });
+    });
+
+    return sendSuccess(res, formatOrder(updatedOrder), "Order fulfilled and assigned to vendor");
   } catch (error) {
     return sendError(res, error.message, 500);
   }

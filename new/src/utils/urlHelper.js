@@ -51,8 +51,6 @@ export const resolveImage = (img) => {
         return `${SERVER_URL}${path}`;
     }
     
-    // 3. Handle Vite Assets (Static Products)
-    // If it's a relative path that doesn't look like an upload, 
-    // it's likely a local Vite asset from productData.js
+    // 3. Fallback for public assets or local Vite references
     return normalized;
 };

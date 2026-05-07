@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { InfiniteSlider } from "./components/ui/infinite-slider.jsx";
+import { API_URL, SERVER_URL } from "@/utils/api";
 
 // Import Brand Logos
 import loreal from "./assets/productlogo/brands/l-oreal-professionnel.svg";
@@ -37,7 +38,6 @@ import dotandkey from "./assets/productlogo/brands/Dot & Key_idmtCza6DA_1.png";
 import minimalist from "./assets/productlogo/brands/Minimalistinc_idImyDscM9_0.jpeg";
 // Placeholder/Fallback for potentially missing or misnamed files
 import unknown1 from "./assets/productlogo/brands/1713911.svg";
-import { API_URL } from "@/utils/api";
 
 export const BRANDS = [
   { name: "L'Oréal Paris", logo: loreal },
@@ -60,7 +60,7 @@ export const BRANDS = [
   { name: "The Ordinary", logo: ordinary },
   { name: "SkinCeuticals", logo: skinceuticals },
   { name: "La Roche-Posay", logo: laroche },
-  { name: "Tatcha", logo: unknown1 }, // Mapped to the numeric file
+  { name: "Tatcha", logo: unknown1 },
   { name: "Drunk Elephant", logo: drunkelephant },
   { name: "Glossier", logo: glossier },
   { name: "Augustinus Bader", logo: augustinus },
@@ -93,16 +93,27 @@ export default React.memo(function ShopByBrand({ onSelectBrand, isAdmin, selecte
   }, []);
 
   const hidden = hiddenBrands || [];
-  const rawBrands = (selectedBrands && selectedBrands.length > 0)
-    ? selectedBrands.filter(b => !hidden.includes(typeof b === 'string' ? b : b.name))
-        .map(b => typeof b === 'string' ? (BRANDS.find(x => x.name === b) || { name: b, logo: '' }) : b)
-    : (dbBrands.length > 0 
-        ? dbBrands.filter(name => !hidden.includes(name)).map(name => BRANDS.find(x => x.name === name) || { name, logo: '' })
-        : BRANDS.filter(b => !hidden.includes(b.name))
-      );
+  
+  let rawBrandsWithDupes;
+  if (selectedBrands && selectedBrands.length > 0) {
+    rawBrandsWithDupes = selectedBrands
+      .filter(b => !hidden.includes(typeof b === 'string' ? b : b.name))
+      .map(b => typeof b === 'string' ? (BRANDS.find(x => x.name === b) || { name: b, logo: '' }) : b);
+  } else {
+    // Always use the full curated BRANDS list with logos
+    // DB brands are only used for ordering/priority, not as the source of truth
+    rawBrandsWithDupes = BRANDS.filter(b => !hidden.includes(b.name));
+  }
+
+  // Deduplicate brands by name
+  const seen = new Set();
+  const rawBrands = rawBrandsWithDupes.filter(b => {
+    if (seen.has(b.name)) return false;
+    seen.add(b.name);
+    return true;
+  });
 
   const adminBrands = maxItems ? rawBrands.slice(0, maxItems) : rawBrands;
-
 
   return (
     <section 
@@ -157,7 +168,8 @@ export default React.memo(function ShopByBrand({ onSelectBrand, isAdmin, selecte
                         <img
                           src={brand.logo.startsWith('/uploads') ? `${SERVER_URL}${brand.logo}` : brand.logo}
                           alt={brand.name}
-                          className="max-w-full max-h-full object-contain transition-all duration-300 ease-out optimize-gpu"
+                          draggable={false}
+                          className="max-w-full max-h-full object-contain transition-all duration-300 ease-out optimize-gpu pointer-events-none"
                           loading="lazy"
                         />
                     ) : (
@@ -178,7 +190,8 @@ export default React.memo(function ShopByBrand({ onSelectBrand, isAdmin, selecte
                         <img
                           src={brand.logo.startsWith('/uploads') ? `${SERVER_URL}${brand.logo}` : brand.logo}
                           alt={brand.name}
-                          className="max-w-full max-h-full object-contain transition-all duration-300 ease-out optimize-gpu"
+                          draggable={false}
+                          className="max-w-full max-h-full object-contain transition-all duration-300 ease-out optimize-gpu pointer-events-none"
                           loading="lazy"
                         />
                     ) : (

@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import { motion, useAnimation } from "framer-motion";
 import ProductCard from "./components/card.jsx";
+import { isInCategoryGroup } from "./utils/categoryMapping";
 
 const CATEGORIES = ["ALL", "Skincare", "Makeup", "Haircare", "Fragrance", "Tools"];
 
@@ -36,7 +37,7 @@ const BestSellersMarquee = React.memo(function BestSellersMarquee({
     }
 
     if (activeCategory !== "ALL") {
-      list = list.filter(p => p.category?.toLowerCase() === activeCategory.toLowerCase());
+      list = list.filter(p => isInCategoryGroup(p.category, activeCategory));
     }
 
     return list.slice(0, settings?.maxItems || 12);
@@ -45,13 +46,7 @@ const BestSellersMarquee = React.memo(function BestSellersMarquee({
   const marqueeItems = useMemo(() => {
     if (mappedProducts.length === 0) return [];
     
-    // If we only have a few products, don't repeat them at all.
-    // We'll show them in a static grid instead.
-    if (mappedProducts.length < 5) {
-      return mappedProducts;
-    }
-
-    // Otherwise, create a smooth loop by filling the set
+    // Always repeat products to fill the row, even if very few
     let baseSet = [...mappedProducts];
     while (baseSet.length < 10) {
       baseSet = [...baseSet, ...mappedProducts];
@@ -61,7 +56,7 @@ const BestSellersMarquee = React.memo(function BestSellersMarquee({
     return [...baseSet, ...baseSet, ...baseSet];
   }, [mappedProducts]);
 
-  const isMarqueeActive = useMemo(() => mappedProducts.length >= 5, [mappedProducts]);
+  const isMarqueeActive = useMemo(() => mappedProducts.length >= 1, [mappedProducts]);
 
   useEffect(() => {
     if (!isMarqueeActive) {

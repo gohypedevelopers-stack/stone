@@ -98,14 +98,22 @@ export const getProfile = async (req, res) => {
         addresses: true,
         orders: {
           include: {
-            items: true,
+            items: {
+              include: {
+                product: true,
+              },
+            },
             trackingEvents: true,
           },
           orderBy: { createdAt: "desc" },
         },
         offlinePurchases: {
           include: {
-            items: true,
+            items: {
+              include: {
+                product: true,
+              },
+            },
             vendor: true,
           },
           orderBy: { purchaseDate: "desc" },
@@ -146,7 +154,7 @@ export const getProfile = async (req, res) => {
     // Replace relationship data with full mobile-based fetch to be 100% sure
     const allOffline = await prisma.offlinePurchase.findMany({
       where: { mobile: customer.mobile },
-      include: { items: true, vendor: true },
+      include: { items: { include: { product: true } }, vendor: true },
       orderBy: { purchaseDate: 'desc' }
     });
     

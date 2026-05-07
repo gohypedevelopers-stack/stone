@@ -1,4 +1,4 @@
-import React, { useRef, memo } from "react";
+import React, { useRef, memo, useState } from "react";
 
 export { categorySphere };
 import categorySphere from "./assets/category-sphere.png";
@@ -98,15 +98,16 @@ const CategoryCard = memo(({ label, image, onClick, isGrid }) => (
   >
     <div className="peer relative aspect-[4/3] rounded-[40px] overflow-hidden border border-black/5 shadow-[0_10px_30px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_45px_rgba(0,0,0,0.15)] transition-all duration-300 hover:-translate-y-2 group optimize-gpu will-change-transform [content-visibility:auto] [contain-intrinsic-size:aspect-ratio(4/3)]">
       <img
-        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out will-change-transform optimize-gpu"
+        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out will-change-transform optimize-gpu pointer-events-none"
         src={image || categorySphere}
         alt={label}
         loading="lazy"
         decoding="async"
+        draggable={false}
       />
       <div className="absolute inset-0 bg-linear-to-b from-transparent to-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
     </div>
-    <div className="mt-4 font-black text-sm md:text-base text-[#151515] peer-hover:text-[#b36cff] transition-colors uppercase tracking-tight">
+    <div className="mt-4 font-black text-sm md:text-base text-[#151515] peer-hover:text-[#b36cff] transition-colors uppercase tracking-tight select-none">
       {label}
     </div>
   </div>
@@ -119,14 +120,111 @@ export const DEFAULT_CATEGORY_DATA = CATEGORIES.map(label => ({
 
 export default React.memo(function ByCategory({ onNavigate, onSelectCategory, title, categories, isAdmin }) {
   const scrollRef = useRef(null);
+  const innerRef = useRef(null);
+  const isDraggingRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
+  const dragDistanceRef = useRef(0);
+  const velocityRef = useRef(0);
+  const lastTimeRef = useRef(0);
+  const containerOffsetRef = useRef(0);
+
+  // Pre-warm layout to avoid reflow on first drag
+  const preWarmLayout = () => {
+    if (scrollRef.current) {
+      containerOffsetRef.current = scrollRef.current.offsetLeft;
+    }
+  };
+
+
 
   const displayItems = categories && categories.length > 0
     ? categories
     : DEFAULT_CATEGORY_DATA;
 
+  const handleMouseDown = (e) => {
+    if (!scrollRef.current || isAdmin) return;
+    
+    // Only drag with left mouse button
+    if (e.button !== 0) return;
+
+    preWarmLayout();
+    isDraggingRef.current = true;
+    startXRef.current = e.pageX - containerOffsetRef.current;
+    scrollLeftRef.current = scrollRef.current.scrollLeft;
+    dragDistanceRef.current = 0;
+    velocityRef.current = 0;
+    lastTimeRef.current = performance.now();
+
+    if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+    
+    // Direct DOM manipulation for maximum smoothness (No re-renders)
+    scrollRef.current.style.scrollBehavior = 'auto';
+    scrollRef.current.style.scrollSnapType = 'none';
+    scrollRef.current.classList.add('cursor-grabbing', 'select-none');
+    scrollRef.current.classList.remove('cursor-grab');
+    if (innerRef.current) innerRef.current.style.pointerEvents = 'none';
+  };
+
+
+  const applyMomentum = () => {
+    if (!scrollRef.current || Math.abs(velocityRef.current) < 0.2) {
+      if (scrollRef.current) {
+        scrollRef.current.style.scrollBehavior = '';
+        scrollRef.current.style.scrollSnapType = '';
+        scrollRef.current.classList.remove('cursor-grabbing', 'select-none');
+        scrollRef.current.classList.add('cursor-grab');
+        if (innerRef.current) innerRef.current.style.pointerEvents = 'auto';
+      }
+      return;
+    }
+
+    scrollRef.current.scrollLeft -= velocityRef.current;
+    velocityRef.current *= 0.95; // Friction factor
+    rafIdRef.current = requestAnimationFrame(applyMomentum);
+  };
+
+
+  const handleMouseLeave = () => {
+    if (isDraggingRef.current) {
+      isDraggingRef.current = false;
+      applyMomentum();
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (isDraggingRef.current) {
+      isDraggingRef.current = false;
+      applyMomentum();
+    }
+  };
+
+
+
+  const handleMouseMove = (e) => {
+    if (!isDraggingRef.current || !scrollRef.current || isAdmin) return;
+    
+    // Use movementX if available for hardware-accelerated precision
+    if (e.movementX !== undefined) {
+      scrollRef.current.scrollLeft -= e.movementX * 1.5;
+      velocityRef.current = e.movementX;
+    } else {
+      // Fallback
+      const x = e.pageX - containerOffsetRef.current;
+      const walk = (x - startXRef.current) * 1.5; 
+      scrollRef.current.scrollLeft = scrollLeftRef.current - walk;
+    }
+
+    const now = performance.now();
+    lastTimeRef.current = now;
+    dragDistanceRef.current += Math.abs(e.movementX || 0);
+  };
+
+
   const handleScroll = (direction) => {
     if (scrollRef.current) {
       const scrollAmount = window.innerWidth < 768 ? 240 : 480;
+      scrollRef.current.style.scrollBehavior = 'smooth';
       scrollRef.current.scrollBy({
         left: direction === "left" ? -scrollAmount : scrollAmount
       });
@@ -134,6 +232,11 @@ export default React.memo(function ByCategory({ onNavigate, onSelectCategory, ti
   };
 
   const handleCategoryClick = (label) => {
+    // Threshold to distinguish between a drag and a click
+    // If we moved more than 10px, it was a drag, so don't trigger click
+    if (dragDistanceRef.current > 10) return;
+
+    
     if (onSelectCategory) onSelectCategory(label);
     if (onNavigate) onNavigate("category-page");
   };
@@ -182,13 +285,25 @@ export default React.memo(function ByCategory({ onNavigate, onSelectCategory, ti
             {/* Scroll Container or Grid */}
             <div
               ref={isAdmin ? null : scrollRef}
+              onMouseDown={handleMouseDown}
+              onMouseLeave={handleMouseLeave}
+              onMouseUp={handleMouseUp}
+              onMouseMove={handleMouseMove}
+              onMouseEnter={preWarmLayout}
               className={`${isAdmin
                 ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10'
-                : 'flex overflow-x-auto snap-x snap-mandatory gap-4 md:gap-6 py-4 no-scrollbar scroll-smooth gpu-accelerated will-change-scroll'}`}
+                : 'flex overflow-x-auto gap-4 md:gap-6 py-4 no-scrollbar gpu-accelerated will-change-scroll transform-gpu cursor-grab backface-hidden'
+                  }`}
+
             >
-              {displayItems.map((cat, idx) => (
-                <CategoryCard key={cat.label || idx} label={cat.label} image={cat.image} onClick={handleCategoryClick} isGrid={isAdmin} />
-              ))}
+              <div 
+                ref={isAdmin ? null : innerRef}
+                className={isAdmin ? 'contents' : 'flex gap-4 md:gap-6 transition-none pointer-events-auto'}
+              >
+                {displayItems.map((cat, idx) => (
+                  <CategoryCard key={cat.label || idx} label={cat.label} image={cat.image} onClick={handleCategoryClick} isGrid={isAdmin} />
+                ))}
+              </div>
             </div>
 
             {!isAdmin && (

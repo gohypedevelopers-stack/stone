@@ -18,10 +18,10 @@ const HeroSlider = React.memo(({ customSlides }) => {
   const slideCount = slides.length;
 
   return (
-    <section className="relative px-1 pt-4 pb-4 md:pt-6 md:pb-6 max-w-[1440px] mx-auto scroll-mt-24 md:scroll-mt-32">
-      <div className="w-full px-0 sm:px-[10px]">
+    <section className="relative scroll-mt-24 md:scroll-mt-32 overflow-hidden">
+      <div className="w-full">
         <div
-          className="relative overflow-hidden rounded-xl border border-black/6 shadow-[0_18px_40px_rgba(0,0,0,0.12)] bg-white"
+          className="relative overflow-hidden bg-white"
           aria-label="Featured banner"
         >
           <div
@@ -37,35 +37,12 @@ const HeroSlider = React.memo(({ customSlides }) => {
             {slides.map((slide, idx) => (
               <div key={idx} className="relative flex-1 overflow-hidden group">
                 <img
-                  className="block w-full aspect-video md:aspect-[21/9] object-cover transition-transform duration-[2s] group-hover:scale-105 transform-gpu optimize-gpu"
+                  className="block w-full aspect-[16/10] md:aspect-[16/6.5] object-cover transition-transform duration-[2s] group-hover:scale-105 transform-gpu optimize-gpu"
                   src={slide.imageUrl}
                   alt={slide.title || "Banner"}
                   loading={idx === 0 ? "eager" : "lazy"}
+                  decoding="async"
                 />
-                {(slide.title || slide.subtitle) && (
-                  <div className="absolute inset-0 bg-linear-to-r from-white/40 via-white/10 to-transparent flex flex-col items-start justify-center text-left p-12 sm:p-24">
-                    <div className="max-w-xl animate-in fade-in slide-in-from-left-8 duration-1000">
-                      {slide.subtitle && (
-                        <p className="text-sm sm:text-base font-bold text-indigo-900/60 mb-2 uppercase tracking-[0.3em] font-['Inter']">
-                          {slide.subtitle}
-                        </p>
-                      )}
-                      {slide.title && (
-                        <h2 className="text-5xl sm:text-7xl font-black text-indigo-950 mb-8 leading-[1.1] drop-shadow-sm">
-                          {slide.title}
-                        </h2>
-                      )}
-                      {slide.link && (
-                        <a
-                          href={slide.link}
-                          className="inline-block bg-indigo-950 text-white px-10 py-4 rounded-lg font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-indigo-950/40 hover:scale-110 active:scale-95 transition-all"
-                        >
-                          Explore Now
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
             ))}
           </div>

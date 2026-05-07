@@ -12,6 +12,9 @@ import notificationsRoutes from "./notifications.routes.js";
 import uploadRoutes from "./upload.routes.js";
 import couponRoutes from "./coupon.routes.js";
 import cartRoutes from "./cart.routes.js";
+import stockTransferRoutes from "./stock-transfer.routes.js";
+import offersRoutes from "./offers.routes.js";
+import outletRoutes from "./outlet.routes.js";
 import { getPublicCategories } from "../controllers/admin.controller.js";
 
 const router = Router();
@@ -39,5 +42,8 @@ router.use("/notifications", notificationsRoutes);
 router.use("/upload", uploadRoutes);
 router.use("/coupons", couponRoutes);
 router.use("/cart", cartRoutes);
+router.use("/stock-transfers", stockTransferRoutes);
+router.use("/offers", offersRoutes);
+router.use("/outlet", outletRoutes);
 
 export default router;

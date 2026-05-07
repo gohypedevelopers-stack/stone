@@ -28,6 +28,7 @@ import CheckoutPage from "./CheckoutPage.jsx";
 import AccountPage from "./AccountPage.jsx";
 import RewardsPage from "./RewardsPage.jsx";
 import WishlistPage from "./WishlistPage.jsx";
+import RitualDetailPage from "./RitualDetailPage.jsx";
 import VendorDashboard from "./pages/VendorDashboard.jsx";
 import VendorLogin from "./pages/VendorLogin.jsx";
 import { useProducts } from "@/context/ProductContext";
@@ -219,12 +220,14 @@ export default function App() {
 
         // Ensure price is a number for calculation
         let price = p.price;
-        if (typeof price === "string") {
+        if (c.isFree) {
+          price = 0;
+        } else if (typeof price === "string") {
           // Remove currency symbols and commas
           price = parseFloat(price.replace(/[^0-9.]/g, ""));
         }
 
-        return { ...p, price, qty: c.qty, line: price * c.qty };
+        return { ...p, price, qty: c.qty, line: price * c.qty, isFree: !!c.isFree, offerType: c.offerType };
       })
       .filter(Boolean);
   }, [cart, PRODUCTS]);
@@ -244,7 +247,8 @@ export default function App() {
   );
 
   const addToCart = useCallback(
-    (item) => {
+    (item, options = {}) => {
+      const isFree = !!options.isFree;
       if (!user) {
         toast.info("Please login to save your cart & track your order");
         setIsAuthModalOpen(true);
@@ -263,7 +267,7 @@ export default function App() {
       const isSpecial = isSpecialItem(productData);
 
       setCart((prev) => {
-        // Enforce limits for Special Offers
+        // Enforce limits for Special Offers (Gifts)
         if (isSpecial) {
           const cartWithData = prev.map((c) => ({
             ...c,
@@ -283,19 +287,18 @@ export default function App() {
           }
         }
 
-        const found = prev.find((x) => x.id === id);
-        if (found) {
-          return prev.map((x) =>
-            x.id === id
-              ? {
-                  ...x,
-                  qty: x.qty + 1,
-                  productData: productData || x.productData,
-                }
-              : x,
-          );
+        const foundIndex = prev.findIndex((x) => x.id === id && !!x.isFree === isFree);
+        if (foundIndex > -1) {
+          const newCart = [...prev];
+          newCart[foundIndex] = {
+            ...newCart[foundIndex],
+            qty: newCart[foundIndex].qty + 1,
+            productData: productData || newCart[foundIndex].productData,
+            offerType: options.offerType || newCart[foundIndex].offerType,
+          };
+          return newCart;
         }
-        return [...prev, { id, qty: 1, productData }];
+        return [...prev, { id, qty: 1, productData, isFree, offerType: options.offerType }];
       });
 
       // Auto-open cart drawer (if not on cart or checkout pages) and provide feedback
@@ -312,29 +315,29 @@ export default function App() {
     [setCartOpen, location.pathname, PRODUCTS, isSpecialItem, user],
   );
 
-  const decQty = useCallback((id) => {
+  const decQty = useCallback((id, isFree = false) => {
     setCart((prev) =>
       prev
-        .map((x) => (x.id === id ? { ...x, qty: x.qty - 1 } : x))
+        .map((x) => (x.id === id && !!x.isFree === !!isFree ? { ...x, qty: x.qty - 1 } : x))
         .filter((x) => x.qty > 0),
     );
   }, []);
 
-  const incQty = useCallback((id) => {
+  const incQty = useCallback((id, isFree = false) => {
     setCart((prev) =>
-      prev.map((x) => (x.id === id ? { ...x, qty: x.qty + 1 } : x)),
+      prev.map((x) => (x.id === id && !!x.isFree === !!isFree ? { ...x, qty: x.qty + 1 } : x)),
     );
   }, []);
 
-  const updateQty = useCallback((id, newQty) => {
+  const updateQty = useCallback((id, newQty, isFree = false) => {
     if (newQty < 1) return;
     setCart((prev) =>
-      prev.map((x) => (x.id === id ? { ...x, qty: newQty } : x)),
+      prev.map((x) => (x.id === id && !!x.isFree === !!isFree ? { ...x, qty: newQty } : x)),
     );
   }, []);
 
-  const removeFromCart = useCallback((id) => {
-    setCart((prev) => prev.filter((x) => x.id !== id));
+  const removeFromCart = useCallback((id, isFree = false) => {
+    setCart((prev) => prev.filter((x) => !(x.id === id && !!x.isFree === !!isFree)));
   }, []);
 
   const moveToWishlist = useCallback(
@@ -405,8 +408,8 @@ export default function App() {
 
       if (routeMap[view]) {
         navigate(routeMap[view]);
-      } else if (PRODUCTS.some((p) => String(p.id) === String(view))) {
-        // Handle direct product ID navigation
+      } else if (PRODUCTS.some((p) => String(p.id) === String(view)) || String(view).startsWith("custom-")) {
+        // Handle direct product ID or custom bundle navigation
         navigate(`/product/${view}`);
       } else {
         // Fallback for direct route names if passed
@@ -455,14 +458,13 @@ export default function App() {
 
       {/* Main Content Area */}
       <Routes>
-        <Route path="/vendor-dashboard" element={<VendorDashboard />} />
+        <Route path="/vendor-dashboard/*" element={<VendorDashboard />} />
         <Route path="/vendor-login" element={<VendorLogin />} />
         <Route
           path="/"
           element={
             <HomePage
               addToCart={addToCart}
-              query={query}
               onNavigate={handleNavigate}
               onSelectCategory={(cat) => navigate(`/category/${cat}`)}
               onSelectBrand={(brand) => navigate(`/brand/${brand}`)}
@@ -471,6 +473,7 @@ export default function App() {
               wishlist={wishlist}
               toggleWishlist={toggleWishlist}
               dynamicCategories={dynamicCategories}
+              user={user}
             />
           }
         />
@@ -549,6 +552,16 @@ export default function App() {
           path="/product/:id"
           element={
             <ProductPage
+              addToCart={addToCart}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+            />
+          }
+        />
+        <Route
+          path="/ritual/:id"
+          element={
+            <RitualDetailPage
               addToCart={addToCart}
               wishlist={wishlist}
               toggleWishlist={toggleWishlist}

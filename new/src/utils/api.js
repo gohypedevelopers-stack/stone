@@ -10,6 +10,12 @@ export const SERVER_URL = isProd
   : (envUrl || LOCAL_URL);
 export const API_URL = `${SERVER_URL}/api`;
 
+export const getMediaUrl = (path) => {
+  if (!path) return "";
+  if (path.startsWith("http")) return path;
+  return `${SERVER_URL}${path.startsWith("/") ? "" : "/"}${path}`;
+};
+
 const parseResponseBody = async (response) => {
   const contentType = response.headers.get("content-type") || "";
 

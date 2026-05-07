@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import {
     Star, Heart, ShoppingBag, Eye, X, Filter, ChevronDown, Check,
-    Search, Sparkles, ArrowRight, Droplets, Sun, Shield,
+    Sparkles, ArrowRight, Droplets, Sun, Shield,
     Zap, Gem, Activity
 } from "lucide-react";
 
@@ -11,6 +11,10 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "./components/ui/dropdown-menu.jsx";
+
+import { useProducts } from "./context/ProductContext.jsx";
+import ProductCard from "./components/card.jsx";
+import { useNavigate } from "react-router-dom";
 
 // Import Local Assets (Reused from byskinconcern.jsx)
 import darkspotImg from "./assets/skinconcern/darkspot.jpg";
@@ -62,7 +66,9 @@ const ROUTINES = {
     ]
 };
 
-export default function SkinConcernPage({ userConcern = "acne", onConcernChange, addToCart }) {
+export default function SkinConcernPage({ userConcern = "acne", onConcernChange, addToCart, wishlist, toggleWishlist }) {
+    const { products } = useProducts();
+    const navigate = useNavigate();
     const [activeConcern, setActiveConcern] = useState(userConcern);
     const [activeFilter, setActiveFilter] = useState("All");
     const [sortOption, setSortOption] = useState("Most Popular");
@@ -70,217 +76,246 @@ export default function SkinConcernPage({ userConcern = "acne", onConcernChange,
     const currentRoutine = ROUTINES[activeConcern] || ROUTINES["default"];
     const currentConcernData = CONCERNS.find(c => c.key === activeConcern) || CONCERNS[0];
 
-    // Mock Products
-    const PRODUCTS = Array.from({ length: 12 }).map((_, i) => ({
-        id: `concern-${activeConcern}-${i}`,
-        name: `${currentConcernData.label} Solution ${i + 1}`,
-        price: 900 + (i * 120),
-        salePrice: i % 3 === 0 ? 800 + (i * 100) : null,
-        rating: 4.7,
-        reviews: 150 + i * 10,
-        image: `https://images.unsplash.com/photo-${1600000000000 + i}?auto=format&fit=crop&w=800&q=80`,
-        tag: i === 0 ? "Bestseller" : i === 1 ? "Trending" : null,
-        benefits: ["Targeted Action", "Fast Results"]
-    }));
+    const filteredProducts = useMemo(() => {
+        return products.filter(p => 
+            p.skinConcerns?.includes(activeConcern) || 
+            p.tags?.some(tag => tag.toLowerCase().includes(activeConcern.toLowerCase()))
+        );
+    }, [products, activeConcern]);
 
-    const TOP_PICKS = PRODUCTS.slice(0, 3);
-    const GRID_PRODUCTS = PRODUCTS.slice(3);
+    const filteredAndSortedProducts = useMemo(() => {
+        let items = [...filteredProducts];
+        
+        if (activeFilter !== "All") {
+            items = items.filter(p => p.tags?.some(tag => tag.toLowerCase().includes(activeFilter.toLowerCase())));
+        }
+
+        if (sortOption === "Price: Low to High") {
+            items.sort((a, b) => a.price - b.price);
+        } else if (sortOption === "New Arrivals") {
+            items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        }
+        
+        return items;
+    }, [filteredProducts, activeFilter, sortOption]);
+
+    const TOP_PICKS = filteredAndSortedProducts.slice(0, 3);
+    const GRID_PRODUCTS = filteredAndSortedProducts.slice(3);
     const FILTERS = ["All", "Oily Skin", "Dry Skin", "Sensitive", "Fragrance-Free", "Vegan"];
 
     return (
         <div className="min-h-screen bg-[#fdfbf9] font-sans text-[#1a1a1a] pb-20 fade-in">
             {/* 1. HERO HEADER */}
-            <header className="relative pt-32 pb-16 px-6 text-center overflow-hidden bg-white/50 backdrop-blur-sm">
-                <div className="relative z-10 max-w-3xl mx-auto">
-                    <h1 className="text-4xl md:text-6xl font-extrabold mb-4 tracking-tight">Shop by Skin Concern</h1>
-                    <p className="text-gray-500 text-lg mb-8 max-w-xl mx-auto">Pick your goal — we’ll show the right products fast.</p>
+            {!activeConcern && (
+                <>
+                    <header className="relative pt-32 pb-16 px-6 text-center overflow-hidden bg-white/50 backdrop-blur-sm">
+                        <div className="relative z-10 max-w-3xl mx-auto">
+                            <h1 className="text-4xl md:text-6xl font-extrabold mb-4 tracking-tight">Shop by Skin Concern</h1>
+                            <p className="text-gray-500 text-lg mb-8 max-w-xl mx-auto">Pick your goal — we’ll show the right products fast.</p>
+                        </div>
+                    </header>
 
-                    <div className="relative max-w-lg mx-auto">
-                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                        <input
-                            type="text"
-                            placeholder="Search products for acne, hydration, dark spots..."
-                            className="w-full bg-white border border-gray-200 rounded-full pl-12 pr-6 py-4 shadow-sm focus:outline-none focus:ring-1 focus:ring-black transition-all placeholder:text-gray-400 font-medium"
-                        />
-                    </div>
-                </div>
-            </header>
+                    {/* 2. CONCERN SELECTOR GRID (Clean Bento Style) */}
+                    <section className="max-w-[1440px] mx-auto px-6 mb-16">
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                            {/* Concerns Grid */}
+                            {CONCERNS.map((c, i) => (
+                                <button
+                                    key={c.key}
+                                    onClick={() => { setActiveConcern(c.key); onConcernChange && onConcernChange(c.key); }}
+                                    className={`
+                                        relative h-[180px] rounded-[24px] overflow-hidden group text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ring-1 ring-black/5
+                                        ${activeConcern === c.key ? "ring-2 ring-black bg-white" : "bg-white"}
+                                    `}
+                                >
+                                    <div className="absolute inset-0 bg-linear-to-br from-gray-50 to-white opacity-50 group-hover:opacity-100 transition-opacity" />
 
-            {/* 2. CONCERN SELECTOR GRID (Clean Bento Style) */}
-            <section className="max-w-[1440px] mx-auto px-6 mb-16">
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                    {/* Featured/Active Card (Large) */}
+                                    <div className="relative z-10 p-5 h-full flex flex-col justify-between">
+                                        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center mb-2 shadow-sm ${c.key === 'hydration' ? 'bg-blue-50 text-blue-600' :
+                                            c.key === 'dullness' ? 'bg-orange-50 text-orange-600' :
+                                                c.key === 'anti-aging' ? 'bg-purple-50 text-purple-600' :
+                                                    'bg-gray-50 text-gray-700'
+                                            }`}>
+                                            <Sparkles size={18} fill="currentColor" className="opacity-20" />
+                                            <img src={c.image} className="absolute inset-0 w-full h-full object-cover opacity-0" alt="icon" />
+                                            <img src={c.image} className="absolute w-full h-full object-cover rounded-2xl opacity-100 mix-blend-multiply" alt="icon-visual" />
+                                        </div>
 
-
-                    {/* Other Concerns Grid */}
-                    {CONCERNS.filter(c => c.key !== "acne").map((c, i) => (
-                        <button
-                            key={c.key}
-                            onClick={() => { setActiveConcern(c.key); onConcernChange && onConcernChange(c.key); }}
-                            className={`
-                                relative h-[180px] rounded-[24px] overflow-hidden group text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ring-1 ring-black/5
-                                ${activeConcern === c.key ? "ring-2 ring-black bg-white" : "bg-white"}
-                            `}
-                        >
-                            <div className="absolute inset-0 bg-linear-to-br from-gray-50 to-white opacity-50 group-hover:opacity-100 transition-opacity" />
-
-                            <div className="relative z-10 p-5 h-full flex flex-col justify-between">
-                                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center mb-2 shadow-sm ${c.key === 'hydration' ? 'bg-blue-50 text-blue-600' :
-                                    c.key === 'dullness' ? 'bg-orange-50 text-orange-600' :
-                                        c.key === 'anti-aging' ? 'bg-purple-50 text-purple-600' :
-                                            'bg-gray-50 text-gray-700'
-                                    }`}>
-                                    {/* Small Icon based on image or generic */}
-                                    <Sparkles size={18} fill="currentColor" className="opacity-20" />
-                                    <img src={c.image} className="absolute inset-0 w-full h-full object-cover opacity-0" alt="icon" /> {/* Hidden img for layout structure if needed, but using icon */}
-                                    <img src={c.image} className="absolute w-full h-full object-cover rounded-2xl opacity-100 mix-blend-multiply" alt="icon-visual" />
-                                </div>
-
-                                <div className="pt-2">
-                                    <h4 className="font-bold text-base leading-tight text-gray-900 mb-1">
-                                        {c.label}
-                                    </h4>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide group-hover:text-black transition-colors">
-                                        {c.desc}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Hover accent */}
-                            <div className="absolute bottom-0 left-0 w-full h-1 bg-black transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
-                        </button>
-                    ))}
-                </div>
-            </section>
+                                        <div className="pt-2">
+                                            <h4 className="font-bold text-base leading-tight text-gray-900 mb-1">
+                                                {c.label}
+                                            </h4>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide group-hover:text-black transition-colors">
+                                                {c.desc}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="absolute bottom-0 left-0 w-full h-1 bg-black transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+                                </button>
+                            ))}
+                        </div>
+                    </section>
+                </>
+            )}
 
             {/* 3. STICKY SELECTION BAR */}
-            <div className="sticky top-[70px] z-40 bg-white/90 backdrop-blur-xl border-y border-gray-100 py-3 shadow-sm transition-all">
-                <div className="max-w-[1440px] mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <h2 className="text-lg font-bold">{currentConcernData.label}</h2>
-                        <button onClick={() => {/* clear */ }} className="text-gray-400 hover:text-black transition-colors"><X size={16} /></button>
-                    </div>
+            {activeConcern && (
+                <div className="sticky top-[70px] z-40 bg-white/90 backdrop-blur-xl border-y border-gray-100 py-3 shadow-sm transition-all">
+                    <div className="max-w-[1440px] mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-lg font-bold">{currentConcernData.label}</h2>
+                            <button onClick={() => { setActiveConcern(null); navigate('/concern'); }} className="text-gray-400 hover:text-black transition-colors"><X size={16} /></button>
+                        </div>
 
-                    <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto no-scrollbar">
-                        {FILTERS.map(f => (
-                            <button key={f} onClick={() => setActiveFilter(f)} className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap border transition-all ${activeFilter === f ? "bg-black text-white border-black" : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"}`}>{f}</button>
-                        ))}
+                        <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto no-scrollbar">
+                            {FILTERS.map(f => (
+                                <button key={f} onClick={() => setActiveFilter(f)} className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap border transition-all ${activeFilter === f ? "bg-black text-white border-black" : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"}`}>{f}</button>
+                            ))}
 
-                        <div className="h-6 w-px bg-gray-200 mx-2 hidden md:block"></div>
+                            <div className="h-6 w-px bg-gray-200 mx-2 hidden md:block"></div>
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger className="flex items-center gap-1 bg-transparent font-bold text-[10px] uppercase tracking-wider cursor-pointer outline-none">
-                                {sortOption}
-                                <ChevronDown size={14} />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-40 p-1 bg-white border border-gray-100 rounded-xl shadow-lg">
-                                {["Most Popular", "Top Rated", "Price: Low to High", "New Arrivals"].map((option) => (
-                                    <DropdownMenuItem key={option} onClick={() => setSortOption(option)} className="px-3 py-2 rounded-lg text-[10px] font-bold uppercase cursor-pointer hover:bg-gray-50">
-                                        {option}
-                                    </DropdownMenuItem>
-                                ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger className="flex items-center gap-1 bg-transparent font-bold text-[10px] uppercase tracking-wider cursor-pointer outline-none">
+                                    {sortOption}
+                                    <ChevronDown size={14} />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-40 p-1 bg-white border border-gray-100 rounded-xl shadow-lg">
+                                    {["Most Popular", "Top Rated", "Price: Low to High", "New Arrivals"].map((option) => (
+                                        <DropdownMenuItem key={option} onClick={() => setSortOption(option)} className="px-3 py-2 rounded-lg text-[10px] font-bold uppercase cursor-pointer hover:bg-gray-50">
+                                            {option}
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             <div className="max-w-[1440px] mx-auto px-6 py-12">
 
                 {/* 4. RECOMMENDED ROUTINE */}
-                <section className="mb-20">
-                    <div className="flex items-center gap-3 mb-8">
-                        <div className="h-px w-8 bg-gray-200"></div>
-                        <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-gray-400">Your Routine Guide</h2>
+                <section className="mb-24">
+                    <div className="flex items-center justify-between mb-12">
+                        <div>
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="h-px w-8 bg-black"></div>
+                                <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-black">Step-by-Step Guide</h2>
+                            </div>
+                            <h3 className="text-3xl font-extrabold tracking-tight">Your Optimal Routine</h3>
+                        </div>
+                        <div className="hidden md:flex items-center gap-2 text-gray-400 text-xs font-medium italic">
+                            <ArrowRight size={14} />
+                            Scroll to follow the flow
+                        </div>
                     </div>
 
-                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                        {currentRoutine.map((step, i) => (
-                            <div key={i} className="group relative bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-lg transition-all hover:-translate-y-1 overflow-hidden">
-                                <div className="absolute top-0 right-0 p-4 opacity-10 font-black text-6xl group-hover:opacity-20 transition-opacity transform group-hover:scale-110 duration-500 pointer-events-none">{step.step}</div>
-                                <div className="relative z-10">
-                                    <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-xs font-bold mb-4">{step.step}</div>
-                                    <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">{step.type}</div>
-                                    <h3 className="font-bold text-lg leading-tight mb-2">{step.title}</h3>
-                                    <div className="inline-block bg-gray-100 px-2 py-1 rounded text-[10px] font-bold text-gray-600 uppercase">{step.benefit}</div>
-                                </div>
-                            </div>
-                        ))}
+                    <div className="relative">
+                        {/* Connecting Line (Desktop) */}
+                        <div className="absolute top-1/2 left-0 w-full h-px bg-linear-to-r from-transparent via-gray-100 to-transparent -translate-y-1/2 hidden lg:block" />
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 relative z-10">
+                            {currentRoutine.map((step, i) => {
+                                const Icon = i === 0 ? Droplets : i === 1 ? Activity : i === 2 ? Zap : i === 3 ? Gem : Sun;
+                                return (
+                                    <div key={i} className="group relative">
+                                        <div className="bg-white border border-gray-100 rounded-[32px] p-8 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden h-full flex flex-col justify-between">
+                                            {/* Background Number Accent */}
+                                            <div className="absolute -top-4 -right-4 opacity-[0.03] font-black text-9xl group-hover:opacity-[0.07] transition-opacity transform group-hover:scale-110 duration-700 pointer-events-none select-none italic">
+                                                {step.step}
+                                            </div>
+
+                                            <div>
+                                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 shadow-sm transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 ${i === 0 ? 'bg-blue-50 text-blue-500' :
+                                                    i === 1 ? 'bg-indigo-50 text-indigo-500' :
+                                                        i === 2 ? 'bg-purple-50 text-purple-500' :
+                                                            i === 3 ? 'bg-rose-50 text-rose-500' :
+                                                                'bg-amber-50 text-amber-500'
+                                                    }`}>
+                                                    <Icon size={24} />
+                                                </div>
+
+                                                <div className="space-y-1 mb-4">
+                                                    <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-black transition-colors">
+                                                        Step {step.step} • {step.type}
+                                                    </div>
+                                                    <h3 className="font-bold text-xl leading-tight group-hover:text-black">{step.title}</h3>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-4 pt-4 border-t border-gray-50">
+                                                <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${i === 0 ? 'bg-blue-50/50 text-blue-600' :
+                                                    i === 1 ? 'bg-indigo-50/50 text-indigo-600' :
+                                                        i === 2 ? 'bg-purple-50/50 text-purple-600' :
+                                                            i === 3 ? 'bg-rose-50/50 text-rose-600' :
+                                                                'bg-amber-50/50 text-amber-600'
+                                                    }`}>
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                                                    {step.benefit}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Connector Arrow (Desktop) */}
+                                        {i < 4 && (
+                                            <div className="absolute top-1/2 -right-4 -translate-y-1/2 z-20 text-gray-200 hidden lg:block group-hover:text-black group-hover:translate-x-1 transition-all">
+                                                <ArrowRight size={20} />
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                 </section>
 
                 {/* 5. TOP PICKS */}
                 <section className="mb-20">
                     <h2 className="text-3xl font-bold mb-8">Bestsellers for {currentConcernData.label}</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {TOP_PICKS.map((p, i) => (
-                            <div key={p.id} className="bg-white rounded-[32px] p-4 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 group flex flex-col">
-                                <div className="relative aspect-4/3 rounded-[24px] overflow-hidden bg-gray-50 mb-6 group-hover:scale-[0.98] transition-all duration-500">
-                                    <div className="absolute top-4 left-4 z-10">
-                                        {p.tag && <span className="bg-[#1a1a1a] text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg">{p.tag}</span>}
-                                    </div>
-                                    <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                </div>
-                                <div className="px-2 pb-2">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <h3 className="text-lg font-bold leading-tight group-hover:text-pink-600 transition-colors">{p.name}</h3>
-                                        <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-lg">
-                                            <Star size={12} className="text-yellow-500 fill-yellow-500" />
-                                            <span className="text-xs font-bold">{p.rating}</span>
-                                        </div>
-                                    </div>
-                                    <p className="text-sm text-gray-500 mb-4 line-clamp-2">Targeted formulation for visible results.</p>
-                                    <div className="flex items-center justify-between mt-auto">
-                                        <span className="text-lg font-bold">
-                                            {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(p.price)}
-                                        </span>
-                                        <button onClick={() => addToCart(p)} className="w-10 h-10 rounded-full bg-gray-100 hover:bg-black hover:text-white flex items-center justify-center transition-all shadow-sm">
-                                            <ShoppingBag size={18} />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    {TOP_PICKS.length > 0 ? (
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                            {TOP_PICKS.map((p) => (
+                                <ProductCard
+                                    key={p.id}
+                                    product={p}
+                                    onAddToCart={addToCart}
+                                    wishlist={wishlist}
+                                    toggleWishlist={toggleWishlist}
+                                    onNavigate={(id) => navigate(`/product/${id}`)}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-20 bg-stone-50 rounded-[32px] border border-dashed border-stone-200">
+                            <Sparkles className="mx-auto text-stone-300 mb-4" size={48} />
+                            <h3 className="text-xl font-bold text-stone-600">Discovering more products...</h3>
+                            <p className="text-stone-400">We're currently curating the best solutions for {currentConcernData.label}.</p>
+                        </div>
+                    )}
                 </section>
 
                 {/* 6. MAIN GRID */}
-                <section>
-                    <div className="flex items-center justify-between mb-8 border-b border-gray-100 pb-4">
-                        <h2 className="text-xl font-bold uppercase tracking-widest">Full Collection</h2>
-                        <span className="text-xs font-medium text-gray-400">{GRID_PRODUCTS.length} Products</span>
-                    </div>
+                {GRID_PRODUCTS.length > 0 && (
+                    <section>
+                        <div className="flex items-center justify-between mb-8 border-b border-gray-100 pb-4">
+                            <h2 className="text-xl font-bold uppercase tracking-widest">Full Collection</h2>
+                            <span className="text-xs font-medium text-gray-400">{GRID_PRODUCTS.length} Products</span>
+                        </div>
 
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
-                        {GRID_PRODUCTS.map(p => (
-                            <div key={p.id} className="group flex flex-col">
-                                <div className="relative aspect-3/4 rounded-[24px] overflow-hidden bg-gray-100 mb-4 shadow-sm group-hover:shadow-lg transition-all">
-                                    <button className="absolute top-4 right-4 z-10 w-9 h-9 bg-white/60 backdrop-blur rounded-full flex items-center justify-center hover:bg-white hover:text-red-500 transition-colors shadow-sm">
-                                        <Heart size={18} />
-                                    </button>
-                                    <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-
-                                    {/* Quick Add */}
-                                    <div className="absolute inset-x-4 bottom-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 opacity-0 group-hover:opacity-100">
-                                        <button
-                                            onClick={() => addToCart(p)}
-                                            className="w-full bg-white text-[#1a1a1a] py-3 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg hover:bg-[#1a1a1a] hover:text-white transition-colors flex items-center justify-center gap-2"
-                                        >
-                                            <ShoppingBag size={14} /> Add to Cart
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="mt-2 text-center md:text-left">
-                                    <h3 className="text-sm font-bold text-[#1a1a1a] leading-tight mb-1 group-hover:text-pink-600 transition-colors">{p.name}</h3>
-                                    <div className="text-sm font-bold text-gray-900">
-                                        {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(p.price)}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </section>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                            {GRID_PRODUCTS.map(p => (
+                                <ProductCard
+                                    key={p.id}
+                                    product={p}
+                                    onAddToCart={addToCart}
+                                    wishlist={wishlist}
+                                    toggleWishlist={toggleWishlist}
+                                    onNavigate={(id) => navigate(`/product/${id}`)}
+                                />
+                            ))}
+                        </div>
+                    </section>
+                )}
 
             </div>
 

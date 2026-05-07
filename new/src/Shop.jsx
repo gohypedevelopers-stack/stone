@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useProducts } from "./context/ProductContext";
 import ProductCard from "./components/card.jsx";
 import { ChevronDown, Search } from "lucide-react";
@@ -9,37 +9,143 @@ function formatINR(amount) {
 }
 
 export default function Shop({ addToCart, wishlist, toggleWishlist }) {
-    const { products: rawProducts } = useProducts();
+    const { products: rawProducts, sections } = useProducts();
     const allProducts = useMemo(() => {
-        return (rawProducts || []).filter(p => !p.specialOfferType || p.specialOfferType === "None");
+        return rawProducts || [];
     }, [rawProducts]);
 
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const query = searchParams.get("q")?.toLowerCase() || "";
+    const originParam = searchParams.get("origin");
 
     // Filter States
     const [selectedOrigins, setSelectedOrigins] = useState([]);
-    const [priceRange, setPriceRange] = useState([0, 2000]);
-    const [localMaxPrice, setLocalMaxPrice] = useState(2000);
+    
+    // Dynamic Price Range
+    const maxInventoryPrice = useMemo(() => {
+        if (!allProducts.length) return 2000;
+        const prices = allProducts.map(p => Number(p.price || 0));
+        return Math.max(...prices, 2000);
+    }, [allProducts]);
+
+    const [priceRange, setPriceRange] = useState([0, 10000]); 
+    const [localMaxPrice, setLocalMaxPrice] = useState(10000);
+    const [isPriceInitialized, setIsPriceInitialized] = useState(false);
+
+    // Initialize/Update price range when products load
+    useEffect(() => {
+        if (allProducts.length > 0 && (!isPriceInitialized || localMaxPrice === 10000)) {
+            setLocalMaxPrice(maxInventoryPrice);
+            setPriceRange([0, maxInventoryPrice]);
+            setIsPriceInitialized(true);
+        }
+    }, [allProducts, maxInventoryPrice, isPriceInitialized]);
+
     const [sortOrder, setSortOrder] = useState("default"); // default, price-asc, price-desc
 
-    const origins = ["Korean", "Japanese", "Other"];
+    // Sync URL origin param to state
+    const getNormalizedOrigin = (name) => {
+        if (!name) return "";
+        const n = name.toLowerCase().trim();
+        if (n === "korean" || n === "korea") return "korea";
+        if (n === "japanese" || n === "japan") return "japan";
+        if (n === "indian" || n === "india") return "india";
+        if (n === "us" || n === "usa" || n === "united states" || n === "american") return "usa";
+        return n;
+    };
+
+    useEffect(() => {
+        if (originParam) {
+            const paramNormalized = getNormalizedOrigin(originParam);
+            // Find the actual origin name in data (using fuzzy match)
+            const matchedOrigin = Array.from(new Set(allProducts.map(p => p.origin).filter(Boolean)))
+                .find(o => getNormalizedOrigin(o) === paramNormalized);
+            
+            if (matchedOrigin) {
+                setSelectedOrigins([matchedOrigin]);
+            } else {
+                // If not found in data yet, just use the param
+                setSelectedOrigins([originParam]);
+            }
+        }
+    }, [originParam, allProducts]);
+
+    const origins = useMemo(() => {
+        const unique = new Set(allProducts.map(p => p.origin).filter(Boolean));
+        // Also include the originParam if it's not in the data yet, so the button exists
+        if (originParam && !Array.from(unique).some(o => o.toLowerCase() === originParam.toLowerCase())) {
+            unique.add(originParam);
+        }
+        return Array.from(unique).sort();
+    }, [allProducts, originParam]);
 
     // Filter & Sort Logic
     const filteredProducts = useMemo(() => {
         let result = allProducts.filter(p => {
             // Search Query Filter
             if (query) {
-                const nameMatch = p.name?.toLowerCase().includes(query);
-                const brandMatch = p.brand?.toLowerCase().includes(query);
-                const categoryMatch = p.category?.toLowerCase().includes(query);
-                if (!nameMatch && !brandMatch && !categoryMatch) return false;
+                const q = query.toLowerCase().trim();
+                const synonyms = {
+                    "mostriser": "moisturizer",
+                    "mosturizer": "moisturizer",
+                    "serum": "serums",
+                };
+                const expandedQuery = synonyms[q] || q;
+                const queryWords = [q, expandedQuery].filter(Boolean);
+
+                const name = (p.name || "").toLowerCase();
+                const brand = (p.brand || "").toLowerCase();
+                const category = (p.category || "").toLowerCase();
+                const origin = (p.origin || "").toLowerCase();
+                const tags = Array.isArray(p.tags) ? p.tags.map(t => String(t).toLowerCase().trim()) : [];
+                
+                const nameWords = name.split(/[\s-]+/);
+
+                const nameMatch = queryWords.some(qw => name === qw || nameWords.some(w => w.startsWith(qw)) || (qw.length > 3 && name.includes(qw)));
+                const brandMatch = queryWords.some(qw => brand.includes(qw));
+                const categoryMatch = queryWords.some(qw => category.includes(qw));
+                const originMatch = queryWords.some(qw => origin.includes(qw));
+                const tagsMatch = tags.some(t => {
+                    const tagWords = t.split(/[\s-]+/);
+                    return queryWords.some(qw => t === qw || tagWords.some(w => w.startsWith(qw)) || (qw.length > 3 && t.includes(qw)));
+                }) || (p.tag && queryWords.some(qw => p.tag.toLowerCase().includes(qw)));
+                
+                if (!nameMatch && !brandMatch && !categoryMatch && !originMatch && !tagsMatch) return false;
             }
 
-            // Origin Filter
-            if (selectedOrigins.length > 0 && !selectedOrigins.includes(p.origin)) {
-                return false;
+            // Origin Filter (Mode-Aware)
+            if (selectedOrigins.length > 0) {
+                const isMatch = selectedOrigins.some(so => {
+                    const normalizedSo = getNormalizedOrigin(so);
+                    
+                    // 1. Explicit metadata match (p.origin property)
+                    if (p.origin && getNormalizedOrigin(p.origin) === normalizedSo) return true;
+                    
+                    // 2. Explicit ID match (Custom products always match)
+                    if (p.isCustom && p.origin === so) return true;
+
+                    // 3. Fallback/Smart Discovery (Only if mode is NOT Manual)
+                    const originConfig = sections?.find(s => s.componentId === "shop-by-origin")
+                        ?.settings?.origins?.find(o => o.name === so);
+                    
+                    const isManual = originConfig?.sourceMode === "Manual";
+
+                    if (!isManual) {
+                        const searchTerms = [so.toLowerCase()];
+                        if (normalizedSo && normalizedSo !== so.toLowerCase()) searchTerms.push(normalizedSo);
+                        
+                        return searchTerms.some(term => 
+                            p.name?.toLowerCase().includes(term) ||
+                            p.brand?.toLowerCase().includes(term) ||
+                            p.category?.toLowerCase().includes(term) ||
+                            p.tag?.toLowerCase().includes(term)
+                        );
+                    }
+                    
+                    return false;
+                });
+                if (!isMatch) return false;
             }
             // Price Filter
             if (p.price < priceRange[0] || p.price > priceRange[1]) {
@@ -65,8 +171,33 @@ export default function Shop({ addToCart, wishlist, toggleWishlist }) {
     }
 
     return (
-        <div className="w-full px-[12px] sm:px-[24px] md:px-[40px] pt-[12px] pb-[40px] lg:pt-[24px] lg:pb-[80px] flex flex-col md:flex-row gap-[24px] lg:gap-[48px] max-w-[1720px] mx-auto min-h-[80vh] relative">
-            {/* Sidebar with Glassmorphism */}
+        <div className="w-full max-w-[1720px] mx-auto px-[12px] sm:px-[24px] md:px-[40px] pt-[12px] pb-[40px] lg:pt-[24px] lg:pb-[80px]">
+            {/* Dedicated Search Header */}
+            {query && (
+                <div className="mb-10 pt-4">
+                    <div className="flex items-baseline gap-3">
+                        <h1 className="text-[42px] font-black tracking-tighter text-stone-900 leading-none">
+                            Search Results
+                        </h1>
+                        <span className="w-2 h-2 bg-pink-500 rounded-full"></span>
+                    </div>
+                    <div className="flex items-center gap-4 mt-4">
+                        <div className="px-4 py-2 bg-stone-100 rounded-[2px] border border-stone-200">
+                            <p className="text-[12px] font-bold text-stone-600 uppercase tracking-widest">
+                                Results for: <span className="text-stone-900">"{query}"</span>
+                            </p>
+                        </div>
+                        <div className="px-4 py-2 bg-pink-50/50 rounded-[2px] border border-pink-100">
+                            <p className="text-[12px] font-bold text-pink-600 uppercase tracking-widest">
+                                {filteredProducts.length} Products Found
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className="flex flex-col md:flex-row gap-[24px] lg:gap-[48px] min-h-[80vh] relative">
+                {/* Sidebar with Glassmorphism */}
             <aside className="w-full md:w-[300px] shrink-0 flex flex-col gap-[40px] md:sticky md:top-[110px] self-start h-fit z-30 transition-all duration-300 bg-white/40 backdrop-blur-2xl border border-white/60 p-8 rounded-[2px] shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
                 {/* Header for Sidebar */}
                 <div className="pb-4 border-b border-stone-100 mb-2">
@@ -109,13 +240,13 @@ export default function Shop({ addToCart, wishlist, toggleWishlist }) {
                         <div className="h-[2px] w-full bg-stone-200 rounded-[2px] overflow-hidden">
                             <div
                                 className="h-full bg-linear-to-r from-pink-500 to-purple-600 transition-none"
-                                style={{ width: `${(localMaxPrice / 2000) * 100}%` }}
+                                style={{ width: `${(localMaxPrice / maxInventoryPrice) * 100}%` }}
                             />
                         </div>
                         <input
                             type="range"
                             min="0"
-                            max="2000"
+                            max={maxInventoryPrice}
                             step="1"
                             value={localMaxPrice}
                             onChange={(e) => setLocalMaxPrice(Number(e.target.value))}
@@ -127,22 +258,22 @@ export default function Shop({ addToCart, wishlist, toggleWishlist }) {
                         {/* Custom Handle */}
                         <div
                             className="absolute h-6 w-6 bg-white border-2 border-stone-900 rounded-[2px] top-px -translate-x-1/2 shadow-lg pointer-events-none transition-none flex items-center justify-center after:content-[''] after:w-1 after:h-1 after:bg-stone-900 after:rounded-[2px]"
-                            style={{ left: `${(localMaxPrice / 2000) * 100}%` }}
+                            style={{ left: `${(localMaxPrice / maxInventoryPrice) * 100}%` }}
                         />
                     </div>
                     <div className="flex justify-between mt-1 text-[10px] font-bold text-stone-400 uppercase tracking-widest">
                         <span>Min ₹0</span>
-                        <span>Max ₹2,000</span>
+                        <span>Max ₹{formatINR(maxInventoryPrice).replace("₹", "")}</span>
                     </div>
                 </div>
 
                 {/* Clear All Helper */}
-                {(selectedOrigins.length > 0 || localMaxPrice < 2000) && (
+                {(selectedOrigins.length > 0 || localMaxPrice < maxInventoryPrice) && (
                     <button 
                         onClick={() => { 
                             setSelectedOrigins([]); 
-                            setPriceRange([0, 2000]); 
-                            setLocalMaxPrice(2000); 
+                            setPriceRange([0, maxInventoryPrice]); 
+                            setLocalMaxPrice(maxInventoryPrice); 
                         }}
                         className="text-[11px] font-bold text-pink-600 hover:text-pink-700 transition-colors uppercase tracking-widest mt-4 text-left flex items-center gap-1.5"
                     >
@@ -210,7 +341,7 @@ export default function Shop({ addToCart, wishlist, toggleWishlist }) {
                         </div>
                         <button
                             className="bg-stone-900 text-white px-[40px] py-[16px] rounded-[2px] font-black text-[11px] uppercase tracking-[2px] cursor-pointer transition-all hover:bg-stone-800 hover:scale-105 active:scale-95 shadow-xl shadow-stone-900/10 mt-2"
-                            onClick={() => { setSelectedOrigins([]); setPriceRange([0, 2000]); setSortOrder("default"); }}
+                            onClick={() => { setSelectedOrigins([]); setPriceRange([0, maxInventoryPrice]); setLocalMaxPrice(maxInventoryPrice); setSortOrder("default"); }}
                         >
                             Clear All Filters
                         </button>
@@ -218,5 +349,6 @@ export default function Shop({ addToCart, wishlist, toggleWishlist }) {
                 )}
             </main>
         </div>
+    </div>
     );
 }

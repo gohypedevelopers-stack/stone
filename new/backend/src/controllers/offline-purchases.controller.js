@@ -115,13 +115,14 @@ export const recordOfflinePurchase = async (req, res) => {
           continue;
         }
 
-        const stockUpdate = await tx.product.updateMany({
+        const stockUpdate = await tx.vendorStock.updateMany({
           where: {
-            id: item.productId,
-            stock: { gte: item.quantity },
+            productId: item.productId,
+            vendorId: vendorId,
+            quantity: { gte: item.quantity },
           },
           data: {
-            stock: { decrement: item.quantity },
+            quantity: { decrement: item.quantity },
           },
         });
 

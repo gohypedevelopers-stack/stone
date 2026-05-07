@@ -129,13 +129,12 @@ export const getAdminVendorAnalytics = async (req, res) => {
     const processProductRevenue = (record, items, isOffline) => {
       // If no items exist (seed data), create a synthetic product derived from the vendor category
       if (!items || items.length === 0) {
-        const category = record.vendor?.businessCategory || 'Store Product';
-        const syntheticName = `Signature ${category.split('&')[0].trim()} Kit`;
+        const pName = 'Miscellaneous / In-Store Purchase';
         const amt = isOffline ? Number(record.amount || 0) : Number(record.totalAmount || 0);
         
-        if (!productStatsMap[syntheticName]) productStatsMap[syntheticName] = { rev: 0, qty: 0, image: null };
-        productStatsMap[syntheticName].rev += amt;
-        productStatsMap[syntheticName].qty += 1;
+        if (!productStatsMap[pName]) productStatsMap[pName] = { rev: 0, qty: 0, image: null };
+        productStatsMap[pName].rev += amt;
+        productStatsMap[pName].qty += 1;
         return;
       }
 
@@ -160,8 +159,10 @@ export const getAdminVendorAnalytics = async (req, res) => {
       processProductRevenue(p, p.items, true);
     });
 
-    // Platform Earnings
-    const platformEarnings = (grossRevenue * 0.15);
+    // Platform Earnings (Dynamic Commission)
+    const { getSetting } = await import("./settings.controller.js");
+    const commissionRate = Number(await getSetting("platform_commission_rate") || 0.15);
+    const platformEarnings = (grossRevenue * commissionRate);
 
     // Dynamic Product Heights
     const maxProductRev = Math.max(...Object.values(productStatsMap).map(p => p.rev), 1);
@@ -217,7 +218,12 @@ export const getAdminDashboard = async (req, res) => {
       prisma.offlinePurchase.aggregate({ _sum: { amount: true } }),
       prisma.order.findMany({ orderBy: { createdAt: 'desc' }, take: 4, select: { id: true, orderNumber: true, totalAmount: true, createdAt: true, type: true } }),
       prisma.vendor.findMany({ where: { approvalStatus: "PENDING" }, orderBy: { createdAt: 'desc' }, take: 3, select: { id: true, businessName: true, createdAt: true } }),
-      prisma.product.findMany({ where: { stock: { lt: 20 } }, orderBy: { updatedAt: 'desc' }, take: 4, select: { id: true, name: true, stock: true, updatedAt: true } })
+      prisma.product.findMany({ 
+        where: { status: { not: "ARCHIVED" } },
+        orderBy: { updatedAt: 'desc' }, 
+        take: 4, 
+        select: { id: true, name: true, updatedAt: true } 
+      })
     ]);
 
     const totalOnlineRevenue = Number(onlineRevenueAgg._sum.totalAmount || 0);
@@ -254,7 +260,7 @@ export const getAdminDashboard = async (req, res) => {
         id: `stock-${p.id}`,
         type: 'inventory',
         title: 'Inventory Alert',
-        description: `SKU '${p.name}' reached low stock (${p.stock} left)`,
+        description: `SKU '${p.name}' was recently updated`,
         time: p.updatedAt,
         iconType: 'alert'
       });
@@ -287,13 +293,24 @@ export const getAdminDashboard = async (req, res) => {
 export const getAdminProducts = async (req, res) => {
   try {
     const products = await prisma.product.findMany({
+      where: { status: { not: "ARCHIVED" } },
       include: {
         vendor: { select: { businessName: true } },
         category: { select: { name: true } },
+        stockRecords: { include: { vendor: true } },
       },
       orderBy: { createdAt: "desc" },
     });
-    return sendSuccess(res, products, "Products fetched");
+
+    const serializedProducts = products.map((p) => ({
+      ...p,
+      stock: (p.stockRecords || []).reduce(
+        (sum, sr) => sum + (sr.quantity || 0),
+        0,
+      ),
+    }));
+
+    return sendSuccess(res, serializedProducts, "Products fetched");
   } catch (error) {
     return sendError(res, error.message, 500);
   }
@@ -301,7 +318,7 @@ export const getAdminProducts = async (req, res) => {
 
 export const getAdminOrders = async (req, res) => {
   try {
-    const [orders, offlinePurchases] = await Promise.all([
+    const [ordersRaw, offlinePurchasesRaw, approvedVendors] = await Promise.all([
       prisma.order.findMany({
         include: {
           customer: { include: { addresses: true } },
@@ -317,46 +334,73 @@ export const getAdminOrders = async (req, res) => {
           vendor: { select: { businessName: true } },
         },
         orderBy: { purchaseDate: "desc" },
+      }),
+      prisma.vendor.findMany({
+        where: { approvalStatus: 'APPROVED' },
+        orderBy: { businessName: "asc" }
       })
     ]);
 
-    // Normalize and merge
-    const combined = [
-      ...orders.map(o => {
-        const hasPreorderItems = o.items.some(item => !item.productId || item.productId.startsWith('po'));
-        const addr = o.shippingAddress || o.customer.addresses?.[0];
-        return {
-          id: o.id,
-          orderNumber: o.orderNumber,
-          customerName: o.customer.name,
-          vendorName: "ONLINE STORE",
-          totalAmount: o.totalAmount,
-          rewardPointsEarned: o.rewardPointsEarned || 0,
-          status: o.status,
-          createdAt: o.createdAt,
-          type: (o.type === 'Online' && hasPreorderItems) ? 'PreOrder' : o.type,
-          destination: addr ? `${addr.city}, ${addr.state}` : "Direct Dispatch"
-        };
-      }),
-      ...offlinePurchases.map(p => {
-        const addr = p.customer?.addresses?.[0];
-        return {
-          id: p.id,
-          orderNumber: `OFF-${p.id.slice(0, 8).toUpperCase()}`,
-          customerName: p.customer?.name || p.mobile,
-          vendorName: p.vendor.businessName,
-          totalAmount: p.amount,
-          rewardPointsEarned: p.rewardPointsEarned || 0,
-          status: 'COMPLETED',
-          createdAt: p.purchaseDate,
-          type: 'Offline',
-          destination: addr ? `${addr.city}, ${addr.state}` : "In-Store Pick"
-        };
-      })
-    ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    // Pre-calculate stocks for online orders
+    const onlineOrderProductIds = [...new Set(ordersRaw.flatMap(o => (o.items || []).map(i => i.productId)))].filter(Boolean);
+    const stocks = await prisma.vendorStock.findMany({
+      where: { productId: { in: onlineOrderProductIds } },
+      select: { productId: true, vendorId: true, quantity: true }
+    });
 
-    return sendSuccess(res, combined, "Orders fetched");
+    const online = ordersRaw.map(o => {
+      const oItems = o.items || [];
+      const customer = o.customer;
+      const addr = o.shippingAddress || (customer?.addresses && customer.addresses[0]);
+
+      // Calculate which vendors can fulfill this order
+      const eligibleVendors = approvedVendors.filter(v => {
+        return oItems.every(item => {
+          if (!item.productId) return true;
+          const s = stocks.find(st => st.productId === item.productId && st.vendorId === v.id);
+          return s && Number(s.quantity) >= Number(item.quantity || 0);
+        });
+      });
+
+      return {
+        id: o.id,
+        orderNumber: o.orderNumber || "ORDER",
+        customerName: customer?.name || "Guest",
+        vendorName: o.vendor?.businessName || "VENDOR NOT ASSIGNED",
+        vendorId: o.vendorId,
+        eligibleVendors,
+        items: oItems.map(i => ({ productId: i.productId, quantity: i.quantity })),
+        totalAmount: parseFloat(o.totalAmount || 0),
+        rewardPointsEarned: o.rewardPointsEarned || 0,
+        status: o.status || 'PLACED',
+        createdAt: o.createdAt,
+        type: o.type || 'Online',
+        destination: addr ? `${addr.city || 'Ship'}, ${addr.state || ''}`.replace(/,\s*$/, '') : "Direct Dispatch"
+      };
+    });
+
+    const offline = offlinePurchasesRaw.map(p => {
+      const customer = p.customer;
+      const addr = customer?.addresses && customer.addresses[0];
+      return {
+        id: p.id,
+        orderNumber: `OFF-${String(p.id).slice(0, 8).toUpperCase()}`,
+        customerName: customer?.name || p.customerName || p.mobile || "Customer",
+        vendorName: p.vendor?.businessName || "RETAIL",
+        totalAmount: parseFloat(p.amount || 0),
+        rewardPointsEarned: p.rewardPointsEarned || 0,
+        status: 'COMPLETED',
+        createdAt: p.purchaseDate || p.createdAt,
+        type: 'Offline',
+        destination: addr ? `${addr.city || 'Store'}, ${addr.state || ''}`.replace(/,\s*$/, '') : "In-Store Pick"
+      };
+    });
+
+    const combined = [...online, ...offline].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    return sendSuccess(res, { orders: combined, approvedVendors }, "Order vault synchronized");
   } catch (error) {
+    console.error("FATAL ERROR IN GET_ADMIN_ORDERS:", error);
     return sendError(res, error.message, 500);
   }
 };
@@ -403,12 +447,63 @@ export const approveVendor = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body; // APPROVED or REJECTED
 
-    const vendor = await prisma.vendor.update({
+    let vendor = await prisma.vendor.update({
       where: { id },
       data: { approvalStatus: status },
+      include: { outlet: true }
     });
 
+    if (status === 'APPROVED' && !vendor.outletId) {
+      // Auto-create outlet for this vendor since Vendor = Outlet
+      const newOutlet = await prisma.outlet.create({
+        data: {
+          name: vendor.businessName || `${vendor.ownerName}'s Outlet`,
+          code: `OUT-${vendor.id.slice(0, 6).toUpperCase()}`,
+          address: vendor.storeAddress || '',
+          city: '',
+          state: '',
+          pincode: '',
+          status: 'ACTIVE'
+        }
+      });
+      vendor = await prisma.vendor.update({
+        where: { id },
+        data: { outletId: newOutlet.id },
+        include: { outlet: true }
+      });
+    }
+
     return sendSuccess(res, vendor, `Vendor ${status.toLowerCase()} successfully`);
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
+export const updateAdminVendor = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      businessName,
+      ownerName,
+      storeAddress,
+      contactNumber,
+      email,
+      businessCategory,
+    } = req.body;
+
+    const vendor = await prisma.vendor.update({
+      where: { id },
+      data: {
+        businessName,
+        ownerName,
+        storeAddress,
+        contactNumber,
+        email,
+        businessCategory,
+      },
+    });
+
+    return sendSuccess(res, vendor, "Vendor updated successfully");
   } catch (error) {
     return sendError(res, error.message, 500);
   }
@@ -616,17 +711,25 @@ export const createAdminOfflinePurchase = async (req, res) => {
         include: { items: true }
       });
 
-      // Decrement Inventory Stock
+      // Decrement Inventory Stock (from VendorStock)
       for (const item of items) {
         if (item.productId) {
-          const currentProduct = await tx.product.findUnique({ where: { id: item.productId } });
-          if (currentProduct) {
-            const newStock = Math.max(0, currentProduct.stock - Number(item.quantity));
-            await tx.product.update({
-              where: { id: item.productId },
-              data: { stock: newStock }
-            });
-          }
+          await tx.vendorStock.upsert({
+            where: {
+              productId_vendorId: {
+                productId: item.productId,
+                vendorId: vendorId
+              }
+            },
+            update: {
+              quantity: { decrement: Number(item.quantity) }
+            },
+            create: {
+              productId: item.productId,
+              vendorId: vendorId,
+              quantity: 0
+            }
+          });
         }
       }
 
@@ -1036,14 +1139,6 @@ export const seedAdminCategories = async (req, res) => {
 
 export const getAdminBrands = async (req, res) => {
   try {
-    const DEFAULT_BRANDS = [
-      "SkinCeuticals", "La Roche-Posay", "Tatcha", "Drunk Elephant", "Glossier",
-      "Augustinus Bader", "e.l.f. Cosmetics", "NYX Professional Makeup", "Huda Beauty",
-      "Sol de Janeiro", "Laneige", "Lakmé", "Mamaearth", "Sugar Cosmetics",
-      "Nykaa Cosmetics", "Dot & Key", "Minimalist", "Dettol", "Detol", "Lifebuoy", 
-      "Savlon", "Pears", "Dove", "Nivea", "Garnier", "L'Oréal"
-    ];
-
     // Fetch all brands from products
     const products = await prisma.product.findMany({
       select: { brand: true }
@@ -1079,7 +1174,7 @@ export const getAdminBrands = async (req, res) => {
     
     // Deduplicate and sort
     const allBrands = Array.from(new Set(
-      [...DEFAULT_BRANDS, ...productBrands, ...vendorNames, ...customHomepageBrands]
+      [...productBrands, ...vendorNames, ...customHomepageBrands]
         .map(b => b?.trim())
         .filter(Boolean)
     )).filter(b => !hiddenHomepageBrands.includes(b)).sort((a, b) => a.localeCompare(b));
@@ -1102,7 +1197,10 @@ export const assignOrderToVendor = async (req, res) => {
       return sendError(res, "Vendor ID is required", 400);
     }
 
-    const order = await prisma.order.findUnique({ where: { id } });
+    const order = await prisma.order.findUnique({ 
+      where: { id },
+      include: { items: true }
+    });
     if (!order) {
       return sendError(res, "Order not found", 404);
     }
@@ -1112,23 +1210,56 @@ export const assignOrderToVendor = async (req, res) => {
       return sendError(res, "Vendor not found", 404);
     }
 
-    const updatedOrder = await prisma.order.update({
-      where: { id },
-      data: {
-        vendorId,
-        status: "CONFIRMED",
-        trackingEvents: {
-          create: {
-            status: "CONFIRMED",
-            note: `Order assigned to vendor: ${vendor.businessName} for fulfillment.`
+    const updatedOrder = await prisma.$transaction(async (tx) => {
+      // 1. Decrement stock for each item from the selected vendor
+      for (const item of order.items) {
+        if (item.productId) {
+          const stock = await tx.vendorStock.findUnique({
+            where: {
+              productId_vendorId: {
+                productId: item.productId,
+                vendorId: vendorId
+              }
+            }
+          });
+
+          if (!stock || stock.quantity < item.quantity) {
+             throw new Error(`Insufficient stock for product ${item.name} at the selected outlet.`);
           }
+
+          await tx.vendorStock.update({
+            where: {
+              productId_vendorId: {
+                productId: item.productId,
+                vendorId: vendorId
+              }
+            },
+            data: {
+              quantity: { decrement: item.quantity }
+            }
+          });
         }
-      },
-      include: {
-        vendor: true,
-        items: true,
-        trackingEvents: true
       }
+
+      // 2. Assign vendor and update order
+      return tx.order.update({
+        where: { id },
+        data: {
+          vendorId,
+          status: "CONFIRMED",
+          trackingEvents: {
+            create: {
+              status: "CONFIRMED",
+              note: `Order assigned to vendor: ${vendor.businessName} for fulfillment.`
+            }
+          }
+        },
+        include: {
+          vendor: true,
+          items: true,
+          trackingEvents: true
+        }
+      });
     });
 
     return sendSuccess(res, updatedOrder, `Order successfully assigned to ${vendor.businessName}`);
@@ -1227,6 +1358,33 @@ export const getCustomerSegments = async (req, res) => {
     ];
 
     return sendSuccess(res, { segments, totalCustomers: allCustomers.length }, "Customer segments fetched");
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
+export const getPlatformSettings = async (req, res) => {
+  try {
+    const settings = await prisma.setting.findMany();
+    const result = settings.reduce((acc, curr) => {
+      acc[curr.key] = curr.value;
+      return acc;
+    }, {});
+    return sendSuccess(res, result, "Settings fetched");
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
+export const updatePlatformSetting = async (req, res) => {
+  try {
+    const { key, value } = req.body;
+    const setting = await prisma.setting.upsert({
+      where: { key },
+      update: { value },
+      create: { key, value },
+    });
+    return sendSuccess(res, setting, "Setting updated successfully");
   } catch (error) {
     return sendError(res, error.message, 500);
   }
