@@ -54,20 +54,30 @@ async function main() {
     }
 
     // 4. Create default vendor
-    let vendor = await prisma.vendor.findFirst({ where: { businessName: 'OMW Global' } });
+    let vendor = await prisma.vendor.findFirst({ where: { businessName: 'Admin Stock' } });
     if (!vendor) {
-        vendor = await prisma.vendor.create({
-            data: {
-                businessName: 'OMW Global',
-                ownerName: 'Admin',
-                contactNumber: '0000000000',
-                email: 'global@omw.com',
-                businessCategory: 'General',
-                storeAddress: 'OMW Headquarters',
-                approvalStatus: 'APPROVED'
-            }
-        });
-        console.log("Created vendor OMW Global");
+        // Migration: check for old name
+        const oldVendor = await prisma.vendor.findFirst({ where: { businessName: 'OMW Global' } });
+        if (oldVendor) {
+            vendor = await prisma.vendor.update({
+                where: { id: oldVendor.id },
+                data: { businessName: 'Admin Stock', email: 'admin-stock@omw.com' }
+            });
+            console.log("Renamed OMW Global to Admin Stock");
+        } else {
+            vendor = await prisma.vendor.create({
+                data: {
+                    businessName: 'Admin Stock',
+                    ownerName: 'Admin',
+                    contactNumber: '0000000000',
+                    email: 'admin-stock@omw.com',
+                    businessCategory: 'General',
+                    storeAddress: 'OMW Headquarters',
+                    approvalStatus: 'APPROVED'
+                }
+            });
+            console.log("Created vendor Admin Stock");
+        }
     }
 
     // 5. Seed categories and products

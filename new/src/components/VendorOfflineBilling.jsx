@@ -30,7 +30,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { printThermalReceipt } from "@/utils/printReceipt";
-import { API_URL } from "@/utils/api";
+import { API_URL, getMediaUrl } from "@/utils/api";
 
 export function VendorOfflineBilling() {
   const [vendors, setVendors] = useState([]);
@@ -151,25 +151,28 @@ export function VendorOfflineBilling() {
     const hasRegularInCart = cart.some(item => !isSpecialItem(item));
     
     let fp = products.filter(p => {
-      const isVendorMatch = p.vendorId === selectedVendorId;
+      // For Admin POS, we show all active products. 
+      // Stock management will be handled during the transaction.
       const isActive = p.status === 'ACTIVE';
       const isSpecial = isSpecialItem(p);
       
       // If deal, only show if unlocked by a regular item in cart
-      if (isSpecial) return isVendorMatch && isActive && hasRegularInCart;
+      if (isSpecial) return isActive && hasRegularInCart;
       
-      return isVendorMatch && isActive;
+      return isActive;
     });
 
     if (searchQuery) {
       fp = fp.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
     }
     
-    // Sort so deals appear at the end or marked clearly
+    // Sort: Regular products first, then deals
     return fp.sort((a, b) => {
-      if (isSpecialItem(a) && !isSpecialItem(b)) return 1;
-      if (!isSpecialItem(a) && isSpecialItem(b)) return -1;
-      return 0;
+      const aSpecial = isSpecialItem(a);
+      const bSpecial = isSpecialItem(b);
+      if (aSpecial && !bSpecial) return 1;
+      if (!aSpecial && bSpecial) return -1;
+      return a.name.localeCompare(b.name);
     });
   }, [products, selectedVendorId, searchQuery, cart]);
 
@@ -386,27 +389,30 @@ export function VendorOfflineBilling() {
         {/* Left Side: Product Selector */}
         <div className="lg:col-span-8 space-y-6">
           <Card className="border border-stone-200 shadow-sm rounded-[5px] overflow-hidden bg-white h-[800px] flex flex-col">
-            <CardHeader className="bg-stone-50 border-b border-stone-100 flex flex-row items-center justify-between pb-4">
-              <div>
-                <CardTitle className="text-[11px] font-black text-stone-900 uppercase tracking-[0.25em] flex items-center justify-between w-full">
-                  <div className="flex items-center gap-3">
-                    <Store className="h-4 w-4 text-pink-500" /> Catalog Registry
+            <CardHeader className="bg-stone-50/50 border-b border-stone-100 flex flex-row items-center justify-between py-5 px-6">
+              <div className="flex-1">
+                <CardTitle className="text-[12px] font-black text-stone-900 uppercase tracking-[0.3em] flex items-center gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="h-8 w-8 rounded-[5px] bg-white border border-stone-200 flex items-center justify-center shadow-sm">
+                      <Store className="h-4 w-4 text-pink-500" />
+                    </div>
+                    <span>Catalog Registry</span>
                   </div>
                   {cart.some(item => !isSpecialItem(item)) && (
-                    <div className="flex items-center gap-2 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 animate-pulse">
+                    <div className="ml-4 flex items-center gap-2 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 animate-pulse">
                       <Sparkles className="h-3 w-3 text-emerald-600" />
                       <span className="text-[8px] text-emerald-600">Special Deals Unlocked</span>
                     </div>
                   )}
                 </CardTitle>
               </div>
-              <div className="relative w-80">
+              <div className="relative w-80 ml-6">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
                 <Input 
                   placeholder="Filter by name or SKU..." 
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-10 h-10 rounded-[5px] bg-white border border-stone-200 shadow-sm"
+                  className="pl-10 h-10 rounded-[5px] bg-white border border-stone-200 shadow-sm focus-visible:ring-stone-900 transition-all"
                 />
               </div>
             </CardHeader>
@@ -432,13 +438,27 @@ export function VendorOfflineBilling() {
                         </div>
                       )}
                       <div className="aspect-square bg-white rounded-[5px] mb-3 overflow-hidden border border-stone-100 relative">
-                        {p.imageUrls && p.imageUrls[0] ? (
-                          <img src={p.imageUrls[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-stone-200">
-                             <Store className="h-10 w-10 stroke-[1]" />
-                          </div>
-                        )}
+                        {(() => {
+                          const img = p.imageUrls?.[0] || p.images?.[0] || p.image;
+                          if (img) {
+                            return (
+                              <img 
+                                src={getMediaUrl(img)} 
+                                alt={p.name} 
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  e.currentTarget.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-stone-200"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="h-10 w-10"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><path d="M15 22V12"></path><path d="M2 7h20"></path><path d="M22 7v11a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7"></path><path d="M12 22V7"></path></svg></div>';
+                                }}
+                              />
+                            );
+                          }
+                          return (
+                            <div className="w-full h-full flex items-center justify-center text-stone-200">
+                               <Store className="h-10 w-10 stroke-[1]" />
+                            </div>
+                          );
+                        })()}
                         <div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/5 flex items-center justify-center transition-colors">
                           <Plus className="opacity-0 group-hover:opacity-100 h-8 w-8 text-stone-900 bg-white rounded-[5px] p-2 shadow-sm transition-all scale-75 group-hover:scale-100" />
                         </div>
@@ -494,15 +514,21 @@ export function VendorOfflineBilling() {
                           className="flex flex-col gap-3 bg-white p-3.5 rounded-[5px] border border-stone-200 shadow-sm"
                         >
                           <div className="flex items-start gap-4">
-                            {item.imageUrls && item.imageUrls[0] ? (
-                              <div className="h-12 w-12 rounded-[5px] border border-stone-100 overflow-hidden shrink-0 bg-stone-50">
-                                <img src={item.imageUrls[0]} alt={item.name} className="h-full w-full object-cover" />
-                              </div>
-                            ) : (
-                              <div className="h-12 w-12 rounded-[5px] border border-stone-100 flex items-center justify-center shrink-0 bg-stone-50 text-stone-300">
-                                <Store className="h-5 w-5" />
-                              </div>
-                            )}
+                            {(() => {
+                              const img = item.imageUrls?.[0] || item.images?.[0] || item.image;
+                              if (img) {
+                                return (
+                                  <div className="h-12 w-12 rounded-[5px] border border-stone-100 overflow-hidden shrink-0 bg-stone-50">
+                                    <img src={getMediaUrl(img)} alt={item.name} className="h-full w-full object-cover" />
+                                  </div>
+                                );
+                              }
+                              return (
+                                <div className="h-12 w-12 rounded-[5px] border border-stone-100 flex items-center justify-center shrink-0 bg-stone-50 text-stone-300">
+                                  <Store className="h-5 w-5" />
+                                </div>
+                              );
+                            })()}
                             <div className="flex-1">
                               <h5 className="font-black text-[11px] text-stone-900 leading-tight uppercase tracking-tight">{item.name}</h5>
                               <span className="font-black text-stone-400 text-[9px] mt-2 block uppercase tracking-widest">&#8377;{Number(item.unitPrice).toLocaleString()} / UNIT</span>

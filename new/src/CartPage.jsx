@@ -23,7 +23,6 @@ import {
   X,
   Star,
 } from "lucide-react";
-import { getAllProducts } from "./data/products";
 import { useAuth } from "./context/AuthContext";
 import AuthModal from "./components/AuthModal";
 import { toast } from "sonner";
@@ -326,7 +325,7 @@ export default function CartPage({
   const canCheckout = selectedItems.length > 0;
 
   // Recommendations
-  const recommendations = useMemo(() => getAllProducts().slice(0, 6), []);
+  const recommendations = useMemo(() => dbProducts.slice(0, 6), [dbProducts]);
 
   // ---------- Delivery Location ----------
   const [pincode, setPincode] = useState(

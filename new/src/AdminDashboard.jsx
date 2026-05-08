@@ -93,10 +93,12 @@ import {
   Monitor,
   UploadCloud,
   PackagePlus,
+  PackageCheck,
   QrCode,
   Copy,
   Gift,
   Upload,
+  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import AdminLogin from "./AdminLogin";
@@ -127,6 +129,7 @@ import InventorySection from "./components/admin/sections/InventorySection";
 import OfflineStoresSection from "./components/admin/sections/OfflineStoresSection";
 import OffersSection from "./components/admin/sections/OffersSection";
 import OutletInventorySection from "./components/admin/sections/OutletInventorySection";
+import ProductLabelsSection from "./components/admin/sections/ProductLabelsSection";
 
 import { printThermalReceipt } from "@/utils/printReceipt";
 
@@ -230,7 +233,7 @@ const emptyProduct = {
   discountPrice: "",
   specialOfferType: "None",
   existingImages: [],
-  vendors: [{ vendorId: "", stock: "" }],
+  vendors: [{ vendorId: "", stock: "0" }],
   howToUse: "",
   skinConcerns: [],
   additionalInfo: "",
@@ -318,11 +321,7 @@ const AdminDashboardContent = () => {
   const activeView = pathSegments[1] || "overview";
   const subView = pathSegments[2];
 
-  useEffect(() => {
-    if (activeView === "product-labels") {
-      navigate("/admin/inventory", { replace: true });
-    }
-  }, [activeView, navigate]);
+  // Removed product-labels redirect to allow standalone view
 
   const [searchQuery, setSearchQuery] = useState("");
   const deferredSearchQuery = useDeferredValue(searchQuery);
@@ -363,11 +362,12 @@ const AdminDashboardContent = () => {
     name: "",
     brand: "",
     price: "",
-    stock: "100",
+    stock: "0",
     vendorId: "",
   });
   const [quickAddImage, setQuickAddImage] = useState(null);
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+  const [tagInput, setTagInput] = useState("");
   const [newProduct, setNewProduct] = useState({
     name: "",
     brand: "",
@@ -387,7 +387,7 @@ const AdminDashboardContent = () => {
     discountPrice: "",
     specialOfferType: "None",
     existingImages: [],
-    vendors: [{ vendorId: "", stock: "" }],
+    vendors: [{ vendorId: "", stock: "0" }],
     howToUse: "",
     skinConcerns: [],
     additionalInfo: "",
@@ -814,7 +814,7 @@ const AdminDashboardContent = () => {
     const newProd = {
       name: p.name,
       brand: p.brand || "",
-      price: p.price,
+      price: p.originalPrice || p.price,
       categoryName: p.category?.name || "",
       description: p.description || "",
       tags: p.tags?.join(", ") || "",
@@ -828,7 +828,7 @@ const AdminDashboardContent = () => {
       specialOfferType: p.specialOfferType || "None",
       ingredients: p.ingredients || "",
       whyWeLoveIt: p.whyWeLoveIt || "",
-      discountPrice: p.discountPrice || "",
+      discountPrice: p.originalPrice ? p.price : (p.discountPrice || ""),
       existingImages: (p.imageUrls || []).filter(
         (img) => img && img.trim() !== "",
       ),
@@ -1198,7 +1198,7 @@ const AdminDashboardContent = () => {
       whyWeLoveIt: "",
       discountPrice: "",
       existingImages: [],
-      vendors: [{ vendorId: "", stock: "" }],
+      vendors: [{ vendorId: "", stock: "0" }],
       howToUse: "",
       skinConcerns: [],
       additionalInfo: "",
@@ -1445,7 +1445,9 @@ const AdminDashboardContent = () => {
           url = `${API_URL}/stock-transfers`;
         } else {
           const endpoint =
-            viewName === "inventory" || viewName === "special-offers"
+            viewName === "inventory" ||
+            viewName === "special-offers" ||
+            viewName === "product-labels"
               ? "products"
               : viewName === "orders" || viewName === "preorder-transactions"
                 ? "orders"
@@ -1462,7 +1464,11 @@ const AdminDashboardContent = () => {
         const data = await resp.json();
         if (data.success) {
           if (viewName === "stock-transfers") setStockTransfers(data.data);
-          else if (viewName === "inventory" || viewName === "special-offers") {
+          else if (
+            viewName === "inventory" ||
+            viewName === "special-offers" ||
+            viewName === "product-labels"
+          ) {
             const mappedProducts = data.data.map(normalizeAdminProduct);
             setProducts(mappedProducts);
           } else if (
@@ -1725,6 +1731,12 @@ const AdminDashboardContent = () => {
         }
       }
 
+      // Validation: Discount must be lower than Base
+      if (newProduct.discountPrice && newProduct.price && Number(newProduct.discountPrice) >= Number(newProduct.price)) {
+        setLoading(false);
+        return toast.error("Pricing Error: Discount price must be strictly less than the base price.");
+      }
+
       // Step 2: Create or Update product
       const basePayload = {
         ...newProduct,
@@ -1736,9 +1748,9 @@ const AdminDashboardContent = () => {
               .map((t) => t.trim())
               .filter((t) => t)
           : [],
-        discountPrice: newProduct.discountPrice
+        discountPrice: newProduct.discountPrice && newProduct.discountPrice !== "Optional"
           ? Number(newProduct.discountPrice)
-          : undefined,
+          : null, // Send null to clear it in the DB
         imageUrls: finalImageUrls,
         ingredients: newProduct.ingredients || null,
         whyWeLoveIt: newProduct.whyWeLoveIt || null,
@@ -2077,8 +2089,12 @@ const AdminDashboardContent = () => {
     }
   };
 
-  const handleViewChange = (view) => {
-    const resolvedView = view === "product-labels" ? "inventory" : view;
+  const handleViewChange = (view, params = {}) => {
+    setPreSelectedTransferSource(params.preSelectedSource || "");
+    setPreSelectedTransferDest(params.preSelectedDest || "");
+    setPreSelectedTransferItems(params.preSelectedItems || []);
+
+    const resolvedView = view;
     navigate(resolvedView === "overview" ? "/admin" : `/admin/${resolvedView}`);
   };
 
@@ -2317,18 +2333,19 @@ const AdminDashboardContent = () => {
                           Products
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
+
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
-                          isActive={activeView === "outlet-inventory"}
-                          onClick={() => handleViewChange("outlet-inventory")}
+                          isActive={activeView === "product-labels"}
+                          onClick={() => handleViewChange("product-labels")}
                           className={cn(
                             "font-['Inter'] font-bold text-[12px] py-3 px-3 rounded-full transition-all duration-300 whitespace-nowrap",
-                            activeView === "outlet-inventory"
+                            activeView === "product-labels"
                               ? "bg-emerald-50 text-emerald-600"
                               : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
                           )}
                         >
-                          Outlet Network
+                          Product Labels
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
@@ -2494,9 +2511,9 @@ const AdminDashboardContent = () => {
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton className="flex items-center gap-3 py-5 px-4 rounded-full transition-all duration-200 text-stone-600 hover:bg-stone-50 hover:text-pink-950 w-full">
-                      <Users className="h-[18px] w-[18px] text-stone-400 group-hover:text-emerald-600 transition-colors" />
+                      <Store className="h-[18px] w-[18px] text-stone-400 group-hover:text-emerald-600 transition-colors" />
                       <span className="font-['Inter'] font-semibold text-[13px] flex-1 text-left">
-                        Vendors
+                        Outlet Network
                       </span>
                       <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90 text-stone-400" />
                     </SidebarMenuButton>
@@ -2505,19 +2522,36 @@ const AdminDashboardContent = () => {
                     <SidebarMenuSub className="pl-4 border-l-2 border-stone-100 ml-7 py-1 mt-1 space-y-0.5">
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
+                          isActive={activeView === "outlet-inventory"}
+                          onClick={() => handleViewChange("outlet-inventory")}
+                          className={cn(
+                            "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-full transition-all duration-200",
+                            activeView === "outlet-inventory"
+                              ? "bg-emerald-50 text-emerald-600 font-semibold"
+                              : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
+                          )}
+                        >
+                          {activeView === "outlet-inventory" && (
+                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-600 mr-2" />
+                          )}
+                          Network Stock
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton
                           isActive={activeView === "vendors"}
                           onClick={() => handleViewChange("vendors")}
                           className={cn(
                             "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-full transition-all duration-200",
                             activeView === "vendors"
-                              ? "bg-emerald-50 text-pink-700 font-semibold"
+                              ? "bg-emerald-50 text-emerald-600 font-semibold"
                               : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
                           )}
                         >
                           {activeView === "vendors" && (
                             <div className="h-1.5 w-1.5 rounded-full bg-emerald-600 mr-2" />
                           )}
-                          Vendor Overview
+                          Manage Outlets
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
@@ -2550,14 +2584,14 @@ const AdminDashboardContent = () => {
                           className={cn(
                             "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-full transition-all duration-200",
                             activeView === "vendor-analytics"
-                              ? "bg-emerald-50 text-pink-700 font-semibold"
+                              ? "bg-emerald-50 text-emerald-600 font-semibold"
                               : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
                           )}
                         >
                           {activeView === "vendor-analytics" && (
                             <div className="h-1.5 w-1.5 rounded-full bg-emerald-600 mr-2" />
                           )}
-                          Vendor Analytics
+                          Sales Reports
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
@@ -2567,14 +2601,14 @@ const AdminDashboardContent = () => {
                           className={cn(
                             "font-['Inter'] font-medium text-[12px] py-3 px-3 rounded-full transition-all duration-200",
                             activeView === "offline-billing"
-                              ? "bg-emerald-50 text-pink-700 font-semibold"
+                              ? "bg-emerald-50 text-emerald-600 font-semibold"
                               : "text-stone-500 hover:bg-stone-50 hover:text-stone-800",
                           )}
                         >
                           {activeView === "offline-billing" && (
                             <div className="h-1.5 w-1.5 rounded-full bg-emerald-600 mr-2" />
                           )}
-                          Offline Billing
+                          Offline POS
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     </SidebarMenuSub>
@@ -2713,19 +2747,19 @@ const AdminDashboardContent = () => {
             </div>
 
             {/* Middle: Search Bar (Hidden on mobile) */}
-            <div className="hidden md:flex flex-1 max-w-lg mx-6 relative group">
+            <div className="hidden md:flex flex-1 max-w-md mx-6 relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Search className="h-[14px] w-[14px] text-stone-400 group-focus-within:text-[#9a6bff] transition-colors" />
+                <Search className="h-3.5 w-3.5 text-stone-400 group-focus-within:text-indigo-600 transition-colors" />
               </div>
               <Input
-                placeholder="Global search protocol..."
+                placeholder="Search anything..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white/60 border border-[#151515]/10 focus-visible:ring-1 focus-visible:ring-[#9a6bff]/40 focus-visible:bg-white pl-10 h-10 rounded-full transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] placeholder:text-stone-400 placeholder:text-[11px] placeholder:font-black placeholder:uppercase placeholder:tracking-widest font-bold text-xs"
+                className="w-full bg-stone-50/50 border-none focus-visible:ring-1 focus-visible:ring-indigo-600/20 focus-visible:bg-white pl-10 h-9 rounded-xl transition-all placeholder:text-stone-400 placeholder:text-[10px] placeholder:font-medium placeholder:uppercase placeholder:tracking-wider font-medium text-xs"
               />
-              <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
-                <span className="text-[9px] font-black uppercase text-stone-400 tracking-widest bg-stone-100 px-2 py-1 rounded-full">
-                  CMD+K
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <span className="text-[8px] font-bold text-stone-300 tracking-wider">
+                  ⌘K
                 </span>
               </div>
             </div>
@@ -3383,10 +3417,16 @@ const AdminDashboardContent = () => {
                   setIsRestockOpen={setIsRestockOpen}
                   handleEditProduct={handleEditProduct}
                   handleDeleteProduct={handleDeleteProduct}
+                  handleViewChange={handleViewChange}
+                  vendors={vendors}
                 />
               )}
 
               {activeView === "outlet-inventory" && <OutletInventorySection />}
+
+              {activeView === "product-labels" && (
+                <ProductLabelsSection products={products} vendors={vendors} />
+              )}
 
               {activeView === "upcoming-drops" && <UpcomingDropsManager />}
 
@@ -5358,11 +5398,11 @@ const AdminDashboardContent = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-12 gap-8">
-                    <Card className="col-span-8 p-10 rounded-[5px] border border-stone-100/40 shadow-sm bg-white overflow-hidden relative group">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-[11px] font-bold text-stone-500 uppercase tracking-widest flex items-center gap-3">
-                          <span className="h-1.5 w-1.5 rounded-[5px] bg-emerald-500" />
+                  <div className="grid grid-cols-12 gap-6 items-start">
+                    <Card className="col-span-8 p-5 rounded-2xl border border-stone-100 shadow-sm bg-white overflow-hidden relative group">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest flex items-center gap-2">
+                          <span className="h-1 w-1 rounded-full bg-emerald-500" />
                           Revenue Distribution
                         </h3>
                       </div>
@@ -5373,50 +5413,60 @@ const AdminDashboardContent = () => {
                       />
                     </Card>
 
-                    <Card className="col-span-4 p-10 rounded-[5px] border border-stone-100/40 shadow-sm bg-white overflow-hidden relative group">
-                      <div className="flex items-center justify-between mb-8">
-                        <h3 className="text-[11px] font-bold text-stone-500 uppercase tracking-widest flex items-center gap-3">
-                          <span className="h-1.5 w-1.5 rounded-[5px] bg-blue-500" />
-                          Product Sales Performance
+                    <Card className="col-span-4 p-5 rounded-2xl border border-stone-100 shadow-sm bg-white overflow-hidden relative group">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest flex items-center gap-2">
+                          <span className="h-1 w-1 rounded-full bg-indigo-500" />
+                          Product Performance
                         </h3>
                       </div>
 
-                      <ScrollArea className="h-[350px] pr-4 -mr-4">
-                        <div className="space-y-6 relative z-10 pb-4">
+                      <ScrollArea className="h-[280px] pr-4 -mr-4">
+                        <div className="space-y-4 relative z-10 pb-4">
                           {analyticsData?.productPerformance &&
                           analyticsData.productPerformance.length > 0 ? (
                             analyticsData.productPerformance.map((s, i) => (
                               <div
                                 key={i}
-                                className="group/item cursor-pointer"
+                                className="group/item cursor-pointer flex items-center gap-3 p-2 rounded-xl hover:bg-stone-50 transition-all duration-300"
                                 onClick={() => setSelectedTopProduct(s)}
                               >
-                                <div className="flex justify-between items-end mb-2">
-                                  <span className="text-xs font-bold text-stone-900 truncate max-w-[65%] group-hover/item:text-blue-600 transition-colors">
-                                    {s.label}
-                                  </span>
-                                  <div className="text-right">
-                                    <span className="text-xs font-bold text-stone-900 block">
+                                <div className="h-11 w-11 shrink-0 rounded-lg overflow-hidden bg-stone-50 border border-stone-100 shadow-sm transition-all">
+                                   <img 
+                                      src={getMediaUrl(s.image)} 
+                                      className="h-full w-full object-cover group-hover/item:scale-110 transition-transform duration-500" 
+                                      alt={s.label}
+                                      onError={(e) => { e.target.src = "https://via.placeholder.com/100?text=P"; }}
+                                   />
+                                </div>
+                                <div className="flex-1 min-w-0 flex flex-col gap-1">
+                                  <div className="flex justify-between items-start gap-2 mb-1">
+                                    <span className="text-[12px] font-bold text-stone-900 truncate leading-tight group-hover/item:text-indigo-600 transition-colors">
+                                      {s.label}
+                                    </span>
+                                    <span className="text-[11px] font-bold text-stone-900 tabular-nums">
                                       {formatMoney(s.val)}
                                     </span>
-                                    <span className="text-[9px] font-semibold text-stone-400">
-                                      {s.qty} units
-                                    </span>
                                   </div>
-                                </div>
-                                <div className="h-1.5 w-full bg-stone-50 rounded-[5px] overflow-hidden">
-                                  <div
-                                    className="h-full bg-stone-900 rounded-[5px] transition-all duration-1000 ease-out group-hover/item:bg-blue-500 shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
-                                    style={{ width: `${Math.max(2, s.p)}%` }}
-                                  />
+                                  <div className="flex items-center gap-3">
+                                     <div className="flex-1 h-[3px] bg-stone-100 rounded-full overflow-hidden">
+                                        <div
+                                          className="h-full bg-stone-900 rounded-full transition-all duration-1000 ease-out group-hover/item:bg-indigo-500"
+                                          style={{ width: `${Math.max(2, s.p)}%` }}
+                                        />
+                                     </div>
+                                     <span className="text-[8px] font-bold text-stone-400 uppercase tracking-widest tabular-nums shrink-0">
+                                       {s.qty} Units
+                                     </span>
+                                  </div>
                                 </div>
                               </div>
                             ))
                           ) : (
-                            <div className="flex flex-col items-center justify-center py-12 opacity-20">
-                              <Package className="h-12 w-12 text-stone-300 mb-4" />
-                              <p className="text-[10px] font-black uppercase tracking-widest">
-                                No Sales Protocol Data
+                            <div className="flex flex-col items-center justify-center py-12 opacity-30">
+                              <Package className="h-10 w-10 text-stone-300 mb-3" />
+                              <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400">
+                                No Performance Data
                               </p>
                             </div>
                           )}
@@ -6366,106 +6416,148 @@ const AdminDashboardContent = () => {
                                     </button>
                                   </div>
                                   <div className="space-y-4">
-                                    {newProduct.vendors.map((v, idx) => (
-                                      <div
-                                        key={idx}
-                                        className="flex items-center gap-4 bg-white p-2 rounded-[5px] border border-stone-200 shadow-sm"
-                                      >
-                                        <div className="h-12 w-12 rounded-[5px] bg-[#fdf2f8] flex items-center justify-center shrink-0">
-                                          <Store className="h-5 w-5 text-[#be185d]" />
-                                        </div>
-                                        <div className="relative flex-1">
-                                          <select
-                                            required
-                                            className="w-full h-12 bg-transparent px-2 text-sm font-bold focus:outline-none appearance-none transition-all"
-                                            value={v.vendorId}
-                                            onChange={(e) => {
-                                              const newVs = [
-                                                ...newProduct.vendors,
-                                              ];
-                                              newVs[idx] = {
-                                                ...newVs[idx],
-                                                vendorId: e.target.value,
-                                              };
-                                              setNewProduct({
-                                                ...newProduct,
-                                                vendors: newVs,
-                                              });
-                                            }}
-                                          >
-                                            <option value="" disabled>
-                                              Select a vendor...
-                                            </option>
-                                            {vendors.map((vnd) => {
-                                              const isSelectedElsewhere =
-                                                newProduct.vendors.some(
-                                                  (otherV, otherIdx) =>
-                                                    otherIdx !== idx &&
-                                                    otherV.vendorId === vnd.id,
-                                                );
-                                              return (
-                                                <option
-                                                  key={vnd.id}
-                                                  value={vnd.id}
-                                                  disabled={isSelectedElsewhere}
-                                                >
-                                                  {vnd.businessName}{" "}
-                                                  {isSelectedElsewhere
-                                                    ? "— Already Selected"
-                                                    : ""}
-                                                </option>
-                                              );
-                                            })}
-                                          </select>
-                                          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400 pointer-events-none" />
-                                        </div>
-                                        <div className="w-[140px] flex items-center gap-3 bg-stone-50 px-4 h-12 rounded-[5px] border border-stone-100">
-                                          <span className="text-[10px] font-black text-stone-300 uppercase">
-                                            QTY
-                                          </span>
-                                          <input
-                                            type="text"
-                                            inputMode="numeric"
-                                            required
-                                            value={v.stock || ""}
-                                            onChange={(e) => {
-                                              const newVs = [
-                                                ...newProduct.vendors,
-                                              ];
-                                              newVs[idx] = {
-                                                ...newVs[idx],
-                                                stock: e.target.value,
-                                              };
-                                              setNewProduct({
-                                                ...newProduct,
-                                                vendors: newVs,
-                                              });
-                                            }}
-                                            className="w-full bg-transparent text-sm font-black text-[#1a1a1a] focus:outline-none"
-                                            placeholder="0"
-                                          />
-                                        </div>
-                                        {newProduct.vendors.length > 1 &&
-                                          idx !== 0 && (
-                                            <button
-                                              type="button"
-                                              onClick={() => {
+                                    {newProduct.vendors.map((v, idx) => {
+                                      const selectedVendor = (vendors || []).find(vnd => vnd.id === v.vendorId);
+                                      const isVendorAdmin = selectedVendor?.businessName?.toLowerCase() === "admin stock" || 
+                                                            selectedVendor?.businessName?.toLowerCase() === "omw global";
+                                      
+                                      return (
+                                        <div
+                                          key={idx}
+                                          className="flex items-center gap-4 bg-white p-2 rounded-[5px] border border-stone-200 shadow-sm"
+                                        >
+                                          <div className="h-12 w-12 rounded-[5px] bg-[#fdf2f8] flex items-center justify-center shrink-0">
+                                            <Store className="h-5 w-5 text-[#be185d]" />
+                                          </div>
+                                          <div className="relative flex-1">
+                                            <select
+                                              required
+                                              disabled={v.stock > 0 && v.vendorId !== ""}
+                                              className={cn(
+                                                "w-full h-12 bg-transparent px-2 text-sm font-bold focus:outline-none appearance-none transition-all",
+                                                v.stock > 0 && v.vendorId !== "" ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                                              )}
+                                              value={v.vendorId}
+                                              onChange={(e) => {
                                                 const newVs = [
                                                   ...newProduct.vendors,
                                                 ];
-                                                newVs.splice(idx, 1);
+                                                newVs[idx] = {
+                                                  ...newVs[idx],
+                                                  vendorId: e.target.value,
+                                                };
                                                 setNewProduct({
                                                   ...newProduct,
                                                   vendors: newVs,
                                                 });
                                               }}
-                                              className="w-10 h-10 flex items-center justify-center text-stone-300 hover:text-rose-500 transition-all"
                                             >
-                                              <Trash2 className="h-4 w-4" />
+                                              <option value="" disabled>
+                                                Select a vendor...
+                                              </option>
+                                              {vendors.map((vnd) => {
+                                                const isSelectedElsewhere =
+                                                  newProduct.vendors.some(
+                                                    (otherV, otherIdx) =>
+                                                      otherIdx !== idx &&
+                                                      otherV.vendorId === vnd.id,
+                                                  );
+                                                return (
+                                                  <option
+                                                    key={vnd.id}
+                                                    value={vnd.id}
+                                                    disabled={isSelectedElsewhere}
+                                                  >
+                                                    {vnd.businessName?.toLowerCase() === "omw global" ? "Admin Stock" : vnd.businessName}{" "}
+                                                    {isSelectedElsewhere
+                                                      ? "— Already Selected"
+                                                      : ""}
+                                                  </option>
+                                                );
+                                              })}
+                                            </select>
+                                            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400 pointer-events-none" />
+                                          </div>
+                                          <div className={cn(
+                                            "w-[140px] flex items-center gap-3 bg-stone-50 px-4 h-12 rounded-[5px] border border-stone-100 transition-all",
+                                            !isVendorAdmin && "opacity-70"
+                                          )}>
+                                            <span className="text-[10px] font-black text-stone-400 uppercase">
+                                              Stock
+                                            </span>
+                                            <input
+                                              type="text"
+                                              readOnly={!isVendorAdmin}
+                                              value={v.stock || "0"}
+                                              onChange={(e) => {
+                                                if (isVendorAdmin) {
+                                                  const val = e.target.value.replace(/\D/g, "");
+                                                  const newVs = [...newProduct.vendors];
+                                                  newVs[idx] = { ...newVs[idx], stock: val };
+                                                  setNewProduct({
+                                                    ...newProduct,
+                                                    vendors: newVs,
+                                                  });
+                                                }
+                                              }}
+                                              className={cn(
+                                                "w-full bg-transparent text-sm font-black transition-all",
+                                                isVendorAdmin ? "text-stone-900 cursor-text" : "text-stone-400 cursor-not-allowed"
+                                              )}
+                                            />
+                                          </div>
+                                          {!isVendorAdmin && (
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                if (!v.vendorId) {
+                                                  toast.error("Please select a vendor first");
+                                                  return;
+                                                }
+                                                const adminStockVendor = (vendors || []).find(
+                                                  ven => ven.businessName?.toLowerCase() === "admin stock" ||
+                                                         ven.businessName?.toLowerCase() === "omw global"
+                                                );
+                                                handleViewChange("create-transfer", {
+                                                  preSelectedSource: adminStockVendor?.id,
+                                                  preSelectedDest: v.vendorId,
+                                                  preSelectedItems: editingProductId ? [{
+                                                    id: editingProductId,
+                                                    name: newProduct.name,
+                                                    transferQty: 1,
+                                                    sourceStock: Number(newProduct.vendors.find(v_row => v_row.vendorId === adminStockVendor?.id)?.stock || 0)
+                                                  }] : []
+                                                });
+                                              }}
+                                              className="h-12 px-4 text-[10px] uppercase font-black tracking-widest text-[#6366f1] bg-[#eef2ff] border border-[#e0e7ff] hover:bg-[#6366f1] hover:text-white rounded-[5px] transition-all flex items-center gap-2"
+                                            >
+                                              <ArrowRightLeft className="h-3.5 w-3.5" /> Transfer
                                             </button>
                                           )}
-                                      </div>
-                                    ))}
+                                          {newProduct.vendors.length > 1 &&
+                                            idx !== 0 && (
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  if (window.confirm("Are you sure you want to remove this vendor stock entry? This will not delete the actual stock but will remove the association from this product.")) {
+                                                    const newVs = [
+                                                      ...newProduct.vendors,
+                                                    ];
+                                                    newVs.splice(idx, 1);
+                                                    setNewProduct({
+                                                      ...newProduct,
+                                                      vendors: newVs,
+                                                    });
+                                                  }
+                                                }}
+                                                className="w-10 h-10 flex items-center justify-center text-stone-300 hover:text-rose-500 transition-all"
+                                              >
+                                                <Trash2 className="h-4 w-4" />
+                                              </button>
+                                            )}
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 </div>
 
@@ -6501,20 +6593,65 @@ const AdminDashboardContent = () => {
                                     </div>
                                   </div>
                                   <div className="space-y-3">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-[#1a1a1a] ml-1">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-[#1a1a1a] ml-1 flex items-center gap-2">
+                                      <Tag className="h-3 w-3 text-stone-400" />
                                       Product Tags
                                     </Label>
-                                    <Input
-                                      value={newProduct.tags}
-                                      onChange={(e) =>
-                                        setNewProduct({
-                                          ...newProduct,
-                                          tags: e.target.value,
-                                        })
-                                      }
-                                      className={`rounded-[5px] h-14 border-stone-200 bg-white font-bold px-6 focus:ring-[#151515] transition-all text-sm shadow-sm`}
-                                      placeholder="Hydrating, Korea, Glow"
-                                    />
+                                    <div className="min-h-[64px] p-3 flex flex-wrap gap-2.5 border border-stone-200 bg-white rounded-[5px] focus-within:ring-2 focus-within:ring-stone-900 focus-within:border-stone-900 transition-all shadow-sm">
+                                      {newProduct.tags && newProduct.tags.split(',')
+                                        .map(t => t.trim())
+                                        .filter(t => t)
+                                        .map((tag, idx) => (
+                                          <Badge 
+                                            key={idx} 
+                                            className="bg-[#1a1a1a] text-white rounded-[4px] px-3.5 py-2 text-[9px] uppercase font-black tracking-[0.1em] flex items-center gap-2.5 group hover:bg-rose-600 transition-all cursor-default border-none shadow-sm"
+                                          >
+                                            {tag}
+                                            <X 
+                                              className="h-3 w-3 cursor-pointer opacity-40 group-hover:opacity-100 transition-opacity" 
+                                              onClick={() => {
+                                                const currentTags = newProduct.tags.split(',').map(t => t.trim()).filter(t => t);
+                                                const newTags = currentTags.filter(t => t !== tag);
+                                                setNewProduct({
+                                                  ...newProduct,
+                                                  tags: newTags.join(', ')
+                                                });
+                                              }} 
+                                            />
+                                          </Badge>
+                                        ))}
+                                      <input 
+                                         className="flex-1 min-w-[180px] bg-transparent outline-none text-sm font-bold px-2 py-1 placeholder:text-stone-300 placeholder:font-medium placeholder:uppercase placeholder:text-[10px] placeholder:tracking-widest"
+                                         placeholder={newProduct.tags ? "" : "ADD PRODUCT TAGS..."}
+                                         value={tagInput}
+                                         onChange={(e) => setTagInput(e.target.value)}
+                                         onKeyDown={(e) => {
+                                           if (e.key === 'Enter' || e.key === ',') {
+                                             e.preventDefault();
+                                             const tag = tagInput.trim().replace(/,/g, '');
+                                             if (tag) {
+                                               const currentTags = newProduct.tags ? newProduct.tags.split(',').map(t => t.trim()).filter(t => t) : [];
+                                               if (!currentTags.includes(tag)) {
+                                                 setNewProduct({
+                                                   ...newProduct,
+                                                   tags: [...currentTags, tag].join(', ')
+                                                 });
+                                               }
+                                             }
+                                             setTagInput("");
+                                           } else if (e.key === 'Backspace' && !tagInput && newProduct.tags) {
+                                              const currentTags = newProduct.tags.split(',').map(t => t.trim()).filter(t => t);
+                                              if (currentTags.length > 0) {
+                                                const newTags = currentTags.slice(0, -1);
+                                                setNewProduct({
+                                                  ...newProduct,
+                                                  tags: newTags.join(', ')
+                                                });
+                                              }
+                                           }
+                                         }}
+                                      />
+                                    </div>
                                   </div>
 
                                   <div className="space-y-3 col-span-2">
@@ -6654,251 +6791,6 @@ const AdminDashboardContent = () => {
                               </div>
                             </div>
 
-                            <div className="bg-white rounded-[5px] border border-stone-200 shadow-sm p-10 space-y-8 transition-all hover:shadow-md">
-                              <div className="flex items-center justify-between border-b border-stone-100 pb-8">
-                                <div className="flex items-center gap-5">
-                                  <div className="h-14 w-14 rounded-[12px] bg-[#eefdf7] flex items-center justify-center shadow-sm">
-                                    <QrCode className="h-7 w-7 text-[#059669]" />
-                                  </div>
-                                  <div>
-                                    <h2 className="text-[12px] font-black uppercase tracking-[0.4em] text-[#064e3b]">
-                                      Batch & Label
-                                    </h2>
-                                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1.5">
-                                      Product label data
-                                    </p>
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                  <Switch
-                                    id="auto-label-toggle"
-                                    checked={productLabelDraft.enabled}
-                                    disabled={Boolean(editingProductId)}
-                                    onCheckedChange={(val) =>
-                                      setProductLabelDraft((prev) => ({
-                                        ...prev,
-                                        enabled: val,
-                                      }))
-                                    }
-                                    className="data-[state=checked]:bg-emerald-600"
-                                  />
-                                  <Label
-                                    htmlFor="auto-label-toggle"
-                                    className="text-[10px] font-black uppercase tracking-widest text-stone-500"
-                                  >
-                                    Auto Label
-                                  </Label>
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-5 gap-8">
-                                <div
-                                  className={cn(
-                                    "col-span-3 space-y-6 transition-opacity",
-                                    !productLabelDraft.enabled &&
-                                      "opacity-40 pointer-events-none",
-                                  )}
-                                >
-                                  <div className="grid grid-cols-2 gap-5">
-                                    <div className="space-y-3">
-                                      <Label className="text-[10px] font-black uppercase tracking-widest text-[#1a1a1a] ml-1">
-                                        Batch No
-                                      </Label>
-                                      <Input
-                                        value={productLabelDraft.batchNo}
-                                        onChange={(e) =>
-                                          setProductLabelDraft((prev) => ({
-                                            ...prev,
-                                            batchNo: e.target.value,
-                                          }))
-                                        }
-                                        className="rounded-[5px] h-12 border-stone-200 bg-white font-bold px-5 text-sm shadow-sm"
-                                        placeholder="Auto generated"
-                                      />
-                                    </div>
-
-                                    <div className="space-y-3">
-                                      <Label className="text-[10px] font-black uppercase tracking-widest text-[#1a1a1a] ml-1">
-                                        MRP (&#8377;)
-                                      </Label>
-                                      <Input
-                                        type="text"
-                                        inputMode="numeric"
-                                        value={productLabelDraft.mrp}
-                                        onChange={(e) =>
-                                          setProductLabelDraft((prev) => ({
-                                            ...prev,
-                                            mrp: e.target.value,
-                                          }))
-                                        }
-                                        className="rounded-[5px] h-12 border-stone-200 bg-white font-bold px-5 text-sm shadow-sm"
-                                        placeholder={newProduct.price || "0.00"}
-                                      />
-                                    </div>
-
-                                    <div className="space-y-3">
-                                      <Label className="text-[10px] font-black uppercase tracking-widest text-[#1a1a1a] ml-1">
-                                        Net Weight
-                                      </Label>
-                                      <Input
-                                        type="text"
-                                        inputMode="decimal"
-                                        value={productLabelDraft.weight}
-                                        onChange={(e) =>
-                                          setProductLabelDraft((prev) => ({
-                                            ...prev,
-                                            weight: e.target.value,
-                                          }))
-                                        }
-                                        className="rounded-[5px] h-12 border-stone-200 bg-white font-bold px-5 text-sm shadow-sm"
-                                        placeholder="50"
-                                      />
-                                    </div>
-
-                                    <div className="space-y-3">
-                                      <Label className="text-[10px] font-black uppercase tracking-widest text-[#1a1a1a] ml-1">
-                                        Unit
-                                      </Label>
-                                      <Input
-                                        value={productLabelDraft.unit}
-                                        onChange={(e) =>
-                                          setProductLabelDraft((prev) => ({
-                                            ...prev,
-                                            unit: e.target.value,
-                                          }))
-                                        }
-                                        className="rounded-[5px] h-12 border-stone-200 bg-white font-bold px-5 text-sm shadow-sm"
-                                        placeholder="ml / g / pcs"
-                                      />
-                                    </div>
-
-                                    <div className="space-y-3">
-                                      <Label className="text-[10px] font-black uppercase tracking-widest text-[#1a1a1a] ml-1">
-                                        Production Date
-                                      </Label>
-                                      <Input
-                                        type="date"
-                                        value={productLabelDraft.productionDate}
-                                        onChange={(e) =>
-                                          setProductLabelDraft((prev) => ({
-                                            ...prev,
-                                            productionDate: e.target.value,
-                                          }))
-                                        }
-                                        className="rounded-[5px] h-12 border-stone-200 bg-white font-bold px-5 text-sm shadow-sm"
-                                      />
-                                    </div>
-
-                                    <div className="space-y-3">
-                                      <Label className="text-[10px] font-black uppercase tracking-widest text-[#1a1a1a] ml-1">
-                                        Expiry Date
-                                      </Label>
-                                      <Input
-                                        type="date"
-                                        value={productLabelDraft.expiryDate}
-                                        onChange={(e) =>
-                                          setProductLabelDraft((prev) => ({
-                                            ...prev,
-                                            expiryDate: e.target.value,
-                                          }))
-                                        }
-                                        className="rounded-[5px] h-12 border-stone-200 bg-white font-bold px-5 text-sm shadow-sm"
-                                      />
-                                    </div>
-                                  </div>
-
-                                  <div className="space-y-3">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-[#1a1a1a] ml-1">
-                                      Label Ingredients
-                                    </Label>
-                                    <textarea
-                                      value={productLabelDraft.ingredients}
-                                      onChange={(e) =>
-                                        setProductLabelDraft((prev) => ({
-                                          ...prev,
-                                          ingredients: e.target.value,
-                                        }))
-                                      }
-                                      className="flex min-h-[95px] w-full rounded-[5px] border border-stone-200 bg-stone-50/50 px-5 py-4 text-sm font-medium placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 transition-all"
-                                      placeholder="Uses Ingredients Analysis if empty"
-                                    />
-                                  </div>
-                                </div>
-
-                                <div
-                                  className={cn(
-                                    "col-span-2 rounded-[5px] border border-dashed border-emerald-200 bg-emerald-50/30 p-5 transition-opacity",
-                                    !productLabelDraft.enabled && "opacity-40",
-                                  )}
-                                >
-                                  <div className="bg-white rounded-[5px] border border-stone-200 p-5 min-h-full flex flex-col">
-                                    <div className="flex items-start justify-between gap-4">
-                                      <div className="min-w-0">
-                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-600">
-                                          Product Label
-                                        </p>
-                                        <h3 className="mt-3 text-sm font-black text-stone-900 leading-tight line-clamp-2">
-                                          {newProduct.name || "Product name"}
-                                        </h3>
-                                        <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-stone-400">
-                                          {newProduct.brand || "Brand"}
-                                        </p>
-                                      </div>
-                                      <QrCode className="h-12 w-12 text-stone-300 shrink-0" />
-                                    </div>
-
-                                    <div className="mt-6 grid grid-cols-2 gap-3 text-[10px]">
-                                      <div className="rounded-[5px] bg-stone-50 border border-stone-100 p-3">
-                                        <p className="font-black uppercase tracking-widest text-stone-400">
-                                          Batch
-                                        </p>
-                                        <p className="mt-1 font-black text-stone-900 truncate">
-                                          {productLabelDraft.batchNo || "AUTO"}
-                                        </p>
-                                      </div>
-                                      <div className="rounded-[5px] bg-stone-50 border border-stone-100 p-3">
-                                        <p className="font-black uppercase tracking-widest text-stone-400">
-                                          MRP
-                                        </p>
-                                        <p className="mt-1 font-black text-stone-900 truncate">
-                                          &#8377;
-                                          {productLabelDraft.mrp ||
-                                            newProduct.price ||
-                                            "0"}
-                                        </p>
-                                      </div>
-                                      <div className="rounded-[5px] bg-stone-50 border border-stone-100 p-3">
-                                        <p className="font-black uppercase tracking-widest text-stone-400">
-                                          Weight
-                                        </p>
-                                        <p className="mt-1 font-black text-stone-900 truncate">
-                                          {productLabelDraft.weight
-                                            ? `${productLabelDraft.weight}${productLabelDraft.unit || ""}`
-                                            : "--"}
-                                        </p>
-                                      </div>
-                                      <div className="rounded-[5px] bg-stone-50 border border-stone-100 p-3">
-                                        <p className="font-black uppercase tracking-widest text-stone-400">
-                                          Expiry
-                                        </p>
-                                        <p className="mt-1 font-black text-stone-900 truncate">
-                                          {productLabelDraft.expiryDate || "--"}
-                                        </p>
-                                      </div>
-                                    </div>
-
-                                    <div className="mt-auto pt-6">
-                                      <div className="rounded-[5px] border-2 border-dashed border-stone-200 py-5 text-center">
-                                        <p className="text-[9px] font-black uppercase tracking-[0.25em] text-stone-400">
-                                          QR after save
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
 
                             <div className="bg-white rounded-[5px] border border-stone-200 shadow-sm transition-all hover:shadow-md overflow-hidden">
                               <div className="p-6 border-b border-stone-100">
@@ -7699,32 +7591,49 @@ const AdminDashboardContent = () => {
                                     inputMode="numeric"
                                     required
                                     value={newProduct.price || ""}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
+                                      const val = e.target.value;
                                       setNewProduct({
                                         ...newProduct,
-                                        price: e.target.value,
-                                      })
-                                    }
+                                        price: val,
+                                      });
+                                    }}
                                     className="rounded-[5px] h-14 border-stone-200 bg-white font-bold px-6 focus:ring-[#151515] transition-all text-sm shadow-sm"
                                     placeholder="0.00"
                                   />
                                 </div>
 
                                 <div className="space-y-3">
-                                  <Label className="text-[10px] font-black uppercase tracking-widest text-[#1a1a1a] ml-1">
-                                    Discount Price (&#8377;)
-                                  </Label>
+                                  <div className="flex items-center justify-between px-1">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-[#1a1a1a]">
+                                      Discount Price (&#8377;)
+                                    </Label>
+                                    {newProduct.discountPrice && newProduct.price && Number(newProduct.discountPrice) >= Number(newProduct.price) && (
+                                      <span className="text-[8px] font-black text-rose-500 uppercase tracking-widest animate-pulse">
+                                        Invalid: Must be lower than base
+                                      </span>
+                                    )}
+                                  </div>
                                   <Input
                                     type="text"
                                     inputMode="numeric"
                                     value={newProduct.discountPrice || ""}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      if (val && newProduct.price && Number(val) >= Number(newProduct.price)) {
+                                        toast.error("Discount price must be less than the base price", {
+                                          id: "pricing-error", // Prevent multiple toasts
+                                        });
+                                      }
                                       setNewProduct({
                                         ...newProduct,
-                                        discountPrice: e.target.value,
-                                      })
-                                    }
-                                    className="rounded-[5px] h-14 border-stone-200 bg-white font-bold px-6 focus:ring-[#151515] transition-all text-sm shadow-sm"
+                                        discountPrice: val,
+                                      });
+                                    }}
+                                    className={cn(
+                                      "rounded-[5px] h-14 border-stone-200 bg-white font-bold px-6 focus:ring-[#151515] transition-all text-sm shadow-sm",
+                                      newProduct.discountPrice && newProduct.price && Number(newProduct.discountPrice) >= Number(newProduct.price) && "border-rose-300 bg-rose-50/30 text-rose-600 focus:ring-rose-500"
+                                    )}
                                     placeholder="Optional"
                                   />
                                 </div>
@@ -7969,53 +7878,77 @@ const AdminDashboardContent = () => {
         {/* Top Product Preview Modal */}
         {selectedTopProduct && (
           <div
-            className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in"
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-stone-900/40 backdrop-blur-md animate-in fade-in duration-500 px-4"
             onClick={() => setSelectedTopProduct(null)}
           >
             <div
-              className="bg-white rounded-[5px] p-6 w-[90%] max-w-sm shadow-2xl animate-in zoom-in-95 duration-300 relative"
+              className="bg-white rounded-[40px] p-8 w-full max-w-md shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] animate-in zoom-in-95 duration-500 relative overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
+              {/* Decorative Background */}
+              <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-50/50 rounded-full blur-3xl -mr-24 -mt-24 pointer-events-none" />
+              
               <button
                 onClick={() => setSelectedTopProduct(null)}
-                className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center rounded-[5px] hover:bg-stone-100 transition-colors cursor-pointer"
+                className="absolute top-6 right-6 h-10 w-10 flex items-center justify-center rounded-full bg-stone-50 hover:bg-stone-100 transition-all cursor-pointer z-20 group"
               >
-                <X className="h-4 w-4 text-stone-500" />
+                <X className="h-5 w-5 text-stone-400 group-hover:text-stone-900 group-hover:rotate-90 transition-all duration-300" />
               </button>
-              <div className="flex flex-col items-center mt-2">
-                <div className="w-48 h-48 rounded-[5px] bg-stone-50 border border-stone-100/50 mb-6 overflow-hidden flex items-center justify-center p-2">
+
+              <div className="flex flex-col items-center relative z-10">
+                <div className="w-full aspect-square max-w-[240px] rounded-[32px] bg-stone-50 border border-stone-100/80 mb-8 overflow-hidden flex items-center justify-center p-6 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] relative group/img">
                   {selectedTopProduct.image ? (
                     <img
-                      src={selectedTopProduct.image}
+                      src={getMediaUrl(selectedTopProduct.image)}
                       alt={selectedTopProduct.label}
-                      className="w-full h-full object-contain mix-blend-multiply drop-shadow-sm"
+                      className="w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 ease-out drop-shadow-2xl"
                     />
                   ) : (
-                    <Package className="h-16 w-16 text-stone-300" />
+                    <Package className="h-20 w-20 text-stone-200" />
                   )}
                 </div>
-                <h3 className="text-xl font-bold text-stone-900 text-center leading-tight mb-2">
-                  {selectedTopProduct.label}
-                </h3>
-                <div className="flex items-center gap-6 mt-4 bg-stone-50 px-8 py-3.5 rounded-[5px] border border-stone-100">
-                  <div className="text-center">
-                    <span className="block text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-0.5">
-                      Revenue
+
+                <div className="text-center px-4 mb-8">
+                  <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-[0.3em] mb-2 block">
+                    Product Spotlight
+                  </span>
+                  <h3 className="text-2xl font-bold text-stone-900 leading-tight">
+                    {selectedTopProduct.label}
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 w-full">
+                  <div className="bg-stone-50/80 backdrop-blur-sm p-5 rounded-3xl border border-stone-100 flex flex-col items-center text-center transition-all hover:bg-white hover:shadow-xl hover:-translate-y-1 duration-300">
+                    <div className="h-8 w-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
+                      <TrendingUp className="h-4 w-4" />
+                    </div>
+                    <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-1">
+                      Gross Revenue
                     </span>
-                    <span className="font-black text-stone-900">
+                    <span className="text-lg font-black text-stone-900 tabular-nums">
                       {formatMoney(selectedTopProduct.val)}
                     </span>
                   </div>
-                  <div className="w-px h-8 bg-stone-200" />
-                  <div className="text-center">
-                    <span className="block text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-0.5">
-                      Units Sold
+
+                  <div className="bg-stone-50/80 backdrop-blur-sm p-5 rounded-3xl border border-stone-100 flex flex-col items-center text-center transition-all hover:bg-white hover:shadow-xl hover:-translate-y-1 duration-300">
+                    <div className="h-8 w-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3">
+                      <ShoppingBag className="h-4 w-4" />
+                    </div>
+                    <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-1">
+                      Total Units
                     </span>
-                    <span className="font-black text-stone-900">
+                    <span className="text-lg font-black text-stone-900 tabular-nums">
                       {selectedTopProduct.qty}
                     </span>
                   </div>
                 </div>
+
+                <Button 
+                  className="w-full mt-8 h-12 rounded-2xl bg-stone-900 text-white hover:bg-stone-800 transition-all font-bold text-sm shadow-xl hover:shadow-2xl hover:-translate-y-0.5 active:translate-y-0 duration-300"
+                  onClick={() => setSelectedTopProduct(null)}
+                >
+                  Close Insights
+                </Button>
               </div>
             </div>
           </div>
@@ -8565,17 +8498,14 @@ const AdminDashboardContent = () => {
                       Initial Stock Quota
                     </label>
                     <Input
-                      required
+                      readOnly
                       type="number"
-                      value={quickAddData.stock}
-                      onChange={(e) =>
-                        setQuickAddData({
-                          ...quickAddData,
-                          stock: e.target.value,
-                        })
-                      }
-                      className="h-12 bg-white border-stone-200 rounded-xl font-medium text-stone-900 px-4 focus:ring-2 focus:ring-stone-900 transition-all text-sm"
+                      value={quickAddData.stock || 0}
+                      className="h-12 bg-stone-50 border-stone-200 rounded-xl font-medium text-stone-400 px-4 cursor-not-allowed text-sm"
                     />
+                    <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mt-1 ml-1">
+                      Stock must be added via "Stock Transfers" after creation
+                    </p>
                   </div>
                 </div>
 
@@ -8770,11 +8700,11 @@ const AdminDashboardContent = () => {
                       <h2 className="text-3xl font-bold tracking-tight text-stone-900 mt-2">
                         Stock Transfer Details
                       </h2>
-                      <p className="text-sm font-medium text-stone-500 mt-2 flex items-center gap-2">
+                      <p className="text-[11px] font-black text-stone-400 uppercase tracking-widest mt-2 flex items-center gap-2">
                         Initiated on{" "}
-                        {new Date(
-                          viewingTransfer.createdAt,
-                        ).toLocaleDateString()}
+                        <span className="text-stone-900 bg-stone-100 px-2 py-0.5 rounded">
+                          {new Date(viewingTransfer.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </span>
                       </p>
                     </div>
 
@@ -8854,8 +8784,7 @@ const AdminDashboardContent = () => {
                                   From Outlet
                                 </p>
                                 <p className="text-sm font-bold text-stone-900">
-                                  {viewingTransfer.sourceVendor?.businessName ||
-                                    "Unknown"}
+                                  {viewingTransfer.sourceVendor?.businessName?.toLowerCase() === "omw global" ? "Admin Stock" : (viewingTransfer.sourceVendor?.businessName || "Unknown")}
                                 </p>
                               </div>
                               <div className="flex items-center text-stone-300">
@@ -8866,8 +8795,7 @@ const AdminDashboardContent = () => {
                                   To Destination
                                 </p>
                                 <p className="text-sm font-bold text-stone-900">
-                                  {viewingTransfer.destinationVendor
-                                    ?.businessName || "Unknown"}
+                                  {viewingTransfer.destinationVendor?.businessName?.toLowerCase() === "omw global" ? "Admin Stock" : (viewingTransfer.destinationVendor?.businessName || "Unknown")}
                                 </p>
                               </div>
                             </div>
@@ -8883,18 +8811,16 @@ const AdminDashboardContent = () => {
 
                           <div
                             className={cn(
-                              "px-4 py-4 rounded-[16px] text-center font-bold text-sm shadow-sm border",
-                              viewingTransfer.status === "COMPLETED"
-                                ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-                                : viewingTransfer.status === "DISPATCHED"
-                                  ? "bg-amber-50 text-amber-700 border-amber-100"
-                                  : viewingTransfer.status === "APPROVED"
-                                    ? "bg-indigo-50 text-indigo-700 border-indigo-100"
-                                    : "bg-stone-50 text-stone-700 border-stone-200",
+                              "px-6 py-5 rounded-[20px] text-center font-black uppercase tracking-[0.2em] text-xs shadow-sm border flex items-center justify-center gap-3",
+                              getStatusColor(viewingTransfer.status)
                             )}
                           >
-                            {statusLabelMapping[viewingTransfer.status] ||
-                              viewingTransfer.status}
+                            {viewingTransfer.status === "PENDING" && <Clock className="h-4 w-4" />}
+                            {viewingTransfer.status === "APPROVED" && <CheckCircle2 className="h-4 w-4" />}
+                            {viewingTransfer.status === "DISPATCHED" && <Truck className="h-4 w-4" />}
+                            {viewingTransfer.status === "COMPLETED" && <PackageCheck className="h-4 w-4" />}
+                            {viewingTransfer.status === "CANCELLED" && <XCircle className="h-4 w-4" />}
+                            {statusLabelMapping[viewingTransfer.status] || viewingTransfer.status}
                           </div>
 
                           <div className="mt-8 space-y-4 px-2">
@@ -8964,11 +8890,11 @@ const AdminDashboardContent = () => {
 };
 
 const statusLabelMapping = {
-  PENDING: "Awaiting Admin Approval",
-  APPROVED: "Approved - Awaiting Dispatch",
-  DISPATCHED: "In Transit - Awaiting Receipt",
-  COMPLETED: "Delivered & Confirmed",
-  CANCELLED: "Protocol Cancelled",
+  PENDING: "Pending",
+  APPROVED: "Approved",
+  DISPATCHED: "Shipped",
+  COMPLETED: "Completed",
+  CANCELLED: "Cancelled",
 };
 
 const getStatusColor = (status) => {
@@ -9070,23 +8996,23 @@ const StockTransferView = ({
           <div className="bg-white rounded-[5px] border border-stone-100 overflow-hidden shadow-sm">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-stone-50 border-b border-stone-100 italic">
-                  <th className="px-6 py-4 text-[10px] font-black uppercase text-stone-400 tracking-widest">
-                    Reference
+                <tr className="bg-stone-50/50 border-b border-stone-100">
+                  <th className="px-6 py-5 text-[11px] font-bold uppercase text-stone-500 tracking-wider">
+                    Transfer ID
                   </th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase text-stone-400 tracking-widest">
-                    Source Outlet
+                  <th className="px-6 py-5 text-[11px] font-bold uppercase text-stone-500 tracking-wider">
+                    From
                   </th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase text-stone-400 tracking-widest">
-                    Destination
+                  <th className="px-6 py-5 text-[11px] font-bold uppercase text-stone-500 tracking-wider">
+                    To
                   </th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase text-stone-400 tracking-widest">
+                  <th className="px-6 py-5 text-[11px] font-bold uppercase text-stone-500 tracking-wider">
                     Items
                   </th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase text-stone-400 tracking-widest text-center">
+                  <th className="px-6 py-5 text-[11px] font-bold uppercase text-stone-500 tracking-wider text-center">
                     Status
                   </th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase text-stone-400 tracking-widest text-right">
+                  <th className="px-6 py-5 text-[11px] font-bold uppercase text-stone-500 tracking-wider text-right">
                     Actions
                   </th>
                 </tr>
@@ -9099,21 +9025,28 @@ const StockTransferView = ({
                     className="hover:bg-indigo-50/30 transition-all cursor-pointer group/row"
                   >
                     <td className="px-6 py-5">
-                      <div className="font-black text-stone-900 text-xs">
-                        #{t.id.slice(-6).toUpperCase()}
-                      </div>
-                      <div className="text-[9px] text-stone-400 font-bold mt-0.5">
-                        {new Date(t.createdAt).toLocaleDateString()}
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-lg bg-stone-50 flex items-center justify-center text-stone-400 group-hover/row:bg-emerald-50 group-hover/row:text-emerald-600 transition-colors">
+                          <FileText className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <div className="font-black text-stone-900 text-[11px] tracking-tight">
+                            #{t.id.slice(-6).toUpperCase()}
+                          </div>
+                          <div className="text-[9px] text-stone-400 font-bold uppercase tracking-widest mt-0.5">
+                            {new Date(t.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </div>
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-5">
-                      <div className="font-bold text-stone-800 text-xs uppercase">
-                        {t.sourceVendor?.businessName}
+                      <div className="font-bold text-stone-700 text-xs uppercase">
+                        {t.sourceVendor?.businessName?.toLowerCase() === "omw global" ? "Admin Stock" : (t.sourceVendor?.businessName || "Unknown")}
                       </div>
                     </td>
                     <td className="px-6 py-5">
-                      <div className="font-bold text-stone-800 text-xs uppercase">
-                        {t.destinationVendor?.businessName}
+                      <div className="font-bold text-emerald-700 text-xs uppercase">
+                        {t.destinationVendor?.businessName?.toLowerCase() === "omw global" ? "Admin Stock" : (t.destinationVendor?.businessName || "Unknown")}
                       </div>
                     </td>
                     <td className="px-6 py-5">
@@ -9132,18 +9065,31 @@ const StockTransferView = ({
                           </div>
                         ))}
                       </div>
-                      {(!t.items || t.items.length === 0) && (
+                      {(!t.items || t.items.length === 0) ? (
                         <div className="text-[10px] text-stone-300 italic">
                           No Items
+                        </div>
+                      ) : (
+                        <div className="mt-2 pt-2 border-t border-stone-50 flex justify-between items-center group/total">
+                          <span className="text-[8px] font-black text-stone-300 uppercase tracking-widest group-hover/total:text-indigo-400 transition-colors">Total Units</span>
+                          <span className="text-[11px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-[4px] tabular-nums">
+                            {t.items.reduce((sum, item) => sum + (item.quantity || 0), 0)}
+                          </span>
                         </div>
                       )}
                     </td>
                     <td className="px-6 py-5 text-center">
-                      <Badge
-                        className={`font-black text-[9px] uppercase px-3 py-1.5 rounded-full border border-transparent shadow-sm ${getStatusColor(t.status)}`}
-                      >
+                      <div className={cn(
+                        "inline-flex items-center gap-2 px-4 py-2 rounded-full border text-[9px] font-black uppercase tracking-widest shadow-sm",
+                        getStatusColor(t.status)
+                      )}>
+                        {t.status === "PENDING" && <Clock className="h-3 w-3" />}
+                        {t.status === "APPROVED" && <CheckCircle2 className="h-3 w-3" />}
+                        {t.status === "DISPATCHED" && <Truck className="h-3 w-3" />}
+                        {t.status === "COMPLETED" && <PackageCheck className="h-3 w-3" />}
+                        {t.status === "CANCELLED" && <XCircle className="h-3 w-3" />}
                         {statusLabelMapping[t.status] || t.status}
-                      </Badge>
+                      </div>
                     </td>
                     <td
                       className="px-6 py-5 text-right"
@@ -9236,9 +9182,18 @@ const CreateTransferView = ({
 
   const sourceProducts = useMemo(() => {
     if (!sourceId) return [];
-    return products.filter(
-      (p) => p.vendorId === sourceId && (p.stock || 0) > 0,
-    );
+    return products
+      .map((p) => {
+        const records = p.stockRecords || p.bundledVendors || [];
+        const sourceRecord = records.find(
+          (r) => (r.vendorId || r.vendor?.id) === sourceId
+        );
+        const sourceStock = sourceRecord
+          ? sourceRecord.quantity || sourceRecord.stock || 0
+          : 0;
+        return { ...p, sourceStock };
+      })
+      .filter((p) => p.sourceStock > 0);
   }, [sourceId, products]);
 
   const handleSubmit = async (e) => {
@@ -9342,11 +9297,11 @@ const CreateTransferView = ({
                       className="w-full h-12 bg-white border border-stone-200 rounded-[8px] px-4 font-bold text-sm outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select Origin...</option>
-                      {vendors
-                        .filter((v) => v.id !== destId)
+                        {vendors
+                        .filter((v) => v.id !== destId && v.businessName?.toLowerCase() === "omw global")
                         .map((v) => (
                           <option key={v.id} value={v.id}>
-                            {v.businessName.toUpperCase()}
+                            {v.businessName?.toLowerCase() === "omw global" ? "ADMIN STOCK" : v.businessName.toUpperCase()}
                           </option>
                         ))}
                     </select>
@@ -9365,11 +9320,11 @@ const CreateTransferView = ({
                       className="w-full h-12 bg-white border border-stone-200 rounded-[8px] px-4 font-bold text-sm outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select Target...</option>
-                      {vendors
-                        .filter((v) => v.id !== sourceId)
+                        {vendors
+                        .filter((v) => v.id !== sourceId && v.businessName?.toLowerCase() !== "omw global")
                         .map((v) => (
                           <option key={v.id} value={v.id}>
-                            {v.businessName.toUpperCase()}
+                            {v.businessName?.toLowerCase() === "omw global" ? "ADMIN STOCK" : v.businessName.toUpperCase()}
                           </option>
                         ))}
                     </select>
@@ -9381,22 +9336,25 @@ const CreateTransferView = ({
           </Card>
 
           <Card className="border-none shadow-sm rounded-[12px] bg-white overflow-hidden border border-stone-100">
-            <CardHeader className="border-b border-stone-50 bg-stone-50/30 px-6 pt-4 pb-2">
+            <CardHeader className="border-b border-stone-50 bg-stone-50/30 px-6 py-4">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-[10px] font-black uppercase tracking-widest text-stone-400 flex items-center gap-2">
-                  <Package className="h-3.5 w-3.5" /> Item Selection
+                <CardTitle className="text-[10px] font-black uppercase tracking-widest text-stone-900 flex items-center gap-2">
+                  <div className="h-5 w-5 rounded bg-stone-900 flex items-center justify-center">
+                    <Package className="h-3 w-3 text-white" />
+                  </div>
+                  Item Selection
                 </CardTitle>
                 {sourceId && (
                   <Badge
                     variant="secondary"
-                    className="text-[9px] font-black uppercase"
+                    className="text-[9px] font-black uppercase bg-stone-100 text-stone-600 border-none px-2 py-0.5 rounded-full"
                   >
-                    {sourceProducts.length} Items Available
+                    {sourceProducts.length} IN STOCK
                   </Badge>
                 )}
               </div>
             </CardHeader>
-            <CardContent className="pt-0.5 px-6 pb-6">
+            <CardContent className="pt-3 px-6 pb-6">
               {!sourceId ? (
                 <div className="py-16 text-center bg-stone-50/50 rounded-[12px] border border-dashed border-stone-200">
                   <p className="text-[10px] font-black uppercase tracking-widest text-stone-300">
@@ -9404,13 +9362,13 @@ const CreateTransferView = ({
                   </p>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+                <div className="space-y-4">
+                  <div className="relative group">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-stone-400 group-focus-within:text-stone-900 transition-colors" />
                     <input
                       type="text"
-                      placeholder="SEARCH INVENTORY..."
-                      className="w-full h-12 bg-stone-50 border border-stone-100 rounded-full pl-12 pr-4 font-bold text-xs outline-none focus:bg-white focus:border-emerald-200 transition-all placeholder:text-stone-300"
+                      placeholder="SCAN OR SEARCH INVENTORY..."
+                      className="w-full h-10 bg-stone-50 border border-stone-100 rounded-[6px] pl-10 pr-4 font-black text-[10px] uppercase tracking-widest outline-none focus:bg-white focus:border-stone-900 transition-all placeholder:text-stone-300 shadow-sm"
                     />
                   </div>
 
@@ -9453,8 +9411,8 @@ const CreateTransferView = ({
                               {p.name}
                             </p>
                             <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mt-1.5 flex items-center gap-2">
-                              Stock:{" "}
-                              <span className="text-stone-900">{p.stock}</span>
+                              Source Stock:{" "}
+                              <span className="text-stone-900">{p.sourceStock}</span>
                             </p>
                           </div>
                           {isSelected ? (
@@ -9478,13 +9436,23 @@ const CreateTransferView = ({
 
         <div className="space-y-6">
           <Card className="border-none shadow-sm rounded-[12px] bg-white overflow-hidden border border-stone-100 sticky top-24">
-            <CardHeader className="border-b border-stone-100 bg-white px-6 py-4">
-              <CardTitle className="text-[10px] font-black uppercase tracking-widest text-stone-900 flex items-center gap-2">
-                <ClipboardList className="h-3.5 w-3.5" /> Transfer Manifest
-              </CardTitle>
+            <CardHeader className="border-b border-stone-50 bg-white px-6 py-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-[11px] font-black uppercase tracking-widest text-stone-900">
+                  Manifest
+                </CardTitle>
+                {selectedItems.length > 0 && (
+                  <button
+                    onClick={() => setSelectedItems([])}
+                    className="text-[9px] font-bold uppercase tracking-wider text-stone-400 hover:text-rose-500 transition-colors"
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="max-h-[450px] overflow-y-auto custom-scrollbar p-6 space-y-4">
+              <div className="max-h-[450px] overflow-y-auto custom-scrollbar p-6 pt-0 space-y-4">
                 {selectedItems.length === 0 ? (
                   <div className="py-12 text-center">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-stone-300">
@@ -9495,17 +9463,42 @@ const CreateTransferView = ({
                   selectedItems.map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-center gap-4 bg-stone-50/50 p-4 rounded-xl border border-stone-100"
+                      className="flex items-center justify-between py-3 border-b border-stone-50 last:border-0 gap-4"
                     >
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-black text-stone-900 uppercase truncate leading-none">
+                      <div className="h-12 w-12 rounded-lg bg-stone-50 border border-stone-100 overflow-hidden shrink-0">
+                        {item.imageUrls?.[0] ? (
+                          <img 
+                            src={getMediaUrl(item.imageUrls[0])} 
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-stone-300 bg-stone-50">
+                            <Package className="h-5 w-5" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0 pr-2">
+                        <p className="text-[12px] font-black text-stone-900 leading-none">
                           {item.name}
                         </p>
-                        <p className="text-[9px] text-stone-400 font-bold uppercase tracking-widest mt-1.5">
-                          Stock Left: {item.stock - item.transferQty}
-                        </p>
+                        <div className="flex flex-col gap-0.5 mt-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-1.5 w-1.5 rounded-full bg-stone-300" />
+                            <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest">
+                              Admin Reserve: {item.sourceStock}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className={cn("h-1.5 w-1.5 rounded-full", (item.sourceStock - item.transferQty) < 0 ? "bg-rose-500 animate-pulse" : "bg-emerald-500")} />
+                            <span className="text-[9px] font-black text-stone-600 uppercase tracking-widest">
+                              Remaining: {Math.max(0, item.sourceStock - item.transferQty)}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 bg-white border border-stone-200 rounded-lg p-1 shadow-sm">
+                      
+                      <div className="flex items-center gap-3">
                         <button
                           onClick={() => {
                             if (item.transferQty > 1) {
@@ -9522,16 +9515,16 @@ const CreateTransferView = ({
                               );
                             }
                           }}
-                          className="h-6 w-6 rounded-md hover:bg-stone-50 flex items-center justify-center transition-all"
+                          className="h-8 w-8 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:bg-stone-50 transition-colors"
                         >
-                          <Minus className="h-3 w-3 text-stone-400" />
+                          <Minus className="h-3 w-3" />
                         </button>
-                        <span className="text-[11px] font-black text-stone-900 w-5 text-center">
+                        <span className="text-sm font-black text-stone-900 min-w-[20px] text-center">
                           {item.transferQty}
                         </span>
                         <button
                           onClick={() => {
-                            if (item.transferQty < item.stock) {
+                            if (item.transferQty < (item.sourceStock || 1000)) {
                               setSelectedItems(
                                 selectedItems.map((si) =>
                                   si.id === item.id
@@ -9543,7 +9536,7 @@ const CreateTransferView = ({
                               toast.info("Limit reached");
                             }
                           }}
-                          className="h-6 w-6 rounded-md hover:bg-stone-50 flex items-center justify-center transition-all font-bold text-emerald-600"
+                          className="h-8 w-8 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:bg-stone-50 transition-colors"
                         >
                           <Plus className="h-3 w-3" />
                         </button>
@@ -9553,35 +9546,52 @@ const CreateTransferView = ({
                 )}
               </div>
 
-              <div className="p-6 bg-stone-50 border-t border-stone-100 space-y-4">
-                <div className="flex justify-between items-center px-1">
-                  <span className="text-[10px] font-black uppercase text-stone-400 tracking-widest">
-                    Aggregate Units
-                  </span>
-                  <span className="text-lg font-black text-stone-900">
-                    {selectedItems.reduce(
-                      (sum, item) => sum + item.transferQty,
-                      0,
-                    )}
-                  </span>
+              <div className="p-6 bg-stone-50/50 border-t border-stone-100 space-y-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center px-1">
+                    <span className="text-[10px] font-black uppercase text-stone-400 tracking-widest">
+                      Unique Products
+                    </span>
+                    <span className="text-[13px] font-black text-stone-600">
+                      {selectedItems.length} SKUs
+                    </span>
+                  </div>
+                  
+                  {destId && (
+                    <div className="flex justify-between items-center px-1">
+                      <span className="text-[10px] font-black uppercase text-stone-400 tracking-widest">
+                        Shipment Target
+                      </span>
+                      <span className="text-[10px] font-black text-indigo-600 uppercase tracking-tight truncate max-w-[150px]">
+                        {vendors.find(v => v.id === destId)?.businessName || "N/A"}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="h-px bg-stone-200/50 my-2" />
+
+                  <div className="flex justify-between items-center px-1">
+                    <span className="text-[11px] font-black uppercase text-stone-900 tracking-widest">
+                      Total Units
+                    </span>
+                    <span className="text-2xl font-black text-stone-900 tracking-tighter">
+                      {selectedItems.reduce(
+                        (sum, item) => sum + item.transferQty,
+                        0,
+                      )}
+                    </span>
+                  </div>
                 </div>
+
                 <Button
                   onClick={handleSubmit}
-                  disabled={
-                    loading ||
-                    !sourceId ||
-                    !destId ||
-                    selectedItems.length === 0
-                  }
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-14 font-black uppercase tracking-widest text-[11px] shadow-lg shadow-emerald-100 transition-all flex items-center justify-center gap-3"
+                  disabled={selectedItems.length === 0 || loading}
+                  className="w-full h-12 bg-[#151515] hover:bg-black text-white rounded-lg text-[11px] font-black uppercase tracking-[0.2em] transition-all"
                 >
                   {loading ? (
-                    <Spinner className="h-5 w-5" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <>
-                      Confirm Transfer
-                      <Send className="h-4 w-4" />
-                    </>
+                    "Confirm Transfer"
                   )}
                 </Button>
               </div>

@@ -286,92 +286,32 @@ export const LiveTimeAgo = memo(({ updatedAt, serverSkew }) => {
 export const AdminKPICard = memo(
   ({ title, value, icon: Icon, trend, trendUp, color = "emerald" }) => {
     const colorMap = {
-      emerald: {
-        icon: "bg-emerald-50 text-emerald-600",
-        trend: trendUp
-          ? "text-emerald-700 bg-emerald-50"
-          : "text-rose-700 bg-rose-50",
-      },
-      sky: {
-        icon: "bg-blue-50 text-blue-600",
-        trend: trendUp
-          ? "text-emerald-700 bg-emerald-50"
-          : "text-rose-700 bg-rose-50",
-      },
-      teal: {
-        icon: "bg-teal-50 text-teal-600",
-        trend: trendUp
-          ? "text-emerald-700 bg-emerald-50"
-          : "text-rose-700 bg-rose-50",
-      },
-      indigo: {
-        icon: "bg-indigo-50 text-indigo-600",
-        trend: trendUp
-          ? "text-emerald-700 bg-emerald-50"
-          : "text-rose-700 bg-rose-50",
-      },
+      emerald: { icon: "bg-emerald-50 text-emerald-600", trend: "text-emerald-600 bg-emerald-50" },
+      sky: { icon: "bg-blue-50 text-blue-600", trend: "text-emerald-600 bg-emerald-50" },
+      teal: { icon: "bg-teal-50 text-teal-600", trend: "text-emerald-600 bg-emerald-50" },
+      indigo: { icon: "bg-indigo-50 text-indigo-600", trend: "text-emerald-600 bg-emerald-50" },
     };
     const c = colorMap[color] || colorMap.emerald;
 
-    const ArrowUp = () => (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="10"
-        height="10"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="mr-0.5"
-      >
-        <path d="m5 12 7-7 7 7" />
-        <path d="M12 19V5" />
-      </svg>
-    );
-    const ArrowDown = () => (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="10"
-        height="10"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="mr-0.5"
-      >
-        <path d="M12 5v14" />
-        <path d="m19 12-7 7-7-7" />
-      </svg>
-    );
-
     return (
-      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col min-h-[115px] hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
-        <div className="flex justify-between items-start w-full">
-          <div
-            className={`w-9 h-9 rounded-xl flex items-center justify-center ${c.icon}`}
-          >
-            <Icon className="h-4 w-4 stroke-[2.5px]" />
+      <div className="bg-white p-4 rounded-xl border border-stone-100 shadow-sm flex flex-col hover:shadow-md transition-all duration-300">
+        <div className="flex justify-between items-start mb-3">
+          <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", c.icon)}>
+            <Icon className="h-4 w-4" />
           </div>
           {trend && (
-            <div
-              className={`flex items-center text-[9px] font-black px-2 py-0.5 rounded-full ${c.trend}`}
-            >
-              {trendUp ? <ArrowUp /> : <ArrowDown />}
+            <div className={cn("text-[8px] font-bold px-1.5 py-0.5 rounded-md", c.trend)}>
               {trend}
             </div>
           )}
         </div>
-        <div className="mt-4 sm:mt-5">
-          <div className="text-2xl font-black text-[#151515] tracking-tight leading-none">
-            {value}
-          </div>
-          <div className="text-[9px] text-gray-400 font-extrabold uppercase tracking-widest mt-1.5">
+        <div>
+          <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-0.5">
             {title}
-          </div>
+          </p>
+          <p className="text-xl font-bold text-stone-900 tracking-tight">
+            {value}
+          </p>
         </div>
       </div>
     );
@@ -385,13 +325,18 @@ export const RevenueReport = memo(({ analyticsData, formatMoney }) => {
 
   if (rawData.length === 0)
     return (
-      <div className="h-48 sm:h-56 relative w-full mb-4 bg-stone-50/50 rounded-[12px] animate-pulse" />
+      <div className="h-48 sm:h-56 relative w-full mb-4 bg-stone-50/20 rounded-xl flex items-center justify-center border border-dashed border-stone-200/50">
+        <div className="text-center space-y-1 opacity-30">
+           <Zap className="h-6 w-6 mx-auto text-stone-300" />
+           <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400">Loading Analytics...</p>
+        </div>
+      </div>
     );
 
   const COLORS = {
-    invested: "#43a047",
+    invested: "#6366f1",
     online: "#0ea5e9",
-    offline: "#6366f1",
+    offline: "#f43f5e",
   };
   const maxAmt = Math.max(
     ...rawData.map((d) => (d.onlineAmount || 0) + (d.offlineAmount || 0)),
@@ -401,32 +346,33 @@ export const RevenueReport = memo(({ analyticsData, formatMoney }) => {
   const getPoints = (data) =>
     data.map((d, i) => ({
       x: data.length > 1 ? (i / (data.length - 1)) * 100 : 50,
-      y:
-        100 - (((d.onlineAmount || 0) + (d.offlineAmount || 0)) / maxAmt) * 100,
+      totalY: 100 - (((d.onlineAmount || 0) + (d.offlineAmount || 0)) / maxAmt) * 100,
+      onlineY: 100 - ((d.onlineAmount || 0) / maxAmt) * 100,
+      offlineY: 100 - ((d.offlineAmount || 0) / maxAmt) * 100,
     }));
 
-  const totalPoints = getPoints(rawData);
-  const barWidth = rawData.length > 0 ? 50 / rawData.length : 4;
+  const points = getPoints(rawData);
+  const barWidth = rawData.length > 0 ? 100 / rawData.length : 4;
 
-  const getSmoothPath = (points) => {
-    if (!points || points.length === 0) return "";
-    if (points.length === 1) return `M ${points[0].x},${points[0].y}`;
-    let d = `M ${points[0].x},${points[0].y}`;
-    for (let i = 0; i < points.length - 1; i++) {
-      const p1 = points[i];
-      const p2 = points[i + 1];
-      const cp1x = p1.x + (p2.x - p1.x) / 3;
-      const cp2x = p2.x - (p2.x - p1.x) / 3;
-      d += ` C ${cp1x},${p1.y} ${cp2x},${p2.y} ${p2.x},${p2.y}`;
+  const getSmoothPath = (pts, key) => {
+    if (!pts || pts.length === 0) return "";
+    if (pts.length === 1) return `M ${pts[0].x},${pts[0][key]}`;
+    let d = `M ${pts[0].x},${pts[0][key]}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const cp1x = p1.x + (p2.x - p1.x) / 2;
+      const cp2x = p1.x + (p2.x - p1.x) / 2;
+      d += ` C ${cp1x},${p1[key]} ${cp2x},${p2[key]} ${p2.x},${p2[key]}`;
     }
     return d;
   };
 
-  const getAreaPath = (points) => {
-    if (!points || points.length === 0) return "";
-    const baseLine = getSmoothPath(points);
-    const last = points[points.length - 1];
-    const first = points[0];
+  const getAreaPath = (pts, key) => {
+    if (!pts || pts.length === 0) return "";
+    const baseLine = getSmoothPath(pts, key);
+    const last = pts[pts.length - 1];
+    const first = pts[0];
     return `${baseLine} L ${last.x},100 L ${first.x},100 Z`;
   };
 
@@ -437,63 +383,70 @@ export const RevenueReport = memo(({ analyticsData, formatMoney }) => {
       className="w-full relative group/chart cursor-crosshair h-full flex flex-col pt-2"
       onMouseLeave={() => setHoverIndex(null)}
     >
-      <div className="h-48 sm:h-56 relative w-full mb-4">
-        <div className="absolute -left-12 w-10 top-0 bottom-0 flex flex-col justify-between text-[11px] font-medium text-slate-400 pb-0">
-          <span className="leading-none text-right">{formatMoney(maxAmt)}</span>
-          <span className="leading-none text-right">0</span>
+      {/* Legend */}
+      <div className="flex items-center gap-4 mb-4">
+        <div className="flex items-center gap-1.5">
+          <div className="h-2 w-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.4)]" />
+          <span className="text-[9px] font-bold text-stone-500 uppercase tracking-widest">Online</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="h-2 w-2 rounded-full bg-stone-300 shadow-[0_0_8px_rgba(0,0,0,0.1)]" />
+          <span className="text-[9px] font-bold text-stone-500 uppercase tracking-widest">Offline</span>
+        </div>
+      </div>
+
+      <div className="h-32 sm:h-40 relative w-full mb-2">
+        {/* Y-Axis Labels - Minimalist */}
+        <div className="absolute left-0 w-full h-full pointer-events-none flex flex-col justify-between py-0">
+          {[1, 0.5, 0].map((level) => (
+            <div key={level} className="flex items-center gap-2">
+               <div className="h-px bg-stone-100 flex-1 border-t border-stone-200/30" />
+               <span className="text-[7.5px] font-medium text-stone-300 tabular-nums">
+                  {formatMoney(maxAmt * level)}
+               </span>
+            </div>
+          ))}
         </div>
 
         {activeIndex !== null && activeData && (
           <div
-            className="absolute z-30 pointer-events-none transition-all duration-200"
+            className="absolute z-40 pointer-events-none transition-all duration-300 ease-out"
             style={{
-              left: `${totalPoints[activeIndex].x}%`,
-              top: `${totalPoints[activeIndex].y}%`,
-              transform: `translate(${totalPoints[activeIndex].x > 50 ? "-105%" : "5%"}, -110%)`,
+              left: `${points[activeIndex].x}%`,
+              top: `${points[activeIndex].totalY}%`,
+              transform: `translate(${points[activeIndex].x > 50 ? "-100%" : "0%"}, -100%)`,
             }}
           >
-            <div className="bg-white/95 backdrop-blur-md border border-stone-200 shadow-xl rounded-xl p-3 min-w-[140px]">
-              <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest leading-none mb-2">
-                {activeData.label || activeData.date}
-              </p>
+            <div className="bg-white/95 backdrop-blur-md border border-stone-100 shadow-xl rounded-2xl p-3 min-w-[140px] ring-1 ring-black/5">
+              <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-stone-50">
+                <p className="text-[9px] font-bold text-stone-900 uppercase tracking-wider">
+                  {activeData.label || activeData.date}
+                </p>
+                <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
+              </div>
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-1.5">
-                    <div
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: COLORS.online }}
-                    />
-                    <span className="text-[11px] font-bold text-stone-600">
-                      Online
-                     </span>
+                    <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                    <span className="text-[9px] text-stone-500 font-bold uppercase tracking-tighter">Online</span>
                   </div>
-                  <span className="text-[11px] font-black text-stone-900">
+                  <span className="text-[10px] font-black text-stone-900 tabular-nums">
                     {formatMoney(activeData.onlineAmount || 0)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-1.5">
-                    <div
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: COLORS.offline }}
-                    />
-                    <span className="text-[11px] font-bold text-stone-600">
-                      Offline
-                    </span>
+                    <div className="h-1.5 w-1.5 rounded-full bg-stone-300" />
+                    <span className="text-[9px] text-stone-500 font-bold uppercase tracking-tighter">Offline</span>
                   </div>
-                  <span className="text-[11px] font-black text-stone-900">
+                  <span className="text-[10px] font-black text-stone-900 tabular-nums">
                     {formatMoney(activeData.offlineAmount || 0)}
                   </span>
                 </div>
-                <div className="pt-1.5 mt-1.5 border-t border-stone-100 flex items-center justify-between gap-4">
-                  <span className="text-[11px] font-black text-stone-400 uppercase">
-                    Total
-                  </span>
-                  <span className="text-[12px] font-black text-[#43a047]">
-                    {formatMoney(
-                      (activeData.onlineAmount || 0) +
-                        (activeData.offlineAmount || 0),
-                    )}
+                <div className="pt-1.5 mt-1 border-t border-stone-50 flex items-center justify-between">
+                   <span className="text-[8px] font-bold text-stone-400 uppercase tracking-widest">Total Yield</span>
+                   <span className="text-[11px] font-black text-indigo-600 tabular-nums">
+                    {formatMoney((activeData.onlineAmount || 0) + (activeData.offlineAmount || 0))}
                   </span>
                 </div>
               </div>
@@ -504,98 +457,120 @@ export const RevenueReport = memo(({ analyticsData, formatMoney }) => {
         <svg
           viewBox="0 0 100 100"
           preserveAspectRatio="none"
-          className="w-full h-full overflow-visible"
+          className="w-full h-full overflow-visible relative z-10"
         >
           <defs>
-            <linearGradient id="areaGradientTotal" x1="0" y1="0" x2="0" y2="1">
-              <stop
-                offset="0%"
-                stopColor={COLORS.invested}
-                stopOpacity="0.15"
-              />
-              <stop
-                offset="100%"
-                stopColor={COLORS.invested}
-                stopOpacity="0.0"
-              />
+            <linearGradient id="areaGradientOnline" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#6366f1" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
             </linearGradient>
+            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+               <feGaussianBlur stdDeviation="1.5" result="blur" />
+               <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
           </defs>
 
+          {/* Offline Line (Subtle Background) */}
           <path
-            d={getAreaPath(totalPoints)}
-            fill="url(#areaGradientTotal)"
-            className="transition-all duration-1000"
-          />
-          <path
-            d={getSmoothPath(totalPoints)}
+            d={getSmoothPath(points, "offlineY")}
             fill="none"
-            stroke={COLORS.invested}
-            strokeWidth="3"
+            stroke="#d1d5db"
+            strokeWidth="1.2"
+            strokeDasharray="4 4"
+            vectorEffect="non-scaling-stroke"
+            className="opacity-50"
+          />
+
+          {/* Online Area */}
+          <path
+            d={getAreaPath(points, "onlineY")}
+            fill="url(#areaGradientOnline)"
+            className="transition-all duration-700 ease-in-out"
+          />
+          
+          {/* Online Line */}
+          <path
+            d={getSmoothPath(points, "onlineY")}
+            fill="none"
+            stroke="#6366f1"
+            strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
             vectorEffect="non-scaling-stroke"
+            className="opacity-90 drop-shadow-[0_2px_4px_rgba(99,102,241,0.2)]"
           />
 
-          {totalPoints.map((p, i) => (
-            <rect
-              key={i}
-              x={p.x - barWidth / 2}
-              y="0"
-              width={barWidth}
-              height="100"
-              fill="transparent"
-              onMouseEnter={() => setHoverIndex(i)}
-            />
+          {points.map((p, i) => (
+            <g key={i}>
+              <rect
+                x={p.x - barWidth / 2}
+                y="0"
+                width={barWidth}
+                height="100"
+                fill="transparent"
+                onMouseEnter={() => setHoverIndex(i)}
+                className="cursor-pointer"
+              />
+              {activeIndex === i && (
+                <line
+                  x1={p.x}
+                  y1="0"
+                  x2={p.x}
+                  y2="100"
+                  stroke="#6366f1"
+                  strokeWidth="0.8"
+                  strokeDasharray="4 4"
+                  vectorEffect="non-scaling-stroke"
+                  className="opacity-20"
+                />
+              )}
+            </g>
           ))}
 
-          {activeIndex !== null && totalPoints[activeIndex] && (
-            <g>
-              <line
-                x1={totalPoints[activeIndex].x}
-                y1="0"
-                x2={totalPoints[activeIndex].x}
-                y2="100"
-                stroke="#cbd5e1"
-                strokeWidth="1"
-                vectorEffect="non-scaling-stroke"
+          {activeIndex !== null && points[activeIndex] && (
+            <g className="transition-all duration-300">
+              <circle
+                cx={points[activeIndex].x}
+                cy={points[activeIndex].onlineY}
+                r="2"
+                fill="#6366f1"
+                className="drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]"
               />
               <circle
-                cx={totalPoints[activeIndex].x}
-                cy={totalPoints[activeIndex].y}
-                r="2.5"
-                fill={COLORS.invested}
-                stroke="white"
-                strokeWidth="1"
+                cx={points[activeIndex].x}
+                cy={points[activeIndex].onlineY}
+                r="0.8"
+                fill="white"
               />
             </g>
           )}
         </svg>
       </div>
 
-      <div className="relative h-6 mt-4 w-full px-2">
+      <div className="relative h-3 w-full flex justify-between px-1">
         {(() => {
-          const maxLabels = 7;
+          const maxLabels = 6;
           const indices = [];
           if (rawData.length <= maxLabels) {
             for (let i = 0; i < rawData.length; i++) indices.push(i);
           } else {
-            for (let i = 0; i < maxLabels; i++) {
-              indices.push(
-                Math.floor((i * (rawData.length - 1)) / (maxLabels - 1)),
-              );
-            }
+            const step = Math.ceil(rawData.length / maxLabels);
+            for (let i = 0; i < rawData.length; i += step) indices.push(i);
+            if (indices[indices.length - 1] !== rawData.length - 1) indices.push(rawData.length - 1);
           }
+          
           return indices.map((idx) => {
             const d = rawData[idx];
-            const p = totalPoints[idx];
+            const p = points[idx];
             if (!p) return null;
             return (
               <span
                 key={idx}
-                className={`absolute text-[9px] font-black transition-colors ${idx === activeIndex ? "text-stone-900" : "text-stone-300"} whitespace-nowrap`}
+                className={`text-[7px] font-medium transition-all duration-300 ${idx === activeIndex ? "text-stone-800" : "text-stone-300"} whitespace-nowrap uppercase tracking-tight`}
                 style={{
+                  position: 'absolute',
                   left: `${p.x}%`,
-                  transform: `translateX(${p.x < 10 ? "0" : p.x > 90 ? "-100%" : "-50%"})`,
+                  transform: `translateX(-50%)`,
                 }}
               >
                 {d.label}

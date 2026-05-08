@@ -46,6 +46,7 @@ import {
   listOutlets,
   listProductLabels,
   updateProductLabelStatus,
+  transferStock,
 } from "../controllers/inventory.controller.js";
 
 const router = Router();
@@ -79,6 +80,7 @@ router.patch("/outlets/:outletId/managers/:vendorId", assignOutletManager);
 router.get("/outlets/:outletId/inventory", getAdminOutletInventory);
 router.get("/inventory/summary", getAdminInventorySummary);
 router.get("/stock-movements", getAdminStockMovements);
+router.post("/inventory/transfer", transferStock);
 router.post("/product-labels", createProductLabel);
 router.get("/product-labels", listProductLabels);
 router.get("/product-labels/:id", getProductLabelById);

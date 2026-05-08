@@ -1168,13 +1168,23 @@ export const getAdminBrands = async (req, res) => {
       }
     }
     
+    // Storefront curated brands (synchronized with frontend shopbybrand.jsx)
+    const curatedStorefrontBrands = [
+      "L'Oréal Paris", "Estée Lauder", "Lancôme", "Dior", "Chanel", "CeraVe", "Maybelline", 
+      "MAC Cosmetics", "Clinique", "La Mer", "Shiseido", "Nivea", "Garnier", "Dove", 
+      "Fenty Beauty", "Rare Beauty", "Charlotte Tilbury", "The Ordinary", "SkinCeuticals", 
+      "La Roche-Posay", "Tatcha", "Drunk Elephant", "Glossier", "Augustinus Bader", 
+      "e.l.f. Cosmetics", "NYX Professional Makeup", "Huda Beauty", "Sol de Janeiro", 
+      "Laneige", "Lakmé", "Mamaearth", "Sugar Cosmetics", "Nykaa Cosmetics", "Dot & Key", "Minimalist"
+    ];
+    
     // Extract names and combine
     const productBrands = products.map(p => p.brand).filter(Boolean);
     const vendorNames = vendors.map(v => v.businessName).filter(Boolean);
     
     // Deduplicate and sort
     const allBrands = Array.from(new Set(
-      [...productBrands, ...vendorNames, ...customHomepageBrands]
+      [...productBrands, ...customHomepageBrands, ...curatedStorefrontBrands]
         .map(b => b?.trim())
         .filter(Boolean)
     )).filter(b => !hiddenHomepageBrands.includes(b)).sort((a, b) => a.localeCompare(b));

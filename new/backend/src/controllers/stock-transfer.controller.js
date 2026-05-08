@@ -38,33 +38,64 @@ export const createTransfer = async (req, res) => {
     // Generate a transfer number
     const transferNumber = `TRF-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-    console.log(`[STOCK_TRANSFER] Attempting to create transfer ${transferNumber} from ${sourceVendorId} to ${destinationVendorId} by Admin: ${adminId || 'Anonymous'}`);
-
-    const transfer = await prisma.stockTransfer.create({
-      data: {
-        transferNumber,
-        sourceVendorId,
-        destinationVendorId,
-        adminId,
-        notes,
-        status: "PENDING",
-        items: {
-          create: items.map(item => ({
-            productId: item.productId,
-            quantity: Number(item.quantity) || 0,
-            unitPrice: item.unitPrice ? Number(item.unitPrice) : null
-          }))
-        }
-      },
-      include: {
-        items: true,
-        sourceVendor: { select: { businessName: true } },
-        destinationVendor: { select: { businessName: true } }
-      }
+    // Check if source is Admin Stock to auto-dispatch
+    const sourceVendor = await prisma.vendor.findUnique({
+      where: { id: sourceVendorId },
+      select: { businessName: true }
     });
 
-    console.log(`[STOCK_TRANSFER] Successfully created ${transferNumber}`);
-    return sendSuccess(res, serializePrisma(transfer), "Stock transfer created successfully", 201);
+    const isAdminSource = sourceVendor?.businessName?.toLowerCase() === "admin stock" || 
+                          sourceVendor?.businessName?.toLowerCase() === "omw global";
+
+    const initialStatus = (isAdminSource && adminId) ? "DISPATCHED" : "PENDING";
+
+    console.log(`[STOCK_TRANSFER] Creating transfer ${transferNumber} (Status: ${initialStatus}) from ${sourceVendorId} to ${destinationVendorId}`);
+
+    const transfer = await prisma.$transaction(async (tx) => {
+      const newTransfer = await tx.stockTransfer.create({
+        data: {
+          transferNumber,
+          sourceVendorId,
+          destinationVendorId,
+          adminId,
+          notes,
+          status: initialStatus,
+          dispatchedAt: initialStatus === "DISPATCHED" ? new Date() : null,
+          items: {
+            create: items.map(item => ({
+              productId: item.productId,
+              quantity: Number(item.quantity) || 0,
+              unitPrice: item.unitPrice ? Number(item.unitPrice) : null
+            }))
+          }
+        },
+        include: {
+          items: true,
+          sourceVendor: { select: { businessName: true } },
+          destinationVendor: { select: { businessName: true } }
+        }
+      });
+
+      // If auto-dispatched, decrement stock now
+      if (initialStatus === "DISPATCHED") {
+        for (const item of items) {
+          await tx.vendorStock.update({
+            where: {
+              productId_vendorId: {
+                productId: item.productId,
+                vendorId: sourceVendorId
+              }
+            },
+            data: { quantity: { decrement: Number(item.quantity) || 0 } }
+          });
+        }
+      }
+
+      return newTransfer;
+    });
+
+    console.log(`[STOCK_TRANSFER] Successfully created and processed ${transferNumber}`);
+    return sendSuccess(res, serializePrisma(transfer), `Stock transfer created ${initialStatus === "DISPATCHED" ? "and dispatched" : "successfully"}`, 201);
   } catch (error) {
     console.error("[STOCK_TRANSFER_ERROR]", error);
     return sendError(res, `Failed to create transfer: ${error.message}`, 500);

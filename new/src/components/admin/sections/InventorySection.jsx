@@ -18,7 +18,9 @@ const InventorySection = ({
   setSelectedRestockProduct,
   setIsRestockOpen,
   handleEditProduct,
-  handleDeleteProduct
+  handleDeleteProduct,
+  handleViewChange,
+  vendors
 }) => {
   return (
     <div className="space-y-8 animate-in fade-in">
@@ -234,22 +236,26 @@ const InventorySection = ({
                               </Badge>
                             );
 
+                          const hasAdmin = vendorsList.some(bv => bv.vendor?.businessName?.toLowerCase() === "omw global");
+                          const otherVendorsCount = vendorsList.filter(bv => bv.vendor?.businessName?.toLowerCase() !== "omw global").length;
+
                           if (vendorsList.length === 1) {
                             const bv = vendorsList[0];
                             return (
-                              <div className="flex items-center gap-1.5 bg-stone-50 hover:bg-stone-100 transition-colors border border-stone-100 rounded-[5px] px-2.5 py-1">
-                                <span className="text-[10px] font-black tracking-wide text-stone-900/80 truncate max-w-[90px]">
-                                  {bv.vendor?.businessName ||
-                                    "Unknown"}
+                              <div className="flex items-center gap-1.5 bg-stone-50 hover:bg-stone-100 transition-colors border border-stone-100 rounded-[5px] px-2.5 py-1 shadow-sm">
+                                <span className="text-[10px] font-black tracking-wide text-stone-900/80 truncate max-w-[110px] uppercase">
+                                  {bv.vendor?.businessName?.toLowerCase() === "omw global" ? "Admin Stock" : (bv.vendor?.businessName || "Unknown")}
                                 </span>
                               </div>
                             );
                           }
 
                           return (
-                            <div className="flex items-center gap-1.5 bg-emerald-50/50 hover:bg-pink-100/50 transition-colors border border-emerald-100/60 rounded-[5px] px-2.5 py-1">
-                              <span className="text-[10px] font-black tracking-wide text-stone-950 truncate max-w-[90px]">
-                                {vendorsList.length} Vendors
+                            <div className="flex items-center gap-1.5 bg-emerald-50/50 hover:bg-emerald-100/50 transition-colors border border-emerald-100/60 rounded-[5px] px-2.5 py-1">
+                              <span className="text-[10px] font-black tracking-wide text-stone-950 truncate max-w-[110px] uppercase">
+                                {hasAdmin && otherVendorsCount > 0 
+                                  ? `Admin + ${otherVendorsCount} Vendor${otherVendorsCount > 1 ? 's' : ''}` 
+                                  : `${vendorsList.length} Vendors`}
                               </span>
                             </div>
                           );
@@ -299,8 +305,20 @@ const InventorySection = ({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSelectedRestockProduct(p);
-                            setIsRestockOpen(true);
+                            const adminStockVendor = (vendors || []).find(
+                              ven => ven.businessName?.toLowerCase() === "admin stock" || 
+                                     ven.businessName?.toLowerCase() === "omw global"
+                            );
+                            handleViewChange("create-transfer", {
+                              preSelectedSource: adminStockVendor?.id,
+                              preSelectedItems: [{
+                                id: p.id,
+                                name: p.name,
+                                transferQty: 1,
+                                sourceStock: (p.stockRecords || p.bundledVendors || []).find(r => (r.vendorId || r.vendor?.id) === adminStockVendor?.id)?.quantity || 
+                                             (p.stockRecords || p.bundledVendors || []).find(r => (r.vendorId || r.vendor?.id) === adminStockVendor?.id)?.stock || 0
+                              }]
+                            });
                           }}
                           title="Quick Restock"
                           className="p-1.5 text-stone-400 hover:text-blue-600 hover:bg-blue-50 rounded-[5px] transition-colors"

@@ -4,14 +4,13 @@ import {
     Truck, CornerUpLeft, CreditCard, ChevronDown, ChevronUp, Share2, ArrowRight,
     Gift, Tag, Sparkles, Clock, CheckCircle, Banknote, MapPin, X, AlertCircle, Store, Copy, Play, ChevronLeft, ChevronRight, BookOpen
 } from "lucide-react";
-import { getAllProducts } from "./data/products";
 import { useProducts } from "./context/ProductContext";
 import { useAuth } from "./context/AuthContext";
 import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { PREORDER_PRODUCTS } from "./data/products";
+
 import { API_URL, SERVER_URL } from "./utils/api";
 
 const getMediaUrl = (url) => {
@@ -23,41 +22,28 @@ const getMediaUrl = (url) => {
 const BURGUNDY = "#5E2B3C";
 const LIGHT_BURGUNDY = "#F8EFF2";
 
-// --- Mock Data for PDP Specifics ---
-const MOCK_PDP_DATA = {
-    brand: "LUMIÈRE SEOUL",
-    inStock: true,
-    shades: [
-        { name: "Fair Porcelain", color: "#F7E7CE" },
-        { name: "Light Beige", color: "#EAC096" },
-        { name: "Medium Sand", color: "#D1A374" },
-        { name: "Warm Honey", color: "#C68E63" }
-    ],
-    images: [
-        "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=1000&q=80", // Main
-        "https://images.unsplash.com/photo-1556228720-1987599988d3?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1599305090598-fe179d501227?auto=format&fit=crop&w=800&q=80"
-    ],
-    description: "Experience the ultimate glass skin finish with our Hydra Barrier Serum. Infused with 5% Niacinamide and Centella Asiatica, it calms redness while delivering deep, lasting hydration.",
-    benefits: [
-        { icon: "💧", text: "72h Hydration" },
-        { icon: "✨", text: "Glass Skin Glow" },
-        { icon: "🌿", text: "Vegan Formula" },
-        { icon: "🛡️", text: "Barrier Repair" }
-    ],
-    ingredients: "Water, Glycerin, Niacinamide (5%), Centella Asiatica Extract, Sodium Hyaluronate, Panthenol, Allantoin, Betaine, Caprylyl Glycol...",
-    howToUse: [
-        "Cleanse your face thoroughly.",
-        "Apply 2-3 drops directly onto skin.",
-        "Gently pat until fully absorbed."
-    ],
-    faq: [
-        { q: "Is this suitable for sensitive skin?", a: "Yes! Our formula is hypoallergenic and free from fragrance and alcohol." },
-        { q: "Can I use this with Vitamin C?", a: "Absolutely. Niacinamide pairs excellently with Vitamin C for brightening." },
-        { q: "Is it non-comedogenic?", a: "Yes, it won't clog pores." }
-    ]
-};
+// --- Default Data Fallbacks ---
+const DEFAULT_DESCRIPTION = "Experience the ultimate glass skin finish with our high-performance formulas. Infused with premium ingredients, our products calm redness while delivering deep, lasting hydration.";
+const DEFAULT_BENEFITS = [
+    { icon: "✨", text: "Premium Quality" },
+    { icon: "💧", text: "Deep Hydration" },
+    { icon: "🌿", text: "Clean Formula" },
+    { icon: "🛡️", text: "Effective Results" }
+];
+const DEFAULT_HOW_TO_USE = [
+    "Cleanse your face thoroughly.",
+    "Apply a small amount to your fingertips.",
+    "Gently massage into skin until absorbed.",
+    "Use morning and night for best results."
+];
+const DEFAULT_FAQ = [
+    { q: "Is this suitable for sensitive skin?", a: "Yes, our products are formulated to be gentle yet effective for all skin types." },
+    { q: "How often should I use this?", a: "We recommend using this twice daily, in your morning and evening routines." }
+];
+const DEFAULT_IMAGES = [
+    "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=1000&q=80",
+    "https://images.unsplash.com/photo-1556228720-1987599988d3?auto=format&fit=crop&w=800&q=80"
+];
 
 // --- Helper Components ---
 
@@ -908,8 +894,8 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
     const decodedId = decodeURIComponent(id);
 
     // 1. Hook definitions at the top
-    const [mainImage, setMainImage] = useState(MOCK_PDP_DATA.images[0]);
-    const [selectedShade, setSelectedShade] = useState(MOCK_PDP_DATA.shades[0]);
+    const [mainImage, setMainImage] = useState(DEFAULT_IMAGES[0]);
+    const [selectedShade, setSelectedShade] = useState(null);
     const [qty, setQty] = useState(1);
     const [activeTab, setActiveTab] = useState("description"); // For Desktop Tabs
     const [openAccordions, setOpenAccordions] = useState({ description: true }); // For Mobile Accordions
@@ -962,24 +948,24 @@ export default function ProductDetail({ addToCart, wishlist = [], toggleWishlist
     }
 
     const fullProduct = {
-        ...MOCK_PDP_DATA,
         ...product,
         brand: displayBrand,
         images: listImages,
-        description: product?.description || MOCK_PDP_DATA.description,
-        ingredients: product?.ingredients || MOCK_PDP_DATA.ingredients,
-        whyWeLoveIt: product?.whyWeLoveIt || "Instantly plumps skin by +45% and repairs barrier in 2 weeks.",
+        description: product?.description || DEFAULT_DESCRIPTION,
+        ingredients: product?.ingredients || "Water, Glycerin, Sodium Hyaluronate, Panthenol, Allantoin, Caprylyl Glycol...",
+        whyWeLoveIt: product?.whyWeLoveIt || "Delivers intense hydration and helps strengthen the skin's natural barrier.",
         benefits: (product?.benefits && typeof product.benefits === "string") 
-            ? product.benefits.split("\n").filter(b => b.trim()).map(b => ({ text: b.trim() }))
-            : (Array.isArray(product?.benefits) && product.benefits.length > 0 ? product.benefits : MOCK_PDP_DATA.benefits),
+            ? product.benefits.split("\n").filter(b => b.trim()).map(b => ({ icon: "✨", text: b.trim() }))
+            : (Array.isArray(product?.benefits) && product.benefits.length > 0 ? product.benefits : DEFAULT_BENEFITS),
         howToUse: (product?.howToUse && typeof product.howToUse === "string")
             ? product.howToUse.split("\n").filter(item => item.trim())
-            : (Array.isArray(product?.howToUse) && product.howToUse.length > 0 ? product.howToUse : MOCK_PDP_DATA.howToUse),
+            : (Array.isArray(product?.howToUse) && product.howToUse.length > 0 ? product.howToUse : DEFAULT_HOW_TO_USE),
         faq: (Array.isArray(product?.frequentlyAskedQuestions) && product.frequentlyAskedQuestions.length > 0)
             ? product.frequentlyAskedQuestions
             : ((product?.info && typeof product.info === "string")
                 ? product.info.split("\n").filter(i => i.trim()).map(i => ({ q: i.trim(), a: "" }))
-                : (Array.isArray(product?.faq) && product.faq.length > 0 ? product.faq : MOCK_PDP_DATA.faq)),
+                : (Array.isArray(product?.faq) && product.faq.length > 0 ? product.faq : DEFAULT_FAQ)),
+        shades: product?.shades || []
     };
 
     useEffect(() => {

@@ -65,6 +65,14 @@ const stockMovementInclude = {
 };
 
 const resolveOutletManager = async (req) => {
+  // If middleware has already resolved it, use that
+  if (req.vendor && req.outletId) {
+    return {
+      manager: req.vendor,
+      outletId: req.outletId,
+    };
+  }
+
   const vendorId = getOutletManagerId(req);
 
   if (!vendorId) {
@@ -112,7 +120,7 @@ const resolveOutletManager = async (req) => {
     };
   }
 
-  return { manager };
+  return { manager, outletId: manager.outletId };
 };
 
 const fetchBatchForInventory = async (batchId) =>
@@ -256,26 +264,55 @@ export const createProductLabel = async (req, res) => {
     const labelCode = buildCode("LABEL");
     const barcodeValue = buildCode("BAR");
     const qrValue = labelCode;
+    const requestedQuantity = parseDecimalOrNull(req.body.quantity) || 0;
+    const sourceVendorId = req.body.sourceVendorId;
 
-    const created = await prisma.productBatch.create({
-      data: {
-        productId,
-        batchNo: String(batchNo).trim(),
-        labelCode,
-        barcodeValue,
-        qrValue,
-        mrp: parseDecimalOrNull(mrp) ?? product.defaultMrp ?? null,
-        ingredients: ingredients || product.ingredients || null,
-        productionDate: parseDateOrNull(productionDate),
-        expiryDate: parseDateOrNull(expiryDate),
-        weight: parseDecimalOrNull(weight) ?? product.defaultWeight ?? null,
-        unit: unit || product.unit || null,
-        status: normalizeEnumInput(status) || "ACTIVE",
-        createdByAdminId: adminId || null,
-      },
-      include: {
-        product: true,
-      },
+    const created = await prisma.$transaction(async (tx) => {
+      const batch = await tx.productBatch.create({
+        data: {
+          productId,
+          batchNo: String(batchNo).trim(),
+          labelCode,
+          barcodeValue,
+          qrValue,
+          mrp: parseDecimalOrNull(mrp) ?? product.defaultMrp ?? null,
+          ingredients: ingredients || product.ingredients || null,
+          productionDate: parseDateOrNull(productionDate),
+          expiryDate: parseDateOrNull(expiryDate),
+          weight: parseDecimalOrNull(weight) ?? product.defaultWeight ?? null,
+          unit: unit || product.unit || null,
+          initialQuantity: Number(requestedQuantity),
+          status: normalizeEnumInput(status) || "ACTIVE",
+          createdByAdminId: adminId || null,
+        },
+        include: {
+          product: true,
+        },
+      });
+
+      if (requestedQuantity > 0) {
+        // 1. Deduct from VendorStock (Global Reserves) if source provided
+        if (sourceVendorId) {
+          await tx.vendorStock.upsert({
+            where: {
+              productId_vendorId: {
+                productId,
+                vendorId: sourceVendorId,
+              },
+            },
+            update: {
+              quantity: { decrement: Number(requestedQuantity) },
+            },
+            create: {
+              productId,
+              vendorId: sourceVendorId,
+              quantity: -Number(requestedQuantity),
+            },
+          });
+        }
+      }
+
+      return batch;
     });
 
     return sendSuccess(
@@ -353,6 +390,29 @@ export const getPrintableProductLabel = async (req, res) => {
 
     if (!label) return sendError(res, "Product label not found", 404);
 
+    const intakeMovement = await prisma.stockMovement.findFirst({
+      where: {
+        batchId: label.id,
+        movementType: "ADD",
+        referenceType: "SCAN",
+      },
+      include: {
+        outlet: true,
+        performedBy: true,
+      },
+    });
+
+    const intakeStatus = intakeMovement
+      ? {
+          received: true,
+          receivedAt: intakeMovement.createdAt,
+          outletName: intakeMovement.outlet?.name,
+          receivedBy: intakeMovement.performedBy?.businessName || intakeMovement.performedBy?.ownerName,
+        }
+      : {
+          received: false,
+        };
+
     return sendSuccess(
       res,
       serializePrisma({
@@ -367,6 +427,8 @@ export const getPrintableProductLabel = async (req, res) => {
         expiryDate: label.expiryDate,
         weight: label.weight,
         unit: label.unit,
+        initialQuantity: label.initialQuantity,
+        intakeStatus,
         product: {
           id: label.product.id,
           name: label.product.name,
@@ -442,7 +504,7 @@ export const scanProductCode = async (req, res) => {
     const inventory = await prisma.outletInventory.findUnique({
       where: {
         outletId_productId_batchId: {
-          outletId: resolved.manager.outletId,
+          outletId: resolved.outletId,
           productId: batch.productId,
           batchId: batch.id,
         },
@@ -474,11 +536,12 @@ export const scanProductCode = async (req, res) => {
           labelCode: batch.labelCode,
           barcodeValue: batch.barcodeValue,
           qrValue: batch.qrValue,
+          initialQuantity: batch.initialQuantity,
           isExpired,
         },
         currentOutletStock: inventory?.quantity || 0,
         outlet: {
-          id: resolved.manager.outlet.id,
+          id: resolved.outletId,
           name: resolved.manager.outlet.name,
           code: resolved.manager.outlet.code,
         },
@@ -540,9 +603,29 @@ const mutateInventory = async ({
   }
 
   const result = await prisma.$transaction(async (tx) => {
+    const currentRefType = normalizeEnumInput(referenceType) || defaultReferenceType;
+
+    // Prevent duplicate intakes for the same batch at the same outlet via scan
+    if (currentRefType === "SCAN" && movementType === "ADD") {
+      const existingScanIntake = await tx.stockMovement.findFirst({
+        where: {
+          outletId: resolved.outletId,
+          batchId: batch.id,
+          movementType: "ADD",
+          referenceType: "SCAN",
+        },
+      });
+
+      if (existingScanIntake) {
+        throw new Error(
+          "This batch has already been processed and received at this outlet.",
+        );
+      }
+    }
+
     const inventoryKey = {
       outletId_productId_batchId: {
-        outletId: resolved.manager.outletId,
+        outletId: resolved.outletId,
         productId: batch.productId,
         batchId: batch.id,
       },
@@ -569,7 +652,7 @@ const mutateInventory = async ({
         })
       : await tx.outletInventory.create({
           data: {
-            outletId: resolved.manager.outletId,
+            outletId: resolved.outletId,
             productId: batch.productId,
             batchId: batch.id,
             quantity: nextQuantity,
@@ -578,7 +661,7 @@ const mutateInventory = async ({
         });
 
     await createMovement(tx, {
-      outletId: resolved.manager.outletId,
+      outletId: resolved.outletId,
       productId: batch.productId,
       batchId: batch.id,
       movementType,
@@ -763,42 +846,80 @@ export const getAdminOutletInventory = async (req, res) => {
 
 export const getAdminInventorySummary = async (_req, res) => {
   try {
-    const inventories = await prisma.vendorStock.findMany({
-      include: {
-        product: true,
-        vendor: true
-      },
-    });
+    const [vendorStocks, outletInventories] = await Promise.all([
+      prisma.vendorStock.findMany({
+        include: {
+          product: true,
+          vendor: true,
+        },
+      }),
+      prisma.outletInventory.findMany({
+        include: {
+          product: true,
+          outlet: true,
+          batch: true,
+        },
+      }),
+    ]);
 
-    const grouped = inventories.reduce((acc, entry) => {
+    const grouped = {};
+
+    // Process VendorStock (Bulk/Main Warehouse Stock)
+    vendorStocks.forEach((entry) => {
       const key = entry.product.name;
-      if (!acc[key]) {
-        acc[key] = {
+      if (!grouped[key]) {
+        grouped[key] = {
           productId: entry.productId,
           productName: entry.product.name,
           productSlug: entry.product.slug,
+          image: entry.product.imageUrls?.[0] || entry.product.image,
           totalStock: 0,
           outlets: [],
         };
       }
 
-      acc[key].totalStock += entry.quantity || 0;
-      acc[key].outlets.push({
-        outletId: entry.vendor?.outletId,
+      grouped[key].totalStock += entry.quantity || 0;
+      grouped[key].outlets.push({
+        outletId: entry.vendor?.id,
         outletName: entry.vendor?.businessName,
+        isGlobal: entry.vendor?.businessName?.toLowerCase().includes("global"),
         batchId: null,
-        batchNo: "N/A",
+        batchNo: "Main Stock",
         quantity: entry.quantity,
         expiryDate: null,
       });
+    });
 
-      return acc;
-    }, {});
+    // Process OutletInventory (Distributed Retail Stock)
+    outletInventories.forEach((entry) => {
+      const key = entry.product.name;
+      if (!grouped[key]) {
+        grouped[key] = {
+          productId: entry.productId,
+          productName: entry.product.name,
+          productSlug: entry.product.slug,
+          image: entry.product.imageUrls?.[0] || entry.product.image,
+          totalStock: 0,
+          outlets: [],
+        };
+      }
+
+      grouped[key].totalStock += entry.quantity || 0;
+      grouped[key].outlets.push({
+        outletId: entry.outletId,
+        outletName: entry.outlet?.name,
+        isGlobal: false,
+        batchId: entry.batchId,
+        batchNo: entry.batch?.batchNo || "N/A",
+        quantity: entry.quantity,
+        expiryDate: entry.batch?.expiryDate,
+      });
+    });
 
     return sendSuccess(
       res,
       serializePrisma(Object.values(grouped)),
-      "Inventory summary fetched",
+      "Network inventory summary fetched",
     );
   } catch (error) {
     return sendError(res, error.message, 500);
@@ -820,6 +941,164 @@ export const getAdminStockMovements = async (req, res) => {
     });
 
     return sendSuccess(res, serializePrisma(movements), "Stock movements fetched");
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+export const listAvailableBatches = async (req, res) => {
+  try {
+    const resolved = await resolveOutletManager(req);
+    if (resolved.error) {
+      return sendError(res, resolved.error.message, resolved.error.status);
+    }
+
+    const { search } = req.query;
+
+    const batches = await prisma.productBatch.findMany({
+      where: {
+        status: "ACTIVE",
+        OR: search ? [
+          { batchNo: { contains: search } },
+          { product: { name: { contains: search } } },
+          { labelCode: { contains: search } }
+        ] : undefined,
+        expiryDate: {
+          gt: new Date()
+        }
+      },
+      include: {
+        product: true
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 20
+    });
+
+    // Also fetch current stock for each batch in this outlet
+    const inventory = await prisma.outletInventory.findMany({
+      where: {
+        outletId: resolved.outletId,
+        batchId: { in: batches.map(b => b.id) }
+      }
+    });
+
+    const inventoryMap = inventory.reduce((acc, item) => {
+      acc[item.batchId] = item.quantity;
+      return acc;
+    }, {});
+
+    const results = batches.map(batch => ({
+      batch: {
+        id: batch.id,
+        batchNo: batch.batchNo,
+        mrp: batch.mrp,
+        productionDate: batch.productionDate,
+        expiryDate: batch.expiryDate,
+        weight: batch.weight,
+        unit: batch.unit,
+        labelCode: batch.labelCode
+      },
+      product: {
+        id: batch.product.id,
+        name: batch.product.name,
+        sku: batch.product.sku || batch.product.slug,
+        image: batch.product.imageUrls?.[0] || null
+      },
+      currentOutletStock: inventoryMap[batch.id] || 0
+    }));
+
+    return sendSuccess(res, serializePrisma(results), "Available batches fetched");
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+export const transferStock = async (req, res) => {
+  try {
+    const { productId, batchId, sourceVendorId, targetOutletId, quantity, reason } = req.body;
+    const parsedQuantity = parsePositiveInt(quantity);
+
+    if (!productId || !batchId || !sourceVendorId || !targetOutletId || !parsedQuantity) {
+      return sendError(res, "Product, Batch, Source, Target, and Quantity are required", 400);
+    }
+
+    const adminId = getAdminId(req);
+
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Deduct from Source Vendor (Bulk/Main)
+      const sourceStock = await tx.vendorStock.upsert({
+        where: {
+          productId_vendorId: {
+            productId,
+            vendorId: sourceVendorId,
+          },
+        },
+        update: {
+          quantity: { decrement: parsedQuantity },
+        },
+        create: {
+          productId,
+          vendorId: sourceVendorId,
+          quantity: -parsedQuantity,
+        },
+      });
+
+      if (sourceStock.quantity < 0) {
+        // Optional: Throw if you don't want negative global stock
+        // throw new Error("Insufficient global stock for transfer");
+      }
+
+      // 2. Add to Target Outlet (Retail)
+      const inventoryKey = {
+        outletId_productId_batchId: {
+          outletId: targetOutletId,
+          productId,
+          batchId,
+        },
+      };
+
+      const targetInventory = await tx.outletInventory.upsert({
+        where: inventoryKey,
+        update: {
+          quantity: { increment: parsedQuantity },
+        },
+        create: {
+          outletId: targetOutletId,
+          productId,
+          batchId,
+          quantity: parsedQuantity,
+        },
+      });
+
+      // 3. Create Stock Movement Records
+      // Movement for Source (Deduction)
+      await tx.stockMovement.create({
+        data: {
+          movementType: "TRANSFER_OUT",
+          quantity: parsedQuantity,
+          reason: reason || `Transfer to outlet ${targetOutletId}`,
+          productId,
+          batchId,
+          performedByAdminId: adminId,
+          vendorId: sourceVendorId, // Linked to source vendor
+        },
+      });
+
+      // Movement for Target (Addition)
+      await tx.stockMovement.create({
+        data: {
+          movementType: "TRANSFER_IN",
+          quantity: parsedQuantity,
+          reason: reason || "Transfer received from global reserves",
+          productId,
+          batchId,
+          performedByAdminId: adminId,
+          outletId: targetOutletId, // Linked to target outlet
+        },
+      });
+
+      return { sourceStock, targetInventory };
+    });
+
+    return sendSuccess(res, serializePrisma(result), "Stock transferred successfully");
   } catch (error) {
     return sendError(res, error.message, 500);
   }

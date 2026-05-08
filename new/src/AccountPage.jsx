@@ -144,7 +144,7 @@ export default function AccountPage() {
                       {order.type === 'Online' ? "Delivered 2 hours ago" : "Purchase Recorded"}
                     </h4>
                     <p className="text-xs text-stone-500 font-medium tracking-tight">
-                      {order.type === 'Online' ? "Package was handed to resident" : `In-store purchase at ${order.vendor?.businessName || 'OMW Global'}`}
+                      {order.type === 'Online' ? "Package was handed to resident" : `In-store purchase at ${order.vendor?.businessName || 'Admin Stock'}`}
                     </p>
                   </div>
                 </div>
@@ -271,7 +271,7 @@ export default function AccountPage() {
                         <MapPin size={14} className="text-emerald-500" />
                       </div>
                       <div className="leading-none">
-                        <p className="text-[10px] font-black text-stone-800 tracking-tight">{order.vendor.businessName || 'OMW Global Store'}</p>
+                        <p className="text-[10px] font-black text-stone-800 tracking-tight">{order.vendor.businessName || 'Admin Stock'}</p>
                         <p className="text-[9px] text-stone-500 font-bold mt-0.5">{order.vendor.storeAddress || 'Main Branch'}</p>
                       </div>
                     </div>
