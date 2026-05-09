@@ -226,7 +226,7 @@ const DispatchProtocolWorkstation = memo(
                   className="w-full bg-stone-50 border border-stone-100 h-11 px-4 rounded-lg font-bold text-sm outline-none focus:border-[#9a6bff] transition-all appearance-none cursor-pointer"
                 >
                   <option value="">Select Target Outlet...</option>
-                  {allVendors.map((v) => (
+                  {allVendors.filter(v => v.id !== currentVendor?.id).map((v) => (
                     <option key={v.id} value={v.id}>
                       {v.businessName} ({v.location || "Branch"})
                     </option>
@@ -746,14 +746,17 @@ export default function VendorDashboard() {
           if (nData.success) setNotifications(nData.data);
           break;
         case "stock-transfers":
-          const [stRes, stpRes] = await Promise.all([
+          const [stRes, stpRes, vRes] = await Promise.all([
             fetch(`${API_URL}/stock-transfers?vendorId=${vid}`),
             fetch(`${API_URL}/vendors/${vid}/products`),
+            fetch(`${API_URL}/vendors`),
           ]);
           const stData = await stRes.json();
           const stpData = await stpRes.json();
+          const vData = await vRes.json();
           if (stData.success) setStockTransfers(stData.data);
           if (stpData.success) setVendorProductsWithDeduplication(stpData.data);
+          if (vData.success) setAllVendors(vData.data);
           break;
       }
     } catch (err) {
