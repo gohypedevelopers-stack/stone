@@ -98,7 +98,8 @@ const OverviewSection = memo(
                     Inventory Alert
                   </h3>
                   <p className="text-[11px] font-medium text-stone-500">
-                    {outOfStockCount} products are out of stock. Immediate action required.
+                    {outOfStockCount} products are out of stock. Immediate
+                    action required.
                   </p>
                 </div>
               </div>
@@ -119,9 +120,9 @@ const OverviewSection = memo(
             <Card className="bg-white border border-stone-100 shadow-sm rounded-2xl overflow-hidden p-5 flex flex-col">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                   <h2 className="text-[18px] font-bold text-stone-900 tracking-tight">
-                     Revenue Overview
-                   </h2>
+                  <h2 className="text-[18px] font-bold text-stone-900 tracking-tight">
+                    Revenue Overview
+                  </h2>
                   <p className="text-[10px] font-medium text-stone-400 uppercase tracking-widest mt-1">
                     Monthly performance metrics
                   </p>
@@ -129,10 +130,7 @@ const OverviewSection = memo(
                 <select
                   value={selectedTimeRange}
                   onChange={(e) =>
-                    handleVendorAnalyticsFilterChange(
-                      "time",
-                      e.target.value,
-                    )
+                    handleVendorAnalyticsFilterChange("time", e.target.value)
                   }
                   className="appearance-none bg-stone-50 border border-stone-100 rounded-lg px-4 py-2 text-[10px] font-bold text-stone-600 uppercase tracking-wider focus:outline-none cursor-pointer hover:bg-white transition-colors"
                 >
@@ -145,12 +143,12 @@ const OverviewSection = memo(
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-stone-50/50 p-3 rounded-xl border border-stone-100 relative overflow-hidden group/box">
                   <div className="flex items-center gap-3 mb-1">
-                     <div className="h-6 w-6 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600">
-                        <Globe className="h-3 w-3" />
-                     </div>
-                     <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">
-                       Digital
-                     </p>
+                    <div className="h-6 w-6 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600">
+                      <Globe className="h-3 w-3" />
+                    </div>
+                    <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">
+                      Digital
+                    </p>
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-lg font-bold text-stone-900 tabular-nums">
@@ -163,12 +161,12 @@ const OverviewSection = memo(
                 </div>
                 <div className="bg-stone-50/50 p-3 rounded-xl border border-stone-100 relative overflow-hidden group/box">
                   <div className="flex items-center gap-3 mb-1">
-                     <div className="h-6 w-6 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600">
-                        <Store className="h-3 w-3" />
-                     </div>
-                     <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">
-                       POS Retail
-                     </p>
+                    <div className="h-6 w-6 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600">
+                      <Store className="h-3 w-3" />
+                    </div>
+                    <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">
+                      POS Retail
+                    </p>
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-lg font-bold text-stone-900 tabular-nums">
@@ -201,7 +199,7 @@ const OverviewSection = memo(
                   Latest transactions
                 </p>
               </div>
-              <Button 
+              <Button
                 variant="ghost"
                 className="h-8 px-4 rounded-lg bg-stone-50 text-[9px] font-bold text-stone-500 uppercase tracking-wider hover:bg-stone-900 hover:text-white transition-all"
               >
@@ -334,13 +332,22 @@ const OverviewSection = memo(
                             src={getMediaUrl(p.imageUrls?.[0] || p.images?.[0])}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                             alt={p.name}
-                            onError={(e) => { e.target.src = "https://via.placeholder.com/100?text=P"; }}
+                            onError={(e) => {
+                              e.target.src =
+                                "https://via.placeholder.com/100?text=P";
+                            }}
                           />
                         </div>
-                        <div className={cn(
-                          "absolute -top-1.5 -left-1.5 w-5 h-5 rounded-md border-2 border-white flex items-center justify-center text-[8px] font-bold shadow-sm",
-                          i === 0 ? "bg-amber-400 text-white" : i === 1 ? "bg-stone-400 text-white" : "bg-stone-100 text-stone-400"
-                        )}>
+                        <div
+                          className={cn(
+                            "absolute -top-1.5 -left-1.5 w-5 h-5 rounded-md border-2 border-white flex items-center justify-center text-[8px] font-bold shadow-sm",
+                            i === 0
+                              ? "bg-amber-400 text-white"
+                              : i === 1
+                                ? "bg-stone-400 text-white"
+                                : "bg-stone-100 text-stone-400",
+                          )}
+                        >
                           {i + 1}
                         </div>
                       </div>
@@ -348,7 +355,9 @@ const OverviewSection = memo(
                         <p className="text-[13px] font-bold text-stone-900 truncate leading-tight">
                           {p.name}
                         </p>
-                        <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider mt-1">{p._totalSold} units sold</span>
+                        <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider mt-1">
+                          {p._totalSold} units sold
+                        </span>
                       </div>
                     </div>
                     <div className="text-right">
@@ -398,12 +407,15 @@ const OverviewSection = memo(
                   >
                     <div className="flex items-center gap-4 flex-1 min-w-0">
                       <div className="w-10 h-10 rounded-lg bg-white border border-stone-100 flex items-center justify-center overflow-hidden">
-                         <img 
-                            src={getMediaUrl(p.imageUrls?.[0] || p.images?.[0])} 
-                            className="h-full w-full object-cover" 
-                            alt={p.name}
-                            onError={(e) => { e.target.src = "https://via.placeholder.com/100?text=P"; }}
-                         />
+                        <img
+                          src={getMediaUrl(p.imageUrls?.[0] || p.images?.[0])}
+                          className="h-full w-full object-cover"
+                          alt={p.name}
+                          onError={(e) => {
+                            e.target.src =
+                              "https://via.placeholder.com/100?text=P";
+                          }}
+                        />
                       </div>
                       <div className="flex flex-col min-w-0 flex-1">
                         <p className="text-[13px] font-bold text-stone-900 truncate">
@@ -414,10 +426,14 @@ const OverviewSection = memo(
                         </p>
                       </div>
                     </div>
-                    <div className={cn(
-                      "px-2 py-1 rounded-lg text-[9px] font-bold uppercase",
-                      (p.stock || 0) === 0 ? "bg-rose-100 text-rose-600" : "bg-amber-100 text-amber-600"
-                    )}>
+                    <div
+                      className={cn(
+                        "px-2 py-1 rounded-lg text-[9px] font-bold uppercase",
+                        (p.stock || 0) === 0
+                          ? "bg-rose-100 text-rose-600"
+                          : "bg-amber-100 text-amber-600",
+                      )}
+                    >
                       {(p.stock || 0) === 0 ? "Empty" : `${p.stock} left`}
                     </div>
                   </div>
@@ -438,7 +454,8 @@ const OverviewSection = memo(
                   Vendor Approvals Pending
                 </h3>
                 <p className="text-stone-400 text-[11px] font-medium">
-                  {stats.pendingVendorApprovals} applications are waiting for your review.
+                  {stats.pendingVendorApprovals} applications are waiting for
+                  your review.
                 </p>
               </div>
             </div>

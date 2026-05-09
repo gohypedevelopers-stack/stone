@@ -14,10 +14,7 @@ import {
   Users,
   CheckCircle2,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -42,7 +39,12 @@ export const getMediaUrl = (url) => {
     );
   }
 
-  if (normalized.startsWith("http") || normalized.startsWith("data:") || normalized.startsWith("/src/") || normalized.startsWith("/@fs/")) {
+  if (
+    normalized.startsWith("http") ||
+    normalized.startsWith("data:") ||
+    normalized.startsWith("/src/") ||
+    normalized.startsWith("/@fs/")
+  ) {
     return normalized;
   }
 
@@ -110,7 +112,8 @@ export const QuickRestockDialog = ({
                 Inventory Refill
               </h2>
               <p className="text-stone-400 text-[11px] font-bold uppercase tracking-[0.1em] mt-1">
-                Targeting <span className="text-indigo-600">{product?.name}</span>
+                Targeting{" "}
+                <span className="text-indigo-600">{product?.name}</span>
               </p>
             </div>
           </div>
@@ -226,17 +229,18 @@ export const SystemClock = memo(() => {
   }, []);
 
   return (
-    <div className="hidden md:block">
-      <div className="text-[9px] font-black text-[#9a6bff] uppercase tracking-[0.3em] opacity-80 mb-0.5">
-        Live System Clock
+    <div className="flex flex-col">
+      <div className="flex items-center gap-2 mb-1">
+        <div className="h-1 w-1 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_5px_rgba(99,102,241,0.5)]" />
+        <span className="text-[9px] font-black text-stone-400 uppercase tracking-[0.4em] leading-none">Clock Protocol</span>
       </div>
-      <div className="text-[13px] font-black text-[#151515] tracking-tight">
-        {time.toLocaleDateString("en-US", {
-          weekday: "long",
-          month: "long",
-          day: "numeric",
-          year: "numeric",
-        })}
+      <div className="flex items-baseline gap-2">
+        <span className="text-[15px] font-black text-stone-900 tracking-tighter tabular-nums italic uppercase">
+          {time.toLocaleTimeString("en-US", { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+        </span>
+        <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest italic opacity-60">
+          {time.toLocaleDateString("en-US", { weekday: 'short', day: 'numeric', month: 'short' })}
+        </span>
       </div>
     </div>
   );
@@ -286,21 +290,43 @@ export const LiveTimeAgo = memo(({ updatedAt, serverSkew }) => {
 export const AdminKPICard = memo(
   ({ title, value, icon: Icon, trend, trendUp, color = "emerald" }) => {
     const colorMap = {
-      emerald: { icon: "bg-emerald-50 text-emerald-600", trend: "text-emerald-600 bg-emerald-50" },
-      sky: { icon: "bg-blue-50 text-blue-600", trend: "text-emerald-600 bg-emerald-50" },
-      teal: { icon: "bg-teal-50 text-teal-600", trend: "text-emerald-600 bg-emerald-50" },
-      indigo: { icon: "bg-indigo-50 text-indigo-600", trend: "text-emerald-600 bg-emerald-50" },
+      emerald: {
+        icon: "bg-emerald-50 text-emerald-600",
+        trend: "text-emerald-600 bg-emerald-50",
+      },
+      sky: {
+        icon: "bg-blue-50 text-blue-600",
+        trend: "text-emerald-600 bg-emerald-50",
+      },
+      teal: {
+        icon: "bg-teal-50 text-teal-600",
+        trend: "text-emerald-600 bg-emerald-50",
+      },
+      indigo: {
+        icon: "bg-indigo-50 text-indigo-600",
+        trend: "text-emerald-600 bg-emerald-50",
+      },
     };
     const c = colorMap[color] || colorMap.emerald;
 
     return (
       <div className="bg-white p-4 rounded-xl border border-stone-100 shadow-sm flex flex-col hover:shadow-md transition-all duration-300">
         <div className="flex justify-between items-start mb-3">
-          <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", c.icon)}>
+          <div
+            className={cn(
+              "w-8 h-8 rounded-lg flex items-center justify-center",
+              c.icon,
+            )}
+          >
             <Icon className="h-4 w-4" />
           </div>
           {trend && (
-            <div className={cn("text-[8px] font-bold px-1.5 py-0.5 rounded-md", c.trend)}>
+            <div
+              className={cn(
+                "text-[8px] font-bold px-1.5 py-0.5 rounded-md",
+                c.trend,
+              )}
+            >
               {trend}
             </div>
           )}
@@ -327,8 +353,10 @@ export const RevenueReport = memo(({ analyticsData, formatMoney }) => {
     return (
       <div className="h-48 sm:h-56 relative w-full mb-4 bg-stone-50/20 rounded-xl flex items-center justify-center border border-dashed border-stone-200/50">
         <div className="text-center space-y-1 opacity-30">
-           <Zap className="h-6 w-6 mx-auto text-stone-300" />
-           <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400">Loading Analytics...</p>
+          <Zap className="h-6 w-6 mx-auto text-stone-300" />
+          <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400">
+            Loading Analytics...
+          </p>
         </div>
       </div>
     );
@@ -346,7 +374,8 @@ export const RevenueReport = memo(({ analyticsData, formatMoney }) => {
   const getPoints = (data) =>
     data.map((d, i) => ({
       x: data.length > 1 ? (i / (data.length - 1)) * 100 : 50,
-      totalY: 100 - (((d.onlineAmount || 0) + (d.offlineAmount || 0)) / maxAmt) * 100,
+      totalY:
+        100 - (((d.onlineAmount || 0) + (d.offlineAmount || 0)) / maxAmt) * 100,
       onlineY: 100 - ((d.onlineAmount || 0) / maxAmt) * 100,
       offlineY: 100 - ((d.offlineAmount || 0) / maxAmt) * 100,
     }));
@@ -387,11 +416,15 @@ export const RevenueReport = memo(({ analyticsData, formatMoney }) => {
       <div className="flex items-center gap-4 mb-4">
         <div className="flex items-center gap-1.5">
           <div className="h-2 w-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.4)]" />
-          <span className="text-[9px] font-bold text-stone-500 uppercase tracking-widest">Online</span>
+          <span className="text-[9px] font-bold text-stone-500 uppercase tracking-widest">
+            Online
+          </span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="h-2 w-2 rounded-full bg-stone-300 shadow-[0_0_8px_rgba(0,0,0,0.1)]" />
-          <span className="text-[9px] font-bold text-stone-500 uppercase tracking-widest">Offline</span>
+          <span className="text-[9px] font-bold text-stone-500 uppercase tracking-widest">
+            Offline
+          </span>
         </div>
       </div>
 
@@ -400,10 +433,10 @@ export const RevenueReport = memo(({ analyticsData, formatMoney }) => {
         <div className="absolute left-0 w-full h-full pointer-events-none flex flex-col justify-between py-0">
           {[1, 0.5, 0].map((level) => (
             <div key={level} className="flex items-center gap-2">
-               <div className="h-px bg-stone-100 flex-1 border-t border-stone-200/30" />
-               <span className="text-[7.5px] font-medium text-stone-300 tabular-nums">
-                  {formatMoney(maxAmt * level)}
-               </span>
+              <div className="h-px bg-stone-100 flex-1 border-t border-stone-200/30" />
+              <span className="text-[7.5px] font-medium text-stone-300 tabular-nums">
+                {formatMoney(maxAmt * level)}
+              </span>
             </div>
           ))}
         </div>
@@ -428,7 +461,9 @@ export const RevenueReport = memo(({ analyticsData, formatMoney }) => {
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-1.5">
                     <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-                    <span className="text-[9px] text-stone-500 font-bold uppercase tracking-tighter">Online</span>
+                    <span className="text-[9px] text-stone-500 font-bold uppercase tracking-tighter">
+                      Online
+                    </span>
                   </div>
                   <span className="text-[10px] font-black text-stone-900 tabular-nums">
                     {formatMoney(activeData.onlineAmount || 0)}
@@ -437,16 +472,23 @@ export const RevenueReport = memo(({ analyticsData, formatMoney }) => {
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-1.5">
                     <div className="h-1.5 w-1.5 rounded-full bg-stone-300" />
-                    <span className="text-[9px] text-stone-500 font-bold uppercase tracking-tighter">Offline</span>
+                    <span className="text-[9px] text-stone-500 font-bold uppercase tracking-tighter">
+                      Offline
+                    </span>
                   </div>
                   <span className="text-[10px] font-black text-stone-900 tabular-nums">
                     {formatMoney(activeData.offlineAmount || 0)}
                   </span>
                 </div>
                 <div className="pt-1.5 mt-1 border-t border-stone-50 flex items-center justify-between">
-                   <span className="text-[8px] font-bold text-stone-400 uppercase tracking-widest">Total Yield</span>
-                   <span className="text-[11px] font-black text-indigo-600 tabular-nums">
-                    {formatMoney((activeData.onlineAmount || 0) + (activeData.offlineAmount || 0))}
+                  <span className="text-[8px] font-bold text-stone-400 uppercase tracking-widest">
+                    Total Yield
+                  </span>
+                  <span className="text-[11px] font-black text-indigo-600 tabular-nums">
+                    {formatMoney(
+                      (activeData.onlineAmount || 0) +
+                        (activeData.offlineAmount || 0),
+                    )}
                   </span>
                 </div>
               </div>
@@ -465,8 +507,8 @@ export const RevenueReport = memo(({ analyticsData, formatMoney }) => {
               <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
             </linearGradient>
             <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-               <feGaussianBlur stdDeviation="1.5" result="blur" />
-               <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
           </defs>
 
@@ -487,7 +529,7 @@ export const RevenueReport = memo(({ analyticsData, formatMoney }) => {
             fill="url(#areaGradientOnline)"
             className="transition-all duration-700 ease-in-out"
           />
-          
+
           {/* Online Line */}
           <path
             d={getSmoothPath(points, "onlineY")}
@@ -556,9 +598,10 @@ export const RevenueReport = memo(({ analyticsData, formatMoney }) => {
           } else {
             const step = Math.ceil(rawData.length / maxLabels);
             for (let i = 0; i < rawData.length; i += step) indices.push(i);
-            if (indices[indices.length - 1] !== rawData.length - 1) indices.push(rawData.length - 1);
+            if (indices[indices.length - 1] !== rawData.length - 1)
+              indices.push(rawData.length - 1);
           }
-          
+
           return indices.map((idx) => {
             const d = rawData[idx];
             const p = points[idx];
@@ -568,7 +611,7 @@ export const RevenueReport = memo(({ analyticsData, formatMoney }) => {
                 key={idx}
                 className={`text-[7px] font-medium transition-all duration-300 ${idx === activeIndex ? "text-stone-800" : "text-stone-300"} whitespace-nowrap uppercase tracking-tight`}
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   left: `${p.x}%`,
                   transform: `translateX(-50%)`,
                 }}
@@ -625,7 +668,9 @@ export const AbandonedCartDetailModal = ({
                 <p className="text-sm text-stone-500">
                   {cart.customer?.mobile || "No phone"}
                   <span className="text-stone-300 mx-2">·</span>
-                  <span className="text-amber-600 font-medium">Last active {timeSince}</span>
+                  <span className="text-amber-600 font-medium">
+                    Last active {timeSince}
+                  </span>
                 </p>
               </div>
             </div>
@@ -687,9 +732,17 @@ export const AbandonedCartDetailModal = ({
 
         <div className="px-6 py-4 border-t border-stone-100 flex items-center justify-between bg-stone-50/50">
           <p className="text-xs text-stone-400">
-            Cart updated {lastActive.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+            Cart updated{" "}
+            {lastActive.toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}
             {" at "}
-            {lastActive.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+            {lastActive.toLocaleTimeString("en-IN", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
           </p>
           <div className="flex gap-2">
             <Button

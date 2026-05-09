@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback, memo } from "react";
 import {
   useNavigate,
   useLocation,
@@ -37,6 +37,7 @@ import {
   RefreshCw,
   Edit3,
   ArrowRight,
+  ArrowLeft,
   Loader2,
   IndianRupee,
   Users,
@@ -163,6 +164,435 @@ const statusLabel = (s) =>
     .replace(/_/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase());
 
+// ─── Render Helpers (Moved outside to prevent blinks) ──────────────────
+
+const DispatchProtocolWorkstation = memo(
+  ({
+    navigate,
+    currentVendor,
+    dispatchDestination,
+    setDispatchDestination,
+    allVendors,
+    activeProducts,
+    dispatchItems,
+    addDispatchItem,
+    removeDispatchItem,
+    updateDispatchItemQty,
+    isSubmitting,
+    handleCreateDispatch,
+    getMediaUrl,
+    formatINR,
+    posSearch,
+    setPosSearch,
+  }) => {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-300 p-2 lg:p-4">
+        <div className="flex items-center justify-between p-4 bg-white border border-stone-100 rounded-xl shadow-sm">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate("/vendor-dashboard/stock-transfers")}
+              className="h-10 w-10 flex items-center justify-center text-stone-400 hover:text-stone-900 transition-all"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <div>
+              <h2 className="text-lg font-bold text-stone-900 tracking-tight">
+                Dispatch Protocol
+              </h2>
+              <p className="text-[10px] text-stone-400 font-medium">Outbound Stock Transfer</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Active</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left: Configuration & Inventory */}
+          <div className="lg:col-span-7 space-y-6">
+            {/* Destination Selector */}
+            <div className="bg-white p-5 rounded-xl border border-stone-100 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <MapPin className="h-4 w-4 text-stone-400" />
+                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">
+                  Route Target
+                </span>
+              </div>
+              <div className="relative">
+                <select
+                  value={dispatchDestination}
+                  onChange={(e) => setDispatchDestination(e.target.value)}
+                  className="w-full bg-stone-50 border border-stone-100 h-11 px-4 rounded-lg font-bold text-sm outline-none focus:border-[#9a6bff] transition-all appearance-none cursor-pointer"
+                >
+                  <option value="">Select Target Outlet...</option>
+                  {allVendors.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.businessName} ({v.location || "Branch"})
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="h-4 w-4 absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Product Catalog */}
+            <div className="bg-white rounded-[1px] border border-stone-200/50 shadow-sm overflow-hidden flex flex-col transition-all duration-500 hover:shadow-md hover:shadow-stone-200/30">
+              <div className="p-5 border-b border-stone-100 flex items-center justify-between bg-white/50 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="h-10 w-10 bg-[#9a6bff]/10 border border-[#9a6bff]/20 rounded-[2px] flex items-center justify-center">
+                      <Package className="h-5 w-5 text-[#9a6bff]" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-[#9a6bff] border-2 border-white rounded-full animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="text-[11px] font-black text-stone-900 uppercase tracking-[0.3em]">
+                      Inventory Staging
+                    </h3>
+                    <p className="text-[9px] text-stone-400 font-bold uppercase tracking-widest mt-0.5">
+                      Ready for Outbound Protocol
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="relative group/search">
+                    <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-300 transition-colors group-focus-within/search:text-[#9a6bff]" />
+                    <input
+                      type="text"
+                      placeholder="Locate Stock Item..."
+                      value={posSearch}
+                      onChange={(e) => setPosSearch(e.target.value)}
+                      className="w-72 pl-10 pr-4 py-2.5 bg-stone-50 border border-stone-200 rounded-[2px] text-xs outline-none focus:bg-white focus:border-[#9a6bff] focus:ring-4 focus:ring-[#9a6bff]/5 font-bold transition-all placeholder:text-stone-300 shadow-inner"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-8 max-h-[700px] overflow-y-auto custom-scrollbar bg-stone-50/20">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {activeProducts.map((p) => {
+                    const isStaged = dispatchItems.some(
+                      (i) => i.productId === p.id,
+                    );
+                    return (
+                      <div
+                        key={p.id}
+                        onClick={() => !isStaged && addDispatchItem(p.id)}
+                        className={cn(
+                          "group/item p-4 rounded-xl border transition-all duration-300 flex flex-col gap-4 relative",
+                          isStaged
+                            ? "bg-emerald-50/20 border-emerald-100 opacity-60 cursor-not-allowed"
+                            : "bg-white border-stone-100 hover:border-[#9a6bff]/40 hover:shadow-xl hover:shadow-stone-200/40 cursor-pointer",
+                        )}
+                      >
+                        <div className="flex gap-4">
+                          <div className="h-16 w-16 bg-stone-50 rounded-lg overflow-hidden shrink-0 border border-stone-100/50">
+                            {p.imageUrls?.[0] ? (
+                              <img
+                                src={getMediaUrl(p.imageUrls[0])}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover/item:scale-105"
+                              />
+                            ) : (
+                              <Package className="h-6 w-6 text-stone-200 m-auto" />
+                            )}
+                          </div>
+                          
+                          <div className="min-w-0 flex-1 flex flex-col justify-between py-0.5">
+                            <div>
+                              <p className="text-[10px] font-bold text-[#9a6bff] uppercase tracking-wider mb-1">
+                                {p.brand || "Standard"}
+                              </p>
+                              <h4 className="text-[13px] font-bold text-stone-900 leading-snug line-clamp-2">
+                                {p.name}
+                              </h4>
+                            </div>
+                            <div className="flex items-center gap-3 mt-2">
+                              <span className="text-sm font-black text-stone-900">
+                                {formatINR(p.discountPrice || p.price)}
+                              </span>
+                              <span className={cn(
+                                "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                                p.stock <= 5 ? "text-rose-500 bg-rose-50" : "text-stone-400 bg-stone-50"
+                              )}>
+                                {p.stock} in stock
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          className={cn(
+                            "w-full h-10 rounded-lg flex items-center justify-center gap-2 text-xs font-bold transition-all",
+                            isStaged
+                              ? "bg-emerald-500 text-white"
+                              : "bg-stone-50 text-stone-400 group-hover/item:bg-[#9a6bff] group-hover/item:text-white"
+                          )}
+                        >
+                          {isStaged ? (
+                            <>
+                              <Check className="h-4 w-4" />
+                              <span>Staged</span>
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="h-4 w-4" />
+                              <span>Stage Item</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Manifest (Dedicated Column) */}
+          <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-[152px] h-fit">
+            <div className="bg-white rounded-[1px] border border-stone-200/50 shadow-lg flex flex-col h-[calc(100vh-200px)]">
+              <div className="p-5 border-b border-stone-100 flex items-center justify-between bg-stone-50/30">
+                <div>
+                  <h3 className="text-[11px] font-black text-stone-900 uppercase tracking-[0.2em] flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-stone-400" /> Dispatch
+                    Manifest
+                  </h3>
+                </div>
+                <span className="text-[9px] font-black text-indigo-500 uppercase tracking-widest border border-indigo-100 px-2 py-1 rounded-[1px] bg-white">
+                  {dispatchItems.length} SKUs Staged
+                </span>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-5 space-y-3 custom-scrollbar bg-stone-50/10">
+                {dispatchItems.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center p-12 opacity-30">
+                    <Box className="h-8 w-8 text-stone-300 mb-4" />
+                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">
+                      Manifest is empty
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {dispatchItems.map((item) => (
+                      <div
+                        key={item.productId}
+                        className="bg-white p-3 border border-stone-100 rounded-lg group transition-all"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="h-10 w-10 bg-stone-50 rounded shrink-0 overflow-hidden border border-stone-100/50">
+                            {item.image && (
+                              <img
+                                src={getMediaUrl(item.image)}
+                                className="w-full h-full object-cover"
+                              />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="text-xs font-bold text-stone-900 truncate">
+                              {item.name}
+                            </h4>
+                            <p className="text-[10px] text-stone-400 font-medium">
+                              {formatINR(item.price || 0)} × {item.quantity}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs font-black text-stone-900 tabular-nums">
+                              {formatINR((item.price || 0) * item.quantity)}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-stone-50">
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => updateDispatchItemQty(item.productId, item.quantity - 1)}
+                              className="h-6 w-6 flex items-center justify-center text-stone-400 hover:text-stone-900 transition-all"
+                            >
+                              <Minus className="h-3 w-3" />
+                            </button>
+                            <span className="w-8 text-center text-[11px] font-black tabular-nums">
+                              {item.quantity}
+                            </span>
+                            <button
+                              onClick={() => updateDispatchItemQty(item.productId, item.quantity + 1)}
+                              className="h-6 w-6 flex items-center justify-center text-stone-400 hover:text-stone-900 transition-all"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </button>
+                          </div>
+                          <button
+                            onClick={() => removeDispatchItem(item.productId)}
+                            className="text-[10px] font-bold text-rose-400 hover:text-rose-600 transition-colors"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="p-8 bg-stone-50 border-t border-stone-200/60 space-y-6 relative overflow-hidden">
+                {/* Subtle Technical Grid Background */}
+                <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
+                     style={{ backgroundImage: `radial-gradient(#9a6bff 0.5px, transparent 0.5px)`, backgroundSize: '12px 12px' }} />
+                
+                <div className="flex items-center justify-between relative z-10">
+                  <div>
+                    <p className="text-[8px] font-black text-stone-400 uppercase tracking-[0.2em] mb-1.5">
+                      Total Consignment Value
+                    </p>
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-xl font-black text-stone-900 tabular-nums tracking-tight">
+                        {formatINR(
+                          dispatchItems.reduce(
+                            (sum, item) =>
+                              sum + (item.price || 0) * item.quantity,
+                            0,
+                          ),
+                        )}
+                      </p>
+                      <span className="text-[8px] text-[#9a6bff] tracking-widest font-bold uppercase italic">
+                        Final Consensus
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[8px] font-black text-stone-400 uppercase tracking-[0.2em] mb-1.5">
+                      Batch Units
+                    </p>
+                    <div className="h-8 px-4 bg-white border border-stone-200 rounded-[1px] flex items-center justify-center shadow-sm">
+                      <p className="text-sm font-black text-stone-900 tabular-nums">
+                        {dispatchItems.reduce(
+                          (sum, item) => sum + item.quantity,
+                          0,
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  disabled={
+                    isSubmitting ||
+                    !dispatchDestination ||
+                    dispatchItems.length === 0
+                  }
+                  onClick={handleCreateDispatch}
+                  className="w-full bg-[#9a6bff] text-white h-14 rounded-[1px] font-black text-[10px] uppercase tracking-[0.3em] hover:bg-indigo-600 transition-all disabled:opacity-20 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg shadow-[#9a6bff]/20 active:scale-[0.98] group/execute"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> 
+                      <span className="animate-pulse">Registering Protocol...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Truck className="h-4 w-4 transition-transform group-hover/execute:translate-x-1" />
+                      Execute Outbound Protocol
+                    </>
+                  )}
+                </button>
+
+                {!dispatchDestination && dispatchItems.length > 0 && (
+                  <div className="flex items-center justify-center gap-2 text-rose-500 bg-rose-50 py-2 rounded-[1px] border border-rose-100">
+                    <AlertTriangle className="h-3 w-3" />
+                    <p className="text-[8px] font-black uppercase tracking-widest">
+                      Routing Target Required
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  },
+);
+
+// ─── Render Helpers (Moved outside to prevent blinks) ──────────────────
+
+const KPICard = ({
+  title,
+  value,
+  icon: Icon,
+  trend,
+  trendUp,
+  color = "purple",
+}) => {
+  const colorMap = {
+    purple: {
+      icon: "bg-purple-100 text-purple-600",
+      trend: trendUp
+        ? "text-emerald-600 bg-emerald-50"
+        : "text-rose-600 bg-rose-50",
+    },
+    blue: {
+      icon: "bg-blue-100 text-blue-600",
+      trend: trendUp
+        ? "text-emerald-600 bg-emerald-50"
+        : "text-rose-600 bg-rose-50",
+    },
+    orange: {
+      icon: "bg-orange-100 text-orange-600",
+      trend: trendUp
+        ? "text-emerald-600 bg-emerald-50"
+        : "text-rose-600 bg-rose-50",
+    },
+    pink: {
+      icon: "bg-pink-100 text-pink-600",
+      trend: trendUp
+        ? "text-emerald-600 bg-emerald-50"
+        : "text-rose-600 bg-rose-50",
+    },
+  };
+  const c = colorMap[color] || colorMap.purple;
+  return (
+    <div className="bg-white p-5 rounded-[2px] border border-gray-100 flex flex-col justify-between min-h-[140px] hover:shadow-md transition-shadow">
+      <div className="flex justify-between items-start">
+        <div className="text-2xl font-black text-[#151515] tracking-tight">
+          {value}
+        </div>
+        <div
+          className={`w-10 h-10 rounded-[2px] flex items-center justify-center ${c.icon}`}
+        >
+          <Icon className="h-5 w-5" />
+        </div>
+      </div>
+      <div className="text-sm text-gray-500 font-semibold tracking-wide mt-2">
+        {title}
+      </div>
+      {trend && (
+        <div
+          className={`mt-3 flex items-center text-xs font-bold w-fit px-2 py-1 rounded-[2px] ${c.trend}`}
+        >
+          {trend}{" "}
+          {trendUp ? (
+            <TrendingUp className="h-3 w-3 ml-1" />
+          ) : (
+            <TrendingDown className="h-3 w-3 ml-1" />
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const StatusBadge = ({ status }) => {
+  const s = getStatusStyle(status);
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[2px] text-xs font-bold ${s.bg} ${s.text}`}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+      {statusLabel(status)}
+    </span>
+  );
+};
+
 // ─── Main Component ────────────────────────────────────────────────────
 export default function VendorDashboard() {
   const navigate = useNavigate();
@@ -171,7 +601,9 @@ export default function VendorDashboard() {
     location.pathname.split("/").filter(Boolean).pop() || "dashboard";
   const activeTab = SIDEBAR_ITEMS.some((item) => item.id === currentPath)
     ? currentPath
-    : "dashboard";
+    : currentPath === "dispatch"
+      ? "stock-transfers"
+      : "dashboard";
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
@@ -214,10 +646,26 @@ export default function VendorDashboard() {
   const [editingStock, setEditingStock] = useState(null);
   const [newStockValue, setNewStockValue] = useState("");
 
-  // Transfer Detail State
   const [isTransferDetailOpen, setIsTransferDetailOpen] = useState(false);
   const [viewingTransfer, setViewingTransfer] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [verifiedItems, setVerifiedItems] = useState({}); // { [transferId]: { [productId]: boolean } }
+  const [allVendors, setAllVendors] = useState([]);
+  const [dispatchDestination, setDispatchDestination] = useState("");
+  const [dispatchItems, setDispatchItems] = useState([]); // [{ productId, quantity }]
+
+  const toggleItemVerification = (transferId, productId) => {
+    setVerifiedItems((prev) => {
+      const currentTransfer = prev[transferId] || {};
+      return {
+        ...prev,
+        [transferId]: {
+          ...currentTransfer,
+          [productId]: !currentTransfer[productId],
+        },
+      };
+    });
+  };
 
   const profileRef = useRef(null);
 
@@ -298,11 +746,14 @@ export default function VendorDashboard() {
           if (nData.success) setNotifications(nData.data);
           break;
         case "stock-transfers":
-          const stRes = await fetch(
-            `${API_URL}/stock-transfers?vendorId=${vid}`,
-          );
+          const [stRes, stpRes] = await Promise.all([
+            fetch(`${API_URL}/stock-transfers?vendorId=${vid}`),
+            fetch(`${API_URL}/vendors/${vid}/products`),
+          ]);
           const stData = await stRes.json();
+          const stpData = await stpRes.json();
           if (stData.success) setStockTransfers(stData.data);
+          if (stpData.success) setVendorProductsWithDeduplication(stpData.data);
           break;
       }
     } catch (err) {
@@ -532,6 +983,115 @@ export default function VendorDashboard() {
     }
   };
 
+  const fetchAllVendors = async () => {
+    try {
+      const res = await fetch(`${API_URL}/vendors`);
+      const data = await res.json();
+      if (data.success) {
+        setAllVendors(
+          data.data.filter((v) => {
+            const name = v.businessName?.toLowerCase() || "";
+            return (
+              v.id !== currentVendor.id &&
+              !name.includes("omw global") &&
+              !name.includes("admin stock")
+            );
+          }),
+        );
+      }
+    } catch (err) {
+      console.error("Error fetching vendors:", err);
+    }
+  };
+
+  const handleInitiateDispatch = () => {
+    fetchAllVendors();
+    setDispatchDestination("");
+    setDispatchItems([]);
+    navigate("/vendor-dashboard/dispatch");
+  };
+
+  const handleCreateDispatch = async () => {
+    if (!dispatchDestination) {
+      toast.error("Please select a destination outlet");
+      return;
+    }
+    if (dispatchItems.length === 0) {
+      toast.error("Please add at least one product to dispatch");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`${API_URL}/stock-transfers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sourceVendorId: currentVendor.id,
+          destinationVendorId: dispatchDestination,
+          items: dispatchItems.map((i) => ({
+            productId: i.productId,
+            quantity: i.quantity,
+          })),
+          notes: `Outlet-initiated transfer from ${currentVendor.businessName}`,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Stock transfer protocol initiated!");
+        navigate("/vendor-dashboard/stock-transfers");
+        fetchTabData("stock-transfers");
+      } else {
+        toast.error(data.message || "Failed to initiate transfer");
+      }
+    } catch (err) {
+      toast.error("Logistics node failure: Check your connection");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const addDispatchItem = (productId) => {
+    const product = vendorProducts.find((p) => p.id === productId);
+    if (!product) return;
+    if (product.stock <= 0) {
+      toast.error("Product out of stock in your outlet");
+      return;
+    }
+
+    setDispatchItems((prev) => {
+      const exists = prev.find((i) => i.productId === productId);
+      if (exists) return prev;
+      return [
+        ...prev,
+        {
+          productId,
+          quantity: 1,
+          name: product.name,
+          brand: product.brand || "Standard",
+          max: product.stock,
+          image: product.imageUrls?.[0],
+          price: product.discountPrice || product.price,
+          category: product.category?.name || "General",
+        },
+      ];
+    });
+  };
+
+  const updateDispatchItemQty = (productId, qty) => {
+    setDispatchItems((prev) =>
+      prev.map((item) => {
+        if (item.productId !== productId) return item;
+        const newQty = Math.max(1, Math.min(item.max, qty));
+        return { ...item, quantity: newQty };
+      }),
+    );
+  };
+
+  const removeDispatchItem = (productId) => {
+    setDispatchItems((prev) => prev.filter((i) => i.productId !== productId));
+  };
+
   // ─── Computed Data ──────────────────────────────────────────────────
   const activeProducts = useMemo(() => {
     let list = vendorProducts.filter((p) => p.status === "ACTIVE");
@@ -598,85 +1158,9 @@ export default function VendorDashboard() {
     return `${SERVER_URL}/${normalized.replace(/^\//, "")}`;
   };
 
-  // ─── Render Helpers ─────────────────────────────────────────────────
-
-  const KPICard = ({
-    title,
-    value,
-    icon: Icon,
-    trend,
-    trendUp,
-    color = "purple",
-  }) => {
-    const colorMap = {
-      purple: {
-        icon: "bg-purple-100 text-purple-600",
-        trend: trendUp
-          ? "text-emerald-600 bg-emerald-50"
-          : "text-rose-600 bg-rose-50",
-      },
-      blue: {
-        icon: "bg-blue-100 text-blue-600",
-        trend: trendUp
-          ? "text-emerald-600 bg-emerald-50"
-          : "text-rose-600 bg-rose-50",
-      },
-      orange: {
-        icon: "bg-orange-100 text-orange-600",
-        trend: trendUp
-          ? "text-emerald-600 bg-emerald-50"
-          : "text-rose-600 bg-rose-50",
-      },
-      pink: {
-        icon: "bg-pink-100 text-pink-600",
-        trend: trendUp
-          ? "text-emerald-600 bg-emerald-50"
-          : "text-rose-600 bg-rose-50",
-      },
-    };
-    const c = colorMap[color] || colorMap.purple;
-    return (
-      <div className="bg-white p-5 rounded-[2px] border border-gray-100 flex flex-col justify-between min-h-[140px] hover:shadow-md transition-shadow">
-        <div className="flex justify-between items-start">
-          <div className="text-2xl font-black text-[#151515] tracking-tight">
-            {value}
-          </div>
-          <div
-            className={`w-10 h-10 rounded-[2px] flex items-center justify-center ${c.icon}`}
-          >
-            <Icon className="h-5 w-5" />
-          </div>
-        </div>
-        <div className="text-sm text-gray-500 font-semibold tracking-wide mt-2">
-          {title}
-        </div>
-        {trend && (
-          <div
-            className={`mt-3 flex items-center text-xs font-bold w-fit px-2 py-1 rounded-[2px] ${c.trend}`}
-          >
-            {trend}{" "}
-            {trendUp ? (
-              <TrendingUp className="h-3 w-3 ml-1" />
-            ) : (
-              <TrendingDown className="h-3 w-3 ml-1" />
-            )}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const StatusBadge = ({ status }) => {
-    const s = getStatusStyle(status);
-    return (
-      <span
-        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[2px] text-xs font-bold ${s.bg} ${s.text}`}
-      >
-        <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
-        {statusLabel(status)}
-      </span>
-    );
-  };
+  // ═══════════════════════════════════════════════════════════════════════
+  // DISPATCH WORKSTATION (Light Theme)
+  // ═══════════════════════════════════════════════════════════════════════
 
   // ═══════════════════════════════════════════════════════════════════════
   // RENDER
@@ -698,7 +1182,10 @@ export default function VendorDashboard() {
           {!sidebarCollapsed && (
             <div className="flex flex-col min-w-0">
               <span className="font-black text-[#151515] leading-tight text-[15px] tracking-tighter truncate">
-                OMW Vendor
+                {currentVendor?.businessName?.toLowerCase() === "omw global" ||
+                currentVendor?.businessName?.toLowerCase() === "admin stock"
+                  ? "Admin Stock"
+                  : currentVendor?.businessName}
               </span>
               <span className="text-[9px] text-[#9a6bff] font-bold uppercase tracking-[0.2em]">
                 Store Hub
@@ -768,9 +1255,9 @@ export default function VendorDashboard() {
       </aside>
 
       {/* ─── Main Content ─── */}
-      <main className="flex-1 overflow-y-auto" data-lenis-prevent>
+      <main className="flex-1 overflow-y-auto relative" data-lenis-prevent>
         {/* Top Bar */}
-        <div className="bg-white px-6 py-3.5 flex items-center justify-between border-b border-gray-100 sticky top-0 z-10">
+        <div className="bg-white/95 backdrop-blur-md px-6 py-3.5 flex items-center justify-between border-b border-gray-100 sticky top-0 z-20">
           <div className="flex items-center gap-4">
             <h1 className="text-xl font-black text-[#151515] tracking-tight">
               {currentVendor
@@ -1226,13 +1713,11 @@ export default function VendorDashboard() {
                                 </span>
                                 <button
                                   onClick={() => {
-                                    setEditingStock(p.id);
-                                    setNewStockValue(String(p.stock));
                                     navigate("/vendor-dashboard/stock-alerts");
                                   }}
-                                  className="text-xs bg-[#9a6bff] text-white px-2 py-1 rounded-[2px] font-bold hover:bg-purple-600"
+                                  className="text-[10px] bg-stone-100 text-stone-500 px-2 py-1 rounded-[2px] font-black uppercase tracking-widest hover:bg-stone-200 transition-colors"
                                 >
-                                  Restock
+                                  View Alert
                                 </button>
                               </div>
                             </div>
@@ -1256,7 +1741,7 @@ export default function VendorDashboard() {
             <Route
               path="/orders"
               element={
-                <div className="space-y-4 animate-in fade-in duration-500">
+                <div className="space-y-4 animate-in fade-in duration-300">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <h2 className="text-2xl font-black text-[#151515]">
@@ -1540,50 +2025,17 @@ export default function VendorDashboard() {
                                   )}
                               </td>
                               <td className="px-4 py-3">
-                                {editingStock === p.id ? (
-                                  <div className="flex items-center gap-1">
-                                    <input
-                                      type="number"
-                                      value={newStockValue}
-                                      onChange={(e) =>
-                                        setNewStockValue(e.target.value)
-                                      }
-                                      className="w-16 border border-[#9a6bff] rounded-[2px] px-2 py-1 text-sm font-bold outline-none"
-                                      autoFocus
-                                    />
-                                    <button
-                                      onClick={() => handleStockUpdate(p.id)}
-                                      className="text-emerald-600 hover:text-emerald-700"
-                                    >
-                                      <Check className="h-4 w-4" />
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        setEditingStock(null);
-                                        setNewStockValue("");
-                                      }}
-                                      className="text-gray-400 hover:text-gray-600"
-                                    >
-                                      <X className="h-4 w-4" />
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <button
-                                    onClick={() => {
-                                      setEditingStock(p.id);
-                                      setNewStockValue(String(p.stock));
-                                    }}
-                                    className={`text-sm font-bold px-2 py-0.5 rounded-[2px] hover:ring-2 hover:ring-[#9a6bff] transition-all ${
-                                      p.stock <= 5
-                                        ? "text-rose-700 bg-rose-50"
-                                        : p.stock <= 20
-                                          ? "text-amber-700 bg-amber-50"
-                                          : "text-gray-700 bg-gray-50"
-                                    }`}
-                                  >
-                                    {p.stock}
-                                  </button>
-                                )}
+                                <span
+                                  className={`text-sm font-bold px-2 py-0.5 rounded-[2px] ${
+                                    p.stock <= 5
+                                      ? "text-rose-700 bg-rose-50"
+                                      : p.stock <= 20
+                                        ? "text-amber-700 bg-amber-50"
+                                        : "text-gray-700 bg-gray-50"
+                                  }`}
+                                >
+                                  {p.stock}
+                                </span>
                               </td>
                               <td className="px-4 py-3">
                                 <span
@@ -2005,7 +2457,7 @@ export default function VendorDashboard() {
             <Route
               path="/offline-history"
               element={
-                <div className="space-y-4 animate-in fade-in duration-500">
+                <div className="space-y-4 animate-in fade-in duration-300">
                   <div>
                     <h2 className="text-2xl font-black text-[#151515]">
                       Offline Purchase History
@@ -2105,7 +2557,7 @@ export default function VendorDashboard() {
             <Route
               path="/analytics"
               element={
-                <div className="space-y-6 animate-in fade-in duration-500">
+                <div className="space-y-6 animate-in fade-in duration-300">
                   <h2 className="text-2xl font-black text-[#151515]">
                     Sales Analytics
                   </h2>
@@ -2268,7 +2720,7 @@ export default function VendorDashboard() {
             <Route
               path="/stock-alerts"
               element={
-                <div className="space-y-4 animate-in fade-in duration-500">
+                <div className="space-y-4 animate-in fade-in duration-300">
                   <div className="flex items-center justify-between">
                     <div>
                       <h2 className="text-2xl font-black text-[#151515]">
@@ -2330,45 +2782,15 @@ export default function VendorDashboard() {
                             </div>
                           </div>
 
-                          {editingStock === p.id ? (
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="number"
-                                value={newStockValue}
-                                onChange={(e) =>
-                                  setNewStockValue(e.target.value)
-                                }
-                                className="flex-1 border border-[#9a6bff] rounded-[2px] px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-[#9a6bff]"
-                                placeholder="New stock amount"
-                                autoFocus
-                              />
-                              <button
-                                onClick={() => handleStockUpdate(p.id)}
-                                className="bg-emerald-500 text-white px-3 py-2 rounded-[2px] font-bold text-sm hover:bg-emerald-600"
-                              >
-                                <Check className="h-4 w-4" />
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setEditingStock(null);
-                                  setNewStockValue("");
-                                }}
-                                className="bg-gray-200 text-gray-600 px-3 py-2 rounded-[2px] hover:bg-gray-300"
-                              >
-                                <X className="h-4 w-4" />
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => {
-                                setEditingStock(p.id);
-                                setNewStockValue(String(p.stock));
-                              }}
-                              className="w-full bg-[#9a6bff] text-white py-2 rounded-[2px] font-bold text-sm hover:bg-purple-600 transition-colors flex items-center justify-center gap-2"
-                            >
-                              <RefreshCw className="h-4 w-4" /> Update Stock
-                            </button>
-                          )}
+                          <div
+                            className={`w-full py-2 rounded-[2px] font-black text-[10px] uppercase tracking-widest text-center border ${
+                              p.stock === 0
+                                ? "bg-rose-50 text-rose-600 border-rose-100"
+                                : "bg-stone-50 text-stone-400 border-stone-100"
+                            }`}
+                          >
+                            In-Store Inventory: {p.stock}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -2378,9 +2800,32 @@ export default function VendorDashboard() {
             />
 
             <Route
+              path="/dispatch"
+              element={
+                <DispatchProtocolWorkstation
+                  navigate={navigate}
+                  currentVendor={currentVendor}
+                  dispatchDestination={dispatchDestination}
+                  setDispatchDestination={setDispatchDestination}
+                  allVendors={allVendors}
+                  activeProducts={activeProducts}
+                  dispatchItems={dispatchItems}
+                  addDispatchItem={addDispatchItem}
+                  removeDispatchItem={removeDispatchItem}
+                  updateDispatchItemQty={updateDispatchItemQty}
+                  isSubmitting={isSubmitting}
+                  handleCreateDispatch={handleCreateDispatch}
+                  getMediaUrl={getMediaUrl}
+                  formatINR={formatINR}
+                  posSearch={posSearch}
+                  setPosSearch={setPosSearch}
+                />
+              }
+            />
+            <Route
               path="/stock-transfers"
               element={
-                <div className="space-y-6 animate-in fade-in duration-500">
+                <div className="space-y-6 animate-in fade-in duration-300">
                   <div className="flex items-center justify-between">
                     <div>
                       <h2 className="text-2xl font-black text-[#151515]">
@@ -2390,13 +2835,21 @@ export default function VendorDashboard() {
                         Manage incoming and outgoing outlet transfers
                       </p>
                     </div>
-                    <button
-                      onClick={() => fetchTabData("stock-transfers")}
-                      className="text-xs bg-white text-[#151515] font-bold px-3 py-2 rounded-[2px] border border-gray-200 hover:bg-gray-50 transition-colors flex items-center gap-1.5"
-                    >
-                      <RefreshCw className="h-3 w-3 text-gray-400" /> Sync
-                      Logistics
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={handleInitiateDispatch}
+                        className="text-xs bg-[#9a6bff] text-white font-bold px-4 py-2 rounded-[2px] hover:bg-purple-600 transition-colors flex items-center gap-2 shadow-lg shadow-purple-500/20"
+                      >
+                        <Plus className="h-4 w-4" /> New Dispatch
+                      </button>
+                      <button
+                        onClick={() => fetchTabData("stock-transfers")}
+                        className="text-xs bg-white text-[#151515] font-bold px-3 py-2 rounded-[2px] border border-gray-200 hover:bg-gray-50 transition-colors flex items-center gap-1.5"
+                      >
+                        <RefreshCw className="h-3 w-3 text-gray-400" /> Sync
+                        Logistics
+                      </button>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -2437,7 +2890,13 @@ export default function VendorDashboard() {
                                       Ref: #{t.id.slice(-6).toUpperCase()}
                                     </span>
                                     <div className="text-sm font-black text-[#151515] mt-0.5">
-                                      From: {t.sourceVendor?.businessName}
+                                      From:{" "}
+                                      {t.sourceVendor?.businessName?.toLowerCase() ===
+                                        "omw global" ||
+                                      t.sourceVendor?.businessName?.toLowerCase() ===
+                                        "admin stock"
+                                        ? "Admin Stock"
+                                        : t.sourceVendor?.businessName}
                                     </div>
                                   </div>
                                   <div
@@ -2499,11 +2958,11 @@ export default function VendorDashboard() {
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      updateTransferStatus(t.id, "COMPLETED");
+                                      fetchTransferDetail(t.id);
                                     }}
-                                    className="w-full bg-[#151515] text-white h-10 rounded-[2px] font-black text-[11px] uppercase tracking-widest hover:bg-black transition-all shadow-lg shadow-gray-200"
+                                    className="w-full bg-emerald-600 text-white h-10 rounded-[2px] font-black text-[11px] uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20"
                                   >
-                                    Confirm Receipt & Add to Stock
+                                    Verify & Receive Shipment
                                   </button>
                                 )}
                                 {t.status === "COMPLETED" && (
@@ -2554,7 +3013,13 @@ export default function VendorDashboard() {
                                       Ref: #{t.id.slice(-6).toUpperCase()}
                                     </span>
                                     <div className="text-sm font-black text-[#151515] mt-0.5">
-                                      To: {t.destinationVendor?.businessName}
+                                      To:{" "}
+                                      {t.destinationVendor?.businessName?.toLowerCase() ===
+                                        "omw global" ||
+                                      t.destinationVendor?.businessName?.toLowerCase() ===
+                                        "admin stock"
+                                        ? "Admin Stock"
+                                        : t.destinationVendor?.businessName}
                                     </div>
                                   </div>
                                   <div
@@ -2620,11 +3085,11 @@ export default function VendorDashboard() {
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      updateTransferStatus(t.id, "DISPATCHED");
+                                      fetchTransferDetail(t.id);
                                     }}
                                     className="w-full bg-indigo-600 text-white h-10 rounded-[2px] font-black text-[11px] uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
                                   >
-                                    Mark as Dispatched (Reduce Stock)
+                                    Run Dispatch Protocol
                                   </button>
                                 )}
                                 {t.status === "PENDING" && (
@@ -2963,7 +3428,7 @@ export default function VendorDashboard() {
         open={isTransferDetailOpen}
         onOpenChange={setIsTransferDetailOpen}
       >
-        <DialogContent className="sm:max-w-[1000px] w-[95vw] p-0 overflow-hidden border-none rounded-[32px] bg-white shadow-[0_32px_120px_-20px_rgba(0,0,0,0.1)] flex flex-col max-h-[92vh] ring-1 ring-stone-200/50 [&>button]:hidden">
+        <DialogContent className="sm:max-w-[1200px] w-[95vw] p-0 overflow-hidden border-none rounded-[2px] bg-white shadow-2xl flex flex-col h-[85vh] max-h-[85vh] [&>button]:hidden">
           <DialogHeader className="sr-only">
             <DialogTitle>Stock Transfer Details</DialogTitle>
             <DialogDescription>
@@ -2972,68 +3437,106 @@ export default function VendorDashboard() {
           </DialogHeader>
 
           {detailLoading || !viewingTransfer ? (
-            <div className="p-24 flex flex-col items-center justify-center space-y-6">
-              <div className="relative">
-                <div className="absolute inset-0 bg-indigo-500 blur-xl opacity-20 rounded-full animate-pulse" />
-                <Loader2 className="h-10 w-10 animate-spin text-indigo-600 relative z-10" />
-              </div>
-              <p className="text-sm font-semibold tracking-wide text-stone-500 uppercase">
+            <div className="flex-1 flex flex-col items-center justify-center space-y-4">
+              <Loader2 className="h-8 w-8 animate-spin text-stone-300" />
+              <p className="text-[10px] font-black tracking-widest text-stone-400 uppercase">
                 Synchronizing Logistics...
               </p>
             </div>
           ) : (
             <>
-              {/* Premium Header */}
-              <div className="relative overflow-hidden bg-white border-b border-stone-100 p-8 shrink-0">
-                <div className="absolute top-0 right-0 p-32 bg-indigo-500 opacity-[0.03] blur-[100px] -mr-20 -mt-20 pointer-events-none" />
-                <div className="absolute bottom-0 left-0 p-32 bg-emerald-500 opacity-[0.03] blur-[100px] -ml-20 -mb-20 pointer-events-none" />
-
-                <div className="relative z-10 flex items-start justify-between">
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-3 mb-1">
-                      <Badge
-                        variant="secondary"
-                        className="px-3 py-1 font-semibold text-xs tracking-wider uppercase bg-indigo-50 border-none text-indigo-700 shadow-sm rounded"
-                      >
-                        Transfer {viewingTransfer.id.slice(-8).toUpperCase()}
-                      </Badge>
+              {/* Workstation Header */}
+              <div className="bg-stone-50 p-6 shrink-0">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="bg-stone-900 text-white text-[9px] font-black px-2 py-0.5 rounded-[1px] uppercase tracking-widest">
+                        ID: {viewingTransfer.id.slice(-8).toUpperCase()}
+                      </span>
+                      {viewingTransfer.status === "DISPATCHED" && (
+                        <span className="bg-amber-500 text-white text-[9px] font-black px-2 py-0.5 rounded-[1px] uppercase tracking-widest animate-pulse">
+                          ON THE WAY
+                        </span>
+                      )}
                     </div>
-                    <h2 className="text-3xl font-bold tracking-tight text-stone-900 mt-2">
-                      Stock Transfer Details
+                    <h2 className="text-xl font-black tracking-tight text-stone-900 uppercase italic">
+                      Stock Transfer{" "}
+                      <span className="text-indigo-600">Details</span>
                     </h2>
-                    <p className="text-sm font-medium text-stone-500 mt-2 flex items-center gap-2">
-                      Initiated on{" "}
-                      {new Date(viewingTransfer.createdAt).toLocaleDateString()}
-                    </p>
+                    <div className="flex items-center gap-4 text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                      <span>
+                        Ref: {viewingTransfer.transferNumber || "N/A"}
+                      </span>
+                      <span className="h-1 w-1 rounded-full bg-stone-300" />
+                      <span>
+                        {new Date(viewingTransfer.createdAt).toLocaleString()}
+                      </span>
+                      <span className="h-1 w-1 rounded-full bg-stone-300" />
+                      <span className="text-stone-900 font-black">
+                        Total Value:{" "}
+                        {formatINR(
+                          viewingTransfer.items?.reduce(
+                            (sum, item) =>
+                              sum +
+                              (item.unitPrice || item.product?.price || 0) *
+                                item.quantity,
+                            0,
+                          ) || 0,
+                        )}
+                      </span>
+                    </div>
                   </div>
 
                   <button
                     onClick={() => setIsTransferDetailOpen(false)}
-                    className="h-10 w-10 rounded-xl bg-white border border-stone-200 shadow-sm flex items-center justify-center text-stone-400 hover:text-stone-900 hover:border-stone-300 transition-all focus:outline-none focus:ring-2 focus:ring-stone-200 focus:ring-offset-2"
+                    className="h-8 w-8 flex items-center justify-center text-stone-400 hover:text-stone-900 transition-colors"
                   >
                     <X className="h-5 w-5" />
                   </button>
                 </div>
               </div>
 
-              <ScrollArea className="flex-1 bg-stone-50/50">
-                <div className="p-8 pb-12">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-                    {/* Left Column: Items */}
-                    <div className="space-y-6">
-                      <h3 className="text-sm font-bold text-stone-900 flex items-center gap-2 mb-4">
-                        <Package className="h-4 w-4 text-stone-400" /> Items
-                        List
-                      </h3>
+              <ScrollArea className="flex-1 min-h-0 h-full">
+                <div className="p-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                    {/* Left: Items (Manifest) */}
+                    <div className="lg:col-span-7 space-y-6">
+                      <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                        <h3 className="text-[11px] font-black text-stone-900 uppercase tracking-widest flex items-center gap-2">
+                          <Package className="h-3.5 w-3.5 text-indigo-500" />
+                          Item List
+                        </h3>
+                        <span className="text-[10px] font-bold text-stone-400 uppercase">
+                          {viewingTransfer.items?.length} Items Detected
+                        </span>
+                      </div>
 
-                      <div className="space-y-4">
-                        {viewingTransfer.items?.map((item, idx) => (
-                          <div
-                            key={idx}
-                            className="group relative overflow-hidden bg-white rounded-[20px] border border-stone-200/60 shadow-sm hover:shadow-md transition-all p-4"
-                          >
-                            <div className="flex items-start gap-4">
-                              <div className="h-16 w-16 rounded-xl bg-stone-50 border border-stone-100 flex items-center justify-center overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
+                      <div className="space-y-2">
+                        {viewingTransfer.items?.map((item, idx) => {
+                          const isVerified =
+                            verifiedItems[viewingTransfer.id]?.[item.productId];
+                          const canVerify =
+                            viewingTransfer.destinationVendorId ===
+                            currentVendor?.id;
+
+                          return (
+                            <div
+                              key={idx}
+                              onClick={() =>
+                                canVerify &&
+                                toggleItemVerification(
+                                  viewingTransfer.id,
+                                  item.productId,
+                                )
+                              }
+                              className={cn(
+                                "group border transition-all p-3 flex items-center gap-4",
+                                isVerified
+                                  ? "bg-emerald-50/50 border-emerald-200"
+                                  : "bg-white border-stone-100 hover:border-stone-200 cursor-pointer",
+                              )}
+                            >
+                              <div className="h-12 w-12 border border-stone-100 bg-stone-50 flex items-center justify-center shrink-0">
                                 {item.product?.image ||
                                 item.product?.imageUrls?.[0] ? (
                                   <img
@@ -3044,103 +3547,133 @@ export default function VendorDashboard() {
                                     className="w-full h-full object-cover"
                                   />
                                 ) : (
-                                  <Box className="h-6 w-6 text-stone-300" />
+                                  <Box className="h-5 w-5 text-stone-200" />
                                 )}
                               </div>
-                              <div className="flex-1 min-w-0 pt-0.5">
-                                <p className="text-[11px] font-bold tracking-widest text-stone-400 mb-1 truncate">
-                                  {item.product?.category?.name ||
-                                    "Treatment mask"}
-                                </p>
-                                <p className="text-sm font-bold text-stone-900 leading-tight truncate">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-0.5">
+                                  <p className="text-[9px] font-black text-indigo-500 uppercase tracking-tighter bg-indigo-50 px-1 rounded-[1px]">
+                                    {item.product?.brand || "Stock Item"}
+                                  </p>
+                                  {item.product?.sku && (
+                                    <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest border-l border-stone-100 pl-2">
+                                      {item.product.sku}
+                                    </p>
+                                  )}
+                                </div>
+                                <p className="text-xs font-bold text-stone-900 truncate">
                                   {item.product?.name ||
                                     item.product?.product?.name ||
-                                    "Unknown Item"}
+                                    "Unknown SKU"}
                                 </p>
-                                <p className="text-xs font-bold text-indigo-600 mt-2">
-                                  Qty: {item.quantity}
+                                <p className="text-[10px] font-black text-stone-400 mt-0.5 italic">
+                                  {formatINR(
+                                    item.unitPrice || item.product?.price || 0,
+                                  )}{" "}
+                                  <span className="opacity-40">/ Unit</span>
                                 </p>
                               </div>
+                              <div className="text-right shrink-0 px-4 border-l border-stone-50">
+                                <p className="text-[10px] font-black text-stone-400 uppercase">
+                                  Qty
+                                </p>
+                                <p className="text-sm font-black text-stone-900 tabular-nums">
+                                  {item.quantity}
+                                </p>
+                                <p className="text-[10px] font-black text-indigo-600 mt-0.5">
+                                  {formatINR(
+                                    (item.unitPrice ||
+                                      item.product?.price ||
+                                      0) * item.quantity,
+                                  )}
+                                </p>
+                              </div>
+                              {canVerify && (
+                                <div
+                                  className={cn(
+                                    "h-6 w-6 rounded-full border flex items-center justify-center transition-all",
+                                    isVerified
+                                      ? "bg-emerald-500 border-emerald-500 text-white"
+                                      : "bg-white border-stone-200 text-stone-200",
+                                  )}
+                                >
+                                  <Check className="h-3.5 w-3.5" />
+                                </div>
+                              )}
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
 
-                    {/* Right Column: Logistics */}
-                    <div className="space-y-8">
-                      {/* Routing Details */}
-                      <div>
-                        <h3 className="text-sm font-bold text-stone-900 mb-4 flex items-center gap-2">
-                          <Store className="h-4 w-4 text-stone-400" /> Routing
-                          Details
+                    {/* Right: Logistics & Timeline */}
+                    <div className="lg:col-span-5 space-y-8">
+                      {/* Routing */}
+                      <div className="space-y-4">
+                        <h3 className="text-[11px] font-black text-stone-900 uppercase tracking-widest flex items-center gap-2">
+                          <MapPin className="h-3.5 w-3.5 text-rose-500" />{" "}
+                          Transfer Route
                         </h3>
-                        <div className="bg-white rounded-[20px] border border-stone-200/60 shadow-sm p-6 relative overflow-hidden">
-                          <div className="absolute top-0 left-0 w-1 h-full bg-stone-200" />
-                          <div className="space-y-6">
-                            <div className="relative">
-                              <p className="text-[10px] font-bold tracking-widest text-stone-400 uppercase mb-1">
-                                From Outlet
+                        <div className="bg-stone-50 border border-stone-200 p-5 space-y-4 relative">
+                          <div className="absolute left-7 top-12 bottom-12 w-px border-l border-dashed border-stone-300" />
+
+                          <div className="flex items-start gap-4 relative z-10">
+                            <div className="h-4 w-4 rounded-full bg-white border-2 border-stone-300 mt-1 shrink-0" />
+                            <div>
+                              <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest">
+                                From
                               </p>
-                              <p className="text-sm font-bold text-stone-900">
-                                {viewingTransfer.sourceVendor?.businessName ||
-                                  "Admin Stock"}
+                              <p className="text-xs font-bold text-stone-900 uppercase tracking-tight">
+                                {viewingTransfer.sourceVendor?.businessName?.toLowerCase() ===
+                                  "omw global" ||
+                                viewingTransfer.sourceVendor?.businessName?.toLowerCase() ===
+                                  "admin stock"
+                                  ? "Admin Stock"
+                                  : viewingTransfer.sourceVendor
+                                      ?.businessName || "Source"}
                               </p>
                             </div>
-                            <div className="flex items-center text-stone-300">
-                              <ArrowRight className="h-4 w-4" />
-                            </div>
-                            <div className="relative">
-                              <p className="text-[10px] font-bold tracking-widest text-stone-400 uppercase mb-1">
-                                To Destination
+                          </div>
+
+                          <div className="flex items-start gap-4 relative z-10">
+                            <div className="h-4 w-4 rounded-full bg-emerald-500 border-2 border-white shadow-sm mt-1 shrink-0" />
+                            <div>
+                              <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">
+                                To
                               </p>
-                              <p className="text-sm font-bold text-stone-900">
-                                {viewingTransfer.destinationVendor
-                                  ?.businessName || "XYZ Retail Delhi"}
+                              <p className="text-xs font-bold text-stone-900 uppercase tracking-tight">
+                                {viewingTransfer.destinationVendor?.businessName?.toLowerCase() ===
+                                  "omw global" ||
+                                viewingTransfer.destinationVendor?.businessName?.toLowerCase() ===
+                                  "admin stock"
+                                  ? "Admin Stock"
+                                  : viewingTransfer.destinationVendor
+                                      ?.businessName || "Destination"}
                               </p>
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Status Tracking */}
-                      <div>
-                        <h3 className="text-sm font-bold text-stone-900 mb-4 flex items-center gap-2">
-                          <History className="h-4 w-4 text-stone-400" /> Status
-                          Tracking
+                      {/* Timeline */}
+                      <div className="space-y-4">
+                        <h3 className="text-[11px] font-black text-stone-900 uppercase tracking-widest flex items-center gap-2">
+                          <Clock className="h-3.5 w-3.5 text-stone-400" /> Event
+                          Log
                         </h3>
-
-                        <div
-                          className={cn(
-                            "px-4 py-4 rounded-[16px] text-center font-bold text-sm shadow-sm border",
-                            viewingTransfer.status === "COMPLETED"
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-                              : viewingTransfer.status === "DISPATCHED"
-                                ? "bg-amber-50 text-amber-700 border-amber-100"
-                                : viewingTransfer.status === "APPROVED"
-                                  ? "bg-indigo-50 text-indigo-700 border-indigo-100"
-                                  : "bg-stone-50 text-stone-700 border-stone-200",
-                          )}
-                        >
-                          {statusLabel(viewingTransfer.status)}
-                        </div>
-
-                        <div className="mt-8 space-y-4 px-2">
+                        <div className="border border-stone-100 rounded-[2px] overflow-hidden divide-y divide-stone-50">
                           {[
                             {
-                              step: "PENDING",
-                              label: "Created:",
+                              label: "Initiated",
                               date: viewingTransfer.createdAt,
                             },
                             {
-                              step: "DISPATCHED",
-                              label: "Dispatched:",
+                              label: "Dispatched",
                               date: viewingTransfer.dispatchedAt,
                               color: "text-indigo-600",
                             },
                             {
-                              step: "COMPLETED",
-                              label: "Received:",
+                              label: "Completed",
                               date: viewingTransfer.receivedAt,
                               color: "text-emerald-600",
                             },
@@ -3149,71 +3682,94 @@ export default function VendorDashboard() {
                             return (
                               <div
                                 key={idx}
-                                className="flex items-center justify-between border-b border-stone-100 pb-3 last:border-0 last:pb-0"
+                                className="flex items-center justify-between p-3 bg-white"
                               >
-                                <span className="text-sm text-stone-500 font-medium">
+                                <span className="text-[10px] font-bold text-stone-500 uppercase tracking-tight">
                                   {phase.label}
                                 </span>
                                 <span
                                   className={cn(
-                                    "text-sm font-bold tabular-nums",
+                                    "text-[11px] font-black tabular-nums",
                                     phase.color || "text-stone-900",
                                   )}
                                 >
-                                  {new Date(phase.date).toLocaleDateString()}
+                                  {new Date(phase.date).toLocaleString([], {
+                                    dateStyle: "short",
+                                    timeStyle: "short",
+                                  })}
                                 </span>
                               </div>
                             );
                           })}
                         </div>
                       </div>
+
+                      {/* Status Card */}
+                      <div
+                        className={cn(
+                          "p-4 border text-center uppercase tracking-[0.2em] font-black text-[11px]",
+                          viewingTransfer.status === "COMPLETED"
+                            ? "bg-emerald-50 border-emerald-100 text-emerald-700"
+                            : viewingTransfer.status === "DISPATCHED"
+                              ? "bg-indigo-50 border-indigo-100 text-indigo-700"
+                              : "bg-stone-50 border-stone-200 text-stone-500",
+                        )}
+                      >
+                        Status: {statusLabel(viewingTransfer.status)}
+                      </div>
                     </div>
                   </div>
                 </div>
               </ScrollArea>
 
-              {/* Contextual Actions Footer */}
-              <div className="p-6 bg-white border-t border-stone-100 flex items-center justify-between sticky bottom-0 z-10 shrink-0">
-                <div className="flex-1">
-                  {viewingTransfer.status === "PENDING" &&
-                    viewingTransfer.sourceVendorId === currentVendor?.id && (
-                      <div className="flex items-center gap-2 text-amber-600 font-semibold px-2 w-fit">
-                        <AlertTriangle className="h-4 w-4" />
-                        <span className="text-xs uppercase tracking-wider">
-                          Awaiting Authorization
-                        </span>
-                      </div>
-                    )}
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Button
-                    onClick={() => setIsTransferDetailOpen(false)}
-                    variant="outline"
-                    className="font-bold text-stone-600 bg-white border-stone-200 shadow-sm px-6 rounded-xl"
-                  >
-                    Close
-                  </Button>
-
-                  {/* Vendor Actions */}
+              {/* Action Footer */}
+              <div className="p-6 bg-stone-50 flex items-center justify-end shrink-0">
+                <div className="flex items-center gap-4">
                   {currentVendor?.id && (
-                    <>
+                    <div className="flex items-center gap-4">
                       {viewingTransfer.status === "DISPATCHED" &&
                         viewingTransfer.destinationVendorId ===
                           currentVendor?.id && (
-                          <Button
-                            onClick={() =>
-                              updateTransferStatus(
-                                viewingTransfer.id,
-                                "COMPLETED",
-                              )
-                            }
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 rounded-xl shadow-lg shadow-emerald-600/20"
-                          >
-                            <CheckCircle2 className="h-4 w-4 mr-2" /> Confirm
-                            Receipt
-                          </Button>
+                          <div className="flex items-center gap-4">
+                            {viewingTransfer.items?.length >
+                              Object.keys(
+                                verifiedItems[viewingTransfer.id] || {},
+                              ).filter(
+                                (k) => verifiedItems[viewingTransfer.id][k],
+                              ).length && (
+                              <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest animate-pulse">
+                                Check{" "}
+                                {viewingTransfer.items.length -
+                                  Object.keys(
+                                    verifiedItems[viewingTransfer.id] || {},
+                                  ).filter(
+                                    (k) => verifiedItems[viewingTransfer.id][k],
+                                  ).length}{" "}
+                                more items
+                              </span>
+                            )}
+                            <Button
+                              disabled={
+                                viewingTransfer.items?.length !==
+                                Object.keys(
+                                  verifiedItems[viewingTransfer.id] || {},
+                                ).filter(
+                                  (k) => verifiedItems[viewingTransfer.id][k],
+                                ).length
+                              }
+                              onClick={() =>
+                                updateTransferStatus(
+                                  viewingTransfer.id,
+                                  "COMPLETED",
+                                )
+                              }
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[11px] uppercase tracking-widest px-8 rounded-[2px] h-11 disabled:opacity-30 transition-all shadow-lg shadow-emerald-500/20"
+                            >
+                              Receive Stock
+                            </Button>
+                          </div>
                         )}
+
                       {viewingTransfer.status === "APPROVED" &&
                         viewingTransfer.sourceVendorId ===
                           currentVendor?.id && (
@@ -3224,13 +3780,12 @@ export default function VendorDashboard() {
                                 "DISPATCHED",
                               )
                             }
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-8 rounded-xl shadow-lg shadow-indigo-600/20"
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[11px] uppercase tracking-widest px-10 rounded-[2px] h-11 shadow-lg shadow-indigo-500/20"
                           >
-                            <Truck className="h-4 w-4 mr-2" /> Dispatch
-                            Inventory
+                            Send Items
                           </Button>
                         )}
-                    </>
+                    </div>
                   )}
                 </div>
               </div>

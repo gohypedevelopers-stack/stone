@@ -44,8 +44,11 @@ export const createTransfer = async (req, res) => {
       select: { businessName: true }
     });
 
-    const isAdminSource = sourceVendor?.businessName?.toLowerCase() === "admin stock" || 
-                          sourceVendor?.businessName?.toLowerCase() === "omw global";
+    const sourceName = sourceVendor?.businessName?.toLowerCase().trim() || "";
+    const isAdminSource = sourceName === "admin stock" || 
+                          sourceName === "omw global" ||
+                          sourceName.includes("admin stock") ||
+                          sourceName.includes("omw global");
 
     const initialStatus = (isAdminSource && adminId) ? "DISPATCHED" : "PENDING";
 
@@ -167,6 +170,16 @@ export const updateTransferStatus = async (req, res) => {
     
     // 1. DISPATCHED: Subtract stock from source vendor
     if (status === "DISPATCHED" && currentStatus !== "DISPATCHED") {
+      const sourceVendor = await prisma.vendor.findUnique({
+        where: { id: transfer.sourceVendorId },
+        select: { businessName: true }
+      });
+      const sourceName = sourceVendor?.businessName?.toLowerCase().trim() || "";
+      const isAdminSource = sourceName === "admin stock" || 
+                            sourceName === "omw global" ||
+                            sourceName.includes("admin stock") ||
+                            sourceName.includes("omw global");
+
       await prisma.$transaction(async (tx) => {
         for (const item of transfer.items) {
           // Find the VendorStock record for this product at the source vendor
@@ -179,8 +192,27 @@ export const updateTransferStatus = async (req, res) => {
             }
           });
 
-          if (!sourceStock || sourceStock.quantity < item.quantity) {
-            throw new Error(`Insufficient stock for product ID ${item.productId} at source vendor. Available: ${sourceStock?.quantity || 0}`);
+          // If Admin Source, ensure stock record exists; if insufficient, auto-adjust if it's an Admin "Force" action
+          if (isAdminSource && (!sourceStock || sourceStock.quantity < item.quantity)) {
+            console.warn(`[STOCK_TRANSFER] Admin override: Adjusting source stock for product ${item.productId}`);
+            if (!sourceStock) {
+              await tx.vendorStock.create({
+                data: {
+                  productId: item.productId,
+                  vendorId: transfer.sourceVendorId,
+                  quantity: item.quantity // Start with enough to transfer
+                }
+              });
+            } else {
+              await tx.vendorStock.update({
+                where: { id: sourceStock.id },
+                data: { quantity: item.quantity } // Adjust to match transfer
+              });
+            }
+          } else if (!sourceStock || sourceStock.quantity < item.quantity) {
+            const errorMsg = `Insufficient stock for product ID ${item.productId} at source vendor ${transfer.sourceVendorId}. Required: ${item.quantity}, Available: ${sourceStock?.quantity || 0}`;
+            console.error(`[STOCK_TRANSFER_FAIL] ${errorMsg}`);
+            throw new Error(errorMsg);
           }
 
           // Decrement source vendor stock
@@ -200,8 +232,8 @@ export const updateTransferStatus = async (req, res) => {
           data: { status: "DISPATCHED", dispatchedAt: new Date() }
         });
       });
-      console.log(`[STOCK_TRANSFER] Transfer ${transfer.transferNumber} DISPATCHED. Source stock decremented.`);
-      return sendSuccess(res, null, "Stock dispatched and source inventory updated");
+      console.log(`[STOCK_TRANSFER] Transfer ${transfer.transferNumber} DISPATCHED. Source stock processed.`);
+      return sendSuccess(res, null, "Stock dispatched and source inventory synchronized");
     }
 
     // 2. COMPLETED: Add stock to destination (and link/upsert VendorStock)
@@ -264,6 +296,11 @@ export const updateTransferStatus = async (req, res) => {
 
     return sendSuccess(res, serializePrisma(updatedTransfer), `Transfer status updated to ${status}`);
   } catch (error) {
+    console.error("[UPDATE_STATUS_ERROR]", error);
+    // Return 400 for business logic errors (like Insufficient Stock)
+    if (error.message.includes("Insufficient stock")) {
+      return sendError(res, error.message, 400);
+    }
     return sendError(res, error.message, 500);
   }
 };

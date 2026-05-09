@@ -2739,57 +2739,47 @@ const AdminDashboardContent = () => {
           data-lenis-prevent
           data-lenis-prevent-wheel
         >
-          <header className="h-[72px] bg-white/50 backdrop-blur-3xl px-6 lg:px-8 flex items-center justify-between sticky top-0 z-50 border-b border-[#151515]/5 shadow-[0_10px_40px_rgba(154,107,255,0.03)] transition-all">
+          <header className="h-[80px] bg-white/80 backdrop-blur-xl px-8 lg:px-12 flex items-center justify-between sticky top-0 z-[100] border-b border-stone-200/50 transition-all duration-500">
             {/* Left: Status & Sidebar Trigger */}
-            <div className="flex items-center gap-6">
-              <SidebarTrigger className="lg:hidden text-[#151515] hover:text-[#9a6bff] transition-colors" />
+            <div className="flex items-center gap-8">
+              <SidebarTrigger className="lg:hidden text-stone-900 hover:text-indigo-600 transition-colors" />
               <SystemClock />
             </div>
 
             {/* Middle: Search Bar (Hidden on mobile) */}
-            <div className="hidden md:flex flex-1 max-w-md mx-6 relative group">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Search className="h-3.5 w-3.5 text-stone-400 group-focus-within:text-indigo-600 transition-colors" />
+            <div className="hidden md:flex flex-1 max-w-xl mx-12 relative group">
+              <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                <Search className="h-4 w-4 text-stone-400 group-focus-within:text-indigo-600 transition-all duration-300" />
               </div>
               <Input
-                placeholder="Search anything..."
+                placeholder="Search protocol, items, or nodes..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-stone-50/50 border-none focus-visible:ring-1 focus-visible:ring-indigo-600/20 focus-visible:bg-white pl-10 h-9 rounded-xl transition-all placeholder:text-stone-400 placeholder:text-[10px] placeholder:font-medium placeholder:uppercase placeholder:tracking-wider font-medium text-xs"
+                className="w-full bg-stone-100/50 border-stone-200/60 focus-visible:ring-2 focus-visible:ring-indigo-500/20 focus-visible:bg-white focus-visible:border-indigo-500/50 pl-12 h-11 rounded-[5px] transition-all duration-300 placeholder:text-stone-400 placeholder:text-[10px] placeholder:font-black placeholder:uppercase placeholder:tracking-[0.1em] font-bold text-sm shadow-inner"
               />
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                <span className="text-[8px] font-bold text-stone-300 tracking-wider">
-                  ⌘K
-                </span>
-              </div>
             </div>
 
             {/* Right: Actions & Notifications */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1 bg-white border border-[#151515]/5 rounded-[5px] p-1 shadow-sm">
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2 bg-stone-100/50 border border-stone-200/60 rounded-xl p-1.5 shadow-inner">
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-8 w-8 rounded-[5px] text-stone-400 hover:text-[#9a6bff] hover:bg-[#9a6bff]/10 transition-all relative group"
+                  className="h-9 w-9 rounded-lg text-stone-500 hover:text-indigo-600 hover:bg-white hover:shadow-sm transition-all relative group"
                 >
                   <Bell className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                  <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(236,72,153,0.8)]"></span>
+                  <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-emerald-500 border-2 border-white shadow-[0_0_10px_rgba(16,185,129,0.5)]"></span>
                 </Button>
+                <div className="w-px h-4 bg-stone-200/60 mx-1" />
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-8 w-8 rounded-[5px] text-stone-400 hover:text-[#9a6bff] hover:bg-[#9a6bff]/10 transition-all group"
+                  className="h-9 w-9 rounded-lg text-stone-500 hover:text-indigo-600 hover:bg-white hover:shadow-sm transition-all group"
                 >
-                  <Settings className="h-4 w-4 group-hover:scale-110 transition-transform group-hover:rotate-45" />
+                  <Settings className="h-4 w-4 group-hover:rotate-90 transition-transform duration-500" />
                 </Button>
               </div>
 
-              <div className="h-6 w-px bg-[#151515]/10 hidden sm:block"></div>
-
-              <Button className="hidden sm:flex bg-[#151515] text-white hover:bg-[#111] rounded-[5px] px-6 h-10 text-[10px] uppercase font-black tracking-[0.2em] shadow-lg shadow-black/10 hover:shadow-xl hover:-translate-y-0.5 transition-all items-center gap-2">
-                <Download className="h-3.5 w-3.5" />
-                Export Data
-              </Button>
             </div>
           </header>
 
@@ -9126,7 +9116,7 @@ const StockTransferView = ({
                               onClick={() => updateStatus(t.id, "DISPATCHED")}
                               className="bg-indigo-600 text-white font-black text-[9px] uppercase px-4 hover:bg-indigo-700 shadow-lg shadow-indigo-500/20"
                             >
-                              Force Dispatch
+                              Dispatch Shipment
                             </Button>
                           )}
                           {t.status === "DISPATCHED" && (
@@ -9135,7 +9125,7 @@ const StockTransferView = ({
                               onClick={() => updateStatus(t.id, "COMPLETED")}
                               className="bg-emerald-600 text-white font-black text-[9px] uppercase px-4 hover:bg-emerald-700 shadow-lg shadow-emerald-500/20"
                             >
-                              Force Complete
+                              Finalize Receipt
                             </Button>
                           )}
                           {(t.status === "COMPLETED" ||
@@ -9217,6 +9207,7 @@ const CreateTransferView = ({
           })),
           notes: "Admin Initiated Transfer",
           adminId,
+          status: vendors.find(v => v.id === sourceId)?.businessName?.toLowerCase().includes("omw global") ? "DISPATCHED" : "PENDING",
         }),
       });
       const data = await resp.json();
@@ -9380,18 +9371,24 @@ const CreateTransferView = ({
                       return (
                         <div
                           key={p.id}
-                          onClick={() =>
-                            !isSelected &&
+                          onClick={() => {
+                            if (isSelected) return;
+                            if (p.sourceStock <= 0) {
+                              toast.error("Insufficient stock at source");
+                              return;
+                            }
                             setSelectedItems([
                               ...selectedItems,
                               { ...p, transferQty: 1 },
-                            ])
-                          }
+                            ]);
+                          }}
                           className={cn(
                             "flex items-center gap-4 p-4 rounded-xl border border-stone-100 transition-all cursor-pointer group",
                             isSelected
                               ? "bg-emerald-50 border-emerald-500/20"
-                              : "bg-white hover:border-stone-300",
+                              : p.sourceStock <= 0 
+                                ? "opacity-50 cursor-not-allowed bg-stone-50"
+                                : "bg-white hover:border-stone-300",
                           )}
                         >
                           <div className="h-12 w-12 rounded-lg bg-stone-50 border border-stone-100 overflow-hidden shrink-0">
