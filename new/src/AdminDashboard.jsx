@@ -130,6 +130,7 @@ import OfflineStoresSection from "./components/admin/sections/OfflineStoresSecti
 import OffersSection from "./components/admin/sections/OffersSection";
 import OutletInventorySection from "./components/admin/sections/OutletInventorySection";
 import ProductLabelsSection from "./components/admin/sections/ProductLabelsSection";
+import NotificationsSection from "./components/admin/sections/NotificationsSection";
 
 import { printThermalReceipt } from "@/utils/printReceipt";
 
@@ -264,8 +265,10 @@ const createEmptyProductLabelDraft = () => ({
 
 const buildAutoBatchNo = (productName) => {
   const prefix =
-    (productName || "PROD").replace(/[^a-z0-9]/gi, "").slice(0, 4).toUpperCase() ||
-    "PROD";
+    (productName || "PROD")
+      .replace(/[^a-z0-9]/gi, "")
+      .slice(0, 4)
+      .toUpperCase() || "PROD";
   const stamp = new Date()
     .toISOString()
     .replace(/[-:TZ.]/g, "")
@@ -449,6 +452,10 @@ const AdminDashboardContent = () => {
   const [segmentSearch, setSegmentSearch] = useState("");
   const [activeSegment, setActiveSegment] = useState(null); // { id, name }
 
+  // Admin Notifications
+  const [adminNotifications, setAdminNotifications] = useState([]);
+  const [notifLoading, setNotifLoading] = useState(false);
+
   // Offline Store States
   const [offlineStores, setOfflineStores] = useState(() => {
     const saved = localStorage.getItem("omw_offline_stores");
@@ -603,6 +610,44 @@ const AdminDashboardContent = () => {
 
   const handleDeleteStore = (id) => {
     setOfflineStores((prev) => prev.filter((s) => s.id !== id));
+  };
+
+  const fetchAdminNotifications = async () => {
+    try {
+      setNotifLoading(true);
+      const res = await fetch(`${API_URL}/notifications?audience=ADMIN`);
+      const data = await res.json();
+      if (data.success) {
+        setAdminNotifications(data.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch notifications", err);
+    } finally {
+      setNotifLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchAdminNotifications();
+      const interval = setInterval(fetchAdminNotifications, 60000); // Refresh every minute
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const markAdminNotificationRead = async (id) => {
+    try {
+      const res = await fetch(`${API_URL}/notifications/${id}/read`, {
+        method: "PATCH",
+      });
+      if (res.ok) {
+        setAdminNotifications((prev) =>
+          prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
+        );
+      }
+    } catch (err) {
+      toast.error("Failed to mark notification as read");
+    }
   };
 
   const handleToggleStore = (id) => {
@@ -828,7 +873,7 @@ const AdminDashboardContent = () => {
       specialOfferType: p.specialOfferType || "None",
       ingredients: p.ingredients || "",
       whyWeLoveIt: p.whyWeLoveIt || "",
-      discountPrice: p.originalPrice ? p.price : (p.discountPrice || ""),
+      discountPrice: p.originalPrice ? p.price : p.discountPrice || "",
       existingImages: (p.imageUrls || []).filter(
         (img) => img && img.trim() !== "",
       ),
@@ -1732,9 +1777,15 @@ const AdminDashboardContent = () => {
       }
 
       // Validation: Discount must be lower than Base
-      if (newProduct.discountPrice && newProduct.price && Number(newProduct.discountPrice) >= Number(newProduct.price)) {
+      if (
+        newProduct.discountPrice &&
+        newProduct.price &&
+        Number(newProduct.discountPrice) >= Number(newProduct.price)
+      ) {
         setLoading(false);
-        return toast.error("Pricing Error: Discount price must be strictly less than the base price.");
+        return toast.error(
+          "Pricing Error: Discount price must be strictly less than the base price.",
+        );
       }
 
       // Step 2: Create or Update product
@@ -1748,9 +1799,10 @@ const AdminDashboardContent = () => {
               .map((t) => t.trim())
               .filter((t) => t)
           : [],
-        discountPrice: newProduct.discountPrice && newProduct.discountPrice !== "Optional"
-          ? Number(newProduct.discountPrice)
-          : null, // Send null to clear it in the DB
+        discountPrice:
+          newProduct.discountPrice && newProduct.discountPrice !== "Optional"
+            ? Number(newProduct.discountPrice)
+            : null, // Send null to clear it in the DB
         imageUrls: finalImageUrls,
         ingredients: newProduct.ingredients || null,
         whyWeLoveIt: newProduct.whyWeLoveIt || null,
@@ -1770,7 +1822,9 @@ const AdminDashboardContent = () => {
         defaultWeight: productLabelDraft.enabled
           ? productLabelDraft.weight || null
           : undefined,
-        unit: productLabelDraft.enabled ? productLabelDraft.unit || null : undefined,
+        unit: productLabelDraft.enabled
+          ? productLabelDraft.unit || null
+          : undefined,
       };
 
       const payload = {
@@ -2304,7 +2358,10 @@ const AdminDashboardContent = () => {
               </Collapsible>
 
               <Collapsible
-                defaultOpen={activeView === "inventory" || activeView === "outlet-inventory"}
+                defaultOpen={
+                  activeView === "inventory" ||
+                  activeView === "outlet-inventory"
+                }
                 className="group/collapsible"
               >
                 <SidebarMenuItem>
@@ -2720,6 +2777,36 @@ const AdminDashboardContent = () => {
                   </span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={activeView === "notifications"}
+                  onClick={() => handleViewChange("notifications")}
+                  className={cn(
+                    "flex items-center gap-3 py-5 px-4 rounded-full transition-all duration-300 group",
+                    activeView === "notifications"
+                      ? "bg-indigo-50 text-indigo-600 font-black shadow-sm shadow-indigo-100/50"
+                      : "text-stone-500 hover:bg-stone-50 hover:text-stone-900",
+                  )}
+                >
+                  <Bell
+                    className={cn(
+                      "h-[18px] w-[18px] transition-all",
+                      activeView === "notifications"
+                        ? "text-indigo-600"
+                        : "text-stone-400 group-hover:text-indigo-600",
+                    )}
+                  />
+                  <span className="font-['Inter'] font-bold text-[13px] tracking-tight">
+                    Notifications
+                  </span>
+                  {adminNotifications.filter(n => !n.isRead).length > 0 && (
+                    <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1.5 text-[9px] font-black text-white shadow-[0_0_10px_rgba(244,63,94,0.4)] animate-in zoom-in-50 duration-500">
+                      {adminNotifications.filter(n => !n.isRead).length}
+                    </span>
+                  )}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarContent>
 
@@ -2762,14 +2849,151 @@ const AdminDashboardContent = () => {
             {/* Right: Actions & Notifications */}
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2 bg-stone-100/50 border border-stone-200/60 rounded-xl p-1.5 shadow-inner">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-9 w-9 rounded-lg text-stone-500 hover:text-indigo-600 hover:bg-white hover:shadow-sm transition-all relative group"
-                >
-                  <Bell className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                  <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-emerald-500 border-2 border-white shadow-[0_0_10px_rgba(16,185,129,0.5)]"></span>
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-9 w-9 rounded-lg text-stone-500 hover:text-indigo-600 hover:bg-white hover:shadow-sm transition-all relative group"
+                    >
+                      <Bell className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                      {adminNotifications.filter((n) => !n.isRead).length >
+                        0 && (
+                        <span className="absolute top-2.5 right-2.5 flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500 border-2 border-white"></span>
+                        </span>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="w-[380px] p-0 rounded-2xl border-stone-200/60 shadow-[0_20px_50px_rgba(0,0,0,0.15)] bg-white/95 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-300 overflow-hidden"
+                  >
+                    <div className="p-5 border-b border-stone-100 flex items-center justify-between bg-stone-50/30">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-900">
+                          Transmission Ledger
+                        </span>
+                        <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">
+                          System Status: Nominal
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {adminNotifications.filter((n) => !n.isRead).length >
+                          0 && (
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              // Bulk mark as read
+                              try {
+                                const unread = adminNotifications.filter(
+                                  (n) => !n.isRead,
+                                );
+                                await Promise.all(
+                                  unread.map((n) =>
+                                    fetch(
+                                      `${API_URL}/notifications/${n.id}/read`,
+                                      { method: "PATCH" },
+                                    ),
+                                  ),
+                                );
+                                setAdminNotifications((prev) =>
+                                  prev.map((n) => ({ ...n, isRead: true })),
+                                );
+                                toast.success("Ledger synchronized");
+                              } catch (err) {}
+                            }}
+                            className="text-[9px] font-black text-indigo-600 hover:text-indigo-700 uppercase tracking-widest bg-indigo-50 px-3 py-1.5 rounded-full transition-all"
+                          >
+                            Mark All
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <ScrollArea className="max-h-[480px]">
+                      {adminNotifications.length === 0 ? (
+                        <div className="py-20 px-10 text-center relative overflow-hidden group">
+                          <div className="absolute inset-0 bg-linear-to-b from-stone-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                          <div className="relative z-10">
+                            <div className="h-16 w-16 rounded-full bg-stone-100 flex items-center justify-center mx-auto mb-6 shadow-inner animate-pulse">
+                              <Bell className="h-8 w-8 text-stone-300" />
+                            </div>
+                            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-stone-900 mb-2">
+                              System Clear
+                            </h3>
+                            <p className="text-[10px] font-bold text-stone-400 leading-relaxed max-w-[200px] mx-auto uppercase tracking-widest">
+                              No active alerts in the current protocol window.
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col divide-y divide-stone-50">
+                          {adminNotifications.slice(0, 8).map((n) => (
+                            <button
+                              key={n.id}
+                              onClick={() => {
+                                if (!n.isRead) markAdminNotificationRead(n.id);
+                                handleViewChange("notifications");
+                              }}
+                              className={cn(
+                                "group flex items-start gap-4 p-5 text-left hover:bg-stone-50/80 transition-all duration-300 relative overflow-hidden",
+                                !n.isRead && "bg-indigo-50/20",
+                              )}
+                            >
+                              {!n.isRead && (
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
+                              )}
+                              
+                              <div className={cn(
+                                "h-10 w-10 rounded-xl flex items-center justify-center shrink-0 border transition-all duration-300",
+                                !n.isRead 
+                                  ? "bg-indigo-50 border-indigo-100 text-indigo-600 scale-105 shadow-sm" 
+                                  : "bg-stone-50 border-stone-100 text-stone-400 opacity-60"
+                              )}>
+                                {n.title?.toLowerCase().includes("order") ? (
+                                  <ShoppingCart className="h-4 w-4" />
+                                ) : n.title?.toLowerCase().includes("stock") ? (
+                                  <AlertCircle className="h-4 w-4" />
+                                ) : (
+                                  <Bell className="h-4 w-4" />
+                                )}
+                              </div>
+
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-2 mb-1">
+                                  <span className={cn(
+                                    "text-[11px] font-black uppercase tracking-tight truncate",
+                                    !n.isRead ? "text-stone-900" : "text-stone-500"
+                                  )}>
+                                    {n.title}
+                                  </span>
+                                  <span className="text-[9px] font-bold text-stone-400 whitespace-nowrap bg-stone-100 px-2 py-0.5 rounded-full">
+                                    <LiveTimeAgo updatedAt={n.createdAt} />
+                                  </span>
+                                </div>
+                                <p className={cn(
+                                  "text-[11px] font-medium leading-relaxed line-clamp-2 transition-colors",
+                                  !n.isRead ? "text-stone-600" : "text-stone-400"
+                                )}>
+                                  {n.message}
+                                </p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </ScrollArea>
+                    <button
+                      onClick={() => handleViewChange("notifications")}
+                      className="w-full p-4 text-center bg-stone-50/50 hover:bg-stone-100/50 border-t border-stone-100 transition-all group"
+                    >
+                      <span className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-600 group-hover:tracking-[0.3em] transition-all">
+                        View All Transmissions
+                      </span>
+                    </button>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <div className="w-px h-4 bg-stone-200/60 mx-1" />
                 <Button
                   size="icon"
@@ -2779,7 +3003,6 @@ const AdminDashboardContent = () => {
                   <Settings className="h-4 w-4 group-hover:rotate-90 transition-transform duration-500" />
                 </Button>
               </div>
-
             </div>
           </header>
 
@@ -2794,6 +3017,15 @@ const AdminDashboardContent = () => {
               {activeView === "coupons" && <AdminCouponManager />}
               {activeView === "shop-by-origin" && <OriginManager />}
               {activeView === "origin-editor" && <OriginEditor />}
+
+              {activeView === "notifications" && (
+                <NotificationsSection
+                  notifications={adminNotifications}
+                  loading={notifLoading}
+                  onMarkRead={markAdminNotificationRead}
+                  onRefresh={fetchAdminNotifications}
+                />
+              )}
 
               {activeView === "stock-transfers" && (
                 <StockTransferView
@@ -4824,7 +5056,7 @@ const AdminDashboardContent = () => {
                             {/* Premium Light Header */}
                             <header className="p-6 lg:p-8 bg-white border-b border-stone-100 flex items-center justify-between shrink-0 relative overflow-hidden">
                               <div className="absolute top-0 right-0 p-32 opacity-[0.03] blur-3xl bg-blue-600 rounded-full -mr-16 -mt-16" />
-                              
+
                               <div className="relative z-10 flex items-center gap-6">
                                 <div className="relative group">
                                   <Avatar className="h-16 w-16 ring-4 ring-blue-50 shadow-xl transition-all duration-500 group-hover:scale-105 group-hover:ring-blue-100">
@@ -4832,14 +5064,19 @@ const AdminDashboardContent = () => {
                                       {selectedVendor.businessName.charAt(0)}
                                     </AvatarFallback>
                                   </Avatar>
-                                  <div className={cn(
-                                    "absolute -bottom-1 -right-1 h-6 w-6 rounded-full border-4 border-white flex items-center justify-center shadow-lg",
-                                    selectedVendor.approvalStatus === "APPROVED" ? "bg-emerald-500" : "bg-amber-500"
-                                  )}>
+                                  <div
+                                    className={cn(
+                                      "absolute -bottom-1 -right-1 h-6 w-6 rounded-full border-4 border-white flex items-center justify-center shadow-lg",
+                                      selectedVendor.approvalStatus ===
+                                        "APPROVED"
+                                        ? "bg-emerald-500"
+                                        : "bg-amber-500",
+                                    )}
+                                  >
                                     <div className="h-1.5 w-1.5 bg-white rounded-full animate-pulse" />
                                   </div>
                                 </div>
-                                
+
                                 <div className="space-y-1">
                                   <div className="flex items-center gap-3">
                                     <h2 className="text-2xl font-black tracking-tight text-stone-900">
@@ -4852,7 +5089,10 @@ const AdminDashboardContent = () => {
                                   <div className="flex items-center gap-5">
                                     <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest flex items-center gap-2">
                                       <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                                      ID: VND-{selectedVendor.id.slice(0, 8).toUpperCase()}
+                                      ID: VND-
+                                      {selectedVendor.id
+                                        .slice(0, 8)
+                                        .toUpperCase()}
                                     </span>
                                     <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest flex items-center gap-2">
                                       <div className="h-1.5 w-1.5 rounded-full bg-purple-500" />
@@ -4868,7 +5108,9 @@ const AdminDashboardContent = () => {
                                   className="h-10 flex items-center gap-2.5 px-5 bg-stone-900 text-white rounded-[8px] hover:bg-black transition-all shadow-lg shadow-stone-200/50"
                                 >
                                   <ChevronLeft className="h-3.5 w-3.5" />
-                                  <span className="text-[10px] font-black uppercase tracking-widest">Back to Vendors</span>
+                                  <span className="text-[10px] font-black uppercase tracking-widest">
+                                    Back to Vendors
+                                  </span>
                                 </Button>
                               </div>
                             </header>
@@ -4887,7 +5129,8 @@ const AdminDashboardContent = () => {
                                       </p>
                                     </div>
                                     <p className="text-2xl font-black text-stone-900 tracking-tight leading-none">
-                                      &#8377;{selectedVendor.totalRevenue?.toLocaleString()}
+                                      &#8377;
+                                      {selectedVendor.totalRevenue?.toLocaleString()}
                                     </p>
                                     <p className="text-[11px] font-bold text-emerald-600 mt-4 flex items-center gap-2">
                                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -4942,55 +5185,57 @@ const AdminDashboardContent = () => {
                                         <span className="h-2 w-2 rounded-full bg-stone-900" />
                                         Vendor Details
                                       </h3>
-                                        <div className="grid grid-cols-12 gap-6">
-                                          <div className="col-span-3 p-6 bg-white rounded-[16px] border border-stone-100 shadow-sm group hover:border-blue-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
-                                            <div className="flex items-center gap-5">
-                                              <div className="h-12 w-12 rounded-xl bg-stone-50 flex items-center justify-center text-stone-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-all duration-500">
-                                                <Mail className="h-5 w-5" />
-                                              </div>
-                                              <div>
-                                                <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-1">
-                                                  Email
-                                                </p>
-                                                <p className="text-[14px] font-bold text-stone-900 break-all">
-                                                  {selectedVendor.email || "N/A"}
-                                                </p>
-                                              </div>
+                                      <div className="grid grid-cols-12 gap-6">
+                                        <div className="col-span-3 p-6 bg-white rounded-[16px] border border-stone-100 shadow-sm group hover:border-blue-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
+                                          <div className="flex items-center gap-5">
+                                            <div className="h-12 w-12 rounded-xl bg-stone-50 flex items-center justify-center text-stone-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-all duration-500">
+                                              <Mail className="h-5 w-5" />
                                             </div>
-                                          </div>
-
-                                          <div className="col-span-3 p-6 bg-white rounded-[16px] border border-stone-100 shadow-sm group hover:border-emerald-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
-                                            <div className="flex items-center gap-5">
-                                              <div className="h-12 w-12 rounded-xl bg-stone-50 flex items-center justify-center text-stone-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-all duration-500">
-                                                <Phone className="h-5 w-5" />
-                                              </div>
-                                              <div>
-                                                <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-1">
-                                                  Phone
-                                                </p>
-                                                <p className="text-[14px] font-bold text-stone-900">
-                                                  {selectedVendor.contactNumber || "N/A"}
-                                                </p>
-                                              </div>
-                                            </div>
-                                          </div>
-
-                                          <div className="col-span-6 p-6 bg-white rounded-[16px] border border-stone-100 shadow-sm group hover:border-indigo-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
-                                            <div className="flex items-start gap-5">
-                                              <div className="h-12 w-12 rounded-xl bg-stone-50 flex items-center justify-center text-stone-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all duration-500 shrink-0">
-                                                <MapPin className="h-5 w-5" />
-                                              </div>
-                                              <div className="flex-1 min-w-0">
-                                                <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-1">
-                                                  Registered Address
-                                                </p>
-                                                <p className="text-[14px] font-bold text-stone-900 leading-relaxed">
-                                                  {selectedVendor.address || "No address data available"}
-                                                </p>
-                                              </div>
+                                            <div>
+                                              <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-1">
+                                                Email
+                                              </p>
+                                              <p className="text-[14px] font-bold text-stone-900 break-all">
+                                                {selectedVendor.email || "N/A"}
+                                              </p>
                                             </div>
                                           </div>
                                         </div>
+
+                                        <div className="col-span-3 p-6 bg-white rounded-[16px] border border-stone-100 shadow-sm group hover:border-emerald-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
+                                          <div className="flex items-center gap-5">
+                                            <div className="h-12 w-12 rounded-xl bg-stone-50 flex items-center justify-center text-stone-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-all duration-500">
+                                              <Phone className="h-5 w-5" />
+                                            </div>
+                                            <div>
+                                              <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-1">
+                                                Phone
+                                              </p>
+                                              <p className="text-[14px] font-bold text-stone-900">
+                                                {selectedVendor.contactNumber ||
+                                                  "N/A"}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        <div className="col-span-6 p-6 bg-white rounded-[16px] border border-stone-100 shadow-sm group hover:border-indigo-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
+                                          <div className="flex items-start gap-5">
+                                            <div className="h-12 w-12 rounded-xl bg-stone-50 flex items-center justify-center text-stone-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all duration-500 shrink-0">
+                                              <MapPin className="h-5 w-5" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                              <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-1">
+                                                Registered Address
+                                              </p>
+                                              <p className="text-[14px] font-bold text-stone-900 leading-relaxed">
+                                                {selectedVendor.address ||
+                                                  "No address data available"}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
                                     </section>
                                   </div>
 
@@ -5002,7 +5247,8 @@ const AdminDashboardContent = () => {
                                       </h3>
                                       <Badge className="bg-blue-50 text-blue-600 border border-blue-100 font-black text-[10px] px-4 py-1.5 rounded-full flex items-center gap-2">
                                         <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse" />
-                                        {selectedVendor.orders?.length || 0} ORDERS
+                                        {selectedVendor.orders?.length || 0}{" "}
+                                        ORDERS
                                       </Badge>
                                     </header>
 
@@ -5010,91 +5256,145 @@ const AdminDashboardContent = () => {
                                       <Table>
                                         <TableHeader className="bg-stone-50/50">
                                           <TableRow className="border-stone-100 hover:bg-transparent h-12">
-                                            <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-stone-400">Order</TableHead>
-                                            <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-stone-400">Items</TableHead>
-                                            <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-stone-400">Customer</TableHead>
-                                            <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-stone-400 text-center">Status</TableHead>
-                                            <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-stone-400 text-right">Total</TableHead>
+                                            <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-stone-400">
+                                              Order
+                                            </TableHead>
+                                            <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-stone-400">
+                                              Items
+                                            </TableHead>
+                                            <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-stone-400">
+                                              Customer
+                                            </TableHead>
+                                            <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-stone-400 text-center">
+                                              Status
+                                            </TableHead>
+                                            <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-stone-400 text-right">
+                                              Total
+                                            </TableHead>
                                           </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                           {selectedVendor.orders?.length > 0 ? (
-                                            selectedVendor.orders.map((order) => (
-                                              <TableRow
-                                                key={order.orderNumber}
-                                                className="border-stone-50 h-20 hover:bg-stone-50/50 transition-all group cursor-pointer"
-                                                onClick={() => navigate(`/admin/orders/${order.id}?type=Online`)}
-                                              >
-                                                <TableCell className="px-6">
-                                                  <div className="flex flex-col">
-                                                    <span className="text-sm font-black text-stone-900 tracking-tight group-hover:text-blue-600 transition-colors">
-                                                      #{order.orderNumber}
-                                                    </span>
-                                                    <span className="text-[10px] font-bold text-stone-400 mt-1">
-                                                      {new Date(order.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()}
-                                                    </span>
-                                                  </div>
-                                                </TableCell>
-                                                <TableCell className="px-6">
-                                                  <div className="flex -space-x-3 hover:space-x-1 transition-all duration-300">
-                                                    {order.items?.slice(0, 3).map((item, idx) => (
-                                                      <div key={idx} className="h-10 w-10 rounded-full border-2 border-white shadow-md overflow-hidden bg-white ring-1 ring-stone-100">
-                                                        <img 
-                                                          src={getMediaUrl(item.product?.imageUrls?.[0])} 
-                                                          className="h-full w-full object-cover" 
-                                                          alt="" 
-                                                          onError={(e) => { e.target.src = "https://via.placeholder.com/100?text=P"; }}
-                                                        />
-                                                      </div>
-                                                    ))}
-                                                    {order.items?.length > 3 && (
-                                                      <div className="h-10 w-10 rounded-full border-2 border-white bg-blue-50 flex items-center justify-center text-[10px] font-black text-blue-600 shadow-md ring-1 ring-blue-100">
-                                                        +{order.items.length - 3}
-                                                      </div>
-                                                    )}
-                                                  </div>
-                                                </TableCell>
-                                                <TableCell className="px-6">
-                                                  <div className="flex items-center gap-3">
-                                                    <Avatar className="h-8 w-8 ring-2 ring-white shadow-sm">
-                                                      <AvatarFallback className="bg-blue-100 text-blue-600 text-[10px] font-black">
-                                                        {order.customer?.name?.charAt(0)}
-                                                      </AvatarFallback>
-                                                    </Avatar>
+                                            selectedVendor.orders.map(
+                                              (order) => (
+                                                <TableRow
+                                                  key={order.orderNumber}
+                                                  className="border-stone-50 h-20 hover:bg-stone-50/50 transition-all group cursor-pointer"
+                                                  onClick={() =>
+                                                    navigate(
+                                                      `/admin/orders/${order.id}?type=Online`,
+                                                    )
+                                                  }
+                                                >
+                                                  <TableCell className="px-6">
                                                     <div className="flex flex-col">
-                                                      <span className="text-[13px] font-bold text-stone-900">
-                                                        {order.customer?.name}
+                                                      <span className="text-sm font-black text-stone-900 tracking-tight group-hover:text-blue-600 transition-colors">
+                                                        #{order.orderNumber}
                                                       </span>
-                                                      <span className="text-[10px] font-medium text-stone-400 lowercase">
-                                                        {order.customer?.mobile}
+                                                      <span className="text-[10px] font-bold text-stone-400 mt-1">
+                                                        {new Date(
+                                                          order.createdAt,
+                                                        )
+                                                          .toLocaleDateString(
+                                                            undefined,
+                                                            {
+                                                              month: "short",
+                                                              day: "numeric",
+                                                              year: "numeric",
+                                                            },
+                                                          )
+                                                          .toUpperCase()}
                                                       </span>
                                                     </div>
-                                                  </div>
-                                                </TableCell>
-                                                <TableCell className="px-6 text-center">
-                                                  <Badge
-                                                    className={cn(
-                                                      "rounded-full font-black text-[9px] uppercase tracking-widest px-4 py-1.5 border transition-all",
-                                                      order.status === "DELIVERED"
-                                                        ? "bg-emerald-50 text-emerald-600 border-emerald-100 shadow-sm"
-                                                        : order.status === "PLACED"
-                                                        ? "bg-amber-50 text-amber-600 border-amber-100 shadow-sm"
-                                                        : "bg-blue-50 text-blue-600 border-blue-100 shadow-sm",
-                                                    )}
-                                                  >
-                                                    {order.status}
-                                                  </Badge>
-                                                </TableCell>
-                                                <TableCell className="px-6 text-right">
-                                                  <span className="text-lg font-black text-stone-900 tracking-tighter">
-                                                    &#8377;{parseFloat(order.totalAmount).toLocaleString()}
-                                                  </span>
-                                                </TableCell>
-                                              </TableRow>
-                                            ))
+                                                  </TableCell>
+                                                  <TableCell className="px-6">
+                                                    <div className="flex -space-x-3 hover:space-x-1 transition-all duration-300">
+                                                      {order.items
+                                                        ?.slice(0, 3)
+                                                        .map((item, idx) => (
+                                                          <div
+                                                            key={idx}
+                                                            className="h-10 w-10 rounded-full border-2 border-white shadow-md overflow-hidden bg-white ring-1 ring-stone-100"
+                                                          >
+                                                            <img
+                                                              src={getMediaUrl(
+                                                                item.product
+                                                                  ?.imageUrls?.[0],
+                                                              )}
+                                                              className="h-full w-full object-cover"
+                                                              alt=""
+                                                              onError={(e) => {
+                                                                e.target.src =
+                                                                  "https://via.placeholder.com/100?text=P";
+                                                              }}
+                                                            />
+                                                          </div>
+                                                        ))}
+                                                      {order.items?.length >
+                                                        3 && (
+                                                        <div className="h-10 w-10 rounded-full border-2 border-white bg-blue-50 flex items-center justify-center text-[10px] font-black text-blue-600 shadow-md ring-1 ring-blue-100">
+                                                          +
+                                                          {order.items.length -
+                                                            3}
+                                                        </div>
+                                                      )}
+                                                    </div>
+                                                  </TableCell>
+                                                  <TableCell className="px-6">
+                                                    <div className="flex items-center gap-3">
+                                                      <Avatar className="h-8 w-8 ring-2 ring-white shadow-sm">
+                                                        <AvatarFallback className="bg-blue-100 text-blue-600 text-[10px] font-black">
+                                                          {order.customer?.name?.charAt(
+                                                            0,
+                                                          )}
+                                                        </AvatarFallback>
+                                                      </Avatar>
+                                                      <div className="flex flex-col">
+                                                        <span className="text-[13px] font-bold text-stone-900">
+                                                          {order.customer?.name}
+                                                        </span>
+                                                        <span className="text-[10px] font-medium text-stone-400 lowercase">
+                                                          {
+                                                            order.customer
+                                                              ?.mobile
+                                                          }
+                                                        </span>
+                                                      </div>
+                                                    </div>
+                                                  </TableCell>
+                                                  <TableCell className="px-6 text-center">
+                                                    <Badge
+                                                      className={cn(
+                                                        "rounded-full font-black text-[9px] uppercase tracking-widest px-4 py-1.5 border transition-all",
+                                                        order.status ===
+                                                          "DELIVERED"
+                                                          ? "bg-emerald-50 text-emerald-600 border-emerald-100 shadow-sm"
+                                                          : order.status ===
+                                                              "PLACED"
+                                                            ? "bg-amber-50 text-amber-600 border-amber-100 shadow-sm"
+                                                            : "bg-blue-50 text-blue-600 border-blue-100 shadow-sm",
+                                                      )}
+                                                    >
+                                                      {order.status}
+                                                    </Badge>
+                                                  </TableCell>
+                                                  <TableCell className="px-6 text-right">
+                                                    <span className="text-lg font-black text-stone-900 tracking-tighter">
+                                                      &#8377;
+                                                      {parseFloat(
+                                                        order.totalAmount,
+                                                      ).toLocaleString()}
+                                                    </span>
+                                                  </TableCell>
+                                                </TableRow>
+                                              ),
+                                            )
                                           ) : (
                                             <TableRow>
-                                              <TableCell colSpan={5} className="h-64 text-center">
+                                              <TableCell
+                                                colSpan={5}
+                                                className="h-64 text-center"
+                                              >
                                                 <div className="flex flex-col items-center justify-center opacity-30 gap-3">
                                                   <History className="h-12 w-12 text-stone-300" />
                                                   <p className="text-[11px] font-black uppercase tracking-[0.4em] text-stone-400">
@@ -5111,7 +5411,6 @@ const AdminDashboardContent = () => {
                                 </div>
                               </div>
                             </ScrollArea>
-
                           </div>
                         )
                       )}
@@ -5422,12 +5721,15 @@ const AdminDashboardContent = () => {
                                 onClick={() => setSelectedTopProduct(s)}
                               >
                                 <div className="h-11 w-11 shrink-0 rounded-lg overflow-hidden bg-stone-50 border border-stone-100 shadow-sm transition-all">
-                                   <img 
-                                      src={getMediaUrl(s.image)} 
-                                      className="h-full w-full object-cover group-hover/item:scale-110 transition-transform duration-500" 
-                                      alt={s.label}
-                                      onError={(e) => { e.target.src = "https://via.placeholder.com/100?text=P"; }}
-                                   />
+                                  <img
+                                    src={getMediaUrl(s.image)}
+                                    className="h-full w-full object-cover group-hover/item:scale-110 transition-transform duration-500"
+                                    alt={s.label}
+                                    onError={(e) => {
+                                      e.target.src =
+                                        "https://via.placeholder.com/100?text=P";
+                                    }}
+                                  />
                                 </div>
                                 <div className="flex-1 min-w-0 flex flex-col gap-1">
                                   <div className="flex justify-between items-start gap-2 mb-1">
@@ -5439,15 +5741,17 @@ const AdminDashboardContent = () => {
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-3">
-                                     <div className="flex-1 h-[3px] bg-stone-100 rounded-full overflow-hidden">
-                                        <div
-                                          className="h-full bg-stone-900 rounded-full transition-all duration-1000 ease-out group-hover/item:bg-indigo-500"
-                                          style={{ width: `${Math.max(2, s.p)}%` }}
-                                        />
-                                     </div>
-                                     <span className="text-[8px] font-bold text-stone-400 uppercase tracking-widest tabular-nums shrink-0">
-                                       {s.qty} Units
-                                     </span>
+                                    <div className="flex-1 h-[3px] bg-stone-100 rounded-full overflow-hidden">
+                                      <div
+                                        className="h-full bg-stone-900 rounded-full transition-all duration-1000 ease-out group-hover/item:bg-indigo-500"
+                                        style={{
+                                          width: `${Math.max(2, s.p)}%`,
+                                        }}
+                                      />
+                                    </div>
+                                    <span className="text-[8px] font-bold text-stone-400 uppercase tracking-widest tabular-nums shrink-0">
+                                      {s.qty} Units
+                                    </span>
                                   </div>
                                 </div>
                               </div>
@@ -5669,7 +5973,7 @@ const AdminDashboardContent = () => {
                             {/* Premium Light Header */}
                             <header className="p-6 lg:p-8 bg-white border-b border-stone-100 flex items-center justify-between shrink-0 relative overflow-hidden">
                               <div className="absolute top-0 right-0 p-32 opacity-[0.03] blur-3xl bg-indigo-600 rounded-full -mr-16 -mt-16" />
-                              
+
                               <div className="relative z-10 flex items-center gap-6">
                                 <div className="relative group">
                                   <Avatar className="h-16 w-16 ring-4 ring-indigo-50 shadow-xl transition-all duration-500 group-hover:scale-105 group-hover:ring-indigo-100">
@@ -5681,7 +5985,7 @@ const AdminDashboardContent = () => {
                                     <div className="h-1.5 w-1.5 bg-white rounded-full animate-pulse" />
                                   </div>
                                 </div>
-                                
+
                                 <div className="space-y-1">
                                   <div className="flex items-center gap-3">
                                     <h2 className="text-2xl font-black tracking-tight text-stone-900">
@@ -5710,7 +6014,9 @@ const AdminDashboardContent = () => {
                                   className="h-10 flex items-center gap-2.5 px-5 bg-stone-900 text-white rounded-[8px] hover:bg-black transition-all shadow-lg shadow-stone-200/50"
                                 >
                                   <ChevronLeft className="h-3.5 w-3.5" />
-                                  <span className="text-[10px] font-black uppercase tracking-widest">Back to Customers</span>
+                                  <span className="text-[10px] font-black uppercase tracking-widest">
+                                    Back to Customers
+                                  </span>
                                 </Button>
                               </div>
                             </header>
@@ -5784,205 +6090,290 @@ const AdminDashboardContent = () => {
                                 </div>
 
                                 <div className="col-span-12 space-y-12">
-                                    <section>
-                                      <h3 className="text-[11px] font-black text-stone-900 uppercase tracking-[0.4em] mb-5 flex items-center gap-4">
-                                        <span className="h-2 w-2 rounded-full bg-stone-900" />
-                                        Contact Info
-                                      </h3>
-                                      <div className="grid grid-cols-12 gap-6">
-                                        <div className="col-span-12 lg:col-span-6 p-6 bg-white rounded-[16px] border border-stone-100 shadow-sm group hover:border-indigo-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
-                                          <div className="flex items-center gap-5">
-                                            <div className="h-12 w-12 rounded-xl bg-stone-50 flex items-center justify-center text-stone-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all duration-500">
-                                              <Mail className="h-5 w-5" />
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                              <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-1">
-                                                Email
-                                              </p>
-                                              <p className="text-[14px] font-bold text-stone-900 truncate">
-                                                {selectedUser.email || "N/A"}
-                                              </p>
-                                            </div>
+                                  <section>
+                                    <h3 className="text-[11px] font-black text-stone-900 uppercase tracking-[0.4em] mb-5 flex items-center gap-4">
+                                      <span className="h-2 w-2 rounded-full bg-stone-900" />
+                                      Contact Info
+                                    </h3>
+                                    <div className="grid grid-cols-12 gap-6">
+                                      <div className="col-span-12 lg:col-span-6 p-6 bg-white rounded-[16px] border border-stone-100 shadow-sm group hover:border-indigo-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
+                                        <div className="flex items-center gap-5">
+                                          <div className="h-12 w-12 rounded-xl bg-stone-50 flex items-center justify-center text-stone-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all duration-500">
+                                            <Mail className="h-5 w-5" />
                                           </div>
-                                        </div>
-
-                                        <div className="col-span-12 lg:col-span-6 p-6 bg-white rounded-[16px] border border-stone-100 shadow-sm group hover:border-emerald-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
-                                          <div className="flex items-center gap-5">
-                                            <div className="h-12 w-12 rounded-xl bg-stone-50 flex items-center justify-center text-stone-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-all duration-500">
-                                              <Phone className="h-5 w-5" />
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                              <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-1">
-                                                Phone
-                                              </p>
-                                              <p className="text-[14px] font-bold text-stone-900 truncate">
-                                                {selectedUser.mobile || "N/A"}
-                                              </p>
-                                            </div>
-                                          </div>
-                                        </div>
-
-                                        <div className="col-span-12 p-6 bg-white rounded-[16px] border border-stone-100 shadow-sm group hover:border-amber-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
-                                          <div className="flex items-start gap-5">
-                                            <div className="h-12 w-12 rounded-xl bg-stone-50 flex items-center justify-center text-stone-400 group-hover:bg-amber-50 group-hover:text-amber-600 transition-all duration-500 shrink-0">
-                                              <MapPin className="h-5 w-5" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                              <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-1">
-                                                Primary Address
-                                              </p>
-                                              <p className="text-[14px] font-bold text-stone-900 leading-relaxed">
-                                                {(() => {
-                                                  const formatAddr = (addr) => {
-                                                    if (!addr) return null;
-                                                    if (typeof addr === "string") return addr;
-                                                    // Handle array of addresses
-                                                    if (Array.isArray(addr)) return formatAddr(addr[0]);
-                                                    
-                                                    const parts = [
-                                                      addr.line1 || addr.street || addr.addressLine1 || addr.address,
-                                                      addr.city,
-                                                      addr.state,
-                                                      addr.postalCode || addr.pincode || addr.zip
-                                                    ].filter(p => p && typeof p === "string");
-                                                    
-                                                    if (parts.length > 0) return parts.join(", ");
-                                                    
-                                                    // Final fallback for unknown object structure: try to find any string value
-                                                    const stringValues = Object.values(addr).filter(v => typeof v === "string" && v.length > 5);
-                                                    return stringValues.length > 0 ? stringValues[0] : null;
-                                                  };
-
-                                                  const profileAddr = formatAddr(selectedUser.address) || 
-                                                                     formatAddr(selectedUser.addresses) ||
-                                                                     formatAddr(selectedUser.shippingAddress) ||
-                                                                     formatAddr(selectedUser.userAddress) ||
-                                                                     formatAddr(selectedUser.profile?.address) ||
-                                                                     formatAddr(selectedUser.shipping?.address);
-                                                  
-                                                  if (profileAddr) return profileAddr;
-
-                                                  // Fallback to most recent order with ANY kind of address data
-                                                  const orders = selectedUser.orders || [];
-                                                  for (let i = orders.length - 1; i >= 0; i--) {
-                                                    const o = orders[i];
-                                                    const addr = formatAddr(o.shippingAddress) || 
-                                                                formatAddr(o.address) || 
-                                                                formatAddr(o.deliveryAddress) ||
-                                                                formatAddr(o.shippingInfo?.address);
-                                                    if (addr) return addr;
-                                                  }
-
-                                                  return "No primary address registered";
-                                                })()}
-                                              </p>
-                                            </div>
+                                          <div className="min-w-0 flex-1">
+                                            <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-1">
+                                              Email
+                                            </p>
+                                            <p className="text-[14px] font-bold text-stone-900 truncate">
+                                              {selectedUser.email || "N/A"}
+                                            </p>
                                           </div>
                                         </div>
                                       </div>
-                                    </section>
-                                  </div>
 
-                                  {/* Right Orders Registry */}
-                                  <div className="col-span-12">
-                                    <header className="flex items-center justify-between mb-6 pb-4 border-b border-stone-100">
-                                      <h3 className="text-[11px] font-black text-stone-900 uppercase tracking-[0.4em] flex items-center gap-4">
-                                        <span className="h-2 w-2 rounded-full bg-stone-900" />
-                                        Order History
-                                      </h3>
-                                      <Badge className="bg-emerald-50 text-emerald-600 border border-emerald-100 font-black text-[10px] px-4 py-1.5 rounded-full flex items-center gap-2">
-                                        <div className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse" />
-                                        {selectedUser.orders?.length || 0} ORDERS
-                                      </Badge>
-                                    </header>
+                                      <div className="col-span-12 lg:col-span-6 p-6 bg-white rounded-[16px] border border-stone-100 shadow-sm group hover:border-emerald-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
+                                        <div className="flex items-center gap-5">
+                                          <div className="h-12 w-12 rounded-xl bg-stone-50 flex items-center justify-center text-stone-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-all duration-500">
+                                            <Phone className="h-5 w-5" />
+                                          </div>
+                                          <div className="min-w-0 flex-1">
+                                            <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-1">
+                                              Phone
+                                            </p>
+                                            <p className="text-[14px] font-bold text-stone-900 truncate">
+                                              {selectedUser.mobile || "N/A"}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      </div>
 
-                                    <div className="bg-white rounded-[12px] border border-stone-100 shadow-xl overflow-hidden">
-                                      <Table>
-                                        <TableHeader className="bg-stone-50/50">
-                                          <TableRow className="border-stone-100 hover:bg-transparent h-12">
-                                            <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-stone-400">Order</TableHead>
-                                            <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-stone-400">Items</TableHead>
-                                            <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-stone-400 text-center">Status</TableHead>
-                                            <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-stone-400 text-right">Total</TableHead>
-                                          </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                          {selectedUser.orders?.length > 0 ? (
-                                            selectedUser.orders.map((order) => (
-                                              <TableRow
-                                                key={order.orderNumber}
-                                                className="border-stone-50 h-20 hover:bg-stone-50/50 transition-all group cursor-pointer"
-                                                onClick={() => navigate(`/admin/orders/${order.id}?type=Online`)}
-                                              >
-                                                <TableCell className="px-6">
-                                                  <div className="flex flex-col">
-                                                    <span className="text-sm font-black text-stone-900 tracking-tight group-hover:text-indigo-600 transition-colors">
-                                                      #{order.orderNumber}
-                                                    </span>
-                                                    <span className="text-[10px] font-bold text-stone-400 mt-1">
-                                                      {new Date(order.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()}
-                                                    </span>
-                                                  </div>
-                                                </TableCell>
-                                                <TableCell className="px-6">
-                                                  <div className="flex -space-x-3 hover:space-x-1 transition-all duration-300">
-                                                    {order.items?.slice(0, 4).map((item, idx) => (
-                                                      <div key={idx} className="h-11 w-11 rounded-full border-2 border-white shadow-md overflow-hidden bg-white ring-1 ring-stone-100">
-                                                        <img 
-                                                          src={getMediaUrl(item.product?.imageUrls?.[0])} 
-                                                          className="h-full w-full object-cover" 
-                                                          alt="" 
-                                                          onError={(e) => { e.target.src = "https://via.placeholder.com/100?text=P"; }}
+                                      <div className="col-span-12 p-6 bg-white rounded-[16px] border border-stone-100 shadow-sm group hover:border-amber-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
+                                        <div className="flex items-start gap-5">
+                                          <div className="h-12 w-12 rounded-xl bg-stone-50 flex items-center justify-center text-stone-400 group-hover:bg-amber-50 group-hover:text-amber-600 transition-all duration-500 shrink-0">
+                                            <MapPin className="h-5 w-5" />
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-1">
+                                              Primary Address
+                                            </p>
+                                            <p className="text-[14px] font-bold text-stone-900 leading-relaxed">
+                                              {(() => {
+                                                const formatAddr = (addr) => {
+                                                  if (!addr) return null;
+                                                  if (typeof addr === "string")
+                                                    return addr;
+                                                  // Handle array of addresses
+                                                  if (Array.isArray(addr))
+                                                    return formatAddr(addr[0]);
+
+                                                  const parts = [
+                                                    addr.line1 ||
+                                                      addr.street ||
+                                                      addr.addressLine1 ||
+                                                      addr.address,
+                                                    addr.city,
+                                                    addr.state,
+                                                    addr.postalCode ||
+                                                      addr.pincode ||
+                                                      addr.zip,
+                                                  ].filter(
+                                                    (p) =>
+                                                      p &&
+                                                      typeof p === "string",
+                                                  );
+
+                                                  if (parts.length > 0)
+                                                    return parts.join(", ");
+
+                                                  // Final fallback for unknown object structure: try to find any string value
+                                                  const stringValues =
+                                                    Object.values(addr).filter(
+                                                      (v) =>
+                                                        typeof v === "string" &&
+                                                        v.length > 5,
+                                                    );
+                                                  return stringValues.length > 0
+                                                    ? stringValues[0]
+                                                    : null;
+                                                };
+
+                                                const profileAddr =
+                                                  formatAddr(
+                                                    selectedUser.address,
+                                                  ) ||
+                                                  formatAddr(
+                                                    selectedUser.addresses,
+                                                  ) ||
+                                                  formatAddr(
+                                                    selectedUser.shippingAddress,
+                                                  ) ||
+                                                  formatAddr(
+                                                    selectedUser.userAddress,
+                                                  ) ||
+                                                  formatAddr(
+                                                    selectedUser.profile
+                                                      ?.address,
+                                                  ) ||
+                                                  formatAddr(
+                                                    selectedUser.shipping
+                                                      ?.address,
+                                                  );
+
+                                                if (profileAddr)
+                                                  return profileAddr;
+
+                                                // Fallback to most recent order with ANY kind of address data
+                                                const orders =
+                                                  selectedUser.orders || [];
+                                                for (
+                                                  let i = orders.length - 1;
+                                                  i >= 0;
+                                                  i--
+                                                ) {
+                                                  const o = orders[i];
+                                                  const addr =
+                                                    formatAddr(
+                                                      o.shippingAddress,
+                                                    ) ||
+                                                    formatAddr(o.address) ||
+                                                    formatAddr(
+                                                      o.deliveryAddress,
+                                                    ) ||
+                                                    formatAddr(
+                                                      o.shippingInfo?.address,
+                                                    );
+                                                  if (addr) return addr;
+                                                }
+
+                                                return "No primary address registered";
+                                              })()}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </section>
+                                </div>
+
+                                {/* Right Orders Registry */}
+                                <div className="col-span-12">
+                                  <header className="flex items-center justify-between mb-6 pb-4 border-b border-stone-100">
+                                    <h3 className="text-[11px] font-black text-stone-900 uppercase tracking-[0.4em] flex items-center gap-4">
+                                      <span className="h-2 w-2 rounded-full bg-stone-900" />
+                                      Order History
+                                    </h3>
+                                    <Badge className="bg-emerald-50 text-emerald-600 border border-emerald-100 font-black text-[10px] px-4 py-1.5 rounded-full flex items-center gap-2">
+                                      <div className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse" />
+                                      {selectedUser.orders?.length || 0} ORDERS
+                                    </Badge>
+                                  </header>
+
+                                  <div className="bg-white rounded-[12px] border border-stone-100 shadow-xl overflow-hidden">
+                                    <Table>
+                                      <TableHeader className="bg-stone-50/50">
+                                        <TableRow className="border-stone-100 hover:bg-transparent h-12">
+                                          <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-stone-400">
+                                            Order
+                                          </TableHead>
+                                          <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-stone-400">
+                                            Items
+                                          </TableHead>
+                                          <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-stone-400 text-center">
+                                            Status
+                                          </TableHead>
+                                          <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-stone-400 text-right">
+                                            Total
+                                          </TableHead>
+                                        </TableRow>
+                                      </TableHeader>
+                                      <TableBody>
+                                        {selectedUser.orders?.length > 0 ? (
+                                          selectedUser.orders.map((order) => (
+                                            <TableRow
+                                              key={order.orderNumber}
+                                              className="border-stone-50 h-20 hover:bg-stone-50/50 transition-all group cursor-pointer"
+                                              onClick={() =>
+                                                navigate(
+                                                  `/admin/orders/${order.id}?type=Online`,
+                                                )
+                                              }
+                                            >
+                                              <TableCell className="px-6">
+                                                <div className="flex flex-col">
+                                                  <span className="text-sm font-black text-stone-900 tracking-tight group-hover:text-indigo-600 transition-colors">
+                                                    #{order.orderNumber}
+                                                  </span>
+                                                  <span className="text-[10px] font-bold text-stone-400 mt-1">
+                                                    {new Date(order.createdAt)
+                                                      .toLocaleDateString(
+                                                        undefined,
+                                                        {
+                                                          month: "short",
+                                                          day: "numeric",
+                                                          year: "numeric",
+                                                        },
+                                                      )
+                                                      .toUpperCase()}
+                                                  </span>
+                                                </div>
+                                              </TableCell>
+                                              <TableCell className="px-6">
+                                                <div className="flex -space-x-3 hover:space-x-1 transition-all duration-300">
+                                                  {order.items
+                                                    ?.slice(0, 4)
+                                                    .map((item, idx) => (
+                                                      <div
+                                                        key={idx}
+                                                        className="h-11 w-11 rounded-full border-2 border-white shadow-md overflow-hidden bg-white ring-1 ring-stone-100"
+                                                      >
+                                                        <img
+                                                          src={getMediaUrl(
+                                                            item.product
+                                                              ?.imageUrls?.[0],
+                                                          )}
+                                                          className="h-full w-full object-cover"
+                                                          alt=""
+                                                          onError={(e) => {
+                                                            e.target.src =
+                                                              "https://via.placeholder.com/100?text=P";
+                                                          }}
                                                         />
                                                       </div>
                                                     ))}
-                                                    {order.items?.length > 4 && (
-                                                      <div className="h-11 w-11 rounded-full border-2 border-white bg-indigo-50 flex items-center justify-center text-[10px] font-black text-indigo-600 shadow-md ring-1 ring-indigo-100">
-                                                        +{order.items.length - 4}
-                                                      </div>
-                                                    )}
-                                                  </div>
-                                                </TableCell>
-                                                <TableCell className="px-6 text-center">
-                                                  <Badge
-                                                    className={cn(
-                                                      "rounded-full font-black text-[9px] uppercase tracking-widest px-4 py-1.5 border transition-all",
-                                                      order.status === "DELIVERED"
-                                                        ? "bg-emerald-50 text-emerald-600 border-emerald-100 shadow-sm"
-                                                        : order.status === "PLACED"
-                                                        ? "bg-amber-50 text-amber-600 border-amber-100 shadow-sm"
-                                                        : "bg-indigo-50 text-indigo-600 border-indigo-100 shadow-sm",
-                                                    )}
-                                                  >
-                                                    {order.status}
-                                                  </Badge>
-                                                </TableCell>
-                                                <TableCell className="px-6 text-right">
-                                                  <span className="text-lg font-black text-stone-900 tracking-tighter">
-                                                    &#8377;{parseFloat(order.totalAmount).toLocaleString()}
-                                                  </span>
-                                                </TableCell>
-                                              </TableRow>
-                                            ))
-                                          ) : (
-                                            <TableRow>
-                                              <TableCell colSpan={4} className="h-64 text-center">
-                                                <div className="flex flex-col items-center justify-center opacity-30 gap-3">
-                                                  <Package className="h-12 w-12 text-stone-300" />
-                                                  <p className="text-[11px] font-black uppercase tracking-[0.4em] text-stone-400">
-                                                    SECTOR ARCHIVE EMPTY
-                                                  </p>
+                                                  {order.items?.length > 4 && (
+                                                    <div className="h-11 w-11 rounded-full border-2 border-white bg-indigo-50 flex items-center justify-center text-[10px] font-black text-indigo-600 shadow-md ring-1 ring-indigo-100">
+                                                      +{order.items.length - 4}
+                                                    </div>
+                                                  )}
                                                 </div>
                                               </TableCell>
+                                              <TableCell className="px-6 text-center">
+                                                <Badge
+                                                  className={cn(
+                                                    "rounded-full font-black text-[9px] uppercase tracking-widest px-4 py-1.5 border transition-all",
+                                                    order.status === "DELIVERED"
+                                                      ? "bg-emerald-50 text-emerald-600 border-emerald-100 shadow-sm"
+                                                      : order.status ===
+                                                          "PLACED"
+                                                        ? "bg-amber-50 text-amber-600 border-amber-100 shadow-sm"
+                                                        : "bg-indigo-50 text-indigo-600 border-indigo-100 shadow-sm",
+                                                  )}
+                                                >
+                                                  {order.status}
+                                                </Badge>
+                                              </TableCell>
+                                              <TableCell className="px-6 text-right">
+                                                <span className="text-lg font-black text-stone-900 tracking-tighter">
+                                                  &#8377;
+                                                  {parseFloat(
+                                                    order.totalAmount,
+                                                  ).toLocaleString()}
+                                                </span>
+                                              </TableCell>
                                             </TableRow>
-                                          )}
-                                        </TableBody>
-                                      </Table>
-                                    </div>
+                                          ))
+                                        ) : (
+                                          <TableRow>
+                                            <TableCell
+                                              colSpan={4}
+                                              className="h-64 text-center"
+                                            >
+                                              <div className="flex flex-col items-center justify-center opacity-30 gap-3">
+                                                <Package className="h-12 w-12 text-stone-300" />
+                                                <p className="text-[11px] font-black uppercase tracking-[0.4em] text-stone-400">
+                                                  SECTOR ARCHIVE EMPTY
+                                                </p>
+                                              </div>
+                                            </TableCell>
+                                          </TableRow>
+                                        )}
+                                      </TableBody>
+                                    </Table>
                                   </div>
                                 </div>
+                              </div>
                             </ScrollArea>
-
                           </div>
                         )
                       )}
@@ -6407,10 +6798,15 @@ const AdminDashboardContent = () => {
                                   </div>
                                   <div className="space-y-4">
                                     {newProduct.vendors.map((v, idx) => {
-                                      const selectedVendor = (vendors || []).find(vnd => vnd.id === v.vendorId);
-                                      const isVendorAdmin = selectedVendor?.businessName?.toLowerCase() === "admin stock" || 
-                                                            selectedVendor?.businessName?.toLowerCase() === "omw global";
-                                      
+                                      const selectedVendor = (
+                                        vendors || []
+                                      ).find((vnd) => vnd.id === v.vendorId);
+                                      const isVendorAdmin =
+                                        selectedVendor?.businessName?.toLowerCase() ===
+                                          "admin stock" ||
+                                        selectedVendor?.businessName?.toLowerCase() ===
+                                          "omw global";
+
                                       return (
                                         <div
                                           key={idx}
@@ -6422,10 +6818,14 @@ const AdminDashboardContent = () => {
                                           <div className="relative flex-1">
                                             <select
                                               required
-                                              disabled={v.stock > 0 && v.vendorId !== ""}
+                                              disabled={
+                                                v.stock > 0 && v.vendorId !== ""
+                                              }
                                               className={cn(
                                                 "w-full h-12 bg-transparent px-2 text-sm font-bold focus:outline-none appearance-none transition-all",
-                                                v.stock > 0 && v.vendorId !== "" ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                                                v.stock > 0 && v.vendorId !== ""
+                                                  ? "opacity-50 cursor-not-allowed"
+                                                  : "cursor-pointer",
                                               )}
                                               value={v.vendorId}
                                               onChange={(e) => {
@@ -6450,15 +6850,21 @@ const AdminDashboardContent = () => {
                                                   newProduct.vendors.some(
                                                     (otherV, otherIdx) =>
                                                       otherIdx !== idx &&
-                                                      otherV.vendorId === vnd.id,
+                                                      otherV.vendorId ===
+                                                        vnd.id,
                                                   );
                                                 return (
                                                   <option
                                                     key={vnd.id}
                                                     value={vnd.id}
-                                                    disabled={isSelectedElsewhere}
+                                                    disabled={
+                                                      isSelectedElsewhere
+                                                    }
                                                   >
-                                                    {vnd.businessName?.toLowerCase() === "omw global" ? "Admin Stock" : vnd.businessName}{" "}
+                                                    {vnd.businessName?.toLowerCase() ===
+                                                    "omw global"
+                                                      ? "Admin Stock"
+                                                      : vnd.businessName}{" "}
                                                     {isSelectedElsewhere
                                                       ? "— Already Selected"
                                                       : ""}
@@ -6468,10 +6874,12 @@ const AdminDashboardContent = () => {
                                             </select>
                                             <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400 pointer-events-none" />
                                           </div>
-                                          <div className={cn(
-                                            "w-[140px] flex items-center gap-3 bg-stone-50 px-4 h-12 rounded-[5px] border border-stone-100 transition-all",
-                                            !isVendorAdmin && "opacity-70"
-                                          )}>
+                                          <div
+                                            className={cn(
+                                              "w-[140px] flex items-center gap-3 bg-stone-50 px-4 h-12 rounded-[5px] border border-stone-100 transition-all",
+                                              !isVendorAdmin && "opacity-70",
+                                            )}
+                                          >
                                             <span className="text-[10px] font-black text-stone-400 uppercase">
                                               Stock
                                             </span>
@@ -6481,9 +6889,18 @@ const AdminDashboardContent = () => {
                                               value={v.stock || "0"}
                                               onChange={(e) => {
                                                 if (isVendorAdmin) {
-                                                  const val = e.target.value.replace(/\D/g, "");
-                                                  const newVs = [...newProduct.vendors];
-                                                  newVs[idx] = { ...newVs[idx], stock: val };
+                                                  const val =
+                                                    e.target.value.replace(
+                                                      /\D/g,
+                                                      "",
+                                                    );
+                                                  const newVs = [
+                                                    ...newProduct.vendors,
+                                                  ];
+                                                  newVs[idx] = {
+                                                    ...newVs[idx],
+                                                    stock: val,
+                                                  };
                                                   setNewProduct({
                                                     ...newProduct,
                                                     vendors: newVs,
@@ -6492,7 +6909,9 @@ const AdminDashboardContent = () => {
                                               }}
                                               className={cn(
                                                 "w-full bg-transparent text-sm font-black transition-all",
-                                                isVendorAdmin ? "text-stone-900 cursor-text" : "text-stone-400 cursor-not-allowed"
+                                                isVendorAdmin
+                                                  ? "text-stone-900 cursor-text"
+                                                  : "text-stone-400 cursor-not-allowed",
                                               )}
                                             />
                                           </div>
@@ -6501,27 +6920,51 @@ const AdminDashboardContent = () => {
                                               type="button"
                                               onClick={() => {
                                                 if (!v.vendorId) {
-                                                  toast.error("Please select a vendor first");
+                                                  toast.error(
+                                                    "Please select a vendor first",
+                                                  );
                                                   return;
                                                 }
-                                                const adminStockVendor = (vendors || []).find(
-                                                  ven => ven.businessName?.toLowerCase() === "admin stock" ||
-                                                         ven.businessName?.toLowerCase() === "omw global"
+                                                const adminStockVendor = (
+                                                  vendors || []
+                                                ).find(
+                                                  (ven) =>
+                                                    ven.businessName?.toLowerCase() ===
+                                                      "admin stock" ||
+                                                    ven.businessName?.toLowerCase() ===
+                                                      "omw global",
                                                 );
-                                                handleViewChange("create-transfer", {
-                                                  preSelectedSource: adminStockVendor?.id,
-                                                  preSelectedDest: v.vendorId,
-                                                  preSelectedItems: editingProductId ? [{
-                                                    id: editingProductId,
-                                                    name: newProduct.name,
-                                                    transferQty: 1,
-                                                    sourceStock: Number(newProduct.vendors.find(v_row => v_row.vendorId === adminStockVendor?.id)?.stock || 0)
-                                                  }] : []
-                                                });
+                                                handleViewChange(
+                                                  "create-transfer",
+                                                  {
+                                                    preSelectedSource:
+                                                      adminStockVendor?.id,
+                                                    preSelectedDest: v.vendorId,
+                                                    preSelectedItems:
+                                                      editingProductId
+                                                        ? [
+                                                            {
+                                                              id: editingProductId,
+                                                              name: newProduct.name,
+                                                              transferQty: 1,
+                                                              sourceStock:
+                                                                Number(
+                                                                  newProduct.vendors.find(
+                                                                    (v_row) =>
+                                                                      v_row.vendorId ===
+                                                                      adminStockVendor?.id,
+                                                                  )?.stock || 0,
+                                                                ),
+                                                            },
+                                                          ]
+                                                        : [],
+                                                  },
+                                                );
                                               }}
                                               className="h-12 px-4 text-[10px] uppercase font-black tracking-widest text-[#6366f1] bg-[#eef2ff] border border-[#e0e7ff] hover:bg-[#6366f1] hover:text-white rounded-[5px] transition-all flex items-center gap-2"
                                             >
-                                              <ArrowRightLeft className="h-3.5 w-3.5" /> Transfer
+                                              <ArrowRightLeft className="h-3.5 w-3.5" />{" "}
+                                              Transfer
                                             </button>
                                           )}
                                           {newProduct.vendors.length > 1 &&
@@ -6529,7 +6972,11 @@ const AdminDashboardContent = () => {
                                               <button
                                                 type="button"
                                                 onClick={() => {
-                                                  if (window.confirm("Are you sure you want to remove this vendor stock entry? This will not delete the actual stock but will remove the association from this product.")) {
+                                                  if (
+                                                    window.confirm(
+                                                      "Are you sure you want to remove this vendor stock entry? This will not delete the actual stock but will remove the association from this product.",
+                                                    )
+                                                  ) {
                                                     const newVs = [
                                                       ...newProduct.vendors,
                                                     ];
@@ -6588,58 +7035,97 @@ const AdminDashboardContent = () => {
                                       Product Tags
                                     </Label>
                                     <div className="min-h-[64px] p-3 flex flex-wrap gap-2.5 border border-stone-200 bg-white rounded-[5px] focus-within:ring-2 focus-within:ring-stone-900 focus-within:border-stone-900 transition-all shadow-sm">
-                                      {newProduct.tags && newProduct.tags.split(',')
-                                        .map(t => t.trim())
-                                        .filter(t => t)
-                                        .map((tag, idx) => (
-                                          <Badge 
-                                            key={idx} 
-                                            className="bg-[#1a1a1a] text-white rounded-[4px] px-3.5 py-2 text-[9px] uppercase font-black tracking-[0.1em] flex items-center gap-2.5 group hover:bg-rose-600 transition-all cursor-default border-none shadow-sm"
-                                          >
-                                            {tag}
-                                            <X 
-                                              className="h-3 w-3 cursor-pointer opacity-40 group-hover:opacity-100 transition-opacity" 
-                                              onClick={() => {
-                                                const currentTags = newProduct.tags.split(',').map(t => t.trim()).filter(t => t);
-                                                const newTags = currentTags.filter(t => t !== tag);
+                                      {newProduct.tags &&
+                                        newProduct.tags
+                                          .split(",")
+                                          .map((t) => t.trim())
+                                          .filter((t) => t)
+                                          .map((tag, idx) => (
+                                            <Badge
+                                              key={idx}
+                                              className="bg-[#1a1a1a] text-white rounded-[4px] px-3.5 py-2 text-[9px] uppercase font-black tracking-[0.1em] flex items-center gap-2.5 group hover:bg-rose-600 transition-all cursor-default border-none shadow-sm"
+                                            >
+                                              {tag}
+                                              <X
+                                                className="h-3 w-3 cursor-pointer opacity-40 group-hover:opacity-100 transition-opacity"
+                                                onClick={() => {
+                                                  const currentTags =
+                                                    newProduct.tags
+                                                      .split(",")
+                                                      .map((t) => t.trim())
+                                                      .filter((t) => t);
+                                                  const newTags =
+                                                    currentTags.filter(
+                                                      (t) => t !== tag,
+                                                    );
+                                                  setNewProduct({
+                                                    ...newProduct,
+                                                    tags: newTags.join(", "),
+                                                  });
+                                                }}
+                                              />
+                                            </Badge>
+                                          ))}
+                                      <input
+                                        className="flex-1 min-w-[180px] bg-transparent outline-none text-sm font-bold px-2 py-1 placeholder:text-stone-300 placeholder:font-medium placeholder:uppercase placeholder:text-[10px] placeholder:tracking-widest"
+                                        placeholder={
+                                          newProduct.tags
+                                            ? ""
+                                            : "ADD PRODUCT TAGS..."
+                                        }
+                                        value={tagInput}
+                                        onChange={(e) =>
+                                          setTagInput(e.target.value)
+                                        }
+                                        onKeyDown={(e) => {
+                                          if (
+                                            e.key === "Enter" ||
+                                            e.key === ","
+                                          ) {
+                                            e.preventDefault();
+                                            const tag = tagInput
+                                              .trim()
+                                              .replace(/,/g, "");
+                                            if (tag) {
+                                              const currentTags =
+                                                newProduct.tags
+                                                  ? newProduct.tags
+                                                      .split(",")
+                                                      .map((t) => t.trim())
+                                                      .filter((t) => t)
+                                                  : [];
+                                              if (!currentTags.includes(tag)) {
                                                 setNewProduct({
                                                   ...newProduct,
-                                                  tags: newTags.join(', ')
-                                                });
-                                              }} 
-                                            />
-                                          </Badge>
-                                        ))}
-                                      <input 
-                                         className="flex-1 min-w-[180px] bg-transparent outline-none text-sm font-bold px-2 py-1 placeholder:text-stone-300 placeholder:font-medium placeholder:uppercase placeholder:text-[10px] placeholder:tracking-widest"
-                                         placeholder={newProduct.tags ? "" : "ADD PRODUCT TAGS..."}
-                                         value={tagInput}
-                                         onChange={(e) => setTagInput(e.target.value)}
-                                         onKeyDown={(e) => {
-                                           if (e.key === 'Enter' || e.key === ',') {
-                                             e.preventDefault();
-                                             const tag = tagInput.trim().replace(/,/g, '');
-                                             if (tag) {
-                                               const currentTags = newProduct.tags ? newProduct.tags.split(',').map(t => t.trim()).filter(t => t) : [];
-                                               if (!currentTags.includes(tag)) {
-                                                 setNewProduct({
-                                                   ...newProduct,
-                                                   tags: [...currentTags, tag].join(', ')
-                                                 });
-                                               }
-                                             }
-                                             setTagInput("");
-                                           } else if (e.key === 'Backspace' && !tagInput && newProduct.tags) {
-                                              const currentTags = newProduct.tags.split(',').map(t => t.trim()).filter(t => t);
-                                              if (currentTags.length > 0) {
-                                                const newTags = currentTags.slice(0, -1);
-                                                setNewProduct({
-                                                  ...newProduct,
-                                                  tags: newTags.join(', ')
+                                                  tags: [
+                                                    ...currentTags,
+                                                    tag,
+                                                  ].join(", "),
                                                 });
                                               }
-                                           }
-                                         }}
+                                            }
+                                            setTagInput("");
+                                          } else if (
+                                            e.key === "Backspace" &&
+                                            !tagInput &&
+                                            newProduct.tags
+                                          ) {
+                                            const currentTags = newProduct.tags
+                                              .split(",")
+                                              .map((t) => t.trim())
+                                              .filter((t) => t);
+                                            if (currentTags.length > 0) {
+                                              const newTags = currentTags.slice(
+                                                0,
+                                                -1,
+                                              );
+                                              setNewProduct({
+                                                ...newProduct,
+                                                tags: newTags.join(", "),
+                                              });
+                                            }
+                                          }
+                                        }}
                                       />
                                     </div>
                                   </div>
@@ -6780,7 +7266,6 @@ const AdminDashboardContent = () => {
                                 </div>
                               </div>
                             </div>
-
 
                             <div className="bg-white rounded-[5px] border border-stone-200 shadow-sm transition-all hover:shadow-md overflow-hidden">
                               <div className="p-6 border-b border-stone-100">
@@ -7598,11 +8083,14 @@ const AdminDashboardContent = () => {
                                     <Label className="text-[10px] font-black uppercase tracking-widest text-[#1a1a1a]">
                                       Discount Price (&#8377;)
                                     </Label>
-                                    {newProduct.discountPrice && newProduct.price && Number(newProduct.discountPrice) >= Number(newProduct.price) && (
-                                      <span className="text-[8px] font-black text-rose-500 uppercase tracking-widest animate-pulse">
-                                        Invalid: Must be lower than base
-                                      </span>
-                                    )}
+                                    {newProduct.discountPrice &&
+                                      newProduct.price &&
+                                      Number(newProduct.discountPrice) >=
+                                        Number(newProduct.price) && (
+                                        <span className="text-[8px] font-black text-rose-500 uppercase tracking-widest animate-pulse">
+                                          Invalid: Must be lower than base
+                                        </span>
+                                      )}
                                   </div>
                                   <Input
                                     type="text"
@@ -7610,10 +8098,17 @@ const AdminDashboardContent = () => {
                                     value={newProduct.discountPrice || ""}
                                     onChange={(e) => {
                                       const val = e.target.value;
-                                      if (val && newProduct.price && Number(val) >= Number(newProduct.price)) {
-                                        toast.error("Discount price must be less than the base price", {
-                                          id: "pricing-error", // Prevent multiple toasts
-                                        });
+                                      if (
+                                        val &&
+                                        newProduct.price &&
+                                        Number(val) >= Number(newProduct.price)
+                                      ) {
+                                        toast.error(
+                                          "Discount price must be less than the base price",
+                                          {
+                                            id: "pricing-error", // Prevent multiple toasts
+                                          },
+                                        );
                                       }
                                       setNewProduct({
                                         ...newProduct,
@@ -7622,7 +8117,11 @@ const AdminDashboardContent = () => {
                                     }}
                                     className={cn(
                                       "rounded-[5px] h-14 border-stone-200 bg-white font-bold px-6 focus:ring-[#151515] transition-all text-sm shadow-sm",
-                                      newProduct.discountPrice && newProduct.price && Number(newProduct.discountPrice) >= Number(newProduct.price) && "border-rose-300 bg-rose-50/30 text-rose-600 focus:ring-rose-500"
+                                      newProduct.discountPrice &&
+                                        newProduct.price &&
+                                        Number(newProduct.discountPrice) >=
+                                          Number(newProduct.price) &&
+                                        "border-rose-300 bg-rose-50/30 text-rose-600 focus:ring-rose-500",
                                     )}
                                     placeholder="Optional"
                                   />
@@ -7643,7 +8142,9 @@ const AdminDashboardContent = () => {
                                 primary: null,
                                 additional: [],
                               });
-                              setProductLabelDraft(createEmptyProductLabelDraft());
+                              setProductLabelDraft(
+                                createEmptyProductLabelDraft(),
+                              );
                             }}
                             className="flex-1 h-16 rounded-[5px] border border-stone-200 text-stone-900 font-black uppercase tracking-[0.2em] text-[11px] hover:bg-stone-50 transition-all"
                           >
@@ -7672,8 +8173,6 @@ const AdminDashboardContent = () => {
             </div>
           </main>
         </div>
-
-
 
         {/* Manual Offline Sale Registry */}
         <Dialog open={isManualOrderOpen} onOpenChange={setIsManualOrderOpen}>
@@ -7877,7 +8376,7 @@ const AdminDashboardContent = () => {
             >
               {/* Decorative Background */}
               <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-50/50 rounded-full blur-3xl -mr-24 -mt-24 pointer-events-none" />
-              
+
               <button
                 onClick={() => setSelectedTopProduct(null)}
                 className="absolute top-6 right-6 h-10 w-10 flex items-center justify-center rounded-full bg-stone-50 hover:bg-stone-100 transition-all cursor-pointer z-20 group"
@@ -7933,7 +8432,7 @@ const AdminDashboardContent = () => {
                   </div>
                 </div>
 
-                <Button 
+                <Button
                   className="w-full mt-8 h-12 rounded-2xl bg-stone-900 text-white hover:bg-stone-800 transition-all font-bold text-sm shadow-xl hover:shadow-2xl hover:-translate-y-0.5 active:translate-y-0 duration-300"
                   onClick={() => setSelectedTopProduct(null)}
                 >
@@ -8687,29 +9186,37 @@ const AdminDashboardContent = () => {
                           Manifest #{viewingTransfer.id.slice(-8).toUpperCase()}
                         </Badge>
                         <div className="flex items-center gap-2">
-                          <div className={cn(
-                            "h-1.5 w-1.5 rounded-full",
-                            viewingTransfer.status === "COMPLETED" ? "bg-emerald-500 animate-pulse" : 
-                            viewingTransfer.status === "DISPATCHED" ? "bg-amber-500 animate-pulse" : "bg-stone-300"
-                          )} />
+                          <div
+                            className={cn(
+                              "h-1.5 w-1.5 rounded-full",
+                              viewingTransfer.status === "COMPLETED"
+                                ? "bg-emerald-500 animate-pulse"
+                                : viewingTransfer.status === "DISPATCHED"
+                                  ? "bg-amber-500 animate-pulse"
+                                  : "bg-stone-300",
+                            )}
+                          />
                           <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">
                             Live Status: {viewingTransfer.status}
                           </span>
                         </div>
                       </div>
-                      
+
                       <div className="space-y-1">
                         <h2 className="text-3xl font-black tracking-tight text-stone-900 flex items-center gap-3">
-                          Stock Transfer <span className="text-indigo-600">Protocol</span>
+                          Stock Transfer{" "}
+                          <span className="text-indigo-600">Protocol</span>
                         </h2>
                         <div className="flex items-center gap-3 text-[10px] font-bold text-stone-400 uppercase tracking-[0.1em]">
                           <Calendar className="h-3 w-3" />
                           <span>Initialized on</span>
                           <span className="text-stone-900 bg-stone-100/80 px-2 py-0.5 rounded-md font-black">
-                            {new Date(viewingTransfer.createdAt).toLocaleDateString(undefined, { 
-                              day: '2-digit', 
-                              month: 'short', 
-                              year: 'numeric'
+                            {new Date(
+                              viewingTransfer.createdAt,
+                            ).toLocaleDateString(undefined, {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
                             })}
                           </span>
                         </div>
@@ -8747,9 +9254,13 @@ const AdminDashboardContent = () => {
                             >
                               <div className="flex items-center gap-5">
                                 <div className="h-16 w-16 rounded-xl bg-stone-50 border border-stone-100 p-2 flex items-center justify-center overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
-                                  {item.product?.image || item.product?.imageUrls?.[0] ? (
+                                  {item.product?.image ||
+                                  item.product?.imageUrls?.[0] ? (
                                     <img
-                                      src={getMediaUrl(item.product.image || item.product.imageUrls[0])}
+                                      src={getMediaUrl(
+                                        item.product.image ||
+                                          item.product.imageUrls[0],
+                                      )}
                                       className="w-full h-full object-cover rounded-lg"
                                     />
                                   ) : (
@@ -8760,14 +9271,18 @@ const AdminDashboardContent = () => {
                                   <div className="flex items-start justify-between gap-4">
                                     <div>
                                       <p className="text-[9px] font-bold tracking-[0.15em] text-stone-400 uppercase mb-0.5">
-                                        {item.product?.category?.name || "Inventory SKU"}
+                                        {item.product?.category?.name ||
+                                          "Inventory SKU"}
                                       </p>
                                       <h4 className="text-sm font-black text-stone-900 truncate">
-                                        {item.product?.name || item.product?.product?.name}
+                                        {item.product?.name ||
+                                          item.product?.product?.name}
                                       </h4>
                                     </div>
                                     <div className="text-right">
-                                      <p className="text-[9px] font-bold tracking-widest text-stone-400 uppercase">Quantity</p>
+                                      <p className="text-[9px] font-bold tracking-widest text-stone-400 uppercase">
+                                        Quantity
+                                      </p>
                                       <p className="text-sm font-black text-indigo-600 tabular-nums">
                                         {item.quantity} units
                                       </p>
@@ -8790,7 +9305,7 @@ const AdminDashboardContent = () => {
                             </div>
                             Transit Path
                           </h3>
-                          
+
                           <div className="bg-white rounded-2xl border border-stone-200/60 shadow-sm p-5 hover:shadow-md transition-all">
                             <div className="flex gap-4">
                               <div className="flex flex-col items-center gap-0.5 shrink-0">
@@ -8808,15 +9323,27 @@ const AdminDashboardContent = () => {
                               </div>
                               <div className="flex flex-col justify-between min-w-0 gap-6 py-0.5">
                                 <div>
-                                  <p className="text-[9px] font-bold tracking-widest text-stone-400 uppercase">From</p>
+                                  <p className="text-[9px] font-bold tracking-widest text-stone-400 uppercase">
+                                    From
+                                  </p>
                                   <p className="text-sm font-black text-stone-900 tracking-tight truncate">
-                                    {viewingTransfer.sourceVendor?.businessName?.toLowerCase() === "omw global" ? "ADMIN STOCK" : (viewingTransfer.sourceVendor?.businessName || "Source Station")}
+                                    {viewingTransfer.sourceVendor?.businessName?.toLowerCase() ===
+                                    "omw global"
+                                      ? "ADMIN STOCK"
+                                      : viewingTransfer.sourceVendor
+                                          ?.businessName || "Source Station"}
                                   </p>
                                 </div>
                                 <div>
-                                  <p className="text-[9px] font-bold tracking-widest text-indigo-400 uppercase">To</p>
+                                  <p className="text-[9px] font-bold tracking-widest text-indigo-400 uppercase">
+                                    To
+                                  </p>
                                   <p className="text-sm font-black text-stone-900 tracking-tight truncate">
-                                    {viewingTransfer.destinationVendor?.businessName?.toLowerCase() === "omw global" ? "ADMIN STOCK" : (viewingTransfer.destinationVendor?.businessName || "Target Terminal")}
+                                    {viewingTransfer.destinationVendor?.businessName?.toLowerCase() ===
+                                    "omw global"
+                                      ? "ADMIN STOCK"
+                                      : viewingTransfer.destinationVendor
+                                          ?.businessName || "Target Terminal"}
                                   </p>
                                 </div>
                               </div>
@@ -8832,33 +9359,70 @@ const AdminDashboardContent = () => {
                             </div>
                             Protocol Ledger
                           </h3>
-                          
+
                           <div className="bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
-                            <div className={cn(
-                              "px-5 py-3 font-black uppercase tracking-[0.2em] text-[10px] border-b flex items-center justify-between",
-                              viewingTransfer.status === "COMPLETED" ? "bg-emerald-50 text-emerald-700 border-emerald-100" : 
-                              viewingTransfer.status === "DISPATCHED" ? "bg-indigo-50 text-indigo-700 border-indigo-100" : "bg-stone-50 text-stone-500 border-stone-200"
-                            )}>
+                            <div
+                              className={cn(
+                                "px-5 py-3 font-black uppercase tracking-[0.2em] text-[10px] border-b flex items-center justify-between",
+                                viewingTransfer.status === "COMPLETED"
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                                  : viewingTransfer.status === "DISPATCHED"
+                                    ? "bg-indigo-50 text-indigo-700 border-indigo-100"
+                                    : "bg-stone-50 text-stone-500 border-stone-200",
+                              )}
+                            >
                               <span>STATUS: {viewingTransfer.status}</span>
                               <div className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
                             </div>
 
                             <div className="p-5 space-y-4">
                               {[
-                                { label: "Initialized", date: viewingTransfer.createdAt, icon: Clock },
-                                { label: "Dispatched", date: viewingTransfer.dispatchedAt, icon: Truck, color: "text-indigo-600" },
-                                { label: "Finalized", date: viewingTransfer.receivedAt, icon: CheckCircle2, color: "text-emerald-600" },
+                                {
+                                  label: "Initialized",
+                                  date: viewingTransfer.createdAt,
+                                  icon: Clock,
+                                },
+                                {
+                                  label: "Dispatched",
+                                  date: viewingTransfer.dispatchedAt,
+                                  icon: Truck,
+                                  color: "text-indigo-600",
+                                },
+                                {
+                                  label: "Finalized",
+                                  date: viewingTransfer.receivedAt,
+                                  icon: CheckCircle2,
+                                  color: "text-emerald-600",
+                                },
                               ].map((phase, idx) => {
                                 if (!phase.date) return null;
                                 const PhaseIcon = phase.icon;
                                 return (
-                                  <div key={idx} className="flex items-center justify-between">
+                                  <div
+                                    key={idx}
+                                    className="flex items-center justify-between"
+                                  >
                                     <div className="flex items-center gap-2">
-                                      <PhaseIcon className={cn("h-3.5 w-3.5", phase.color || "text-stone-400")} />
-                                      <span className="text-[9px] font-black text-stone-500 uppercase tracking-widest">{phase.label}</span>
+                                      <PhaseIcon
+                                        className={cn(
+                                          "h-3.5 w-3.5",
+                                          phase.color || "text-stone-400",
+                                        )}
+                                      />
+                                      <span className="text-[9px] font-black text-stone-500 uppercase tracking-widest">
+                                        {phase.label}
+                                      </span>
                                     </div>
-                                    <span className={cn("text-[10px] font-black tabular-nums bg-stone-50 px-2 py-0.5 rounded-md", phase.color || "text-stone-900")}>
-                                      {new Date(phase.date).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                                    <span
+                                      className={cn(
+                                        "text-[10px] font-black tabular-nums bg-stone-50 px-2 py-0.5 rounded-md",
+                                        phase.color || "text-stone-900",
+                                      )}
+                                    >
+                                      {new Date(phase.date).toLocaleString([], {
+                                        dateStyle: "short",
+                                        timeStyle: "short",
+                                      })}
                                     </span>
                                   </div>
                                 );
@@ -9038,11 +9602,14 @@ const StockTransferView = ({
                             </div>
                             <div className="text-[9px] text-stone-400 font-black uppercase tracking-[0.15em] flex items-center gap-1.5">
                               <Clock className="h-2.5 w-2.5" />
-                              {new Date(t.createdAt).toLocaleDateString(undefined, {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                              })}
+                              {new Date(t.createdAt).toLocaleDateString(
+                                undefined,
+                                {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                },
+                              )}
                             </div>
                           </div>
                         </div>
@@ -9176,7 +9743,9 @@ const StockTransferView = ({
                               {t.status === "DISPATCHED" && (
                                 <Button
                                   size="sm"
-                                  onClick={() => updateStatus(t.id, "COMPLETED")}
+                                  onClick={() =>
+                                    updateStatus(t.id, "COMPLETED")
+                                  }
                                   className="h-9 px-6 bg-emerald-600 text-white font-black text-[9px] uppercase hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 rounded-lg transition-all"
                                 >
                                   Finalize Receipt
@@ -9190,8 +9759,6 @@ const StockTransferView = ({
                               )}
                             </>
                           )}
-
-
                         </div>
                       </td>
                     </tr>
@@ -9234,7 +9801,7 @@ const CreateTransferView = ({
       .map((p) => {
         const records = p.stockRecords || p.bundledVendors || [];
         const sourceRecord = records.find(
-          (r) => (r.vendorId || r.vendor?.id) === sourceId
+          (r) => (r.vendorId || r.vendor?.id) === sourceId,
         );
         const sourceStock = sourceRecord
           ? sourceRecord.quantity || sourceRecord.stock || 0
@@ -9265,7 +9832,12 @@ const CreateTransferView = ({
           })),
           notes: "Admin Initiated Transfer",
           adminId,
-          status: vendors.find(v => v.id === sourceId)?.businessName?.toLowerCase().includes("omw global") ? "DISPATCHED" : "PENDING",
+          status: vendors
+            .find((v) => v.id === sourceId)
+            ?.businessName?.toLowerCase()
+            .includes("omw global")
+            ? "DISPATCHED"
+            : "PENDING",
         }),
       });
       const data = await resp.json();
@@ -9346,11 +9918,17 @@ const CreateTransferView = ({
                       className="w-full h-12 bg-white border border-stone-200 rounded-[8px] px-4 font-bold text-sm outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select Origin...</option>
-                        {vendors
-                        .filter((v) => v.id !== destId && v.businessName?.toLowerCase() === "omw global")
+                      {vendors
+                        .filter(
+                          (v) =>
+                            v.id !== destId &&
+                            v.businessName?.toLowerCase() === "omw global",
+                        )
                         .map((v) => (
                           <option key={v.id} value={v.id}>
-                            {v.businessName?.toLowerCase() === "omw global" ? "ADMIN STOCK" : v.businessName.toUpperCase()}
+                            {v.businessName?.toLowerCase() === "omw global"
+                              ? "ADMIN STOCK"
+                              : v.businessName.toUpperCase()}
                           </option>
                         ))}
                     </select>
@@ -9369,11 +9947,17 @@ const CreateTransferView = ({
                       className="w-full h-12 bg-white border border-stone-200 rounded-[8px] px-4 font-bold text-sm outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select Target...</option>
-                        {vendors
-                        .filter((v) => v.id !== sourceId && v.businessName?.toLowerCase() !== "omw global")
+                      {vendors
+                        .filter(
+                          (v) =>
+                            v.id !== sourceId &&
+                            v.businessName?.toLowerCase() !== "omw global",
+                        )
                         .map((v) => (
                           <option key={v.id} value={v.id}>
-                            {v.businessName?.toLowerCase() === "omw global" ? "ADMIN STOCK" : v.businessName.toUpperCase()}
+                            {v.businessName?.toLowerCase() === "omw global"
+                              ? "ADMIN STOCK"
+                              : v.businessName.toUpperCase()}
                           </option>
                         ))}
                     </select>
@@ -9444,7 +10028,7 @@ const CreateTransferView = ({
                             "flex items-center gap-4 p-4 rounded-xl border border-stone-100 transition-all cursor-pointer group",
                             isSelected
                               ? "bg-emerald-50 border-emerald-500/20"
-                              : p.sourceStock <= 0 
+                              : p.sourceStock <= 0
                                 ? "opacity-50 cursor-not-allowed bg-stone-50"
                                 : "bg-white hover:border-stone-300",
                           )}
@@ -9467,7 +10051,9 @@ const CreateTransferView = ({
                             </p>
                             <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mt-1.5 flex items-center gap-2">
                               Source Stock:{" "}
-                              <span className="text-stone-900">{p.sourceStock}</span>
+                              <span className="text-stone-900">
+                                {p.sourceStock}
+                              </span>
                             </p>
                           </div>
                           {isSelected ? (
@@ -9522,8 +10108,8 @@ const CreateTransferView = ({
                     >
                       <div className="h-12 w-12 rounded-lg bg-stone-50 border border-stone-100 overflow-hidden shrink-0">
                         {item.imageUrls?.[0] ? (
-                          <img 
-                            src={getMediaUrl(item.imageUrls[0])} 
+                          <img
+                            src={getMediaUrl(item.imageUrls[0])}
                             alt=""
                             className="w-full h-full object-cover"
                           />
@@ -9545,14 +10131,22 @@ const CreateTransferView = ({
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <span className={cn("h-1.5 w-1.5 rounded-full", (item.sourceStock - item.transferQty) < 0 ? "bg-rose-500 animate-pulse" : "bg-emerald-500")} />
+                            <span
+                              className={cn(
+                                "h-1.5 w-1.5 rounded-full",
+                                item.sourceStock - item.transferQty < 0
+                                  ? "bg-rose-500 animate-pulse"
+                                  : "bg-emerald-500",
+                              )}
+                            />
                             <span className="text-[9px] font-black text-stone-600 uppercase tracking-widest">
-                              Remaining: {Math.max(0, item.sourceStock - item.transferQty)}
+                              Remaining:{" "}
+                              {Math.max(0, item.sourceStock - item.transferQty)}
                             </span>
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() => {
@@ -9611,14 +10205,15 @@ const CreateTransferView = ({
                       {selectedItems.length} SKUs
                     </span>
                   </div>
-                  
+
                   {destId && (
                     <div className="flex justify-between items-center px-1">
                       <span className="text-[10px] font-black uppercase text-stone-400 tracking-widest">
                         Shipment Target
                       </span>
                       <span className="text-[10px] font-black text-indigo-600 uppercase tracking-tight truncate max-w-[150px]">
-                        {vendors.find(v => v.id === destId)?.businessName || "N/A"}
+                        {vendors.find((v) => v.id === destId)?.businessName ||
+                          "N/A"}
                       </span>
                     </div>
                   )}

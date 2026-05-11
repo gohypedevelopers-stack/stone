@@ -50,7 +50,7 @@ import {
   ArrowRightLeft,
   Building2,
   ShieldCheck,
-  Calendar
+  Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -202,12 +202,16 @@ const DispatchProtocolWorkstation = memo(
               <h2 className="text-lg font-bold text-stone-900 tracking-tight">
                 Dispatch Protocol
               </h2>
-              <p className="text-[10px] text-stone-400 font-medium">Outbound Stock Transfer</p>
+              <p className="text-[10px] text-stone-400 font-medium">
+                Outbound Stock Transfer
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-emerald-500" />
-            <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Active</span>
+            <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">
+              Active
+            </span>
           </div>
         </div>
 
@@ -229,11 +233,13 @@ const DispatchProtocolWorkstation = memo(
                   className="w-full bg-stone-50 border border-stone-100 h-11 px-4 rounded-lg font-bold text-sm outline-none focus:border-[#9a6bff] transition-all appearance-none cursor-pointer"
                 >
                   <option value="">Select Target Outlet...</option>
-                  {allVendors.filter(v => v.id !== currentVendor?.id).map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.businessName} ({v.location || "Branch"})
-                    </option>
-                  ))}
+                  {allVendors
+                    .filter((v) => v.id !== currentVendor?.id)
+                    .map((v) => (
+                      <option key={v.id} value={v.id}>
+                        {v.businessName} ({v.location || "Branch"})
+                      </option>
+                    ))}
                 </select>
                 <ChevronDown className="h-4 w-4 absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
               </div>
@@ -300,7 +306,7 @@ const DispatchProtocolWorkstation = memo(
                               <Package className="h-6 w-6 text-stone-200 m-auto" />
                             )}
                           </div>
-                          
+
                           <div className="min-w-0 flex-1 flex flex-col justify-between py-0.5">
                             <div>
                               <p className="text-[10px] font-bold text-[#9a6bff] uppercase tracking-wider mb-1">
@@ -314,10 +320,14 @@ const DispatchProtocolWorkstation = memo(
                               <span className="text-sm font-black text-stone-900">
                                 {formatINR(p.discountPrice || p.price)}
                               </span>
-                              <span className={cn(
-                                "text-[10px] font-bold px-2 py-0.5 rounded-full",
-                                p.stock <= 5 ? "text-rose-500 bg-rose-50" : "text-stone-400 bg-stone-50"
-                              )}>
+                              <span
+                                className={cn(
+                                  "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                                  p.stock <= 5
+                                    ? "text-rose-500 bg-rose-50"
+                                    : "text-stone-400 bg-stone-50",
+                                )}
+                              >
                                 {p.stock} in stock
                               </span>
                             </div>
@@ -329,7 +339,7 @@ const DispatchProtocolWorkstation = memo(
                             "w-full h-10 rounded-lg flex items-center justify-center gap-2 text-xs font-bold transition-all",
                             isStaged
                               ? "bg-emerald-500 text-white"
-                              : "bg-stone-50 text-stone-400 group-hover/item:bg-[#9a6bff] group-hover/item:text-white"
+                              : "bg-stone-50 text-stone-400 group-hover/item:bg-[#9a6bff] group-hover/item:text-white",
                           )}
                         >
                           {isStaged ? (
@@ -409,7 +419,12 @@ const DispatchProtocolWorkstation = memo(
                         <div className="flex items-center justify-between mt-3 pt-3 border-t border-stone-50">
                           <div className="flex items-center gap-1">
                             <button
-                              onClick={() => updateDispatchItemQty(item.productId, item.quantity - 1)}
+                              onClick={() =>
+                                updateDispatchItemQty(
+                                  item.productId,
+                                  item.quantity - 1,
+                                )
+                              }
                               className="h-6 w-6 flex items-center justify-center text-stone-400 hover:text-stone-900 transition-all"
                             >
                               <Minus className="h-3 w-3" />
@@ -418,7 +433,12 @@ const DispatchProtocolWorkstation = memo(
                               {item.quantity}
                             </span>
                             <button
-                              onClick={() => updateDispatchItemQty(item.productId, item.quantity + 1)}
+                              onClick={() =>
+                                updateDispatchItemQty(
+                                  item.productId,
+                                  item.quantity + 1,
+                                )
+                              }
                               className="h-6 w-6 flex items-center justify-center text-stone-400 hover:text-stone-900 transition-all"
                             >
                               <Plus className="h-3 w-3" />
@@ -439,9 +459,14 @@ const DispatchProtocolWorkstation = memo(
 
               <div className="p-8 bg-stone-50 border-t border-stone-200/60 space-y-6 relative overflow-hidden">
                 {/* Subtle Technical Grid Background */}
-                <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-                     style={{ backgroundImage: `radial-gradient(#9a6bff 0.5px, transparent 0.5px)`, backgroundSize: '12px 12px' }} />
-                
+                <div
+                  className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                  style={{
+                    backgroundImage: `radial-gradient(#9a6bff 0.5px, transparent 0.5px)`,
+                    backgroundSize: "12px 12px",
+                  }}
+                />
+
                 <div className="flex items-center justify-between relative z-10">
                   <div>
                     <p className="text-[8px] font-black text-stone-400 uppercase tracking-[0.2em] mb-1.5">
@@ -488,8 +513,10 @@ const DispatchProtocolWorkstation = memo(
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin" /> 
-                      <span className="animate-pulse">Registering Protocol...</span>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="animate-pulse">
+                        Registering Protocol...
+                      </span>
                     </>
                   ) : (
                     <>
@@ -3455,7 +3482,7 @@ export default function VendorDashboard() {
                   Logistics Sync
                 </p>
                 <p className="text-sm font-bold text-stone-900">
-                  Synchronizing Secure Ledger... 
+                  Synchronizing Secure Ledger...
                 </p>
               </div>
             </div>
@@ -3470,9 +3497,7 @@ export default function VendorDashboard() {
                 <div className="relative z-10 flex items-start justify-between">
                   <div className="flex flex-col space-y-3">
                     <div className="flex items-center gap-4">
-                      <Badge
-                        className="px-4 py-1.5 font-black text-[10px] tracking-[0.15em] uppercase bg-stone-900 text-white border-none shadow-lg shadow-stone-900/10 rounded-full"
-                      >
+                      <Badge className="px-4 py-1.5 font-black text-[10px] tracking-[0.15em] uppercase bg-stone-900 text-white border-none shadow-lg shadow-stone-900/10 rounded-full">
                         PROTOCOL #{viewingTransfer.id.slice(-8).toUpperCase()}
                       </Badge>
                       {viewingTransfer.status === "DISPATCHED" && (
@@ -3484,20 +3509,34 @@ export default function VendorDashboard() {
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="space-y-1">
                       <h2 className="text-4xl font-black tracking-tight text-stone-900 flex items-center gap-3">
-                        Transfer <span className="text-indigo-600">Manifest</span>
+                        Transfer{" "}
+                        <span className="text-indigo-600">Manifest</span>
                       </h2>
                       <div className="flex items-center gap-4 text-[11px] font-bold text-stone-400 uppercase tracking-[0.1em]">
                         <div className="flex items-center gap-1.5">
                           <Calendar className="h-3.5 w-3.5" />
-                          <span>{new Date(viewingTransfer.createdAt).toLocaleDateString()}</span>
+                          <span>
+                            {new Date(
+                              viewingTransfer.createdAt,
+                            ).toLocaleDateString()}
+                          </span>
                         </div>
                         <div className="h-1 w-1 rounded-full bg-stone-200" />
                         <div className="flex items-center gap-1.5">
                           <span className="text-stone-900 font-black">
-                            Value: {formatINR(viewingTransfer.items?.reduce((sum, item) => sum + (item.unitPrice || item.product?.price || 0) * item.quantity, 0) || 0)}
+                            Value:{" "}
+                            {formatINR(
+                              viewingTransfer.items?.reduce(
+                                (sum, item) =>
+                                  sum +
+                                  (item.unitPrice || item.product?.price || 0) *
+                                    item.quantity,
+                                0,
+                              ) || 0,
+                            )}
                           </span>
                         </div>
                       </div>
@@ -3532,23 +3571,39 @@ export default function VendorDashboard() {
 
                       <div className="grid grid-cols-1 gap-4">
                         {viewingTransfer.items?.map((item, idx) => {
-                          const isVerified = verifiedItems[viewingTransfer.id]?.[item.productId];
-                          const canVerify = viewingTransfer.destinationVendorId === currentVendor?.id && viewingTransfer.status === "DISPATCHED";
+                          const isVerified =
+                            verifiedItems[viewingTransfer.id]?.[item.productId];
+                          const canVerify =
+                            viewingTransfer.destinationVendorId ===
+                              currentVendor?.id &&
+                            viewingTransfer.status === "DISPATCHED";
 
                           return (
                             <div
                               key={idx}
-                              onClick={() => canVerify && toggleItemVerification(viewingTransfer.id, item.productId)}
+                              onClick={() =>
+                                canVerify &&
+                                toggleItemVerification(
+                                  viewingTransfer.id,
+                                  item.productId,
+                                )
+                              }
                               className={cn(
                                 "group relative overflow-hidden bg-white rounded-3xl border transition-all duration-500 p-5",
-                                isVerified ? "bg-emerald-50/30 border-emerald-200 shadow-lg shadow-emerald-500/5" : "border-stone-200/60 shadow-sm hover:shadow-xl hover:shadow-stone-900/5 hover:-translate-y-1 cursor-pointer"
+                                isVerified
+                                  ? "bg-emerald-50/30 border-emerald-200 shadow-lg shadow-emerald-500/5"
+                                  : "border-stone-200/60 shadow-sm hover:shadow-xl hover:shadow-stone-900/5 hover:-translate-y-1 cursor-pointer",
                               )}
                             >
                               <div className="flex items-center gap-5">
                                 <div className="h-20 w-20 rounded-2xl bg-stone-50 border border-stone-100 p-2 flex items-center justify-center overflow-hidden shrink-0 group-hover:scale-105 transition-transform duration-500">
-                                  {item.product?.image || item.product?.imageUrls?.[0] ? (
+                                  {item.product?.image ||
+                                  item.product?.imageUrls?.[0] ? (
                                     <img
-                                      src={getMediaUrl(item.product.image || item.product.imageUrls[0])}
+                                      src={getMediaUrl(
+                                        item.product.image ||
+                                          item.product.imageUrls[0],
+                                      )}
                                       className="w-full h-full object-cover rounded-lg"
                                     />
                                   ) : (
@@ -3567,29 +3622,53 @@ export default function VendorDashboard() {
                                     )}
                                   </div>
                                   <p className="text-lg font-black text-stone-900 leading-tight mb-2 truncate">
-                                    {item.product?.name || item.product?.product?.name || "Secure Item"}
+                                    {item.product?.name ||
+                                      item.product?.product?.name ||
+                                      "Secure Item"}
                                   </p>
                                   <div className="flex items-center gap-4">
                                     <div className="flex items-center gap-1.5 px-3 py-1 bg-stone-50 rounded-full border border-stone-100">
-                                      <span className="text-[10px] font-bold text-stone-400 uppercase">Qty:</span>
-                                      <span className="text-sm font-black text-stone-900 tabular-nums">{item.quantity}</span>
+                                      <span className="text-[10px] font-bold text-stone-400 uppercase">
+                                        Qty:
+                                      </span>
+                                      <span className="text-sm font-black text-stone-900 tabular-nums">
+                                        {item.quantity}
+                                      </span>
                                     </div>
                                     <div className="text-[10px] font-black text-stone-400 italic">
-                                      {formatINR(item.unitPrice || item.product?.price || 0)} / Unit
+                                      {formatINR(
+                                        item.unitPrice ||
+                                          item.product?.price ||
+                                          0,
+                                      )}{" "}
+                                      / Unit
                                     </div>
                                   </div>
                                 </div>
-                                
+
                                 <div className="flex flex-col items-end shrink-0 pl-6 border-l border-stone-100 space-y-2">
                                   <p className="text-[10px] font-black text-indigo-600 tabular-nums">
-                                    {formatINR((item.unitPrice || item.product?.price || 0) * item.quantity)}
+                                    {formatINR(
+                                      (item.unitPrice ||
+                                        item.product?.price ||
+                                        0) * item.quantity,
+                                    )}
                                   </p>
                                   {canVerify && (
-                                    <div className={cn(
-                                      "h-8 w-8 rounded-full border flex items-center justify-center transition-all duration-300",
-                                      isVerified ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "bg-white border-stone-200 text-stone-200"
-                                    )}>
-                                      <Check className={cn("h-4 w-4 transition-transform", isVerified && "scale-110")} />
+                                    <div
+                                      className={cn(
+                                        "h-8 w-8 rounded-full border flex items-center justify-center transition-all duration-300",
+                                        isVerified
+                                          ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20"
+                                          : "bg-white border-stone-200 text-stone-200",
+                                      )}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "h-4 w-4 transition-transform",
+                                          isVerified && "scale-110",
+                                        )}
+                                      />
                                     </div>
                                   )}
                                   {!canVerify && isVerified && (
@@ -3632,15 +3711,27 @@ export default function VendorDashboard() {
                             </div>
                             <div className="flex flex-col justify-between min-w-0 gap-6 py-0.5">
                               <div>
-                                <p className="text-[9px] font-bold tracking-widest text-stone-400 uppercase">From</p>
+                                <p className="text-[9px] font-bold tracking-widest text-stone-400 uppercase">
+                                  From
+                                </p>
                                 <p className="text-sm font-black text-stone-900 tracking-tight truncate">
-                                  {viewingTransfer.sourceVendor?.businessName?.toLowerCase() === "omw global" ? "Central Command" : (viewingTransfer.sourceVendor?.businessName || "Source Station")}
+                                  {viewingTransfer.sourceVendor?.businessName?.toLowerCase() ===
+                                  "omw global"
+                                    ? "Central Command"
+                                    : viewingTransfer.sourceVendor
+                                        ?.businessName || "Source Station"}
                                 </p>
                               </div>
                               <div>
-                                <p className="text-[9px] font-bold tracking-widest text-indigo-400 uppercase">To</p>
+                                <p className="text-[9px] font-bold tracking-widest text-indigo-400 uppercase">
+                                  To
+                                </p>
                                 <p className="text-sm font-black text-stone-900 tracking-tight truncate">
-                                  {viewingTransfer.destinationVendor?.businessName?.toLowerCase() === "omw global" ? "Central Command" : (viewingTransfer.destinationVendor?.businessName || "Target Terminal")}
+                                  {viewingTransfer.destinationVendor?.businessName?.toLowerCase() ===
+                                  "omw global"
+                                    ? "Central Command"
+                                    : viewingTransfer.destinationVendor
+                                        ?.businessName || "Target Terminal"}
                                 </p>
                               </div>
                             </div>
@@ -3656,33 +3747,72 @@ export default function VendorDashboard() {
                           </div>
                           Protocol Ledger
                         </h3>
-                        
+
                         <div className="bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
-                          <div className={cn(
-                            "px-5 py-3 font-black uppercase tracking-[0.2em] text-[10px] border-b flex items-center justify-between",
-                            viewingTransfer.status === "COMPLETED" ? "bg-emerald-50 text-emerald-700 border-emerald-100" : 
-                            viewingTransfer.status === "DISPATCHED" ? "bg-indigo-50 text-indigo-700 border-indigo-100" : "bg-stone-50 text-stone-500 border-stone-200"
-                          )}>
-                            <span>STATUS: {statusLabel(viewingTransfer.status)}</span>
+                          <div
+                            className={cn(
+                              "px-5 py-3 font-black uppercase tracking-[0.2em] text-[10px] border-b flex items-center justify-between",
+                              viewingTransfer.status === "COMPLETED"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                                : viewingTransfer.status === "DISPATCHED"
+                                  ? "bg-indigo-50 text-indigo-700 border-indigo-100"
+                                  : "bg-stone-50 text-stone-500 border-stone-200",
+                            )}
+                          >
+                            <span>
+                              STATUS: {statusLabel(viewingTransfer.status)}
+                            </span>
                             <div className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
                           </div>
 
                           <div className="p-5 space-y-4">
                             {[
-                              { label: "Initialized", date: viewingTransfer.createdAt, icon: Clock },
-                              { label: "Dispatched", date: viewingTransfer.dispatchedAt, icon: Truck, color: "text-indigo-600" },
-                              { label: "Finalized", date: viewingTransfer.receivedAt, icon: CheckCircle2, color: "text-emerald-600" },
+                              {
+                                label: "Initialized",
+                                date: viewingTransfer.createdAt,
+                                icon: Clock,
+                              },
+                              {
+                                label: "Dispatched",
+                                date: viewingTransfer.dispatchedAt,
+                                icon: Truck,
+                                color: "text-indigo-600",
+                              },
+                              {
+                                label: "Finalized",
+                                date: viewingTransfer.receivedAt,
+                                icon: CheckCircle2,
+                                color: "text-emerald-600",
+                              },
                             ].map((phase, idx) => {
                               if (!phase.date) return null;
                               const PhaseIcon = phase.icon;
                               return (
-                                <div key={idx} className="flex items-center justify-between">
+                                <div
+                                  key={idx}
+                                  className="flex items-center justify-between"
+                                >
                                   <div className="flex items-center gap-2">
-                                    <PhaseIcon className={cn("h-3.5 w-3.5", phase.color || "text-stone-400")} />
-                                    <span className="text-[9px] font-black text-stone-500 uppercase tracking-widest">{phase.label}</span>
+                                    <PhaseIcon
+                                      className={cn(
+                                        "h-3.5 w-3.5",
+                                        phase.color || "text-stone-400",
+                                      )}
+                                    />
+                                    <span className="text-[9px] font-black text-stone-500 uppercase tracking-widest">
+                                      {phase.label}
+                                    </span>
                                   </div>
-                                  <span className={cn("text-[10px] font-black tabular-nums bg-stone-50 px-2 py-0.5 rounded-md", phase.color || "text-stone-900")}>
-                                    {new Date(phase.date).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                                  <span
+                                    className={cn(
+                                      "text-[10px] font-black tabular-nums bg-stone-50 px-2 py-0.5 rounded-md",
+                                      phase.color || "text-stone-900",
+                                    )}
+                                  >
+                                    {new Date(phase.date).toLocaleString([], {
+                                      dateStyle: "short",
+                                      timeStyle: "short",
+                                    })}
                                   </span>
                                 </div>
                               );
@@ -3701,8 +3831,12 @@ export default function VendorDashboard() {
                   <div className="flex items-center gap-3">
                     <ShieldCheck className="h-5 w-5 text-emerald-500" />
                     <div className="flex flex-col">
-                      <span className="text-[10px] font-black text-stone-900 uppercase tracking-widest">Secure Dispatch Protocol</span>
-                      <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">Verification Required</span>
+                      <span className="text-[10px] font-black text-stone-900 uppercase tracking-widest">
+                        Secure Dispatch Protocol
+                      </span>
+                      <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">
+                        Verification Required
+                      </span>
                     </div>
                   </div>
 
@@ -3720,11 +3854,13 @@ export default function VendorDashboard() {
                                   (k) => verifiedItems[viewingTransfer.id][k],
                                 ).length && (
                                 <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em] animate-pulse">
-                                  WAITING FOR {viewingTransfer.items.length -
+                                  WAITING FOR{" "}
+                                  {viewingTransfer.items.length -
                                     Object.keys(
                                       verifiedItems[viewingTransfer.id] || {},
                                     ).filter(
-                                      (k) => verifiedItems[viewingTransfer.id][k],
+                                      (k) =>
+                                        verifiedItems[viewingTransfer.id][k],
                                     ).length}{" "}
                                   SKUS
                                 </span>
