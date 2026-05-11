@@ -48,6 +48,9 @@ import {
   ChevronUp,
   LogOut,
   ArrowRightLeft,
+  Building2,
+  ShieldCheck,
+  Calendar
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -3440,356 +3443,332 @@ export default function VendorDashboard() {
           </DialogHeader>
 
           {detailLoading || !viewingTransfer ? (
-            <div className="flex-1 flex flex-col items-center justify-center space-y-4">
-              <Loader2 className="h-8 w-8 animate-spin text-stone-300" />
-              <p className="text-[10px] font-black tracking-widest text-stone-400 uppercase">
-                Synchronizing Logistics...
-              </p>
+            <div className="flex-1 flex flex-col items-center justify-center space-y-8 animate-in fade-in duration-700">
+              <div className="relative">
+                <div className="absolute inset-0 bg-indigo-500/20 blur-2xl rounded-full animate-pulse" />
+                <div className="h-16 w-16 rounded-2xl bg-white shadow-xl border border-stone-100 flex items-center justify-center relative z-10 animate-bounce">
+                  <Package className="h-8 w-8 text-indigo-600" />
+                </div>
+              </div>
+              <div className="text-center space-y-2">
+                <p className="text-[10px] font-black tracking-[0.3em] text-stone-400 uppercase">
+                  Logistics Sync
+                </p>
+                <p className="text-sm font-bold text-stone-900">
+                  Synchronizing Secure Ledger... 
+                </p>
+              </div>
             </div>
           ) : (
             <>
-              {/* Workstation Header */}
-              <div className="bg-stone-50 p-6 shrink-0">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="bg-stone-900 text-white text-[9px] font-black px-2 py-0.5 rounded-[1px] uppercase tracking-widest">
-                        ID: {viewingTransfer.id.slice(-8).toUpperCase()}
-                      </span>
+              {/* Premium Workstation Header */}
+              <div className="relative overflow-hidden bg-white border-b border-stone-100 px-10 py-6 shrink-0">
+                {/* Mesh Gradient Accents */}
+                <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/5 blur-[120px] -mr-20 -mt-20 pointer-events-none rounded-full" />
+                <div className="absolute bottom-0 left-0 w-96 h-96 bg-rose-500/5 blur-[120px] -ml-20 -mb-20 pointer-events-none rounded-full" />
+
+                <div className="relative z-10 flex items-start justify-between">
+                  <div className="flex flex-col space-y-3">
+                    <div className="flex items-center gap-4">
+                      <Badge
+                        className="px-4 py-1.5 font-black text-[10px] tracking-[0.15em] uppercase bg-stone-900 text-white border-none shadow-lg shadow-stone-900/10 rounded-full"
+                      >
+                        PROTOCOL #{viewingTransfer.id.slice(-8).toUpperCase()}
+                      </Badge>
                       {viewingTransfer.status === "DISPATCHED" && (
-                        <span className="bg-amber-500 text-white text-[9px] font-black px-2 py-0.5 rounded-[1px] uppercase tracking-widest animate-pulse">
-                          ON THE WAY
-                        </span>
+                        <div className="flex items-center gap-2 px-3 py-1 bg-amber-50 rounded-full border border-amber-100 animate-pulse">
+                          <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                          <span className="text-[9px] font-black text-amber-600 uppercase tracking-widest">
+                            IN TRANSIT
+                          </span>
+                        </div>
                       )}
                     </div>
-                    <h2 className="text-xl font-black tracking-tight text-stone-900 uppercase italic">
-                      Stock Transfer{" "}
-                      <span className="text-indigo-600">Details</span>
-                    </h2>
-                    <div className="flex items-center gap-4 text-[10px] font-bold text-stone-400 uppercase tracking-wider">
-                      <span>
-                        Ref: {viewingTransfer.transferNumber || "N/A"}
-                      </span>
-                      <span className="h-1 w-1 rounded-full bg-stone-300" />
-                      <span>
-                        {new Date(viewingTransfer.createdAt).toLocaleString()}
-                      </span>
-                      <span className="h-1 w-1 rounded-full bg-stone-300" />
-                      <span className="text-stone-900 font-black">
-                        Total Value:{" "}
-                        {formatINR(
-                          viewingTransfer.items?.reduce(
-                            (sum, item) =>
-                              sum +
-                              (item.unitPrice || item.product?.price || 0) *
-                                item.quantity,
-                            0,
-                          ) || 0,
-                        )}
-                      </span>
+                    
+                    <div className="space-y-1">
+                      <h2 className="text-4xl font-black tracking-tight text-stone-900 flex items-center gap-3">
+                        Transfer <span className="text-indigo-600">Manifest</span>
+                      </h2>
+                      <div className="flex items-center gap-4 text-[11px] font-bold text-stone-400 uppercase tracking-[0.1em]">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="h-3.5 w-3.5" />
+                          <span>{new Date(viewingTransfer.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <div className="h-1 w-1 rounded-full bg-stone-200" />
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-stone-900 font-black">
+                            Value: {formatINR(viewingTransfer.items?.reduce((sum, item) => sum + (item.unitPrice || item.product?.price || 0) * item.quantity, 0) || 0)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
                   <button
                     onClick={() => setIsTransferDetailOpen(false)}
-                    className="h-8 w-8 flex items-center justify-center text-stone-400 hover:text-stone-900 transition-colors"
+                    className="h-12 w-12 rounded-2xl bg-white border border-stone-200 shadow-sm flex items-center justify-center text-stone-400 hover:text-stone-900 hover:border-stone-400 hover:shadow-md transition-all duration-300 focus:outline-none"
                   >
                     <X className="h-5 w-5" />
                   </button>
                 </div>
               </div>
 
-              <ScrollArea className="flex-1 min-h-0 h-full">
-                <div className="p-8">
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                    {/* Left: Items (Manifest) */}
-                    <div className="lg:col-span-7 space-y-6">
-                      <div className="flex items-center justify-between border-b border-stone-100 pb-2">
-                        <h3 className="text-[11px] font-black text-stone-900 uppercase tracking-widest flex items-center gap-2">
-                          <Package className="h-3.5 w-3.5 text-indigo-500" />
-                          Item List
+              <div className="flex-1 overflow-y-auto bg-[#fcfcfc] min-h-0 custom-scrollbar">
+                <div className="p-10 pb-16">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 max-w-7xl mx-auto">
+                    {/* Left: Manifest Ledger */}
+                    <div className="lg:col-span-7 space-y-8">
+                      <div className="flex items-center justify-between border-b border-stone-100 pb-4">
+                        <h3 className="text-xs font-black text-stone-900 flex items-center gap-3 uppercase tracking-[0.2em]">
+                          <div className="h-8 w-8 rounded-lg bg-indigo-50 flex items-center justify-center border border-indigo-100">
+                            <Package className="h-4 w-4 text-indigo-600" />
+                          </div>
+                          Item Checklist
                         </h3>
-                        <span className="text-[10px] font-bold text-stone-400 uppercase">
-                          {viewingTransfer.items?.length} Items Detected
+                        <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest bg-stone-100 px-3 py-1 rounded-md">
+                          {viewingTransfer.items?.length || 0} SKUs DETECTED
                         </span>
                       </div>
 
-                      <div className="space-y-2">
+                      <div className="grid grid-cols-1 gap-4">
                         {viewingTransfer.items?.map((item, idx) => {
-                          const isVerified =
-                            verifiedItems[viewingTransfer.id]?.[item.productId];
-                          const canVerify =
-                            viewingTransfer.destinationVendorId ===
-                            currentVendor?.id;
+                          const isVerified = verifiedItems[viewingTransfer.id]?.[item.productId];
+                          const canVerify = viewingTransfer.destinationVendorId === currentVendor?.id && viewingTransfer.status === "DISPATCHED";
 
                           return (
                             <div
                               key={idx}
-                              onClick={() =>
-                                canVerify &&
-                                toggleItemVerification(
-                                  viewingTransfer.id,
-                                  item.productId,
-                                )
-                              }
+                              onClick={() => canVerify && toggleItemVerification(viewingTransfer.id, item.productId)}
                               className={cn(
-                                "group border transition-all p-3 flex items-center gap-4",
-                                isVerified
-                                  ? "bg-emerald-50/50 border-emerald-200"
-                                  : "bg-white border-stone-100 hover:border-stone-200 cursor-pointer",
+                                "group relative overflow-hidden bg-white rounded-3xl border transition-all duration-500 p-5",
+                                isVerified ? "bg-emerald-50/30 border-emerald-200 shadow-lg shadow-emerald-500/5" : "border-stone-200/60 shadow-sm hover:shadow-xl hover:shadow-stone-900/5 hover:-translate-y-1 cursor-pointer"
                               )}
                             >
-                              <div className="h-12 w-12 border border-stone-100 bg-stone-50 flex items-center justify-center shrink-0">
-                                {item.product?.image ||
-                                item.product?.imageUrls?.[0] ? (
-                                  <img
-                                    src={getMediaUrl(
-                                      item.product.image ||
-                                        item.product.imageUrls[0],
-                                    )}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <Box className="h-5 w-5 text-stone-200" />
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-0.5">
-                                  <p className="text-[9px] font-black text-indigo-500 uppercase tracking-tighter bg-indigo-50 px-1 rounded-[1px]">
-                                    {item.product?.brand || "Stock Item"}
-                                  </p>
-                                  {item.product?.sku && (
-                                    <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest border-l border-stone-100 pl-2">
-                                      {item.product.sku}
+                              <div className="flex items-center gap-5">
+                                <div className="h-20 w-20 rounded-2xl bg-stone-50 border border-stone-100 p-2 flex items-center justify-center overflow-hidden shrink-0 group-hover:scale-105 transition-transform duration-500">
+                                  {item.product?.image || item.product?.imageUrls?.[0] ? (
+                                    <img
+                                      src={getMediaUrl(item.product.image || item.product.imageUrls[0])}
+                                      className="w-full h-full object-cover rounded-lg"
+                                    />
+                                  ) : (
+                                    <Box className="h-8 w-8 text-stone-200" />
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1.5">
+                                    <p className="text-[10px] font-black tracking-[0.15em] text-indigo-500 uppercase">
+                                      {item.product?.brand || "Premium SKU"}
                                     </p>
+                                    {item.product?.sku && (
+                                      <p className="text-[9px] font-bold text-stone-300 uppercase tracking-widest border-l border-stone-100 pl-2">
+                                        {item.product.sku}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <p className="text-lg font-black text-stone-900 leading-tight mb-2 truncate">
+                                    {item.product?.name || item.product?.product?.name || "Secure Item"}
+                                  </p>
+                                  <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-1.5 px-3 py-1 bg-stone-50 rounded-full border border-stone-100">
+                                      <span className="text-[10px] font-bold text-stone-400 uppercase">Qty:</span>
+                                      <span className="text-sm font-black text-stone-900 tabular-nums">{item.quantity}</span>
+                                    </div>
+                                    <div className="text-[10px] font-black text-stone-400 italic">
+                                      {formatINR(item.unitPrice || item.product?.price || 0)} / Unit
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex flex-col items-end shrink-0 pl-6 border-l border-stone-100 space-y-2">
+                                  <p className="text-[10px] font-black text-indigo-600 tabular-nums">
+                                    {formatINR((item.unitPrice || item.product?.price || 0) * item.quantity)}
+                                  </p>
+                                  {canVerify && (
+                                    <div className={cn(
+                                      "h-8 w-8 rounded-full border flex items-center justify-center transition-all duration-300",
+                                      isVerified ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "bg-white border-stone-200 text-stone-200"
+                                    )}>
+                                      <Check className={cn("h-4 w-4 transition-transform", isVerified && "scale-110")} />
+                                    </div>
+                                  )}
+                                  {!canVerify && isVerified && (
+                                    <div className="h-6 w-6 rounded-full bg-emerald-100 flex items-center justify-center">
+                                      <Check className="h-3 w-3 text-emerald-600" />
+                                    </div>
                                   )}
                                 </div>
-                                <p className="text-xs font-bold text-stone-900 truncate">
-                                  {item.product?.name ||
-                                    item.product?.product?.name ||
-                                    "Unknown SKU"}
-                                </p>
-                                <p className="text-[10px] font-black text-stone-400 mt-0.5 italic">
-                                  {formatINR(
-                                    item.unitPrice || item.product?.price || 0,
-                                  )}{" "}
-                                  <span className="opacity-40">/ Unit</span>
-                                </p>
                               </div>
-                              <div className="text-right shrink-0 px-4 border-l border-stone-50">
-                                <p className="text-[10px] font-black text-stone-400 uppercase">
-                                  Qty
-                                </p>
-                                <p className="text-sm font-black text-stone-900 tabular-nums">
-                                  {item.quantity}
-                                </p>
-                                <p className="text-[10px] font-black text-indigo-600 mt-0.5">
-                                  {formatINR(
-                                    (item.unitPrice ||
-                                      item.product?.price ||
-                                      0) * item.quantity,
-                                  )}
-                                </p>
-                              </div>
-                              {canVerify && (
-                                <div
-                                  className={cn(
-                                    "h-6 w-6 rounded-full border flex items-center justify-center transition-all",
-                                    isVerified
-                                      ? "bg-emerald-500 border-emerald-500 text-white"
-                                      : "bg-white border-stone-200 text-stone-200",
-                                  )}
-                                >
-                                  <Check className="h-3.5 w-3.5" />
-                                </div>
-                              )}
                             </div>
                           );
                         })}
                       </div>
                     </div>
 
-                    {/* Right: Logistics & Timeline */}
-                    <div className="lg:col-span-5 space-y-8">
-                      {/* Routing */}
-                      <div className="space-y-4">
-                        <h3 className="text-[11px] font-black text-stone-900 uppercase tracking-widest flex items-center gap-2">
-                          <MapPin className="h-3.5 w-3.5 text-rose-500" />{" "}
-                          Transfer Route
-                        </h3>
-                        <div className="bg-stone-50 border border-stone-200 p-5 space-y-4 relative">
-                          <div className="absolute left-7 top-12 bottom-12 w-px border-l border-dashed border-stone-300" />
-
-                          <div className="flex items-start gap-4 relative z-10">
-                            <div className="h-4 w-4 rounded-full bg-white border-2 border-stone-300 mt-1 shrink-0" />
-                            <div>
-                              <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest">
-                                From
-                              </p>
-                              <p className="text-xs font-bold text-stone-900 uppercase tracking-tight">
-                                {viewingTransfer.sourceVendor?.businessName?.toLowerCase() ===
-                                  "omw global" ||
-                                viewingTransfer.sourceVendor?.businessName?.toLowerCase() ===
-                                  "admin stock"
-                                  ? "Admin Stock"
-                                  : viewingTransfer.sourceVendor
-                                      ?.businessName || "Source"}
-                              </p>
-                            </div>
+                    {/* Right: Logistics & Control */}
+                    <div className="lg:col-span-5 space-y-10">
+                      {/* Visual Routing */}
+                      <div className="space-y-3">
+                        <h3 className="text-[10px] font-black text-stone-900 flex items-center gap-2 uppercase tracking-[0.2em]">
+                          <div className="h-6 w-6 rounded-md bg-rose-50 flex items-center justify-center border border-rose-100">
+                            <MapPin className="h-3 w-3 text-rose-600" />
                           </div>
-
-                          <div className="flex items-start gap-4 relative z-10">
-                            <div className="h-4 w-4 rounded-full bg-emerald-500 border-2 border-white shadow-sm mt-1 shrink-0" />
-                            <div>
-                              <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">
-                                To
-                              </p>
-                              <p className="text-xs font-bold text-stone-900 uppercase tracking-tight">
-                                {viewingTransfer.destinationVendor?.businessName?.toLowerCase() ===
-                                  "omw global" ||
-                                viewingTransfer.destinationVendor?.businessName?.toLowerCase() ===
-                                  "admin stock"
-                                  ? "Admin Stock"
-                                  : viewingTransfer.destinationVendor
-                                      ?.businessName || "Destination"}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Timeline */}
-                      <div className="space-y-4">
-                        <h3 className="text-[11px] font-black text-stone-900 uppercase tracking-widest flex items-center gap-2">
-                          <Clock className="h-3.5 w-3.5 text-stone-400" /> Event
-                          Log
+                          Transit Path
                         </h3>
-                        <div className="border border-stone-100 rounded-[2px] overflow-hidden divide-y divide-stone-50">
-                          {[
-                            {
-                              label: "Initiated",
-                              date: viewingTransfer.createdAt,
-                            },
-                            {
-                              label: "Dispatched",
-                              date: viewingTransfer.dispatchedAt,
-                              color: "text-indigo-600",
-                            },
-                            {
-                              label: "Completed",
-                              date: viewingTransfer.receivedAt,
-                              color: "text-emerald-600",
-                            },
-                          ].map((phase, idx) => {
-                            if (!phase.date) return null;
-                            return (
-                              <div
-                                key={idx}
-                                className="flex items-center justify-between p-3 bg-white"
-                              >
-                                <span className="text-[10px] font-bold text-stone-500 uppercase tracking-tight">
-                                  {phase.label}
-                                </span>
-                                <span
-                                  className={cn(
-                                    "text-[11px] font-black tabular-nums",
-                                    phase.color || "text-stone-900",
-                                  )}
-                                >
-                                  {new Date(phase.date).toLocaleString([], {
-                                    dateStyle: "short",
-                                    timeStyle: "short",
-                                  })}
-                                </span>
+                        <div className="bg-white rounded-2xl border border-stone-200/60 shadow-sm p-4 relative overflow-hidden group">
+                          <div className="relative z-10 flex items-center gap-3">
+                            <div className="flex flex-col items-center gap-0.5 shrink-0">
+                              <div className="h-7 w-7 rounded-lg bg-stone-900 text-white flex items-center justify-center shadow-sm">
+                                <Building2 className="h-3.5 w-3.5" />
                               </div>
-                            );
-                          })}
+                              <div className="w-px h-5 border-l border-dashed border-stone-300 group-hover:border-indigo-300 transition-colors" />
+                              <div className="h-5 w-5 rounded-full bg-white border border-stone-200 flex items-center justify-center group-hover:border-indigo-400 transition-all">
+                                <ChevronDown className="h-3 w-3 text-stone-400 group-hover:text-indigo-500 transition-colors" />
+                              </div>
+                              <div className="w-px h-5 border-l border-dashed border-stone-300 group-hover:border-indigo-300 transition-colors" />
+                              <div className="h-7 w-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-sm shadow-indigo-200">
+                                <Store className="h-3.5 w-3.5" />
+                              </div>
+                            </div>
+                            <div className="flex flex-col justify-between min-w-0 gap-6 py-0.5">
+                              <div>
+                                <p className="text-[9px] font-bold tracking-widest text-stone-400 uppercase">From</p>
+                                <p className="text-sm font-black text-stone-900 tracking-tight truncate">
+                                  {viewingTransfer.sourceVendor?.businessName?.toLowerCase() === "omw global" ? "Central Command" : (viewingTransfer.sourceVendor?.businessName || "Source Station")}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-[9px] font-bold tracking-widest text-indigo-400 uppercase">To</p>
+                                <p className="text-sm font-black text-stone-900 tracking-tight truncate">
+                                  {viewingTransfer.destinationVendor?.businessName?.toLowerCase() === "omw global" ? "Central Command" : (viewingTransfer.destinationVendor?.businessName || "Target Terminal")}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Status Card */}
-                      <div
-                        className={cn(
-                          "p-4 border text-center uppercase tracking-[0.2em] font-black text-[11px]",
-                          viewingTransfer.status === "COMPLETED"
-                            ? "bg-emerald-50 border-emerald-100 text-emerald-700"
-                            : viewingTransfer.status === "DISPATCHED"
-                              ? "bg-indigo-50 border-indigo-100 text-indigo-700"
-                              : "bg-stone-50 border-stone-200 text-stone-500",
-                        )}
-                      >
-                        Status: {statusLabel(viewingTransfer.status)}
+                      {/* Event Log */}
+                      <div className="space-y-4">
+                        <h3 className="text-[10px] font-black text-stone-900 flex items-center gap-2 uppercase tracking-[0.2em]">
+                          <div className="h-6 w-6 rounded-md bg-stone-50 flex items-center justify-center border border-stone-200">
+                            <History className="h-3 w-3 text-stone-600" />
+                          </div>
+                          Protocol Ledger
+                        </h3>
+                        
+                        <div className="bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
+                          <div className={cn(
+                            "px-5 py-3 font-black uppercase tracking-[0.2em] text-[10px] border-b flex items-center justify-between",
+                            viewingTransfer.status === "COMPLETED" ? "bg-emerald-50 text-emerald-700 border-emerald-100" : 
+                            viewingTransfer.status === "DISPATCHED" ? "bg-indigo-50 text-indigo-700 border-indigo-100" : "bg-stone-50 text-stone-500 border-stone-200"
+                          )}>
+                            <span>STATUS: {statusLabel(viewingTransfer.status)}</span>
+                            <div className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
+                          </div>
+
+                          <div className="p-5 space-y-4">
+                            {[
+                              { label: "Initialized", date: viewingTransfer.createdAt, icon: Clock },
+                              { label: "Dispatched", date: viewingTransfer.dispatchedAt, icon: Truck, color: "text-indigo-600" },
+                              { label: "Finalized", date: viewingTransfer.receivedAt, icon: CheckCircle2, color: "text-emerald-600" },
+                            ].map((phase, idx) => {
+                              if (!phase.date) return null;
+                              const PhaseIcon = phase.icon;
+                              return (
+                                <div key={idx} className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <PhaseIcon className={cn("h-3.5 w-3.5", phase.color || "text-stone-400")} />
+                                    <span className="text-[9px] font-black text-stone-500 uppercase tracking-widest">{phase.label}</span>
+                                  </div>
+                                  <span className={cn("text-[10px] font-black tabular-nums bg-stone-50 px-2 py-0.5 rounded-md", phase.color || "text-stone-900")}>
+                                    {new Date(phase.date).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </ScrollArea>
+              </div>
 
-              {/* Action Footer */}
-              <div className="p-6 bg-stone-50 flex items-center justify-end shrink-0">
-                <div className="flex items-center gap-4">
-                  {currentVendor?.id && (
-                    <div className="flex items-center gap-4">
-                      {viewingTransfer.status === "DISPATCHED" &&
-                        viewingTransfer.destinationVendorId ===
-                          currentVendor?.id && (
-                          <div className="flex items-center gap-4">
-                            {viewingTransfer.items?.length >
-                              Object.keys(
-                                verifiedItems[viewingTransfer.id] || {},
-                              ).filter(
-                                (k) => verifiedItems[viewingTransfer.id][k],
-                              ).length && (
-                              <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest animate-pulse">
-                                Check{" "}
-                                {viewingTransfer.items.length -
-                                  Object.keys(
-                                    verifiedItems[viewingTransfer.id] || {},
-                                  ).filter(
-                                    (k) => verifiedItems[viewingTransfer.id][k],
-                                  ).length}{" "}
-                                more items
-                              </span>
-                            )}
-                            <Button
-                              disabled={
-                                viewingTransfer.items?.length !==
+              {/* Secure Command Footer */}
+              <div className="p-8 bg-white border-t border-stone-100 shrink-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <ShieldCheck className="h-5 w-5 text-emerald-500" />
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black text-stone-900 uppercase tracking-widest">Secure Dispatch Protocol</span>
+                      <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">Verification Required</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-6">
+                    {currentVendor?.id && (
+                      <div className="flex items-center gap-6">
+                        {viewingTransfer.status === "DISPATCHED" &&
+                          viewingTransfer.destinationVendorId ===
+                            currentVendor?.id && (
+                            <div className="flex items-center gap-6">
+                              {viewingTransfer.items?.length >
                                 Object.keys(
                                   verifiedItems[viewingTransfer.id] || {},
                                 ).filter(
                                   (k) => verifiedItems[viewingTransfer.id][k],
-                                ).length
-                              }
+                                ).length && (
+                                <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em] animate-pulse">
+                                  WAITING FOR {viewingTransfer.items.length -
+                                    Object.keys(
+                                      verifiedItems[viewingTransfer.id] || {},
+                                    ).filter(
+                                      (k) => verifiedItems[viewingTransfer.id][k],
+                                    ).length}{" "}
+                                  SKUS
+                                </span>
+                              )}
+                              <Button
+                                disabled={
+                                  viewingTransfer.items?.length !==
+                                  Object.keys(
+                                    verifiedItems[viewingTransfer.id] || {},
+                                  ).filter(
+                                    (k) => verifiedItems[viewingTransfer.id][k],
+                                  ).length
+                                }
+                                onClick={() =>
+                                  updateTransferStatus(
+                                    viewingTransfer.id,
+                                    "COMPLETED",
+                                  )
+                                }
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-[0.2em] px-10 rounded-2xl h-14 disabled:opacity-20 transition-all shadow-xl shadow-emerald-500/20 hover:-translate-y-1 active:translate-y-0"
+                              >
+                                Commit Receipt
+                              </Button>
+                            </div>
+                          )}
+
+                        {viewingTransfer.status === "APPROVED" &&
+                          viewingTransfer.sourceVendorId ===
+                            currentVendor?.id && (
+                            <Button
                               onClick={() =>
                                 updateTransferStatus(
                                   viewingTransfer.id,
-                                  "COMPLETED",
+                                  "DISPATCHED",
                                 )
                               }
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[11px] uppercase tracking-widest px-8 rounded-[2px] h-11 disabled:opacity-30 transition-all shadow-lg shadow-emerald-500/20"
+                              className="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-[0.2em] px-12 rounded-2xl h-14 shadow-xl shadow-indigo-500/20 hover:-translate-y-1 active:translate-y-0"
                             >
-                              Receive Stock
+                              Initiate Dispatch
                             </Button>
-                          </div>
-                        )}
-
-                      {viewingTransfer.status === "APPROVED" &&
-                        viewingTransfer.sourceVendorId ===
-                          currentVendor?.id && (
-                          <Button
-                            onClick={() =>
-                              updateTransferStatus(
-                                viewingTransfer.id,
-                                "DISPATCHED",
-                              )
-                            }
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[11px] uppercase tracking-widest px-10 rounded-[2px] h-11 shadow-lg shadow-indigo-500/20"
-                          >
-                            Send Items
-                          </Button>
-                        )}
-                    </div>
-                  )}
+                          )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </>

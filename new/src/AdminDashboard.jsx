@@ -8672,85 +8672,107 @@ const AdminDashboardContent = () => {
               </div>
             ) : (
               <>
-                {/* Premium Header */}
-                <div className="relative overflow-hidden bg-white border-b border-stone-100 p-8 shrink-0">
-                  <div className="absolute top-0 right-0 p-32 bg-indigo-500 opacity-[0.03] blur-[100px] -mr-20 -mt-20 pointer-events-none" />
-                  <div className="absolute bottom-0 left-0 p-32 bg-emerald-500 opacity-[0.03] blur-[100px] -ml-20 -mb-20 pointer-events-none" />
+                {/* Premium Workstation Header */}
+                <div className="relative overflow-hidden bg-white border-b border-stone-100 px-8 py-6 shrink-0">
+                  <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/5 blur-[120px] -mr-20 -mt-20 pointer-events-none rounded-full" />
+                  <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-500/5 blur-[120px] -ml-20 -mb-20 pointer-events-none rounded-full" />
 
                   <div className="relative z-10 flex items-start justify-between">
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-3 mb-1">
+                    <div className="flex flex-col space-y-2">
+                      <div className="flex items-center gap-3">
                         <Badge
                           variant="secondary"
-                          className="px-3 py-1 font-semibold text-xs tracking-wider uppercase bg-indigo-50 border-none text-indigo-700 shadow-sm rounded"
+                          className="px-3 py-1 font-black text-[10px] tracking-[0.15em] uppercase bg-stone-900 text-white border-none shadow-lg shadow-stone-900/10 rounded-full"
                         >
-                          Transfer #{viewingTransfer.id.slice(-8).toUpperCase()}
+                          Manifest #{viewingTransfer.id.slice(-8).toUpperCase()}
                         </Badge>
+                        <div className="flex items-center gap-2">
+                          <div className={cn(
+                            "h-1.5 w-1.5 rounded-full",
+                            viewingTransfer.status === "COMPLETED" ? "bg-emerald-500 animate-pulse" : 
+                            viewingTransfer.status === "DISPATCHED" ? "bg-amber-500 animate-pulse" : "bg-stone-300"
+                          )} />
+                          <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">
+                            Live Status: {viewingTransfer.status}
+                          </span>
+                        </div>
                       </div>
-                      <h2 className="text-3xl font-bold tracking-tight text-stone-900 mt-2">
-                        Stock Transfer Details
-                      </h2>
-                      <p className="text-[11px] font-black text-stone-400 uppercase tracking-widest mt-2 flex items-center gap-2">
-                        Initiated on{" "}
-                        <span className="text-stone-900 bg-stone-100 px-2 py-0.5 rounded">
-                          {new Date(viewingTransfer.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
-                        </span>
-                      </p>
+                      
+                      <div className="space-y-1">
+                        <h2 className="text-3xl font-black tracking-tight text-stone-900 flex items-center gap-3">
+                          Stock Transfer <span className="text-indigo-600">Protocol</span>
+                        </h2>
+                        <div className="flex items-center gap-3 text-[10px] font-bold text-stone-400 uppercase tracking-[0.1em]">
+                          <Calendar className="h-3 w-3" />
+                          <span>Initialized on</span>
+                          <span className="text-stone-900 bg-stone-100/80 px-2 py-0.5 rounded-md font-black">
+                            {new Date(viewingTransfer.createdAt).toLocaleDateString(undefined, { 
+                              day: '2-digit', 
+                              month: 'short', 
+                              year: 'numeric'
+                            })}
+                          </span>
+                        </div>
+                      </div>
                     </div>
 
                     <button
                       onClick={() => setIsTransferDetailOpen(false)}
-                      className="h-10 w-10 rounded-xl bg-white border border-stone-200 shadow-sm flex items-center justify-center text-stone-400 hover:text-stone-900 hover:border-stone-300 transition-all focus:outline-none focus:ring-2 focus:ring-stone-200 focus:ring-offset-2"
+                      className="h-10 w-10 rounded-xl bg-white border border-stone-200 shadow-sm flex items-center justify-center text-stone-400 hover:text-stone-900 hover:border-stone-400 transition-all focus:outline-none"
                     >
                       <X className="h-5 w-5" />
                     </button>
                   </div>
                 </div>
 
-                <ScrollArea className="flex-1 bg-stone-50/50">
+                <div className="flex-1 overflow-y-auto bg-[#fcfcfc] min-h-0 custom-scrollbar">
                   <div className="p-8 pb-12">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-                      {/* Left Column: Items */}
-                      <div className="space-y-6">
-                        <h3 className="text-sm font-bold text-stone-900 flex items-center gap-2 mb-4">
-                          <Package className="h-4 w-4 text-stone-400" /> Items
-                          List
-                        </h3>
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 max-w-7xl mx-auto">
+                      {/* Left: Manifest Ledger */}
+                      <div className="lg:col-span-7 space-y-6">
+                        <div className="flex items-center justify-between border-b border-stone-100 pb-4">
+                          <h3 className="text-[10px] font-black text-stone-900 flex items-center gap-3 uppercase tracking-[0.2em]">
+                            <div className="h-8 w-8 rounded-lg bg-indigo-50 flex items-center justify-center border border-indigo-100">
+                              <Package className="h-4 w-4 text-indigo-600" />
+                            </div>
+                            Transfer Manifest
+                          </h3>
+                        </div>
 
-                        <div className="space-y-4">
+                        <div className="grid grid-cols-1 gap-4">
                           {viewingTransfer.items?.map((item, idx) => (
                             <div
                               key={idx}
-                              className="group relative overflow-hidden bg-white rounded-[20px] border border-stone-200/60 shadow-sm hover:shadow-md transition-all p-4"
+                              className="group relative overflow-hidden bg-white rounded-2xl border border-stone-200/60 shadow-sm p-4"
                             >
-                              <div className="flex items-start gap-4">
-                                <div className="h-16 w-16 rounded-xl bg-stone-50 border border-stone-100 flex items-center justify-center overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
-                                  {item.product?.image ||
-                                  item.product?.imageUrls?.[0] ? (
+                              <div className="flex items-center gap-5">
+                                <div className="h-16 w-16 rounded-xl bg-stone-50 border border-stone-100 p-2 flex items-center justify-center overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
+                                  {item.product?.image || item.product?.imageUrls?.[0] ? (
                                     <img
-                                      src={getMediaUrl(
-                                        item.product.image ||
-                                          item.product.imageUrls[0],
-                                      )}
-                                      className="w-full h-full object-cover"
+                                      src={getMediaUrl(item.product.image || item.product.imageUrls[0])}
+                                      className="w-full h-full object-cover rounded-lg"
                                     />
                                   ) : (
                                     <Box className="h-6 w-6 text-stone-300" />
                                   )}
                                 </div>
-                                <div className="flex-1 min-w-0 pt-0.5">
-                                  <p className="text-[11px] font-bold tracking-widest text-stone-400 mb-1 truncate">
-                                    {item.product?.category?.name ||
-                                      "Inventory"}
-                                  </p>
-                                  <p className="text-sm font-bold text-stone-900 leading-tight truncate">
-                                    {item.product?.name ||
-                                      item.product?.product?.name ||
-                                      "Unknown Item"}
-                                  </p>
-                                  <p className="text-xs font-bold text-indigo-600 mt-2">
-                                    Qty: {item.quantity}
-                                  </p>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-start justify-between gap-4">
+                                    <div>
+                                      <p className="text-[9px] font-bold tracking-[0.15em] text-stone-400 uppercase mb-0.5">
+                                        {item.product?.category?.name || "Inventory SKU"}
+                                      </p>
+                                      <h4 className="text-sm font-black text-stone-900 truncate">
+                                        {item.product?.name || item.product?.product?.name}
+                                      </h4>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-[9px] font-bold tracking-widest text-stone-400 uppercase">Quantity</p>
+                                      <p className="text-sm font-black text-indigo-600 tabular-nums">
+                                        {item.quantity} units
+                                      </p>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -8758,116 +8780,109 @@ const AdminDashboardContent = () => {
                         </div>
                       </div>
 
-                      {/* Right Column: Logistics */}
-                      <div className="space-y-8">
-                        {/* Routing Details */}
-                        <div>
-                          <h3 className="text-sm font-bold text-stone-900 mb-4 flex items-center gap-2">
-                            <Store className="h-4 w-4 text-stone-400" /> Routing
-                            Details
+                      {/* Right: Logistics Workflow */}
+                      <div className="lg:col-span-5 space-y-8">
+                        {/* Vertical Transit Path */}
+                        <div className="space-y-4">
+                          <h3 className="text-[10px] font-black text-stone-900 flex items-center gap-2 uppercase tracking-[0.2em]">
+                            <div className="h-6 w-6 rounded-md bg-stone-50 flex items-center justify-center border border-stone-200">
+                              <MapPin className="h-3.5 w-3.5 text-stone-600" />
+                            </div>
+                            Transit Path
                           </h3>
-                          <div className="bg-white rounded-[20px] border border-stone-200/60 shadow-sm p-6 relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-1 h-full bg-stone-200" />
-                            <div className="space-y-6">
-                              <div className="relative">
-                                <p className="text-[10px] font-bold tracking-widest text-stone-400 uppercase mb-1">
-                                  From Outlet
-                                </p>
-                                <p className="text-sm font-bold text-stone-900">
-                                  {viewingTransfer.sourceVendor?.businessName?.toLowerCase() === "omw global" ? "Admin Stock" : (viewingTransfer.sourceVendor?.businessName || "Unknown")}
-                                </p>
+                          
+                          <div className="bg-white rounded-2xl border border-stone-200/60 shadow-sm p-5 hover:shadow-md transition-all">
+                            <div className="flex gap-4">
+                              <div className="flex flex-col items-center gap-0.5 shrink-0">
+                                <div className="h-7 w-7 rounded-lg bg-stone-900 text-white flex items-center justify-center shadow-sm">
+                                  <Building2 className="h-3.5 w-3.5" />
+                                </div>
+                                <div className="w-px h-5 border-l border-dashed border-stone-300 transition-colors" />
+                                <div className="h-5 w-5 rounded-full bg-white border border-stone-200 flex items-center justify-center">
+                                  <ChevronDown className="h-3 w-3 text-stone-400" />
+                                </div>
+                                <div className="w-px h-5 border-l border-dashed border-stone-300 transition-colors" />
+                                <div className="h-7 w-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-sm shadow-indigo-200">
+                                  <Store className="h-3.5 w-3.5" />
+                                </div>
                               </div>
-                              <div className="flex items-center text-stone-300">
-                                <ArrowRight className="h-4 w-4" />
-                              </div>
-                              <div className="relative">
-                                <p className="text-[10px] font-bold tracking-widest text-stone-400 uppercase mb-1">
-                                  To Destination
-                                </p>
-                                <p className="text-sm font-bold text-stone-900">
-                                  {viewingTransfer.destinationVendor?.businessName?.toLowerCase() === "omw global" ? "Admin Stock" : (viewingTransfer.destinationVendor?.businessName || "Unknown")}
-                                </p>
+                              <div className="flex flex-col justify-between min-w-0 gap-6 py-0.5">
+                                <div>
+                                  <p className="text-[9px] font-bold tracking-widest text-stone-400 uppercase">From</p>
+                                  <p className="text-sm font-black text-stone-900 tracking-tight truncate">
+                                    {viewingTransfer.sourceVendor?.businessName?.toLowerCase() === "omw global" ? "ADMIN STOCK" : (viewingTransfer.sourceVendor?.businessName || "Source Station")}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-[9px] font-bold tracking-widest text-indigo-400 uppercase">To</p>
+                                  <p className="text-sm font-black text-stone-900 tracking-tight truncate">
+                                    {viewingTransfer.destinationVendor?.businessName?.toLowerCase() === "omw global" ? "ADMIN STOCK" : (viewingTransfer.destinationVendor?.businessName || "Target Terminal")}
+                                  </p>
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
 
-                        {/* Status Tracking */}
-                        <div>
-                          <h3 className="text-sm font-bold text-stone-900 mb-4 flex items-center gap-2">
-                            <History className="h-4 w-4 text-stone-400" />{" "}
-                            Status Tracking
+                        {/* Compact Status Ledger */}
+                        <div className="space-y-4">
+                          <h3 className="text-[10px] font-black text-stone-900 flex items-center gap-2 uppercase tracking-[0.2em]">
+                            <div className="h-6 w-6 rounded-md bg-stone-50 flex items-center justify-center border border-stone-200">
+                              <History className="h-3.5 w-3.5 text-stone-600" />
+                            </div>
+                            Protocol Ledger
                           </h3>
+                          
+                          <div className="bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
+                            <div className={cn(
+                              "px-5 py-3 font-black uppercase tracking-[0.2em] text-[10px] border-b flex items-center justify-between",
+                              viewingTransfer.status === "COMPLETED" ? "bg-emerald-50 text-emerald-700 border-emerald-100" : 
+                              viewingTransfer.status === "DISPATCHED" ? "bg-indigo-50 text-indigo-700 border-indigo-100" : "bg-stone-50 text-stone-500 border-stone-200"
+                            )}>
+                              <span>STATUS: {viewingTransfer.status}</span>
+                              <div className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
+                            </div>
 
-                          <div
-                            className={cn(
-                              "px-6 py-5 rounded-[20px] text-center font-black uppercase tracking-[0.2em] text-xs shadow-sm border flex items-center justify-center gap-3",
-                              getStatusColor(viewingTransfer.status)
-                            )}
-                          >
-                            {viewingTransfer.status === "PENDING" && <Clock className="h-4 w-4" />}
-                            {viewingTransfer.status === "APPROVED" && <CheckCircle2 className="h-4 w-4" />}
-                            {viewingTransfer.status === "DISPATCHED" && <Truck className="h-4 w-4" />}
-                            {viewingTransfer.status === "COMPLETED" && <PackageCheck className="h-4 w-4" />}
-                            {viewingTransfer.status === "CANCELLED" && <XCircle className="h-4 w-4" />}
-                            {statusLabelMapping[viewingTransfer.status] || viewingTransfer.status}
-                          </div>
-
-                          <div className="mt-8 space-y-4 px-2">
-                            {[
-                              {
-                                step: "PENDING",
-                                label: "Created:",
-                                date: viewingTransfer.createdAt,
-                              },
-                              {
-                                step: "DISPATCHED",
-                                label: "Dispatched:",
-                                date: viewingTransfer.dispatchedAt,
-                                color: "text-indigo-600",
-                              },
-                              {
-                                step: "COMPLETED",
-                                label: "Received:",
-                                date: viewingTransfer.receivedAt,
-                                color: "text-emerald-600",
-                              },
-                            ].map((phase, idx) => {
-                              if (!phase.date) return null;
-                              return (
-                                <div
-                                  key={idx}
-                                  className="flex items-center justify-between border-b border-stone-100 pb-3 last:border-0 last:pb-0"
-                                >
-                                  <span className="text-sm text-stone-500 font-medium">
-                                    {phase.label}
-                                  </span>
-                                  <span
-                                    className={cn(
-                                      "text-sm font-bold tabular-nums",
-                                      phase.color || "text-stone-900",
-                                    )}
-                                  >
-                                    {new Date(phase.date).toLocaleDateString()}
-                                  </span>
-                                </div>
-                              );
-                            })}
+                            <div className="p-5 space-y-4">
+                              {[
+                                { label: "Initialized", date: viewingTransfer.createdAt, icon: Clock },
+                                { label: "Dispatched", date: viewingTransfer.dispatchedAt, icon: Truck, color: "text-indigo-600" },
+                                { label: "Finalized", date: viewingTransfer.receivedAt, icon: CheckCircle2, color: "text-emerald-600" },
+                              ].map((phase, idx) => {
+                                if (!phase.date) return null;
+                                const PhaseIcon = phase.icon;
+                                return (
+                                  <div key={idx} className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <PhaseIcon className={cn("h-3.5 w-3.5", phase.color || "text-stone-400")} />
+                                      <span className="text-[9px] font-black text-stone-500 uppercase tracking-widest">{phase.label}</span>
+                                    </div>
+                                    <span className={cn("text-[10px] font-black tabular-nums bg-stone-50 px-2 py-0.5 rounded-md", phase.color || "text-stone-900")}>
+                                      {new Date(phase.date).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </ScrollArea>
+                </div>
 
-                {/* Contextual Actions Footer */}
-                <div className="p-6 bg-white border-t border-stone-100 flex items-center justify-end sticky bottom-0 z-10 shrink-0">
+                <div className="p-8 bg-white border-t border-stone-100 flex items-center justify-between shrink-0">
+                  <div className="flex items-center gap-3">
+                    <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                    <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">
+                      Secure Logistics Ledger
+                    </span>
+                  </div>
                   <Button
                     onClick={() => setIsTransferDetailOpen(false)}
-                    variant="outline"
-                    className="font-bold text-stone-600 bg-white border-stone-200 shadow-sm px-6 rounded-xl"
+                    className="px-10 h-12 bg-stone-900 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl hover:bg-black transition-all shadow-xl shadow-stone-900/10 hover:-translate-y-1 active:translate-y-0"
                   >
-                    Close
+                    Close Protocol
                   </Button>
                 </div>
               </>
@@ -8983,164 +8998,207 @@ const StockTransferView = ({
             </h3>
           </div>
         ) : (
-          <div className="bg-white rounded-[5px] border border-stone-100 overflow-hidden shadow-sm">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-stone-50/50 border-b border-stone-100">
-                  <th className="px-6 py-5 text-[11px] font-bold uppercase text-stone-500 tracking-wider">
-                    Transfer ID
-                  </th>
-                  <th className="px-6 py-5 text-[11px] font-bold uppercase text-stone-500 tracking-wider">
-                    From
-                  </th>
-                  <th className="px-6 py-5 text-[11px] font-bold uppercase text-stone-500 tracking-wider">
-                    To
-                  </th>
-                  <th className="px-6 py-5 text-[11px] font-bold uppercase text-stone-500 tracking-wider">
-                    Items
-                  </th>
-                  <th className="px-6 py-5 text-[11px] font-bold uppercase text-stone-500 tracking-wider text-center">
-                    Status
-                  </th>
-                  <th className="px-6 py-5 text-[11px] font-bold uppercase text-stone-500 tracking-wider text-right">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-stone-50">
-                {transfers.map((t) => (
-                  <tr
-                    key={t.id}
-                    onClick={() => onViewDetail(t.id)}
-                    className="hover:bg-indigo-50/30 transition-all cursor-pointer group/row"
-                  >
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-lg bg-stone-50 flex items-center justify-center text-stone-400 group-hover/row:bg-emerald-50 group-hover/row:text-emerald-600 transition-colors">
-                          <FileText className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <div className="font-black text-stone-900 text-[11px] tracking-tight">
-                            #{t.id.slice(-6).toUpperCase()}
-                          </div>
-                          <div className="text-[9px] text-stone-400 font-bold uppercase tracking-widest mt-0.5">
-                            {new Date(t.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="font-bold text-stone-700 text-xs uppercase">
-                        {t.sourceVendor?.businessName?.toLowerCase() === "omw global" ? "Admin Stock" : (t.sourceVendor?.businessName || "Unknown")}
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="font-bold text-emerald-700 text-xs uppercase">
-                        {t.destinationVendor?.businessName?.toLowerCase() === "omw global" ? "Admin Stock" : (t.destinationVendor?.businessName || "Unknown")}
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="space-y-1">
-                        {t.items?.map((item, idx) => (
-                          <div
-                            key={idx}
-                            className="flex items-center justify-between gap-4 text-[10px] border-b border-stone-50 pb-1 last:border-0"
-                          >
-                            <span className="font-black text-stone-700 truncate max-w-[120px]">
-                              {getProductSafe(item)}
-                            </span>
-                            <span className="font-black text-emerald-600 tabular-nums">
-                              ×{item.quantity}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                      {(!t.items || t.items.length === 0) ? (
-                        <div className="text-[10px] text-stone-300 italic">
-                          No Items
-                        </div>
-                      ) : (
-                        <div className="mt-2 pt-2 border-t border-stone-50 flex justify-between items-center group/total">
-                          <span className="text-[8px] font-black text-stone-300 uppercase tracking-widest group-hover/total:text-indigo-400 transition-colors">Total Units</span>
-                          <span className="text-[11px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-[4px] tabular-nums">
-                            {t.items.reduce((sum, item) => sum + (item.quantity || 0), 0)}
-                          </span>
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-5 text-center">
-                      <div className={cn(
-                        "inline-flex items-center gap-2 px-4 py-2 rounded-full border text-[9px] font-black uppercase tracking-widest shadow-sm",
-                        getStatusColor(t.status)
-                      )}>
-                        {t.status === "PENDING" && <Clock className="h-3 w-3" />}
-                        {t.status === "APPROVED" && <CheckCircle2 className="h-3 w-3" />}
-                        {t.status === "DISPATCHED" && <Truck className="h-3 w-3" />}
-                        {t.status === "COMPLETED" && <PackageCheck className="h-3 w-3" />}
-                        {t.status === "CANCELLED" && <XCircle className="h-3 w-3" />}
-                        {statusLabelMapping[t.status] || t.status}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-5 text-right"
-                      onClick={(e) => e.stopPropagation()}
+          <div className="bg-white rounded-[10px] border border-stone-100 overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.03)]">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-stone-50/80 border-b border-stone-100">
+                    <th className="px-8 py-5 text-[10px] font-black uppercase text-stone-400 tracking-[0.2em]">
+                      Transfer Identity
+                    </th>
+                    <th className="px-8 py-5 text-[10px] font-black uppercase text-stone-400 tracking-[0.2em]">
+                      Logistics Path
+                    </th>
+                    <th className="px-8 py-5 text-[10px] font-black uppercase text-stone-400 tracking-[0.2em]">
+                      Item Manifest
+                    </th>
+                    <th className="px-8 py-5 text-[10px] font-black uppercase text-stone-400 tracking-[0.2em] text-center">
+                      Protocol Status
+                    </th>
+                    <th className="px-8 py-5 text-[10px] font-black uppercase text-stone-400 tracking-[0.2em] text-right">
+                      System Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-50">
+                  {transfers.map((t) => (
+                    <tr
+                      key={t.id}
+                      onClick={() => onViewDetail(t.id)}
+                      className="hover:bg-indigo-50/20 transition-all cursor-pointer group/row border-l-2 border-l-transparent hover:border-l-indigo-500"
                     >
-                      {updating === t.id ? (
-                        <div className="flex justify-end pr-4">
-                          <Loader2 className="h-4 w-4 animate-spin text-stone-300" />
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-4">
+                          <div className="h-10 w-10 rounded-xl bg-stone-50 border border-stone-100 flex items-center justify-center text-stone-400 group-hover/row:bg-white group-hover/row:border-indigo-100 group-hover/row:text-indigo-600 group-hover/row:shadow-sm transition-all">
+                            <FileText className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <div className="font-black text-stone-900 text-sm tracking-tight mb-0.5">
+                              #{t.id.slice(-6).toUpperCase()}
+                            </div>
+                            <div className="text-[9px] text-stone-400 font-black uppercase tracking-[0.15em] flex items-center gap-1.5">
+                              <Clock className="h-2.5 w-2.5" />
+                              {new Date(t.createdAt).toLocaleDateString(undefined, {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                            </div>
+                          </div>
                         </div>
-                      ) : (
-                        <div className="flex justify-end gap-2">
-                          {t.status === "PENDING" && (
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className="h-5 w-5 rounded-md bg-stone-900 text-white flex items-center justify-center text-[9px] font-black shrink-0">
+                              S
+                            </div>
+                            <span className="text-[11px] font-black text-stone-700 uppercase tracking-tight truncate max-w-[150px]">
+                              {t.sourceVendor?.businessName?.toLowerCase() ===
+                              "omw global"
+                                ? "ADMIN STOCK"
+                                : t.sourceVendor?.businessName ||
+                                  "Unknown Station"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="h-5 w-5 rounded-md bg-indigo-600 text-white flex items-center justify-center text-[9px] font-black shrink-0">
+                              D
+                            </div>
+                            <span className="text-[11px] font-black text-indigo-700 uppercase tracking-tight truncate max-w-[150px]">
+                              {t.destinationVendor?.businessName?.toLowerCase() ===
+                              "omw global"
+                                ? "ADMIN STOCK"
+                                : t.destinationVendor?.businessName ||
+                                  "Terminal Target"}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className="space-y-1.5 min-w-[200px]">
+                          {t.items?.slice(0, 2).map((item, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between gap-4 text-[10px] border-b border-stone-50 pb-1.5 last:border-0 last:pb-0"
+                            >
+                              <span className="font-black text-stone-600 truncate max-w-[140px]">
+                                {getProductSafe(item)}
+                              </span>
+                              <span className="font-black text-indigo-600 tabular-nums bg-indigo-50 px-1.5 py-0.5 rounded">
+                                ×{item.quantity}
+                              </span>
+                            </div>
+                          ))}
+                          {t.items?.length > 2 && (
+                            <div className="text-[9px] font-black text-stone-400 uppercase tracking-widest pt-1 italic opacity-60">
+                              + {t.items.length - 2} additional units in
+                              manifest
+                            </div>
+                          )}
+                          {!t.items || t.items.length === 0 ? (
+                            <div className="text-[10px] text-stone-300 italic">
+                              Empty Manifest
+                            </div>
+                          ) : (
+                            <div className="mt-3 pt-3 border-t border-stone-100 flex justify-between items-center group/total">
+                              <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest group-hover/total:text-indigo-500 transition-colors">
+                                Net Quantity
+                              </span>
+                              <span className="text-xs font-black text-stone-900 tabular-nums">
+                                {t.items.reduce(
+                                  (sum, item) => sum + (item.quantity || 0),
+                                  0,
+                                )}{" "}
+                                SKUs
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-8 py-6 text-center">
+                        <div
+                          className={cn(
+                            "inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full border text-[10px] font-black uppercase tracking-[0.15em] shadow-sm transition-all duration-500",
+                            getStatusColor(t.status),
+                          )}
+                        >
+                          <div className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
+                          {statusLabelMapping[t.status] || t.status}
+                        </div>
+                      </td>
+                      <td className="px-8 py-6 text-right">
+                        <div
+                          className="flex items-center justify-end gap-3"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {updating === t.id ? (
+                            <div className="flex items-center gap-2 text-[10px] font-black text-indigo-500 uppercase tracking-widest px-4">
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              Processing
+                            </div>
+                          ) : (
                             <>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => updateStatus(t.id, "CANCELLED")}
-                                className="text-rose-500 font-black text-[9px] uppercase hover:bg-rose-50"
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => updateStatus(t.id, "APPROVED")}
-                                className="bg-emerald-600 text-white font-black text-[9px] uppercase px-4 hover:bg-emerald-700 shadow-lg shadow-emerald-500/20"
-                              >
-                                Approve
-                              </Button>
+                              {t.status === "PENDING" && (
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() =>
+                                      updateStatus(t.id, "CANCELLED")
+                                    }
+                                    className="h-9 px-4 text-rose-500 font-black text-[9px] uppercase hover:bg-rose-50 rounded-lg"
+                                  >
+                                    Cancel
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    onClick={() =>
+                                      updateStatus(t.id, "APPROVED")
+                                    }
+                                    className="h-9 px-5 bg-stone-900 text-white font-black text-[9px] uppercase hover:bg-black shadow-lg shadow-stone-900/10 rounded-lg transition-all"
+                                  >
+                                    Approve
+                                  </Button>
+                                </div>
+                              )}
+                              {t.status === "APPROVED" && (
+                                <Button
+                                  size="sm"
+                                  onClick={() =>
+                                    updateStatus(t.id, "DISPATCHED")
+                                  }
+                                  className="h-9 px-6 bg-indigo-600 text-white font-black text-[9px] uppercase hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 rounded-lg transition-all"
+                                >
+                                  Dispatch Shipment
+                                </Button>
+                              )}
+                              {t.status === "DISPATCHED" && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => updateStatus(t.id, "COMPLETED")}
+                                  className="h-9 px-6 bg-emerald-600 text-white font-black text-[9px] uppercase hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 rounded-lg transition-all"
+                                >
+                                  Finalize Receipt
+                                </Button>
+                              )}
+                              {(t.status === "COMPLETED" ||
+                                t.status === "CANCELLED") && (
+                                <span className="text-[9px] font-black text-stone-300 uppercase tracking-widest italic pr-2">
+                                  Protocol Finalized
+                                </span>
+                              )}
                             </>
                           )}
-                          {t.status === "APPROVED" && (
-                            <Button
-                              size="sm"
-                              onClick={() => updateStatus(t.id, "DISPATCHED")}
-                              className="bg-indigo-600 text-white font-black text-[9px] uppercase px-4 hover:bg-indigo-700 shadow-lg shadow-indigo-500/20"
-                            >
-                              Dispatch Shipment
-                            </Button>
-                          )}
-                          {t.status === "DISPATCHED" && (
-                            <Button
-                              size="sm"
-                              onClick={() => updateStatus(t.id, "COMPLETED")}
-                              className="bg-emerald-600 text-white font-black text-[9px] uppercase px-4 hover:bg-emerald-700 shadow-lg shadow-emerald-500/20"
-                            >
-                              Finalize Receipt
-                            </Button>
-                          )}
-                          {(t.status === "COMPLETED" ||
-                            t.status === "CANCELLED") && (
-                            <span className="text-[9px] font-black text-stone-300 uppercase italic">
-                              Protocol Finalized
-                            </span>
-                          )}
+
+
                         </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
